@@ -1,0 +1,54 @@
+'use client';
+
+import { useLocale, useTranslations } from 'next-intl';
+import { useRouter, usePathname } from 'next/navigation';
+import { Globe } from 'lucide-react';
+import { locales } from '@/i18n/config';
+import { useUpdatePreferences } from '@/hooks/useSettings';
+import { useThemeStore } from '@/store/themeStore';
+import { Button } from './Button';
+
+export default function LanguageSwitcher() {
+  const locale = useLocale();
+  const t = useTranslations('LanguageSwitcher');
+  const router = useRouter();
+  const pathname = usePathname();
+  const updatePreferencesMutation = useUpdatePreferences();
+  const { theme } = useThemeStore();
+
+  const switchLanguage = (newLocale: string) => {
+    const pathWithoutLocale = pathname.replace(`/${locale}`, '');
+    
+    document.cookie = `NEXT_LOCALE=${newLocale}; path=/; max-age=31536000; SameSite=Lax`;
+    
+    updatePreferencesMutation.mutate({ 
+      language: newLocale, 
+      theme: theme
+    });
+    
+    window.location.href = `/${newLocale}${pathWithoutLocale}`;
+  };
+
+  return (
+    <div className="relative inline-block text-left">
+      <Button
+        type="button"
+        onClick={() => {
+          const currentIndex = locales.indexOf(locale as any);
+          const nextIndex = (currentIndex + 1) % locales.length;
+          switchLanguage(locales[nextIndex]);
+        }}
+        variant="ghost"
+        size="sm"
+        rounded={true}
+      >
+        <Globe className="w-5 h-5 text-gray-600" />
+      </Button>
+      
+      {/* Language indicator */}
+      <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 text-white text-xs rounded-full flex items-center justify-center">
+        {locale === 'he' ? t('hebrew') : t('english')}
+      </div>
+    </div>
+  );
+} 

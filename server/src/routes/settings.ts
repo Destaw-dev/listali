@@ -1,0 +1,23 @@
+import express from 'express';
+import { authenticateToken } from '../middleware/auth';
+import { asyncHandler } from '../middleware/errorHandler';
+import { preferencesValidation, notificationSettingsValidation } from '../middleware/validation';
+import {
+  getUserPreferences,
+  updateUserPreferences,
+  getUserNotificationSettings,
+  updateUserNotificationSettings
+} from '../controllers/settings';
+
+const router = express.Router();
+
+// Apply authentication middleware to all routes
+router.use(authenticateToken);
+
+// Settings routes
+router.get('/preferences', asyncHandler(getUserPreferences));
+router.put('/preferences', preferencesValidation, asyncHandler(updateUserPreferences));
+router.get('/notifications', asyncHandler(getUserNotificationSettings));
+router.put('/notifications', notificationSettingsValidation, asyncHandler(updateUserNotificationSettings));
+
+export default router;
