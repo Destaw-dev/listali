@@ -21,16 +21,13 @@ export default function DashboardPage() {
   const locale = params?.locale as string || 'he';
   const { user } = useAuthStore();
 
-  // Use custom hook for auth redirect
   const { isAuthenticated, isInitialized } = useAuthRedirect({
     redirectTo: `/${locale}/welcome`,
     requireAuth: true
   });
 
-  // Fetch dashboard data
   const { data: dashboardData } = useDashboard();
 
-  // Show loading while auth store is initializing
   if (!isInitialized) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primaryT-50 via-secondaryT-50 to-accentT-50 safe-area-inset flex items-center justify-center">
@@ -49,7 +46,6 @@ export default function DashboardPage() {
     return null;
   }
 
-  // Use dashboard data from API
   const stats = dashboardData?.stats || {
     groups: 0,
     lists: 0,
@@ -103,7 +99,6 @@ export default function DashboardPage() {
     }
   ];
 
-  // Use achievements from API
   const achievementIcons = {
     first_group: Award,
     shopping_master: Target,
@@ -112,11 +107,9 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primaryT-50 via-secondaryT-50 to-accentT-50 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900 safe-area-inset  overflow-hidden">
-      {/* Background decorative elements */}
       <div className="container mx-auto px-4 py-8 relative z-10">
         <div className="max-w-7xl mx-auto space-y-8">
           
-          {/* Welcome Header */}
           <Card variant="glass" className="bg-white/80 dark:bg-neutral-800/80 shadow-2xl">
             <CardBody className="p-8">
               <div className="flex items-center justify-between">
@@ -162,7 +155,6 @@ export default function DashboardPage() {
             </CardBody>
           </Card>
 
-          {/* Statistics Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
             <Card variant="glass" hover className="bg-white/70 dark:bg-neutral-800/70">
               <CardBody className="p-6">
@@ -285,9 +277,7 @@ export default function DashboardPage() {
             </Card>
           </div>
 
-          {/* Quick Actions & Achievements */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Quick Actions */}
             <div className="lg:col-span-2">
               <Card variant="glass" className="bg-white/80 shadow-2xl">
                 <CardHeader>
@@ -340,7 +330,6 @@ export default function DashboardPage() {
               </Card>
             </div>
 
-            {/* Achievements */}
             <div>
               <Card variant="glass" className="bg-white/80 shadow-2xl">
                 <CardHeader>
@@ -390,7 +379,6 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Recent Activity */}
           <Card variant="glass" className="bg-white/80 shadow-2xl">
             <CardHeader>
               <div className="flex items-center gap-3">

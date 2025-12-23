@@ -1,13 +1,8 @@
-// Dropdown.tsx
 "use client";
 
 import React, { useState, useRef, useEffect, ReactNode, RefObject } from "react";
 import { cn } from "@/lib/utils";
 import { ChevronDown } from "lucide-react";
-
-// ---------------------------
-// 1. Types & Interfaces
-// ---------------------------
 
 export interface DropdownOption {
   value: string | number;
@@ -50,9 +45,22 @@ interface DropdownWithTriggerProps extends BaseDropdownProps {
 
 type DropdownProps = DropdownWithTriggerProps;
 
-// ---------------------------
-// 2. Design Tokens
-// ---------------------------
+/**
+ * Safely converts a value to a string for use in DOM IDs.
+ * Only uses primitives to ensure valid CSS selectors.
+ * Falls back to index for objects/complex types.
+ */
+function safeValueToString(value: unknown, fallback: string | number): string {
+  if (value === null || value === undefined) {
+    return String(fallback);
+  }
+  
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+    return String(value);
+  }
+  
+  return String(fallback);
+}
 
 const sizeClasses = {
   sm: "px-3 py-1.5 text-sm",
@@ -67,9 +75,6 @@ const variantClasses = {
 };
 
 // ---------------------------
-// 3. DropdownTrigger Component (Extracted)
-// ---------------------------
-
 interface DropdownTriggerProps {
   selectedOption?: DropdownOption;
   placeholder: string;
@@ -145,9 +150,6 @@ function DropdownTrigger({
 }
 
 // ---------------------------
-// 4. DropdownMenu Component (Extracted)
-// ---------------------------
-
 interface DropdownMenuProps {
   options: DropdownOption[];
   value?: string | number;
@@ -163,7 +165,6 @@ interface DropdownMenuProps {
   maxHeight: string;
 }
 
-// Logical positioning utilities (RTL/LTR)
 const alignClasses = {
   start: "inset-inline-start-0",
   end: "inset-inline-end-0",
@@ -191,7 +192,7 @@ function DropdownMenu({
 }: DropdownMenuProps) {
 
   const activeDescendantId = focusedIndex >= 0 
-    ? `option-${options[focusedIndex].value || focusedIndex}` 
+    ? `option-${safeValueToString(options[focusedIndex].value, focusedIndex)}` 
     : undefined;
 
   return (
@@ -231,11 +232,11 @@ function DropdownMenu({
           const isFocused = index === focusedIndex;
           const isDisabled = option.disabled;
           
-          const optionId = `option-${option.value || index}`;
+          const optionId = `option-${safeValueToString(option.value, index)}`;
 
           return (
             <button
-              key={option.value || `option-${index}`}
+              key={safeValueToString(option.value, `option-${index}`)}
               id={optionId}
               type="button"
               role="option"
@@ -280,9 +281,6 @@ function DropdownMenu({
 
 
 // ---------------------------
-// 5. Dropdown Component (Main)
-// ---------------------------
-
 export function Dropdown({
   options,
   value,
@@ -310,7 +308,6 @@ export function Dropdown({
   isOpen: controlledIsOpen,
 }: DropdownProps) {
   
-  // --- State and Refs ---
   const [internalIsOpen, setInternalIsOpen] = useState(false);
   const isOpen = controlledIsOpen !== undefined ? controlledIsOpen : internalIsOpen;
   const [focusedIndex, setFocusedIndex] = useState(-1);
@@ -319,7 +316,6 @@ export function Dropdown({
 
   const selectedOption = options.find((opt) => opt.value === value);
 
-  // --- Helpers ---
   const setIsOpen = (value: boolean | ((prev: boolean) => boolean)) => {
     const newState = typeof value === "function" 
       ? value(controlledIsOpen !== undefined ? controlledIsOpen : internalIsOpen) 
@@ -359,8 +355,6 @@ export function Dropdown({
     });
   };
 
-  // --- Effects ---
-  // Handle click outside to close
   useEffect(() => {
     const handleClickOutside = (event: Event) => {
       if (
@@ -383,7 +377,6 @@ export function Dropdown({
     };
   }, [isOpen, controlledIsOpen]);
 
-  // Handle keyboard navigation
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!isOpen) return;
@@ -438,11 +431,10 @@ export function Dropdown({
     }
   }, [isOpen, focusedIndex, options, controlledIsOpen]);
 
-  // Scroll focused option into view 
   useEffect(() => {
     if (focusedIndex >= 0 && menuRef.current) {
-      const focusedElement = menuRef.current.querySelector(`#option-${options[focusedIndex].value || focusedIndex}`) as HTMLElement;
-
+      const optionValue = safeValueToString(options[focusedIndex].value, focusedIndex);
+      const focusedElement = menuRef.current.querySelector(`#option-${optionValue}`) as HTMLElement;
       if (focusedElement) {
         focusedElement.scrollIntoView({
           block: "nearest",
@@ -452,13 +444,11 @@ export function Dropdown({
     }
   }, [focusedIndex, options]);
 
-  // --- Render ---
   return (
     <div
       className={cn("relative", fullWidth && "w-full", className)}
       ref={dropdownRef}
     >
-      {/* Label */}
       {label && (
         <label
           className={cn(
@@ -470,7 +460,6 @@ export function Dropdown({
         </label>
       )}
 
-      {/* 3. DropdownTrigger */}
       <DropdownTrigger
         selectedOption={selectedOption}
         placeholder={placeholder}
@@ -485,7 +474,6 @@ export function Dropdown({
         error={error}
       />
 
-      {/* 4. DropdownMenu */}
       {isOpen && (
         <DropdownMenu
           options={options}
@@ -503,7 +491,6 @@ export function Dropdown({
         />
       )}
 
-      {/* Helper text / Error */}
       {(helperText || error) && (
         <p
           className={cn(

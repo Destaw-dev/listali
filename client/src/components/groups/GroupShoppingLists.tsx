@@ -309,7 +309,7 @@ const MetricsBar = ({
 
   ] as const;
   return (
-  <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 grid grid-cols-2 md:grid-cols-5 gap-4">
+  <div className="bg-surface rounded-2xl shadow-lg border border-gray-100 p-6 grid grid-cols-2 md:grid-cols-5 gap-4">
     {metricsLabels.map((metric) => (
       <MetricCard
         key={metric.id}

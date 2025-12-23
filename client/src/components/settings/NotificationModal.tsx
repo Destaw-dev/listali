@@ -118,10 +118,10 @@ export default function NotificationModal({
 
   return (
     <div 
-      className="fixed inset-0 bg-surface backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 backdrop-blur-lg z-50 flex items-center justify-center p-4"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <Card variant="glass" className="bg-surface shadow-2xl max-w-lg w-full animate-in slide-in-from-bottom-4">
+      <Card className="bg-surface shadow-2xl max-w-lg w-full animate-in slide-in-from-bottom-4">
         <CardBody className="p-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">

@@ -15,14 +15,12 @@ export default function WelcomePage() {
   const { isAuthenticated, isInitialized } = useAuthStore();
   const locale = params?.locale as string || 'he';
 
-  // Redirect logic - only redirect when needed
   useEffect(() => {
     if (isInitialized && isAuthenticated) {
       router.push(`/${locale}/dashboard`);
     }
   }, [isAuthenticated, isInitialized]);
 
-  // Show loading while auth is initializing
   if (!isInitialized) {
     return (
       <div className="min-h-screen bg-surface safe-area-inset flex items-center justify-center">
@@ -34,7 +32,6 @@ export default function WelcomePage() {
     );
   }
 
-  // Don't render welcome page for authenticated users
   if (isAuthenticated) {
     return null;
   }
@@ -42,7 +39,6 @@ export default function WelcomePage() {
   return (
     <div className="min-h-screen bg-surface safe-area-inset">
       <div className="container mx-auto px-4 py-8">
-        {/* Header */}
         <div className="text-center mb-12">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-primary rounded-full mb-6">
             <ShoppingCart className="w-10 h-10 text-white" />
@@ -55,8 +51,7 @@ export default function WelcomePage() {
           </p>
         </div>
 
-        {/* Features Grid */}
-        <div className="grid md:grid-cols-3 gap-8 mb-16">
+        <div className="grid md:grid-cols-3 gap-8 mb-5">
           <div className="text-center mobile-card">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-success rounded-xl mb-6">
               <Users className="w-8 h-8 text-white" />
@@ -94,7 +89,6 @@ export default function WelcomePage() {
           </div>
         </div>
 
-        {/* CTA Buttons */}
         <div className="text-center space-y-1">
           <IntlLink
             href="/auth/login"

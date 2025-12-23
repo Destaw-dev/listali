@@ -43,7 +43,6 @@ export default function LanguageThemeModal({
   const [selectedLanguage, setSelectedLanguage] = useState(currentLocale);
   const [selectedTheme, setSelectedTheme] = useState(currentTheme);
 
-  // Reset selections when modal opens
   useEffect(() => {
     if (isOpen) {
       setSelectedLanguage(currentLocale);
@@ -84,7 +83,7 @@ export default function LanguageThemeModal({
 
   return (
     <div 
-      className="fixed inset-0 bg-surface backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 backdrop-blur-lg z-50 flex items-center justify-center p-4"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <Card  className="bg-surface shadow-2xl max-w-lg w-full animate-in slide-in-from-bottom-4">
@@ -108,7 +107,6 @@ export default function LanguageThemeModal({
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6" onKeyDown={handleKeyDown}>
-            {/* Language Selection */}
             <div>
               <h3 className="text-lg font-semibold text-primary mb-3 flex items-center gap-2">
                 <Globe className="w-4 h-4" />
@@ -141,7 +139,6 @@ export default function LanguageThemeModal({
               </div>
             </div>
 
-            {/* Theme Selection */}
             <div>
               <h3 className="text-lg font-semibold text-primary mb-3 flex items-center gap-2">
                 <Palette className="w-4 h-4" />
@@ -156,7 +153,6 @@ export default function LanguageThemeModal({
                     size='lg'
                     onClick={() => setSelectedTheme(theme.id)}
                     variant={selectedTheme === theme.id ? 'primary' : 'ghost'}
-                    // icon={<span className="text-2xl">{theme.icon}</span>}
                     className='text-start p-0 block'
                   >
                     <div className="flex items-center justify-between">
@@ -176,8 +172,7 @@ export default function LanguageThemeModal({
               </div>
             </div>
 
-            {/* create divider */}
-            <div className=" w-full h-1 bg-gradient-to-r from-primaryT-400 to-primaryT-600" />
+            <div className=" w-full h-1 bg-gradient-to-r from-primaryT-100 to-primaryT-200" />
 
             <div className="flex gap-3 pt-4">
               <Button

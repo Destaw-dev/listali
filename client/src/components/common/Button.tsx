@@ -2,14 +2,17 @@ import React from 'react';
 import { ButtonProps as IButtonProps } from '../../types';
 import { cn } from '@/lib/utils';
 
-interface ButtonProps extends IButtonProps {
-  children: React.ReactNode;
+interface ButtonProps extends Omit<IButtonProps, 'variant'> {
+  children?: React.ReactNode;
   icon?: React.ReactNode;
   iconPosition?: 'left' | 'right';
   fullWidth?: boolean;
   rounded?: boolean;
   shadow?: boolean;
   glow?: boolean;
+  checked?: boolean; 
+  checkIcon?: React.ReactNode; 
+  variant?: IButtonProps['variant'] | 'checkbox'; 
 }
 
 export function Button({ 
@@ -26,15 +29,16 @@ export function Button({
   fullWidth = false,
   rounded = false,
   shadow = true,
-  glow = false
+  glow = false,
+  checked = false,
+  checkIcon
 }: ButtonProps) {
   const baseClasses = cn(
     'inline-flex items-center justify-center font-medium transition-all duration-200',
-    // 'focus:outline-none focus:ring-2 focus:ring-offset-2',
     'disabled:opacity-50 disabled:cursor-not-allowed',
     'active:scale-95 transform',
     fullWidth && 'w-full',
-    rounded ? 'rounded-full' : 'rounded-lg',
+    rounded ? 'rounded-full' : 'rounded-md',
     shadow && 'shadow-sm hover:shadow-md',
     glow && 'shadow-glow-primary hover:shadow-glow-primary/80',
     className
@@ -53,9 +57,14 @@ export function Button({
       'bg-accent text-white hover:bg-accent/90',
       'focus:ring-accent shadow-lg hover:shadow-xl'
     ),
-    outline: cn(
+    outlineBlue: cn(
       'border border-primary text-primary',
       'hover:bg-primary-50 focus:ring-primary',
+      'bg-transparent shadow-lg hover:shadow-xl'
+    ),
+    outline: cn(
+      'border border-border text-text-primary',
+      'hover:bg-surface-hover focus:ring-primary',
       'bg-transparent shadow-lg hover:shadow-xl'
     ),
     ghost: cn(
@@ -80,6 +89,13 @@ export function Button({
       'hover:bg-error/5 focus:ring-error',
       'bg-transparent shadow-lg hover:shadow-xl'
     ),
+    checkbox: cn(
+      'flex items-center justify-center rounded-full border-2 transition-all',
+      'size-6 shrink-0',
+      checked
+        ? 'bg-emerald-500 border-emerald-500 text-white'
+        : 'border-slate-200 bg-white hover:border-slate-300'
+    ),
   };
   
   const sizeClasses: Record<string, string> = {
@@ -90,10 +106,20 @@ export function Button({
     xl: 'px-8 py-4 text-lg gap-3'
   };
   
+  const isCheckbox = variant === 'checkbox';
+  const checkboxSizeClasses: Record<string, string> = {
+    xs: 'size-4',
+    sm: 'size-5',
+    md: 'size-6',
+    lg: 'size-7',
+    xl: 'size-8'
+  };
+  
   const classes = cn(
     baseClasses,
     variantClasses[variant],
-    sizeClasses[size]
+    isCheckbox ? checkboxSizeClasses[size] : sizeClasses[size],
+    isCheckbox && 'shadow-none hover:shadow-none'
   );
   
   return (
@@ -125,14 +151,33 @@ export function Button({
         </svg>
       )}
       
-      {!loading && icon && iconPosition === 'left' && (
-        <span className="flex-shrink-0">{icon}</span>
+      {isCheckbox && checked && (
+        <span className="flex-shrink-0">
+          {checkIcon || (
+            <svg 
+              className="h-3.5 w-3.5 stroke-[3px]" 
+              fill="none" 
+              viewBox="0 0 24 24" 
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+            </svg>
+          )}
+        </span>
       )}
       
-      <span className="flex-shrink-0">{children}</span>
-      
-      {!loading && icon && iconPosition === 'right' && (
-        <span className="flex-shrink-0">{icon}</span>
+      {!isCheckbox && (
+        <>
+          {!loading && icon && iconPosition === 'left' && (
+            <span className="flex-shrink-0">{icon}</span>
+          )}
+          
+          {children && <span className="flex-shrink-0">{children}</span>}
+          
+          {!loading && icon && iconPosition === 'right' && (
+            <span className="flex-shrink-0">{icon}</span>
+          )}
+        </>
       )}
     </button>
   );

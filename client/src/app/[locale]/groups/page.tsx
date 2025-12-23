@@ -6,13 +6,10 @@ import { useRouter, useParams } from "next/navigation";
 import {
   Plus,
   Users,
-  ShoppingCart,
-  Settings,
   UserPlus,
   Search,
   Grid,
   List,
-  MoreHorizontal,
 } from "lucide-react";
 import { CreateGroupModal } from "@/components/groups/CreateGroupModal";
 import { JoinGroupModal } from "@/components/groups/JoinGroupModal";
@@ -21,7 +18,6 @@ import {
   Card,
   CardBody,
   CardFooter,
-  CardHeader,
 } from "@/components/common/Card";
 import { Button } from "@/components/common/Button";
 import { Badge } from "@/components/common/Badge";
@@ -43,16 +39,10 @@ export default function GroupsPage() {
   const createGroupMutation = useCreateGroup();
   const joinGroupMutation = useJoinGroup();
 
-  const { isAuthenticated, isInitialized } = useAuthRedirect({
+  const { isInitialized } = useAuthRedirect({
     redirectTo: `/${locale}/welcome`,
     requireAuth: true,
   });
-
-  //   const groups = [
-  //   { id: 1, name: 'דסטאו', description: 'קניות אישיות', itemsCount: 2, members: 3, color: 'bg-blue-500' },
-  //   { id: 2, name: 'על האש - יום העצמאות', description: 'רשימה משותפת למשרד', itemsCount: 12, members: 8, color: 'bg-orange-500' },
-  //   { id: 3, name: 'קניות לבית', description: 'פירות, ירקות ומוצרי ניקוי', itemsCount: 5, members: 2, color: 'bg-green-500' },
-  // ];
 
   const handleCreateGroup = async (groupData: {
     name: string;
@@ -83,14 +73,12 @@ export default function GroupsPage() {
     router.push(`/${locale}/invitations`);
   };
 
-  // Filter groups based on search term
   const filteredGroups = groups.filter(
     (group: any) =>
       group.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       group.description?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Show loading while auth is initializing
   if (!isInitialized) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary-50 via-secondary-50 to-accent-50 safe-area-inset flex items-center justify-center">
@@ -99,7 +87,6 @@ export default function GroupsPage() {
     );
   }
 
-  // Show loading while fetching data
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary-50 via-secondary-50 to-accent-50 safe-area-inset flex items-center justify-center">
@@ -108,7 +95,6 @@ export default function GroupsPage() {
     );
   }
 
-  // Show error state
   if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary-50 via-secondary-50 to-accent-50 safe-area-inset flex items-center justify-center p-4">
@@ -134,7 +120,6 @@ export default function GroupsPage() {
     <div className="min-h-screen bg-gradient-to-br from-primary-50 via-secondary-50 to-accent-50 safe-area-inset">
       <div className="container mx-auto px-4 py-4">
         <div className="max-w-6xl mx-auto space-y-4">
-          {/* Compact Header */}
           <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl">
@@ -175,7 +160,6 @@ export default function GroupsPage() {
             </div>
           </div>
 
-          {/* Search */}
           <div className="flex gap-2 items-center justify-between">
             <div className="flex-1">
               <Input
@@ -205,7 +189,6 @@ export default function GroupsPage() {
             </div>
           </div>
 
-          {/* Groups List */}
           {filteredGroups.length === 0 ? (
             <Card variant="glass" className="bg-surface shadow-lg">
               <CardBody className="p-8 text-center">
@@ -251,11 +234,10 @@ export default function GroupsPage() {
                   hover
                   padding="sm"
                   rounded="xl"
-                  shadow="sm"
+                  shadow="md"
                   border={false}
                   onClick={() => navigateToGroup(group._id)}
                   className="overflow-hidden group cursor-pointer"
-                  borderTopColor="border-t-info-100 border-t-8"
                 >
 
                   <CardBody padding="lg" className="pb-3">
@@ -325,7 +307,6 @@ export default function GroupsPage() {
         </div>
       </div>
 
-      {/* Modals */}
       <CreateGroupModal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}

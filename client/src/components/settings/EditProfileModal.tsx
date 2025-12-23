@@ -162,12 +162,11 @@ export default function EditProfileModal({
 
   return (
     <div
-      className="fixed inset-0 bg-white/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 backdrop-blur-lg z-50 flex items-center justify-center p-4"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <Card
-        variant="glass"
-        className="bg-white/90 shadow-2xl max-w-md w-full animate-in slide-in-from-bottom-4"
+        className="bg-surface shadow-2xl max-w-md w-full animate-in slide-in-from-bottom-4"
       >
         <CardBody className="p-6">
           <div className="flex items-center justify-between mb-6">

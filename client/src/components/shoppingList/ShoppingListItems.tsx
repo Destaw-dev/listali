@@ -65,28 +65,31 @@ export const ShoppingListItems = memo(function ShoppingListItems({
   // );
 
   const handlePurchase = useCallback(
-    (itemId: string, purchasedQuantity?: number) => {
-      if (isItemLoading(itemId)) return;
+   async (itemId: string, purchasedQuantity?: number) => {
+      
+      if (isItemLoading(itemId) || purchasedQuantity === undefined || purchasedQuantity <= 0) return;
 
-    purchaseItemMutation.mutateAsync({
+   await purchaseItemMutation.mutateAsync({
       itemId,
       shoppingListId: listId,
       groupId,
       purchasedQuantity,
     });
+    setPurchaseModalItem(null);
     },
     [groupId, isItemLoading, listId, purchaseItemMutation]
   );
 
   const handleUnpurchase = useCallback(
-    (itemId: string) => {
+    async (itemId: string) => {
       if (isItemLoading(itemId)) return;
 
-    unpurchaseItemMutation.mutateAsync({
+   await unpurchaseItemMutation.mutateAsync({
       itemId,
       shoppingListId: listId,
       groupId,
     });
+    setPurchaseModalItem(null);
     },
     [groupId, isItemLoading, listId, unpurchaseItemMutation]
   );
@@ -174,11 +177,8 @@ export const ShoppingListItems = memo(function ShoppingListItems({
         <header className=" flex flex-col sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-lg font-semibold text-text-primary">
-              {tItems("listItems")}
+              {tItems("listItems")} <span className="text-sm text-text-muted">({items.length} {tItems("items")})</span>
             </h2>
-            <p className="text-sm text-text-muted">
-              {items.length} {tItems("items")}
-            </p>
           </div>
         </header>
 

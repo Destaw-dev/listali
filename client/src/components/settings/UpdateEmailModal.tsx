@@ -82,8 +82,8 @@ export default function UpdateEmailModal({ isOpen, onClose, currentEmail }: Upda
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/50 backdrop-blur-sm">
-      <Card variant="glass" className="bg-white/90 shadow-2xl max-w-md w-full animate-in slide-in-from-bottom-4">
+    <div className="fixed inset-0 backdrop-blur-lg z-50 flex items-center justify-center p-4" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <Card className="bg-surface shadow-2xl max-w-md w-full animate-in slide-in-from-bottom-4">
         <CardHeader className="flex items-center justify-between p-6">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-gradient-to-br from-secondary-400 to-secondary-600 rounded-xl">
@@ -96,10 +96,9 @@ export default function UpdateEmailModal({ isOpen, onClose, currentEmail }: Upda
           </div>
           <Button
             variant="ghost"
-            size="sm"
             onClick={onClose}
+            type="button"
             disabled={isLoading}
-            className="p-2 text-text-muted hover:text-text-primary transition-colors rounded-lg hover:bg-white/50"
           >
             <X className="w-5 h-5" />
           </Button>

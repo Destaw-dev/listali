@@ -2,6 +2,7 @@
 
 import { memo, useEffect, useState } from "react";
 import { Minus, Plus } from "lucide-react";
+import { Button } from "@/components/common/Button";
 
 interface PurchaseQuantityModalProps {
   item: any | null;
@@ -29,16 +30,18 @@ export const PurchaseQuantityModal = memo(function PurchaseQuantityModal({
   const maxQuantity = item.quantity ?? 0;
 
   const handleIncrement = () => {
+    if (quantity >= maxQuantity) return;
     setQuantity((prev: number) => Math.min(prev + 1, maxQuantity));
   };
 
   const handleDecrement = () => {
+    if (quantity <= 0) return;
     setQuantity((prev: number) => Math.max(prev - 1, 0));
   };
 
   const handleConfirm = () => {
+    if (quantity <= 0 || quantity > maxQuantity) return;
     onConfirm(quantity || maxQuantity);
-    onClose();
   };
 
   return (
@@ -83,20 +86,31 @@ export const PurchaseQuantityModal = memo(function PurchaseQuantityModal({
         </div>
 
         <div className="mt-8 flex gap-3">
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex-1 rounded-full border border-border px-4 py-2 text-sm font-medium text-text-secondary transition hover:bg-surface"
+          <Button
+            variant="outline"
+            onClick={handleConfirm}        
+            size="md"
+            fullWidth={true}
+            rounded={true}
+            shadow={true}
+            glow={true}
+            className="flex-1"
           >
             {tItems("cancel")}
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="primary"
             onClick={handleConfirm}
-            className="flex-1 rounded-full bg-primaryT-500 px-4 py-2 text-sm font-semibold text-text-on-primary transition hover:bg-primaryT-600"
+            disabled={quantity <= 0 || quantity > maxQuantity}          
+            size="md"
+            fullWidth={true}
+            rounded={true}
+            shadow={true}
+            glow={true}
+            className="flex-1"
           >
             {tItems("confirm")}
-          </button>
+          </Button>  
         </div>
       </div>
     </div>

@@ -829,6 +829,7 @@
     "newEmail": "New Email",
     "newEmailPlaceholder": "Enter new email address",
     "emailUpdateNote": "You will receive a verification email to confirm your new email address.",
+    "update": "Update",
     "updating": "Updating..."
   },
   "GroupDetails": {
