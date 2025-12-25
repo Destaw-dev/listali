@@ -40,9 +40,8 @@ export default function GroupDetailsPage() {
   const createListMutation = useCreateShoppingList();
   const inviteToGroupMutation = useInviteToGroup();
   
-  // Listen for real-time member role updates
   useGroupMemberRoleWebSocket(groupId);
-  // Initialize active tab from URL or default to 'overview'
+
   useEffect(() => {
     const tabFromUrl = searchParams.get('tab') as TabType;
     if (tabFromUrl && ['overview', 'lists', 'chat', 'stats'].includes(tabFromUrl)) {
@@ -58,7 +57,7 @@ export default function GroupDetailsPage() {
       // Error handled by mutation
     }
   };
-  // Update URL when tab changes
+
   const handleTabChange = (tab: TabType) => {
     setActiveTab(tab);
     const newUrl = new URL(window.location.href);
@@ -82,6 +81,13 @@ export default function GroupDetailsPage() {
     router.push(`/${locale}/groups/${groupId}/settings`);
   };
 
+  // Redirect on 403 error - must be before any early returns
+  useEffect(() => {
+    if (error && (error as { response?: { status?: number } })?.response?.status === 403) {
+      router.push(`/${locale}/groups`);
+    }
+  }, [error, locale, router]);
+
   if (!isInitialized) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -99,13 +105,9 @@ export default function GroupDetailsPage() {
   }
 
   if (error || !group) {
-    const is403Error = error && (error as any)?.response?.status === 403;
+    const is403Error = error && (error as { response?: { status?: number } })?.response?.status === 403;
     
     if (is403Error) {
-      React.useEffect(() => {
-        router.push(`/${locale}/groups`);
-      }, []);
-      
       return (
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
@@ -132,10 +134,9 @@ export default function GroupDetailsPage() {
   }
 
   const hasAdminPermissions = group?.members?.find(
-    (member: any) => {
+    (member: { user: string | { _id: string }; role: string }) => {
       const memberUserId = typeof member.user === 'object' ? member.user._id : member.user;
-      memberUserId === user?._id && (member.role === 'admin' || member.role === 'owner');
-      return true
+      return memberUserId === user?._id && (member.role === 'admin' || member.role === 'owner');
     }
   );
 
@@ -173,58 +174,47 @@ export default function GroupDetailsPage() {
           <div className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
-          {/* Left Column (Main) - 2/3 Width */}
           <div className="lg:col-span-2 space-y-6">
             
-            {/* Active Lists Section */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                <h3 className="font-semibold text-gray-900">{t('activeLists')}</h3>
+            <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
+              <div className="px-6 py-4 border-b border-border flex justify-between items-center bg-card">
+                <h3 className="font-semibold text-text-primary">{t('activeLists')}</h3>
                 <Button variant="ghost" size="sm" onClick={() => setActiveTab('lists')}>{t('manageLists')}</Button>
               </div>
               
-              {/* רשימה לדוגמה (במקום אזור ריק) */}
-              <div className="divide-y divide-gray-100">
+              <div className="divide-y divide-border">
                 {
                   group.shoppingLists?.map((list: any) => (
-                    <div key={list._id} className="p-4 hover:bg-gray-50 transition-colors flex items-center justify-between group cursor-pointer" onClick={() => router.push(`/${locale}/groups/${groupId}/${list._id}`)}>
+                    <div key={list._id} className="p-4 hover:bg-surface transition-colors flex items-center justify-between group cursor-pointer" onClick={() => router.push(`/${locale}/groups/${groupId}/${list._id}`)}>
                     <div className="flex items-center gap-4">
-                      <div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600">
+                      <div className="h-10 w-10 rounded-lg bg-primaryT-100 flex items-center justify-center text-primaryT-600">
                         <ShoppingCart className="h-5 w-5" />
                       </div>
                       <div>
-                        <p className="font-medium text-gray-900">{list.name}</p>
-                        <p className="text-xs text-gray-500">{`נוצר ע״י ${list.createdBy?.username} •  ${t('items')} ${list.items?.length || 0}`}</p>
+                        <p className="font-medium text-text-primary">{list.name}</p>
+                        <p className="text-xs text-text-muted">{`נוצר ע״י ${list.createdBy?.username} •  ${t('items')} ${list.items?.length || 0}`}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                       <div className="hidden sm:flex -space-x-2 space-x-reverse">
-                         <div className="h-6 w-6 rounded-full bg-gray-200 border-2 border-white"></div>
-                         <div className="h-6 w-6 rounded-full bg-gray-300 border-2 border-white"></div>
-                       </div>
-                       <span className="text-xs font-medium bg-green-100 text-green-700 px-2 py-1 rounded-full">{list.status === 'active' ? t('active') : list.status === 'completed' ? t('completed') : t('archived')}</span>
-                       <MoreVertical className="h-4 w-4 text-gray-400" />
+                       <span className="text-xs font-medium bg-success-100 text-success-700 px-2 py-1 rounded-full">{list.status === 'active' ? t('active') : list.status === 'completed' ? t('completed') : t('archived')}</span>
+                       <MoreVertical className="h-4 w-4 text-text-muted" />
                     </div>
                  </div>
                   ))
                 }
                 
-                 {/* Empty State Mini (אם רוצים להראות שיש מקום לעוד) */}
                 <div className="p-8 text-center">
-                  <button className="text-sm text-gray-400 hover:text-indigo-600 flex items-center justify-center w-full gap-2 border border-dashed border-gray-300 rounded-lg py-3 hover:border-indigo-300 hover:bg-indigo-50 transition-all" onClick={() => setShowCreateListModal(true)}>
-                    <Plus className="h-4 w-4" />
+                  <Button variant="dashed" size="lg" fullWidth onClick={() => setShowCreateListModal(true)} icon={<Plus className="h-4 w-4" />}>
                     {t('createNewList')}
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
 
           </div>
 
-          {/* Right Column (Sidebar) - 1/3 Width */}
           <div className="space-y-6">
             
-            {/* Members Widget */}
             <div className="bg-surface rounded-xl shadow-sm border border-gray-200">
               <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center">
                 <h3 className="font-semibold">{t('groupMembers')} ({group.members?.length || 0})</h3>
@@ -233,13 +223,12 @@ export default function GroupDetailsPage() {
                 </Button>
               </div>
               <div className="p-2 space-y-2">
-                {console.log('group.members',group.members)}
                 {group.members?.map((member: any) => (
                   <MemberItem key={member.user._id} name={member.user.firstName + ' ' + member.user.lastName} role={member.role} email={member.user.email} initial={member.user.firstName[0]} color={member.role === 'owner' ? 'bg-blue-600' : 'bg-purple-600'} />
                 ))}
               </div>
-              <div className="px-4 py-3 text-center rounded-b-xl">
-                <Button variant='ghost' size='sm' onClick={() => setShowInviteModal(true)}>{t('inviteFriends')}</Button>
+              <div className="px-4 py-3 text-center">
+                <Button variant='dashed' size='lg' onClick={() => setShowInviteModal(true)}>{t('inviteFriends')}</Button>
               </div>
             </div>
 
@@ -298,7 +287,6 @@ export default function GroupDetailsPage() {
 
   return (
     <div className="min-h-screen bg-surface">
-      {/* Header */}
       <div className="">
         <div className="container mx-auto px-4 py-3 md:py-4">
           <div className="flex items-center justify-between">
@@ -324,7 +312,6 @@ export default function GroupDetailsPage() {
 
       <div className="shadow-sm">
         <div className="container mx-auto px-4">
-          {/* Desktop Tabs */}
           <div className="hidden md:flex space-x-8">
             {tabs.map((tab) => (
               <button
@@ -347,7 +334,6 @@ export default function GroupDetailsPage() {
             ))}
           </div>
 
-          {/* Mobile Tabs */}
           <div className="md:hidden flex space-x-1 overflow-x-auto">
             {tabs.map((tab) => (
               <button
@@ -376,7 +362,6 @@ export default function GroupDetailsPage() {
         </div>
       </div>
 
-      {/* Tab Content */}
       <div className="container mx-auto px-4 py-6">
         {renderTabContent()}
       </div>

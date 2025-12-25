@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "Smart Group Shopping",
+    "name": "Listali",
     "description": "Smart system for managing group shopping",
     "version": "Version 1.0.0",
     "rights": "All rights reserved"
@@ -160,6 +160,7 @@
     "resendVerification": "Resend Verification Email",
     "sending": "Sending...",
     "verificationEmailSent": "Verification email sent successfully!",
+    "pleaseCheckYourEmail": "Please check your email and verify your account to continue.",
     "verificationEmailError": "Failed to send verification email. Please try again.",
     "emailAlreadyVerified": "Email Already Verified",
     "emailAlreadyVerifiedMessage": "Your email address has already been verified. You can now login to your account.",
@@ -174,10 +175,14 @@
     "passwordsDoNotMatch": "Passwords do not match",
     "googleLoginSuccess": "Successfully logged in with Google!",
     "googleLoginError": "Error logging in with Google",
-    "processingGoogleLogin": "Processing Google login..."
+    "processingGoogleLogin": "Processing Google login...",
+    "inviteError": "Invitation Error",
+    "inviteErrorMessage": "There was an issue with the invitation.",
+    "emailNotVerified": "Email Not Verified",
+    "emailNotVerifiedMessage": "Your email address has not been verified. Please verify your email to continue."
   },
   "welcome": {
-    "title": "Smart Group Shopping",
+    "title": "Listali",
     "subtitle": "Smart system for managing group shopping with family and friends",
     "features": {
       "groups": {
@@ -300,7 +305,12 @@
     "acceptSuccess": "Invitation accepted successfully",
     "acceptError": "Error accepting invitation",
     "declineSuccess": "Invitation declined",
-    "declineError": "Error declining invitation"
+    "declineError": "Error declining invitation",
+    "expired": "This invitation has expired. Please request a new invitation from the group admin.",
+    "emailMismatch": "The email address used for registration does not match the email address that received the invitation.",
+    "invalidCode": "Invalid invitation code. Please check the invitation link or request a new one.",
+    "invalidCodeOrCancelled": "Invalid invitation code. The group may not exist or the invitation may have been cancelled.",
+    "processingFailed": "Failed to process the invitation. Please contact the group admin for assistance."
   },
   "lists": {
     "title": "Shopping Lists",
@@ -616,7 +626,12 @@
     "adding": "Adding...",
     "addItem": "Add Item",
     "clearSelection": "Clear Selection",
-    "continueToFillDetails": "Continue to Fill Details"
+    "clearAllProducts": "Clear All Products",
+    "clearAllItems": "Clear Items",
+    "continueToFillDetails": "Continue to Fill Details",
+    "selectProductsFromCatalog": "Select products from the catalog on the left",
+    "products": "Products",
+    "selectedItems": "Selected Items"
   },
   "CreateShoppingListModal": {
     "nameMinLength": "List name must be at least 2 characters",
@@ -760,6 +775,7 @@
     "lastNameMinLength": "Last name must be at least 2 characters",
     "emailRequired": "Email is required",
     "emailInvalid": "Please enter a valid email address",
+    "invalidEmail": "Please enter a valid email address",
     "passwordMinLength": "Password must be at least 6 characters",
     "pleaseFixErrors": "Please fix the errors above",
     "firstNamePlaceholder": "Enter your first name",
@@ -1073,10 +1089,15 @@
     "hideAdvanced": "Hide Advanced Filters",
     "advancedFilters": "Advanced Filters",
     "subCategory": "Sub Category:",
+    "selectSubCategory": "Select Sub Category",
     "clearSubCategory": "Clear Sub Category",
     "kosher": "Kosher",
     "organic": "Organic",
     "glutenFree": "Gluten Free",
+    "quickFilters": "Quick Filters:",
+    "on": "On",
+    "off": "Off",
+    "apply": "Apply",
     "searchLabel": "Search: \"{query}\""
   },
   "AddItemsModalItemForm": {

@@ -6,6 +6,7 @@ import { X, Users } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useModalScrollLock } from '@/hooks/useModalScrollLock';
 
 type CreateGroupFormData = {
   name: string;
@@ -55,11 +56,14 @@ export function CreateGroupModal({ isOpen, onClose, onCreateGroup }: CreateGroup
     onClose();
   };
 
+  // Prevent body scroll when modal is open
+  useModalScrollLock(isOpen);
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-white/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white/90 shadow-2xl rounded-xl max-w-md w-full max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom-4">
+    <div className="fixed inset-0 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={(e) => e.target === e.currentTarget && handleClose()}>
+      <div className="bg-card shadow-2xl rounded-xl max-w-md w-full max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom-4">
         {/* Header */}
         <div className="flex items-center justify-between p-6">
           <div className="flex items-center gap-3">

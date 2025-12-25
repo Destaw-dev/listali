@@ -3,6 +3,7 @@
 import { memo, useEffect, useState } from "react";
 import { Minus, Plus } from "lucide-react";
 import { Button } from "@/components/common/Button";
+import { useModalScrollLock } from "@/hooks/useModalScrollLock";
 
 interface PurchaseQuantityModalProps {
   item: any | null;
@@ -24,6 +25,9 @@ export const PurchaseQuantityModal = memo(function PurchaseQuantityModal({
       setQuantity(item.quantity ?? 0);
     }
   }, [item]);
+
+  // Prevent body scroll when modal is open
+  useModalScrollLock(!!item);
 
   if (!item) return null;
 

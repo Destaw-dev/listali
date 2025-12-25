@@ -42,7 +42,6 @@ export function GroupShoppingLists() {
   const [searchTerm, setSearchTerm] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   
-  // Filter States
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
@@ -133,7 +132,7 @@ export function GroupShoppingLists() {
 
   if (groupLoading || listsLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-50 via-secondary-50 to-accent-50 safe-area-inset flex items-center justify-center">
+      <div className="min-h-screen bg-surface flex items-center justify-center">
         <LoadingSpinner />
       </div>
     );
@@ -141,7 +140,7 @@ export function GroupShoppingLists() {
 
   if (groupError || listsError) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-50 via-secondary-50 to-accent-50 safe-area-inset flex items-center justify-center p-4">
+      <div className="min-h-screen bg-surface flex items-center justify-center p-4">
         <Card variant="glass" className="bg-white/80 shadow-2xl max-w-md">
           <CardBody className="p-6 text-center">
             <h3 className="text-lg font-bold text-primary mb-2">
@@ -193,17 +192,21 @@ export function GroupShoppingLists() {
 
         {/* Filter Bar */}
         <div className="flex items-center gap-2 flex-wrap">
+          {
+            shoppingLists?.length > 0 && (
+              <FilterDropdownMenu
+                t={t}
+                statusFilter={statusFilter}
+                priorityFilter={priorityFilter}
+                setStatusFilter={setStatusFilter}
+                setPriorityFilter={setPriorityFilter}
+                isOpen={isFilterDropdownOpen}
+                setIsOpen={setIsFilterDropdownOpen}
+                activeFiltersCount={activeFiltersCount}
+              />
+            )
+          }
           
-          <FilterDropdownMenu
-            t={t}
-            statusFilter={statusFilter}
-            priorityFilter={priorityFilter}
-            setStatusFilter={setStatusFilter}
-            setPriorityFilter={setPriorityFilter}
-            isOpen={isFilterDropdownOpen}
-            setIsOpen={setIsFilterDropdownOpen}
-            activeFiltersCount={activeFiltersCount}
-          />
 
           {/* Display Active Filters */}
           {(statusFilter !== "all" || priorityFilter !== "all") && (

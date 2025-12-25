@@ -8,6 +8,7 @@ import { Button } from "@/components/common/Button";
 import { Input } from "@/components/common/Input";
 import { z } from "zod";
 import { NotificationType, useNotification } from "@/contexts/NotificationContext";
+import { useModalScrollLock } from "@/hooks/useModalScrollLock";
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -157,6 +158,9 @@ export default function EditProfileModal({
       onClose();
     }
   };
+
+  // Prevent body scroll when modal is open
+  useModalScrollLock(isOpen);
 
   if (!isOpen) return null;
 

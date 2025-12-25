@@ -5,6 +5,7 @@ import Item from '../models/item';
 import { AppError } from '../middleware/errorHandler';
 import { getIO, emitToGroupExcept } from '../socket/socketHandler';
 import { Types } from 'mongoose';
+import { IGroup, IGroupMember } from '@/types';
 
 export const startShopping = async (req: Request, res: Response) => {
   try {
@@ -38,12 +39,12 @@ export const startShopping = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, message: 'Shopping list is not active' });
     }
 
-    const group: any = shoppingList.group;
+    const group: IGroup = shoppingList.group as unknown as IGroup;
     if (!group?.members) {
       return res.status(403).json({ success: false, message: 'Access denied to this shopping list' });
     }
 
-    const isMember = group.members.some((m: any) => {
+    const isMember = group.members.some((m: IGroupMember) => {
       const memberUserId =
         (m.user?._id ?? m.user)
       return String(memberUserId) === String(userObjId);
@@ -103,23 +104,23 @@ export const startShopping = async (req: Request, res: Response) => {
       message: 'Shopping session started successfully'
     });
 
-  } catch (err: any) {
+  } catch (error: any) {
     console.error('startShopping error:', {
-      name: err?.name,
-      message: err?.message,
-      code: err?.code,
-      errors: err?.errors,
-      stack: err?.stack
+      name: error?.name,
+      message: error?.message,
+      code: error?.code,
+      errors: error?.errors,
+      stack: error?.stack
     });
 
-    if (err instanceof AppError) throw err;
+    if (error instanceof AppError) throw error;
 
-    if (err?.name === 'CastError') {
-      throw new AppError(`Invalid ID format for field "${err?.path}"`, 400);
+    if (error?.name === 'CastError') {
+      throw new AppError(`Invalid ID format for field "${error?.path}"`, 400);
     }
 
-    if (err?.name === 'ValidationError') {
-      const msgs = Object.values(err.errors ?? {}).map((e: any) => e.message);
+    if (error?.name === 'ValidationError') {
+      const msgs = Object.values(error.errors ?? {}).map((e: any) => e.message);
       throw new AppError(`Validation failed: ${msgs.join('; ')}`, 400);
     }
 
@@ -166,7 +167,7 @@ export const stopShopping = async (req: Request, res: Response) => {
     // Emit WebSocket event to group members (excluding the performer)
     const io = getIO();
     if (io) {
-      const roomName = `group:${shoppingSession.groupId.toString()}`;
+      const _roomName = `group:${shoppingSession.groupId.toString()}`;
       
       emitToGroupExcept(
         io,
@@ -248,7 +249,7 @@ export const pauseShopping = async (req: Request, res: Response) => {
     // Emit WebSocket event to group members (excluding the performer)
     const io = getIO();
     if (io) {
-      const roomName = `group:${shoppingSession.groupId.toString()}`;
+      const _roomName = `group:${shoppingSession.groupId.toString()}`;
       
       emitToGroupExcept(
         io,
@@ -324,7 +325,7 @@ export const resumeShopping = async (req: Request, res: Response) => {
     // Emit WebSocket event to group members (excluding the performer)
     const io = getIO();
     if (io) {
-      const roomName = `group:${shoppingSession.groupId.toString()}`;
+      const _roomName = `group:${shoppingSession.groupId.toString()}`;
       
       emitToGroupExcept(
         io,
@@ -404,7 +405,7 @@ export const updateShoppingLocation = async (req: Request, res: Response) => {
     // Emit WebSocket event to group members (excluding the performer)
     const io = getIO();
     if (io) {
-      const roomName = `group:${shoppingSession.groupId.toString()}`;
+      const _roomName = `group:${shoppingSession.groupId.toString()}`;
       
       emitToGroupExcept(
         io,
@@ -580,9 +581,9 @@ export const getShoppingListData = async (req: Request, res: Response) => {
       throw new AppError('Shopping list not found', 404);
     }
 
-    const group = shoppingList.group as any;
+    const group = shoppingList.group as unknown as IGroup;
     const isMember = group.members.some(
-      (member: any) => member.user.toString() === userId
+      (member: IGroupMember) => member.user.toString() === userId
     );
     if (!isMember) {
       throw new AppError('Access denied to this shopping list', 403);

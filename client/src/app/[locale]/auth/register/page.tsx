@@ -3,18 +3,20 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Eye, EyeOff, Mail, Lock, User, UserCheck } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { useParams } from 'next/navigation';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useAuthStore } from '@/store/authStore';
 import { apiClient } from '@/lib/api';
 import { useNotification } from '@/contexts/NotificationContext';
 import { Link as IntlLink } from '@/i18n/navigation';
 import { GoogleAuthButton } from '@/components/auth/GoogleAuthButton';
-import { useParams } from 'next/navigation';
 import { ArrowIcon } from '@/components/common/Arrow';
 import { Button, Input } from '@/components/common';
+import { mapInviteErrorToTranslationKey } from '@/lib/utils';
+
 
 
 export default function RegisterPage() {
@@ -23,8 +25,8 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const params = useParams();
-  const { isAuthenticated, isInitialized } = useAuthStore();
-  const { showSuccess, handleApiError } = useNotification();
+  const { isAuthenticated, isInitialized, setUser } = useAuthStore();
+  const { showSuccess, showWarning, handleApiError } = useNotification();
   const t = useTranslations('auth');
   const locale = params?.locale as string || 'he';
 
@@ -42,9 +44,6 @@ export default function RegisterPage() {
 
 type RegisterForm = z.infer<typeof registerSchema>;
 
-
-
-  // Move useForm to the top, before any conditional returns
   const {
     register,
     handleSubmit,
@@ -53,10 +52,9 @@ type RegisterForm = z.infer<typeof registerSchema>;
     resolver: zodResolver(registerSchema),
   });
 
-  // Show loading while auth is initializing
   if (!isInitialized) {
     return (
-      <div className="min-h-screen bg-surface safe-area-inset flex items-center justify-center">
+      <div className="min-h-screen bg-surface flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-secondary">{t('loading')}</p>
@@ -65,7 +63,6 @@ type RegisterForm = z.infer<typeof registerSchema>;
     );
   }
 
-  // Don't render register page for authenticated users
   if (isAuthenticated) {
     return null;
   }
@@ -73,15 +70,36 @@ type RegisterForm = z.infer<typeof registerSchema>;
   const onSubmit = async (data: RegisterForm) => {
     setIsLoading(true);
     try {
-      await apiClient.register({
+      const searchParams = new URLSearchParams(window.location.search);
+      const inviteCode = searchParams.get('inviteCode');
+      
+      const response = await apiClient.register({
         firstName: data.firstName,
         lastName: data.lastName,
         username: data.username,
         email: data.email,
         password: data.password,
+        inviteCode: inviteCode || undefined,
       });
-      showSuccess('registerSuccess');
-      router.push(`/${locale}/auth/verify-email?email=${encodeURIComponent(data.email)}`);
+      
+      if (response.inviteError) {
+        const translationKey = mapInviteErrorToTranslationKey(response.inviteError);
+        showWarning(translationKey);
+        router.push(`/${locale}/auth/verify-email?inviteError=${encodeURIComponent(response.inviteError)}`);
+        return;
+      } else {
+        showSuccess('auth.registerSuccess');
+
+      }
+      
+      if (response.groupJoined) {
+        setUser(response.user);
+        router.push(`/${locale}/groups/${response.groupJoined}`);
+        return;
+      } else {
+        router.push(`/${locale}/auth/verify-email?email=${encodeURIComponent(data.email)}`);
+        return;
+      }
     } catch (error: any) {
       handleApiError(error);
     } finally {
@@ -92,7 +110,16 @@ type RegisterForm = z.infer<typeof registerSchema>;
   const handleGoogleAuth = async () => {
     setIsLoading(true);
     try {
-      const callbackUrl = `${window.location.origin}/${locale}/auth/callback`;
+      // Get inviteCode from current URL if it exists
+      const searchParams = new URLSearchParams(window.location.search);
+      const inviteCode = searchParams.get('inviteCode');
+      
+      // Build callback URL with inviteCode if it exists
+      const callbackUrlBase = `${window.location.origin}/${locale}/auth/callback`;
+      const callbackUrl = inviteCode 
+        ? `${callbackUrlBase}?inviteCode=${encodeURIComponent(inviteCode)}`
+        : callbackUrlBase;
+      
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/google/url?callback=${encodeURIComponent(callbackUrl)}`);
       const data = await response.json();
       
@@ -101,7 +128,7 @@ type RegisterForm = z.infer<typeof registerSchema>;
       } else {
         throw new Error(data.message || 'Failed to get Google OAuth URL');
       }
-    } catch (error: any) {
+    } catch (error) {
       handleApiError(error);
     } finally {
       setIsLoading(false);
@@ -109,9 +136,8 @@ type RegisterForm = z.infer<typeof registerSchema>;
   };
 
   return (
-    <div className="min-h-screen bg-surface safe-area-inset flex items-center justify-center p-4">
+    <div className="min-h-screen bg-surface flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Header */}
         <div className="text-center mb-8 flex items-center justify-center">
           <IntlLink
             href='/welcome'
@@ -125,10 +151,8 @@ type RegisterForm = z.infer<typeof registerSchema>;
           </div>
         </div>
 
-        {/* Register Form */}
         <div className="mobile-card">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* First Name Field */}
             <Input
               {...register('firstName')}
               type="text"
@@ -139,7 +163,6 @@ type RegisterForm = z.infer<typeof registerSchema>;
               error={errors.firstName?.message}
             />
 
-            {/* Last Name Field */}
             <Input
               {...register('lastName')}
               type="text"
@@ -150,7 +173,6 @@ type RegisterForm = z.infer<typeof registerSchema>;
               error={errors.lastName?.message}
             />
 
-            {/* Username Field */}
             <Input
               {...register('username')}
               type="text"
@@ -161,7 +183,6 @@ type RegisterForm = z.infer<typeof registerSchema>;
               error={errors.username?.message}
             />
 
-            {/* Email Field */}
             <Input
               {...register('email')}
               type="email"
@@ -172,7 +193,6 @@ type RegisterForm = z.infer<typeof registerSchema>;
               error={errors.email?.message}
             />  
 
-            {/* Password Field */}
             <Input
               {...register('password')}
               type={showPassword ? 'text' : 'password'}
@@ -192,7 +212,6 @@ type RegisterForm = z.infer<typeof registerSchema>;
               }
             />
 
-            {/* Confirm Password Field */}
             <Input
               {...register('confirmPassword')}
               type={showConfirmPassword ? 'text' : 'password'}
@@ -212,7 +231,6 @@ type RegisterForm = z.infer<typeof registerSchema>;
               }
             />
 
-            {/* Submit Button */}
             <Button
               variant="primary"
               size="lg"
@@ -225,21 +243,18 @@ type RegisterForm = z.infer<typeof registerSchema>;
             </Button>
           </form>
 
-          {/* Divider */}
           <div className="my-5 flex items-center">
             <div className="flex-1 border-t border-border-light"></div>
             <span className="px-4 text-sm text-muted">{t('welcome.or')}</span>
             <div className="flex-1 border-t border-border-light"></div>
           </div>
 
-          {/* Google Auth Button */}
           <GoogleAuthButton 
             type="register" 
             onGoogleAuth={handleGoogleAuth}
             isLoading={isLoading}
           />
 
-          {/* Login Link */}
           <div className="text-center mt-5">
             <p className="text-secondary">
               {t('hasAccount')}{' '}

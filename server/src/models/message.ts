@@ -1,4 +1,4 @@
-import mongoose, { Schema, Model } from "mongoose";
+import mongoose, { Schema, Model, FilterQuery } from "mongoose";
 import { IMessage, IReadStatus, MessageDocument } from "../types";
 
 type MessageModel = Model<MessageDocument> & {
@@ -230,7 +230,6 @@ messageSchema.statics.findByGroup = function (
   options: any = {}
 ) {
   const {
-    page = 1,
     limit = 50,
     before = null, // Message ID to get messages before
     after = null, // Message ID to get messages after
@@ -239,7 +238,7 @@ messageSchema.statics.findByGroup = function (
     includeDeleted = false,
   } = options;
 
-  const query: any = { group: groupId };
+  const query: FilterQuery<IMessage> = { group: groupId };
 
   if (!includeDeleted) {
     query.isDeleted = false;
@@ -277,7 +276,7 @@ messageSchema.statics.getUnreadMessages = function (
   userId: string,
   groupId?: string
 ) {
-  const query: any = {
+  const query: FilterQuery<IMessage> = {
     "readBy.user": { $ne: userId },
     isDeleted: false,
     sender: { $ne: userId }, // Don't include own messages
@@ -324,7 +323,7 @@ messageSchema.statics.getStatistics = function (
   groupId: string,
   timeRange?: { start: Date; end: Date }
 ) {
-  const matchConditions: any = {
+  const matchConditions: FilterQuery<IMessage> = {
     group: new mongoose.Types.ObjectId(groupId),
     isDeleted: false,
   };
@@ -376,7 +375,7 @@ messageSchema.statics.searchMessages = function (
 ) {
   const { limit = 20, skip = 0, messageType = null } = options;
 
-  const query: any = {
+  const query: FilterQuery<IMessage> = {
     group: groupId,
     $text: { $search: searchTerm },
     isDeleted: false,
@@ -399,7 +398,7 @@ messageSchema.statics.getMostActiveUsers = function (
   timeRange?: { start: Date; end: Date },
   limit: number = 10
 ) {
-  const matchConditions: any = {
+  const matchConditions: FilterQuery<IMessage> = {
     group: new mongoose.Types.ObjectId(groupId),
     isDeleted: false,
     messageType: { $ne: "system" },

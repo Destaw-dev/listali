@@ -105,14 +105,14 @@ export default async function LocaleLayout({
               <Navigation />
               
               {/* Main content with responsive padding */}
-              <div className="pt-0 md:pt-0 md:pb-0">
+              <div className="pt-0 md:pt-0">
                 {children}
               </div>
               
               {/* Footer - Only show for authenticated users */}
               <footer className="text-center py-4 bg-white/50 dark:bg-neutral-800/50 backdrop-blur-sm">
                 <p className="text-xs text-muted px-4">
-                  © 2025 Shopping Lists. {locale === 'he' ? 'כל הזכויות שמורות.' : 'All rights reserved.'}
+                  © 2025 Listali. {locale === 'he' ? 'כל הזכויות שמורות.' : 'All rights reserved.'}
                 </p>
               </footer>
             </div>

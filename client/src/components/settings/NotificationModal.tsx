@@ -8,6 +8,7 @@ import { Button } from '@/components/common/Button';
 import { Badge } from '@/components/common/Badge';
 import { useNotification } from '@/contexts/NotificationContext';
 import { Toggle } from '../common/Toggle';
+import { useModalScrollLock } from '@/hooks/useModalScrollLock';
 
 interface NotificationModalProps {
   isOpen: boolean;
@@ -113,6 +114,9 @@ export default function NotificationModal({
       onClose();
     }
   };
+
+  // Prevent body scroll when modal is open
+  useModalScrollLock(isOpen);
 
   if (!isOpen) return null;
 

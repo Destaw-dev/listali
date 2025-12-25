@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "lint:fix": "next lint --fix"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.0",
@@ -25,7 +26,6 @@
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.61.1",
     "react-hot-toast": "^2.5.2",
-    "smart-list-shared": "file:../shared",
     "socket.io-client": "^4.8.1",
     "tailwind-merge": "^3.3.1",
     "zod": "^4.0.13",

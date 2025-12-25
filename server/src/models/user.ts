@@ -1,9 +1,9 @@
-import mongoose, { Schema, Model } from 'mongoose';
+import mongoose, { Schema, Model, FilterQuery } from 'mongoose';
 import bcrypt from 'bcryptjs';
 import jwt, { SignOptions } from 'jsonwebtoken';
 import { IUser, IUserMethods } from '../types';
 
-type UserModel = Model<IUser, {}, IUserMethods> & {
+type UserModel = Model<IUser, Record<string, never>, IUserMethods> & {
   findByCredentials(email: string, password: string): Promise<IUser>;
   isUsernameAvailable(username: string, excludeId?: string): Promise<boolean>;
   isEmailAvailable(email: string, excludeId?: string): Promise<boolean>;
@@ -200,7 +200,7 @@ userSchema.statics.canLogin = async function (email: string) {
 
 // Static: check username availability
 userSchema.statics.isUsernameAvailable = async function (username: string, excludeId?: string) {
-  const query: any = {
+  const query: FilterQuery<IUser> = {
     username: { $regex: new RegExp(`^${username}$`, 'i') }
   };
   if (excludeId) query._id = { $ne: excludeId };
@@ -209,7 +209,7 @@ userSchema.statics.isUsernameAvailable = async function (username: string, exclu
 
 // Static: check email availability
 userSchema.statics.isEmailAvailable = async function (email: string, excludeId?: string) {
-  const query: any = { email: email.toLowerCase() };
+  const query: FilterQuery<IUser> = { email: email.toLowerCase() };
   if (excludeId) query._id = { $ne: excludeId };
   return !(await this.findOne(query));
 };

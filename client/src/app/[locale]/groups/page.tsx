@@ -81,7 +81,7 @@ export default function GroupsPage() {
 
   if (!isInitialized) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-50 via-secondary-50 to-accent-50 safe-area-inset flex items-center justify-center">
+      <div className="min-h-screen bg-surface flex items-center justify-center">
         <LoadingSpinner />
       </div>
     );
@@ -89,7 +89,7 @@ export default function GroupsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-50 via-secondary-50 to-accent-50 safe-area-inset flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <LoadingSpinner />
       </div>
     );
@@ -97,7 +97,7 @@ export default function GroupsPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-50 via-secondary-50 to-accent-50 safe-area-inset flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center p-4">
         <Card variant="glass" className="bg-white/80 shadow-2xl max-w-md">
           <CardBody className="p-6 text-center">
             <h3 className="text-lg font-bold text-primary mb-2">
@@ -117,7 +117,7 @@ export default function GroupsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-secondary-50 to-accent-50 safe-area-inset">
+    <div className="min-h-screen bg-surface">
       <div className="container mx-auto px-4 py-4">
         <div className="max-w-6xl mx-auto space-y-4">
           <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
@@ -190,7 +190,7 @@ export default function GroupsPage() {
           </div>
 
           {filteredGroups.length === 0 ? (
-            <Card variant="glass" className="bg-surface shadow-lg">
+            <Card  className="shadow-2xl">
               <CardBody className="p-8 text-center">
                 <Users className="w-12 h-12 text-muted mx-auto mb-4" />
                 <h3 className="text-lg font-bold text-primary mb-2">
@@ -230,14 +230,13 @@ export default function GroupsPage() {
               {filteredGroups.map((group: any) => (
                 <Card
                   key={group._id}
-                  variant="glass"
                   hover
                   padding="sm"
                   rounded="xl"
                   shadow="md"
                   border={false}
                   onClick={() => navigateToGroup(group._id)}
-                  className="overflow-hidden group cursor-pointer"
+                  className="overflow-hidden group cursor-pointer bg-card"
                 >
 
                   <CardBody padding="lg" className="pb-3">
@@ -255,7 +254,7 @@ export default function GroupsPage() {
                         </div>
 
                         {group.description && (
-                          <p className="text-xs md:text-sm text-gray-500 mb-1 h-5 line-clamp-1">
+                          <p className="text-xs md:text-sm text-text-muted mb-1 h-5 line-clamp-1">
                             {group.description}
                           </p>
                         )}
@@ -273,19 +272,19 @@ export default function GroupsPage() {
                         .map((member: any, i: number) => (
                           <div
                             key={i}
-                            className="h-6 w-6 rounded-full ring-2 ring-accentT-50 bg-gray-300 flex items-center justify-center text-[10px] text-gray-600 font-medium"
+                            className="h-6 w-6 rounded-full ring-2 ring-accentT-50 bg-card flex items-center justify-center text-[10px] text-text-muted font-medium"
                           >
                             {member.user.firstName?.[0]}
                             {member.user.lastName?.[0]}
                           </div>
                         ))}
 
-                      <div className="h-6 w-6 rounded-full ring-2 ring-accentT-50 bg-gray-100 flex items-center justify-center text-[10px] text-gray-500 font-medium">
+                      <div className="h-6 w-6 rounded-full ring-2 ring-accentT-50 bg-card flex items-center justify-center text-[10px] text-text-muted font-medium">
                         +{group.members?.length || 0}
                       </div>
                     </div>
 
-                    <div className="flex items-center text-[11px] md:text-xs font-medium text-primaryT-600 bg-primaryT-50 px-2 py-1 rounded-full">
+                    <div className="flex items-center text-[11px] md:text-xs font-medium text-text-on-primary bg-primary px-2 py-1 rounded-full">
                       {group.shoppingLists?.length || 0} {t("lists")}
                     </div>
                   </CardFooter>

@@ -12,7 +12,7 @@ interface ButtonProps extends Omit<IButtonProps, 'variant'> {
   glow?: boolean;
   checked?: boolean; 
   checkIcon?: React.ReactNode; 
-  variant?: IButtonProps['variant'] | 'checkbox'; 
+  variant?: IButtonProps['variant'] | 'checkbox' | 'dashed'; 
 }
 
 export function Button({ 
@@ -64,6 +64,11 @@ export function Button({
     ),
     outline: cn(
       'border border-border text-text-primary',
+      'hover:bg-surface-hover focus:ring-primary',
+      'bg-transparent shadow-lg hover:shadow-xl'
+    ),
+    dashed: cn(
+      'border border-dashed border-border text-text-primary',
       'hover:bg-surface-hover focus:ring-primary',
       'bg-transparent shadow-lg hover:shadow-xl'
     ),

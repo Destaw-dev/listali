@@ -37,6 +37,7 @@ interface BaseDropdownProps {
   closeOnSelect?: boolean; 
   onOpenChange?: (isOpen: boolean) => void; 
   isOpen?: boolean; 
+  id?: string;
 }
 
 interface DropdownWithTriggerProps extends BaseDropdownProps {
@@ -249,11 +250,11 @@ function DropdownMenu({
                 "w-full flex items-center justify-between gap-2 px-4 py-2", 
                 "transition-colors duration-150",
                 "focus:outline-none",
-                isFocused && !isDisabled && "bg-primary/10",
-                isSelected && !isDisabled && "bg-primary/20 font-medium",
+                isFocused && !isDisabled && "bg-primaryT-100",
+                isSelected && !isDisabled && "bg-primaryT-200 font-medium",
                 isDisabled
                   ? "opacity-50 cursor-not-allowed text-text-muted"
-                  : "hover:bg-surface cursor-pointer",
+                  : "hover:bg-primaryT-50 cursor-pointer",
                 optionClassName
               )}
             >
@@ -306,6 +307,7 @@ export function Dropdown({
   closeOnSelect = !footer,
   onOpenChange,
   isOpen: controlledIsOpen,
+  id,
 }: DropdownProps) {
   
   const [internalIsOpen, setInternalIsOpen] = useState(false);
@@ -447,6 +449,7 @@ export function Dropdown({
   return (
     <div
       className={cn("relative", fullWidth && "w-full", className)}
+      id={id}
       ref={dropdownRef}
     >
       {label && (

@@ -3,6 +3,7 @@
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { Package, X, Tag } from "lucide-react";
 import { Button } from "@/components/common";
+import { useModalScrollLock } from "@/hooks/useModalScrollLock";
 
 interface ProductDetailsModalProps {
   item: any | null;
@@ -18,6 +19,10 @@ export const ProductDetailsModal = memo(function ProductDetailsModal({
   tCommon,
 }: ProductDetailsModalProps) {
   const [imgLoaded, setImgLoaded] = useState(false);
+  
+  // Prevent body scroll when modal is open
+  useModalScrollLock(!!item);
+  
   if (!item) return null;
 
   const product = item.product ?? {};

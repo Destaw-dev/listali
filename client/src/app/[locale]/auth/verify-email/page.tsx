@@ -6,27 +6,42 @@ import { useTranslations } from 'next-intl';
 import { Button } from '@/components/common/Button';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { apiClient } from '@/lib/api';
+import { useAuthStore } from '@/store/authStore';
+import { mapInviteErrorToTranslationKey } from '@/lib/utils';
+import { useNotification } from '@/contexts/NotificationContext';
 
 function VerifyEmailContent() {
-  const t = useTranslations('auth');
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  
-  const [verificationStatus, setVerificationStatus] = useState<'verifying' | 'success' | 'error' | 'expired' | 'alreadyVerified'>('verifying');
+
+  const [verificationStatus, setVerificationStatus] = useState<'verifying' | 'success' | 'error' | 'expired' | 'alreadyVerified' | 'inviteError' | 'default' | 'emailNotVerified'>('verifying');
   const [isResending, setIsResending] = useState(false);
   const [countdown, setCountdown] = useState(0);
+  const [verificationSent, setVerificationSent] = useState(false);
+  
+  const t = useTranslations('auth');
+  const tInvitations = useTranslations('invitations');
+  const tRoot = useTranslations();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const { showSuccess, showError } = useNotification();
+  const { setUser } = useAuthStore();
 
   const token = searchParams.get('token');
   const email = searchParams.get('email');
   const locale = searchParams.get('locale') || 'he';
+  const inviteError = searchParams.get('inviteError');
+  const status = searchParams.get('status');
 
   useEffect(() => {
     if (token) {
       verifyEmail(token);
+    } else if (inviteError) {
+      setVerificationStatus('inviteError');
+    } else if (status === 'emailNotVerified') {
+      setVerificationStatus('emailNotVerified');
     } else {
-      setVerificationStatus('error');
+      setVerificationStatus('default');
     }
-  }, [token]);
+  }, [token, inviteError]);
 
   useEffect(() => {
     if (verificationStatus === 'success') {
@@ -43,7 +58,6 @@ function VerifyEmailContent() {
     }
   }, [verificationStatus]);
 
-  // Separate useEffect for navigation to avoid React state conflicts
   useEffect(() => {
     if (verificationStatus === 'success' && countdown === 0) {
       router.push(`/${locale}/dashboard`);
@@ -52,7 +66,8 @@ function VerifyEmailContent() {
 
   const verifyEmail = async (verificationToken: string) => {
     try {
-      await apiClient.verifyEmail(verificationToken, email || undefined);
+      const data = await apiClient.verifyEmail(verificationToken, email || undefined);
+      setUser(data.user);
       setVerificationStatus('success');
     } catch (error: any) {
       console.error('Verification error:', error);
@@ -72,11 +87,10 @@ function VerifyEmailContent() {
     setIsResending(true);
     try {
       await apiClient.resendVerification(email);
-      // Show success message
-      alert(t('verificationEmailSent'));
+      showSuccess('auth.verificationEmailSent');
+      setVerificationSent(true);
     } catch (error: any) {
-      console.error('Resend error:', error);
-      alert(t('verificationEmailError'));
+      showError('auth.verificationEmailError');
     } finally {
       setIsResending(false);
     }
@@ -124,19 +138,15 @@ function VerifyEmailContent() {
               </svg>
             </div>
             <h2 className="text-2xl font-bold text-yellow-600 mb-2">{t('verificationExpired')}</h2>
-            <p className="text-gray-600 mb-4">{t('verificationExpiredMessage')}</p>
+            {!verificationSent ? <p className="text-gray-600 mb-4">{t('verificationExpiredMessage')}</p> : (
+              <p className="text-gray-600 mb-4">{t('verificationEmailSent')}</p>
+            )}
             <Button 
               onClick={resendVerification}
               disabled={isResending}
-              className="mb-3"
+              size='lg'
             >
               {isResending ? t('sending') : t('resendVerification')}
-            </Button>
-            <Button 
-              variant="outline"
-              onClick={() => router.push(`/${locale}/auth/login`)}
-            >
-              {t('backToLogin')}
             </Button>
           </div>
         );
@@ -150,19 +160,15 @@ function VerifyEmailContent() {
               </svg>
             </div>
             <h2 className="text-2xl font-bold text-red-600 mb-2">{t('verificationFailed')}</h2>
-            <p className="text-gray-600 mb-4">{t('verificationFailedMessage')}</p>
+            {!verificationSent ? <p className="text-gray-600 mb-4">{t('verificationFailedMessage')}</p> : (
+              <p className="text-gray-600 mb-4">{t('verificationEmailSent')}</p>
+            )}
             <Button 
               onClick={resendVerification}
               disabled={isResending}
-              className="mb-3"
+              size='lg'
             >
               {isResending ? t('sending') : t('resendVerification')}
-            </Button>
-            <Button 
-              variant="outline"
-              onClick={() => router.push(`/${locale}/auth/login`)}
-            >
-              {t('backToLogin')}
             </Button>
           </div>
         );
@@ -185,8 +191,75 @@ function VerifyEmailContent() {
           </div>
         );
 
+      case 'inviteError': {
+        const inviteErrorMsg = inviteError ? decodeURIComponent(inviteError) : '';
+        const inviteErrorKey = inviteErrorMsg ? mapInviteErrorToTranslationKey(inviteErrorMsg) : 'inviteErrorMessage';
+        let errorMessage = t('inviteErrorMessage');
+        
+        if (inviteErrorKey.startsWith('invitations.')) {
+          errorMessage = tInvitations(inviteErrorKey.replace('invitations.', ''));
+        } else if (inviteErrorKey.includes('.')) {
+          errorMessage = tRoot(inviteErrorKey);
+        } else if (inviteErrorMsg) {
+          errorMessage = inviteErrorMsg;
+        }
+        
+        return (
+          <div className="text-center">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-red-600 mb-2">{t('inviteError')}</h2>
+            <p className="text-gray-600 mb-4">{errorMessage}</p>
+            <p className="text-text-primary mb-4">{t('pleaseCheckYourEmail')}</p>
+            <Button 
+              onClick={resendVerification}
+              disabled={isResending}
+              size='lg'
+            >
+              {isResending ? t('sending') : t('resendVerification')}
+            </Button>
+          </div>
+        );
+      }
+
+      case 'emailNotVerified':
+        return (
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-red-600 mb-2">{t('emailNotVerified')}</h2>
+            <p className="text-gray-600 mb-4">{t('emailNotVerifiedMessage')}</p>
+            <Button 
+              onClick={resendVerification}
+              disabled={isResending}
+              size='lg'
+            >
+              {isResending ? t('sending') : t('resendVerification')}
+            </Button>
+          </div>
+        );
+
       default:
-        return null;
+        return (
+          <div className="text-center flex flex-col items-center justify-center gap-4">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+              <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h2 className="text-xl font-semibold">{t('verificationEmailSent')}</h2>
+            <p className="text-text-primary">{t('pleaseCheckYourEmail')}</p>
+            <Button 
+              onClick={resendVerification}
+              disabled={isResending}
+              size='lg'
+            >
+              {isResending ? t('sending') : t('resendVerification')}
+            </Button>
+
+          </div>
+        );
     }
   };
 
@@ -210,8 +283,8 @@ function VerifyEmailContent() {
           <p>{t('verificationHelp')}</p>
           <p className="mt-1">
             {t('contactSupport')}{' '}
-            <a href="mailto:support@smartlist.com" className="text-blue-600 hover:text-blue-500">
-              support@smartlist.com
+            <a href="mailto:support@listali.co.il" className="text-blue-600 hover:text-blue-500">
+              support@listali.co.il
             </a>
           </p>
         </div>

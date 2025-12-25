@@ -7,12 +7,12 @@ import type {
   IItem, 
   IUserSimple, 
   IChatMessage,
-} from '../../../shared/src/types';
+} from '@/types';
 
 // ============================================================================
-// TYPES - IMPORTED FROM SHARED TYPES
+// TYPES - IMPORTED FROM CLIENT TYPES
 // ============================================================================
-// All types are now imported from shared types to eliminate duplication
+// All types are imported from client types
 
 // Type aliases for backward compatibility
 export type WebSocketEvents = IWebSocketEvents;
@@ -30,7 +30,8 @@ class WebSocketService {
   private maxReconnectAttempts = 5;
   private reconnectDelay = 1000;
   private isConnected = false;
-  private listeners = new Map<string, Set<Function>>();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private listeners = new Map<string, Set<any>>();
 
   // --------- Utils ---------
   private isClient(): boolean {
@@ -42,7 +43,7 @@ class WebSocketService {
     if (!this.isClient()) return;
 
     // Guard: don't connect twice
-    if (this.socket && (this.socket.connected || (this.socket as any).connecting)) {
+    if (this.socket && this.socket.connected) {
       return;
     }
 
@@ -114,9 +115,6 @@ class WebSocketService {
   private setupDomainListeners() {
     if (!this.socket) return;
 
-    this.socket.on('online_users', (data: any) => {
-    });
-
   }
 
   private handleReconnect() {
@@ -136,7 +134,8 @@ class WebSocketService {
     this.listeners.forEach((listeners, event) => {
       listeners.forEach((listener) => {
         if (this.socket) {
-          this.socket.on(event as string, listener as any);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      this.socket.on(event as string, listener as any);
         }
       });
     });
@@ -186,6 +185,7 @@ class WebSocketService {
       
       // Remove from Socket.IO
       if (this.socket) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.socket.off(event as string, listener as any);
       }
     };
@@ -199,9 +199,12 @@ function createService() {
   return new WebSocketService();
 }
 
-// @ts-ignore
+// HMR-safe singleton pattern
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const websocketService: WebSocketService =
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (globalThis as any)[WS_SINGLETON_KEY] ||
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ((globalThis as any)[WS_SINGLETON_KEY] = createService());
 
 export default websocketService;

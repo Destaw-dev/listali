@@ -1,6 +1,5 @@
-import mongoose, { Schema, Model } from 'mongoose';
-import { IShoppingList, IShoppingSession, ShoppingListDocument } from '../types';
-import { Types } from 'mongoose';
+import mongoose, { Schema, Model, FilterQuery } from 'mongoose';
+import { IGroupMember, IShoppingList } from '../types';
 
 type ShoppingListModel = Model<IShoppingList>& {
     findByGroup(groupId: string, options?: any): Promise<IShoppingList[]>;
@@ -286,7 +285,7 @@ shoppingListSchema.methods.addItem = async function(itemId: string) {
 
 // Instance method to remove item
 shoppingListSchema.methods.removeItem = async function(itemId: string) {
-  const itemIndex = this.items.findIndex((id: String)=> id.toString() === itemId);
+  const itemIndex = this.items.findIndex((id: string | mongoose.Types.ObjectId)=> id.toString() === itemId);
   
   if (itemIndex === -1) {
     throw new Error('Item not found in this shopping list');
@@ -334,7 +333,7 @@ shoppingListSchema.methods.assignTo = async function(userId: string) {
   const Group = mongoose.model('Group');
   const group = await Group.findById(this.group);
   
-  if (!group || !group.members.some((m: any) => m.user.toString() === userId)) {
+  if (!group || !group.members.some((m: IGroupMember) => m.user.toString() === userId)) {
     throw new Error('User is not a member of this group');
   }
   
@@ -362,7 +361,7 @@ shoppingListSchema.statics.findByGroup = function(groupId: string, options: any 
     sort = '-createdAt'
   } = options;
   
-  const query: any = { group: groupId };
+  const query: FilterQuery<IShoppingList> = { group: groupId };
   
   if (status) query.status = status;
   if (assignedTo) query.assignedTo = assignedTo;
@@ -382,7 +381,7 @@ shoppingListSchema.statics.findByGroup = function(groupId: string, options: any 
 
 // Static method to find overdue lists
 shoppingListSchema.statics.findOverdue = function(groupId?: string) {
-  const query: any = {
+  const query: FilterQuery<IShoppingList> = {
     status: 'active',
     dueDate: { $lt: new Date() }
   };
@@ -397,7 +396,7 @@ shoppingListSchema.statics.findOverdue = function(groupId?: string) {
 
 // Static method to get statistics
 shoppingListSchema.statics.getStatistics = async function(groupId: string, timeRange?: { start: Date, end: Date }) {
-  const matchConditions: any = { group: new mongoose.Types.ObjectId(groupId) };
+  const matchConditions: FilterQuery<IShoppingList> = { group: new mongoose.Types.ObjectId(groupId) };
   
   if (timeRange) {
     matchConditions.createdAt = {

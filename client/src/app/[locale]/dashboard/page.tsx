@@ -2,7 +2,6 @@
 
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import { Users, ShoppingCart, Plus, TrendingUp, Bell, Sparkles, Activity, Target, Award } from 'lucide-react';
 import { useAuthRedirect } from '@/hooks/useAuthRedirect';
@@ -30,7 +29,7 @@ export default function DashboardPage() {
 
   if (!isInitialized) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primaryT-50 via-secondaryT-50 to-accentT-50 safe-area-inset flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-primaryT-50 via-secondaryT-50 to-accentT-50  flex items-center justify-center">
         <div className="text-center">
           <div className="relative">
             <div className="animate-spin rounded-full h-16 w-16 border-4 border-primary border-t-transparent mx-auto mb-6"></div>
@@ -70,17 +69,17 @@ export default function DashboardPage() {
   };
 
   const quickActions = [
+    // {
+    //   title: t('createGroup'),
+    //   description: t('createGroupDesc'),
+    //   icon: Users,
+    //   action: () => router.push(`/${locale}/groups`),
+    //   variant: 'primary' as const,
+    //   gradient: 'from-primaryT-500 to-primaryT-600',
+    //   bgGradient: 'from-primaryT-50 to-primaryT-100'
+    // },
     {
-      title: t('createGroup'),
-      description: t('createGroupDesc'),
-      icon: Users,
-      action: () => router.push(`/${locale}/groups`),
-      variant: 'primary' as const,
-      gradient: 'from-primaryT-500 to-primaryT-600',
-      bgGradient: 'from-primaryT-50 to-primaryT-100'
-    },
-    {
-      title: t('joinGroup'),
+      title: `צור/${t('joinGroup')}`,
       description: t('joinGroupDesc'),
       icon: Plus,
       action: () => router.push(`/${locale}/groups`),
@@ -106,25 +105,24 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primaryT-50 via-secondaryT-50 to-accentT-50 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900 safe-area-inset  overflow-hidden">
+    <div className="min-h-screen bg-surface overflow-hidden">
       <div className="container mx-auto px-4 py-8 relative z-10">
         <div className="max-w-7xl mx-auto space-y-8">
           
           <Card variant="glass" className="bg-white/80 dark:bg-neutral-800/80 shadow-2xl">
-            <CardBody className="p-8">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-6">
+            <CardBody className="p-1 sm:p-8">
+              <div className="flex sm:items-center justify-between flex-col md:flex-row gap-3 ">
+                <div className="flex items-center sm:gap-6 flex-col sm:flex-row">
                   {user?.avatar && (
-                    <div className="relative group">
-                      <div className="absolute inset-0 bg-gradient-to-r from-primary-400 to-secondary-400 rounded-full blur-lg opacity-75 group-hover:opacity-100 transition-opacity"></div>
-                      <Image 
+                    <div className="">
+                      <img 
                         src={user.avatar} 
                         alt={user.firstName || user.username}
-                        className="relative w-24 h-24 rounded-full border-4 border-white shadow-xl object-cover"
+                        width='100%'
+                        height={'100%'}
+                        loading="lazy"
+                        className="w-14 h-14 sm:w-24 sm:h-24 rounded-full border-4 border-white shadow-xl object-cover"
                       />
-                      <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-success rounded-full border-4 border-white shadow-lg flex items-center justify-center">
-                        <div className="w-3 h-3 bg-white rounded-full animate-pulse"></div>
-                      </div>
                     </div>
                   )}
                   <div>
@@ -132,9 +130,6 @@ export default function DashboardPage() {
                       <h1 className="text-4xl font-bold bg-gradient-to-br from-primaryT-600 to-secondaryT-600 bg-clip-text text-transparent">
                         {t('welcome')} 🎉
                       </h1>
-                      <div className="px-3 py-1 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-full text-white text-sm font-medium animate-pulse">
-                        {t('new')}
-                      </div>
                     </div>
                     <p className="text-xl text-secondary font-medium mb-1">
                     {user?.username || user?.firstName + ' ' + user?.lastName}
@@ -145,7 +140,7 @@ export default function DashboardPage() {
                     </div>
                   </div>
                 </div>
-                <div className="text-right">
+                <div className="flex flex-col items-center gap-1">
                   <Badge variant="success" size="lg" dot className="mb-2">
                     {t('online')}
                   </Badge>

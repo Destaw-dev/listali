@@ -1,3 +1,4 @@
+import { AxiosError } from "axios"
 
 // Query client configuration
 export const queryClientConfig = {
@@ -5,7 +6,7 @@ export const queryClientConfig = {
     queries: {
       refetchOnWindowFocus: false,
       refetchOnReconnect: 'always' as const,
-      retry: (failureCount: number, error: any) => {
+      retry: (failureCount: number, error: AxiosError) => {
         // Don't retry on 401 errors
         if (error.response?.status === 401) return false
         // Retry up to 3 times for other errors

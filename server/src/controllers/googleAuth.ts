@@ -2,16 +2,16 @@ import { OAuth2Client } from 'google-auth-library';
 import { google } from 'googleapis';
 import axios from 'axios';
 import User from '@/models/user';
-import jwt from 'jsonwebtoken';
 import { Response, Request } from 'express';
-import { successResponse } from '@/middleware/errorHandler';
+import { errorResponse, successResponse } from '@/middleware/errorHandler';
+import { IBasePendingInvite, IGroupMember } from '@/types';
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 export const googleAuth = async (req: Request, res: Response) => {
-  const { credential } = req.body; // token מ-Google
+  const { credential } = req.body;
   if (!credential) {
-    return res.status(400).json({ success: false, error: 'Missing Google credential' });
+    return res.status(400).json(errorResponse('Missing Google credential', 400, 'Missing Google credential'));
   }
 
   const clientId = process.env.GOOGLE_CLIENT_ID;
@@ -21,12 +21,12 @@ if (!clientId) {
 
 const ticket = await client.verifyIdToken({
   idToken: credential,
-  audience: clientId // now it's guaranteed to be string
+  audience: clientId
 });
 
   const payload = ticket.getPayload();
   if (!payload || !payload.email || !payload.sub) {
-    return res.status(401).json({ success: false, error: 'Invalid Google token' });
+    return res.status(401).json(errorResponse('Invalid Google token', 401, 'Invalid Google token'));
   }
 
   const { email, name, picture, given_name, family_name, sub } = payload;
@@ -44,6 +44,11 @@ const ticket = await client.verifyIdToken({
     });
   }
 
+  if(!user.isEmailVerified) {
+    user.isEmailVerified = true;
+    await user.save();
+  }
+
   const token = user.getSignedJwtToken();
   res.cookie('token', token, {
     httpOnly: true,
@@ -59,7 +64,7 @@ export const googleCallback = async (req: Request, res: Response) => {
   const { code, state } = req.query;
 
   if (!code || typeof code !== 'string') {
-    return res.status(400).json({ success: false, message: 'Missing Google code' });
+    return res.status(400).json(errorResponse('Missing Google code', 400, 'Missing Google code'));
   }
 
   try {
@@ -78,7 +83,7 @@ export const googleCallback = async (req: Request, res: Response) => {
       }
     });
 
-    const { id_token, access_token } = tokenResponse.data;
+    const { id_token } = tokenResponse.data;
 
     // 2. Verify the ID token and get user info
     const ticket = await client.verifyIdToken({
@@ -88,12 +93,14 @@ export const googleCallback = async (req: Request, res: Response) => {
 
     const payload = ticket.getPayload();
     if (!payload || !payload.email || !payload.sub) {
-      return res.status(401).json({ success: false, message: 'Invalid Google payload' });
+      return res.status(401).json(errorResponse('Invalid Google payload', 401, 'Invalid Google payload'));
     }
 
     const { email, name, picture, given_name, family_name, sub } = payload;
 
     let user = await User.findOne({ email });
+    const isNewUser = !user;
+    
     if (!user) {
       user = await User.create({
         email,
@@ -102,13 +109,86 @@ export const googleCallback = async (req: Request, res: Response) => {
         lastName: family_name || name?.split(' ')[1] || '',
         googleId: sub,
         avatar: picture,
-        isEmailVerified: true, // Google users are automatically verified
+        isEmailVerified: true,
       });
+    }
+    if(!user.isEmailVerified) {
+      user.isEmailVerified = true;
+      await user.save();
+    }
+
+    // Handle invite code if provided and user is new
+    let groupJoined = null;
+    let inviteError = null;
+    if (isNewUser && state) {
+      try {
+        const frontendCallback = decodeURIComponent(state as string);
+        const callbackUrl = new URL(frontendCallback);
+        const inviteCode = callbackUrl.searchParams.get('inviteCode');
+
+        console.log('inviteCode', inviteCode);
+        console.log('callbackUrl', callbackUrl);
+        console.log('state', state);
+        console.log('frontendCallback', frontendCallback);
+        console.log('decodeURIComponent(state as string)', decodeURIComponent(state as string));
+        if (inviteCode) {
+          const Group = (await import('../models/group')).default;
+          const group = await Group.findOne({
+            'pendingInvites.code': inviteCode,
+            isActive: true
+          });
+
+          if (group) {
+            const invite = group.pendingInvites.find((i: IBasePendingInvite) => i.code === inviteCode);
+            if (invite) {
+              const inviteAge = Date.now() - new Date(invite.invitedAt).getTime();
+              const inviteExpirationTime = 1000 * 60 * 60 * 24;
+              if (inviteAge > inviteExpirationTime) {
+                const hoursExpired = Math.round(inviteAge / (1000 * 60 * 60));
+                console.error(`Invitation expired: invite code ${inviteCode} expired ${hoursExpired} hours ago`);
+                inviteError = 'This invitation has expired. Please request a new invitation from the group admin.';
+              } else {
+                if (invite.type === 'email' && invite.email) {
+                  if (invite.email.toLowerCase() !== email.toLowerCase()) {
+                    console.error(`Email mismatch: invite email ${invite.email} does not match user email ${email}`);
+                    inviteError = 'The email address used for registration does not match the email address that received the invitation.';
+                  } else {
+                    const alreadyMember = group.members.find((m: IGroupMember) => m.user.toString() === user._id.toString());
+                    if (!alreadyMember) {
+                      await group.addMember(user._id.toString(), invite.role || 'member');
+                      group.pendingInvites = group.pendingInvites.filter((i: IBasePendingInvite) => i.code !== inviteCode);
+                      await group.save();
+                      
+                      await User.findByIdAndUpdate(user._id, { 
+                        $push: { groups: group._id },
+                        $set: { 
+                          isEmailVerified: true, 
+                          emailVerification: { token: '', expiresAt: new Date() } 
+                        }
+                      });
+                      
+                      groupJoined = group._id.toString();
+                    }
+                  }
+                }
+              }
+            } else {
+              console.error(`Invite code not found: ${inviteCode}`);
+              inviteError = 'Invalid invitation code. Please check the invitation link or request a new one.';
+            }
+          } else {
+            console.error(`Group not found for invite code: ${inviteCode}`);
+            inviteError = 'Invalid invitation code. The group may not exist or the invitation may have been cancelled.';
+          }
+        }
+      } catch (error) {
+        console.error('Failed to join group with invite code:', error);
+        inviteError = 'Failed to process the invitation. Please contact the group admin for assistance.';
+      }
     }
 
     const token = user.getSignedJwtToken();
     
-    // Set cookie for server-side auth
     res.cookie('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -116,10 +196,8 @@ export const googleCallback = async (req: Request, res: Response) => {
       expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
     });
 
-    // Get the frontend callback URL from state parameter
     const frontendCallback = state ? decodeURIComponent(state as string) : `${process.env.CLIENT_URL}/he/auth/callback`;
     
-    // Prepare user data for frontend
     const userData = {
       _id: user._id,
       email: user.email,
@@ -129,20 +207,26 @@ export const googleCallback = async (req: Request, res: Response) => {
       avatar: user.avatar,
       googleId: user.googleId,
       createdAt: user.createdAt,
-      updatedAt: user.updatedAt
+      updatedAt: user.updatedAt,
+      isEmailVerified: user.isEmailVerified,
     };
 
-    // Redirect to frontend with token and user data
     const redirectUrl = new URL(frontendCallback);
     redirectUrl.searchParams.set('token', token);
     redirectUrl.searchParams.set('user', encodeURIComponent(JSON.stringify(userData)));
     redirectUrl.searchParams.set('google', 'true');
+    if (groupJoined) {
+      redirectUrl.searchParams.set('groupJoined', groupJoined);
+    }
+    if (inviteError) {
+      redirectUrl.searchParams.set('inviteError', encodeURIComponent(inviteError));
+    }
 
     return res.redirect(redirectUrl.toString());
 
-  } catch (err: any) {
-    console.error('Google login failed:', err.response?.data || err.message);
-    return res.status(500).json({ success: false, message: 'Google login failed' });
+  } catch (error) {
+    console.error('Google login failed:', error instanceof Error ? error.message : 'Failed to login with Google');
+    return res.status(500).json(errorResponse('Google login failed', 500, error instanceof Error ? error.message : 'Failed to login with Google'));
   }
 };
 
@@ -169,12 +253,9 @@ export const googleUrl = async (req: Request, res: Response) => {
 
     const url = client.generateAuthUrl(authUrlOptions);
 
-    res.json({ success: true, url });
-  } catch (error: any) {
+    return res.status(200).json(successResponse({ url }, 'Google URL generated successfully'));
+  } catch (error) {
     console.error('Error generating Google URL:', error);
-    res.status(500).json({ success: false, message: 'Failed to generate Google URL' });
+    return res.status(500).json(errorResponse('Failed to generate Google URL', 500, error instanceof Error ? error.message : 'Failed to generate Google URL'));
   }
-}
-
-
-
+};

@@ -5,8 +5,8 @@ import { useTranslations } from 'next-intl';
 import { X, Globe, Palette, Check } from 'lucide-react';
 import { Card, CardBody } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
-import { Badge } from '@/components/common/Badge';
 import { useNotification } from '@/contexts/NotificationContext';
+import { useModalScrollLock } from '@/hooks/useModalScrollLock';
 
 interface LanguageThemeModalProps {
   isOpen: boolean;
@@ -37,11 +37,13 @@ export default function LanguageThemeModal({
   isLoading: externalIsLoading
 }: LanguageThemeModalProps) {
   const t = useTranslations('settings');
-  const { showSuccess, handleApiError } = useNotification();
+
   const [internalIsLoading, setInternalIsLoading] = useState(false);
-  const isLoading = externalIsLoading || internalIsLoading;
   const [selectedLanguage, setSelectedLanguage] = useState(currentLocale);
   const [selectedTheme, setSelectedTheme] = useState(currentTheme);
+  
+  const { showSuccess, handleApiError } = useNotification();
+  const isLoading = externalIsLoading || internalIsLoading;
 
   useEffect(() => {
     if (isOpen) {
@@ -78,6 +80,9 @@ export default function LanguageThemeModal({
       onClose();
     }
   };
+
+  // Prevent body scroll when modal is open
+  useModalScrollLock(isOpen);
 
   if (!isOpen) return null;
 

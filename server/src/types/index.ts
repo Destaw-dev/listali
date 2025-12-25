@@ -13,6 +13,8 @@ import { Request as ExpressRequest } from "express";
 // ============================================================================
 
 // Extend Express Request to include our custom properties
+// Using declare global for Express namespace extension (required by Express types)
+/* eslint-disable @typescript-eslint/no-namespace */
 declare global {
   namespace Express {
     interface Request {
@@ -21,6 +23,7 @@ declare global {
     }
   }
 }
+/* eslint-enable @typescript-eslint/no-namespace */
 
 // Our custom Request interface (for backward compatibility)
 export interface Request extends ExpressRequest {
@@ -77,7 +80,7 @@ export interface IBaseGroup {
   };
   inviteCode: string;
   isActive: boolean;
-  pendingInvites: any[];
+  pendingInvites: IBasePendingInvite[];
 }
 
 // Base group member interface (consistent with shared types)
@@ -512,6 +515,7 @@ export interface IApiResponse<T = any> {
     statusCode?: number;
     isOperational?: boolean;
   };
+  isEmailVerified?: boolean;
   pagination?: {
     page: number;
     limit: number;
@@ -525,6 +529,7 @@ export interface IApiError {
   message: string;
   statusCode: number;
   errors?: Record<string, string>;
+  isEmailVerified?: boolean;
 }
 
 // Paginated response interface
@@ -570,6 +575,8 @@ export interface IAuthResponse {
   user: Omit<IUser, "password">;
   token: string;
   refreshToken?: string;
+  groupJoined?: string; // Group ID if user joined a group during registration
+  inviteError?: string; // Error message if invitation failed (but registration succeeded)
 }
 
 // ============================================================================

@@ -15,12 +15,11 @@ export const useThemeStore = create<ThemeStore>()(
       updateThemeOnServer: async (theme: Theme) => {
         try {
           await apiClient.updatePreferences({ 
-            language: 'he', // Keep current language
+            language: 'he',
             theme: theme 
           });
         } catch (error) {
           console.error('Error updating theme on server:', error);
-          // Theme update error - this will be handled by the notification system
         }
       },
 
@@ -36,9 +35,11 @@ export const useThemeStore = create<ThemeStore>()(
           newTheme = 'light';
         }
 
-        get().setTheme(newTheme);
-        // Update on server in background
-        get().updateThemeOnServer(newTheme);
+        set({ theme: newTheme });
+        const updateThemeOnServer = get().updateThemeOnServer;
+        if (updateThemeOnServer) {
+          updateThemeOnServer(newTheme);
+        }
       },
     }),
     {
@@ -46,5 +47,3 @@ export const useThemeStore = create<ThemeStore>()(
     }
   )
 );
-
-// Theme application is now handled by ThemeProvider component

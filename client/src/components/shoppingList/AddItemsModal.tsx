@@ -6,36 +6,28 @@ import React, {
   useMemo,
   useCallback,
 } from "react";
-import { useForm, useFieldArray } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { useTranslations } from "next-intl";
-import { Package, X, Trash2 } from "lucide-react";
+import { Package, X } from "lucide-react";
 import { useAvailableCategories } from "@/hooks/useItems";
-import { getProductUnit } from "@/lib/utils";
+import { useModalScrollLock } from "@/hooks/useModalScrollLock";
 import { ProductsSelectionView } from "./AddItemsModal/ProductsSelectionView";
-import { ItemForm } from "./AddItemsModal/ItemForm";
+import { SelectedItemsSidebar } from "./AddItemsModal/SelectedItemsSidebar";
+import { Button } from "../common";
+
+type SingleItemFormData = {
+  name: string;
+  quantity: number;
+  unit: string;
+  category?: string;
+  priority: "low" | "medium" | "high";
+  notes?: string;
+  brand?: string;
+  description?: string;
+  product?: string;
+  image?: string;
+};
  
 
-const itemSchema = z.object({
-  name: z.string().min(1, "nameRequired").max(100, "nameMaxLength"),
-  quantity: z.number().min(0.1, "quantityMin").max(10000, "quantityMax"),
-  unit: z.string().min(1, "unitRequired").max(20, "unitMaxLength"),
-  category: z.string().optional(),
-  priority: z.enum(["low", "medium", "high"]),
-  notes: z.string().max(500, "notesMaxLength").optional(),
-  brand: z.string().max(100).optional(),
-  description: z.string().max(200).optional(),
-  product: z.string().optional(),
-  image: z.string().optional(),
-});
-
-const itemsSchema = z.object({
-  items: z.array(itemSchema).min(1, "atLeastOneItem"),
-});
-
-type ItemsFormData = z.infer<typeof itemsSchema>;
-type SingleItemFormData = z.infer<typeof itemSchema>;
 
 interface AddItemsModalProps {
   isOpen: boolean;
@@ -53,28 +45,10 @@ export default function AddItemsModal({
 }: AddItemsModalProps) {
   const t = useTranslations("AddItemModal");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showProductsList, setShowProductsList] = useState(true);
   const [selectedProducts, setSelectedProducts] = useState<any[]>([]);
+  const [currentItems, setCurrentItems] = useState<SingleItemFormData[]>([]);
+  const [mobileView, setMobileView] = useState<'products' | 'items'>('products');
   const { data: categories = [] } = useAvailableCategories();
-
-  const {
-    control,
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-    watch,
-  } = useForm<ItemsFormData>({
-    resolver: zodResolver(itemsSchema),
-    defaultValues: { items: [] },
-  });
-
-  const { fields, remove } = useFieldArray({
-    control,
-    name: "items",
-  });
-
-  const watchedItems = watch("items");
 
   // Memoized callbacks
   const handleProductSelect = useCallback((product: any) => {
@@ -87,78 +61,31 @@ export default function AddItemsModal({
     });
   }, []);
 
-  const handleContinueToFillDetails = useCallback(() => {
-    const items = selectedProducts.map((product) => {
-      const categoryId = product.categoryId
-        ? typeof product.categoryId === "string"
-          ? product.categoryId
-          : product.categoryId._id || product.categoryId
-        : "";
+  const handleProductRemove = useCallback((productId: string) => {
+    setSelectedProducts((prev) => prev.filter((p) => p._id !== productId));
+  }, []);
 
-      return {
-        name: product.name || "",
-        quantity: 1,
-        unit: getProductUnit({
-          defaultUnit: product.defaultUnit,
-          units: product.units,
-          name: product.name,
-        }),
-        category: categoryId,
-        priority: "medium" as const,
-        notes: "",
-        brand: product.brand || "",
-        description: product.description || "",
-        product: product._id,
-        image: product.image || "",
-      };
-    });
-
-    reset({ items });
-    setShowProductsList(false);
-  }, [selectedProducts, reset]);
+  const handleClearAllProducts = useCallback(() => {
+    setSelectedProducts([]);
+    setCurrentItems([]);
+  }, []);
 
   const addManualItem = useCallback(() => {
-    const items: any[] = [];
-
-    if (selectedProducts.length > 0) {
-      items.push(
-        ...selectedProducts.map((product) => {
-          const categoryId = product.categoryId
-            ? typeof product.categoryId === "string"
-              ? product.categoryId
-              : product.categoryId._id || product.categoryId
-            : "";
-
-          return {
-            name: product.name || "",
-            quantity: 1,
-            unit: product.defaultUnit || product.units?.[0] || "piece",
-            category: categoryId,
-            priority: "medium" as const,
-            notes: "",
-            brand: product.brand || "",
-            description: product.description || "",
-            product: product._id,
-            image: product.image || "",
-          };
-        })
-      );
-    }
-
-    items.push({
+    // Add a manual item (empty product) to the selected products
+    const manualProduct = {
+      _id: `manual-${Date.now()}`,
       name: "",
-      quantity: 1,
-      unit: "piece",
+      defaultUnit: "piece",
+      units: ["piece", "kg", "g", "l", "ml", "package", "box", "bag", "bottle", "can"],
       priority: "medium" as const,
       notes: "",
       brand: "",
       description: "",
       image: "",
-    });
-
-    reset({ items });
-    setShowProductsList(false);
-  }, [selectedProducts, reset]);
+      isManual: true,
+    };
+    setSelectedProducts((prev) => [...prev, manualProduct]);
+  }, []);
 
   const selectedProductIds = useMemo(
     () => selectedProducts.map((p) => p._id),
@@ -167,18 +94,17 @@ export default function AddItemsModal({
 
   const handleClose = useCallback(() => {
     if (!isSubmitting) {
-      reset();
       setSelectedProducts([]);
-      setShowProductsList(true);
+      setCurrentItems([]);
       onClose();
     }
-  }, [isSubmitting, reset, onClose]);
+  }, [isSubmitting, onClose]);
 
-  const handleFormSubmit = useCallback(
-    async (data: ItemsFormData) => {
+  const handleSubmit = useCallback(
+    async (items: SingleItemFormData[]) => {
       setIsSubmitting(true);
       try {
-        await onSubmit(data.items);
+        await onSubmit(items);
         handleClose();
       } catch (error) {
         // Error handled by parent
@@ -189,104 +115,105 @@ export default function AddItemsModal({
     [onSubmit, handleClose]
   );
 
+  const handleItemsChange = useCallback((items: SingleItemFormData[]) => {
+    setCurrentItems(items);
+  }, []);
+
   // Reset when modal opens
   useEffect(() => {
     if (isOpen) {
       setSelectedProducts([]);
-      setShowProductsList(true);
-      reset();
+      setCurrentItems([]);
     }
-  }, [isOpen, reset]);
+  }, [isOpen]);
+
+  // Prevent body scroll when modal is open
+  useModalScrollLock(isOpen);
 
   if (!isOpen) return null;
 
-  const modalTitle = showProductsList
-    ? selectedProducts.length > 0
-      ? selectedProducts.length === 1
-        ? t("selectedProducts", { count: selectedProducts.length })
-        : t("selectedProductsPlural", { count: selectedProducts.length })
-      : t("addNewItem")
-    : t("fillDetails", { count: fields.length });
-
   return (
     <div className="fixed inset-0 backdrop-blur-sm z-50 flex items-center justify-center p-0 sm:p-4">
-      <div className="bg-surface shadow-xl rounded-none sm:rounded-2xl w-full sm:max-w-3xl h-full  sm:max-h-[100vh] flex flex-col">
+      <div className="bg-surface shadow-xl rounded-none sm:rounded-2xl w-full sm:max-w-7xl h-full sm:max-h-[100vh] flex flex-col">
         {/* Modal Header */}
-        <div className="border-b border-border">
-          <div className="flex items-center justify-between p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-surface-hover rounded-lg">
-                <Package className="w-5 h-5 text-primary" />
+        <div className="border-b border-border flex-shrink-0">
+          <div className="flex items-center justify-between p-3 sm:p-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="p-1.5 sm:p-2 bg-surface-hover rounded-lg">
+                <Package className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-text-secondary">{modalTitle}</h2>
+                <h2 className="text-base sm:text-lg font-bold text-text-secondary">{t("addNewItem")}</h2>
               </div>
-              {selectedProducts.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => setSelectedProducts([])}
-                  className="text-xs text-text-primary hover:underline p-2 px-4 rounded-lg flex items-center gap-2"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  {t('clearSelection')}
-                </button>
-              )}
             </div>
+            <Button variant="ghost" size="md" icon={<X className="w-5 h-5" />} onClick={handleClose} disabled={isSubmitting} rounded={true}/>
+          </div>
+        </div>
+
+        {/* Mobile Tabs Navigation */}
+        <div className="sm:hidden border-b border-border flex-shrink-0">
+          <div className="flex">
             <button
-              onClick={handleClose}
-              disabled={isSubmitting}
-              className="p-2 text-text-muted hover:text-text-primary transition-colors disabled:opacity-50"
+              onClick={() => setMobileView('products')}
+              className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                mobileView === 'products'
+                  ? 'border-b-2 border-primary text-primary'
+                  : 'text-text-muted hover:text-text-primary'
+              }`}
             >
-              <X className="w-5 h-5" />
+              {t('products')}
+              {selectedProducts.length > 0 && (
+                <span className="ml-2 px-2 py-0.5 bg-primary/10 text-primary rounded-full text-xs">
+                  {selectedProducts.length}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setMobileView('items')}
+              className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                mobileView === 'items'
+                  ? 'border-b-2 border-primary text-primary'
+                  : 'text-text-muted hover:text-text-primary'
+              }`}
+            >
+              {t('selectedItems')}
             </button>
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4">
-          {showProductsList ? (
-            <ProductsSelectionView
-              onProductSelect={handleProductSelect}
-              onAddManual={addManualItem}
-              selectedProductIds={selectedProductIds}
-              selectedProductsCount={selectedProducts.length}
-              onContinue={handleContinueToFillDetails}
-              isSubmitting={isSubmitting}
-              t={t}
-            />
-          ) : (
-            <ItemForm
-              fields={fields}
-              register={register}
-              errors={errors}
-              categories={categories}
-              watchedItems={watchedItems}
-              remove={(index) => {
-                const item = watchedItems?.[index];
-                remove(index);
-                if (item?.product) {
-                  setSelectedProducts((prev) =>
-                    prev.filter((p) => p._id !== item.product)
-                  );
-                }
-              }}
-              onBack={() => {
-                const currentProductIds = new Set(
-                  watchedItems
-                    ?.map((item: any) => item?.product)
-                    .filter(Boolean) || []
-                );
-                setSelectedProducts((prev) =>
-                  prev.filter((p) => currentProductIds.has(p._id))
-                );
-                setShowProductsList(true);
-              }}
-              onAddManual={addManualItem}
-              onSubmit={handleSubmit(handleFormSubmit)}
+        {/* Layout: Tabs on mobile, side-by-side on desktop */}
+        <div className="flex-1 flex flex-col sm:flex-row overflow-hidden">
+          {/* Left Side - Products Catalog */}
+          <div className={`${mobileView === 'products' ? 'flex' : 'hidden'} sm:flex flex-1 sm:flex-[0.6] flex-col overflow-hidden `}>
+            <div className="flex-1 overflow-y-auto p-3 sm:p-4">
+              <ProductsSelectionView
+                onProductSelect={handleProductSelect}
+                onAddManual={addManualItem}
+                selectedProductIds={selectedProductIds}
+                selectedProductsCount={selectedProducts.length}
+                onContinue={() => {}} // Not needed in side-by-side layout
+                isSubmitting={isSubmitting}
+                t={t}
+                onClearAllProducts={handleClearAllProducts}
+              />
+            </div>
+          </div>
+
+          {/* Right Side - Selected Items Sidebar */}
+          <div className={`${mobileView === 'items' ? 'flex' : 'hidden'} sm:flex flex-1 sm:flex-[0.4] flex-col overflow-hidden`}>
+            <SelectedItemsSidebar
+              selectedProducts={selectedProducts}
+              onProductRemove={handleProductRemove}
+              onItemsChange={handleItemsChange}
+              onSubmit={handleSubmit}
               onClose={handleClose}
+              onAddManual={addManualItem}
+              categories={categories}
               isSubmitting={isSubmitting}
+              onClearAllItems={handleClearAllProducts}
               t={t}
             />
-          )}
+          </div>
         </div>
       </div>
     </div>

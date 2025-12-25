@@ -4,142 +4,147 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const resend = new Resend(process.env.RESEND_API_KEY);
+const EMAIL_FROM = 'Listali <hello@listali.co.il>';
 
-export async function sendEmailVerification(to: string, token: string, username: string, language: string) {
+
+export async function sendEmailVerification(to: string, token: string, username: string, language: string = 'he') {
+  const translations = {
+    he: {
+      subject: 'אימות כתובת אימייל - Listali 📧',
+      welcome: (name: string) => `שלום ${name} 👋`,
+      body: 'תודה שנרשמת ל-Listali! כדי להשלים את ההרשמה ולנהל רשימות קניות יחד, אנא אמת את כתובת האימייל שלך.',
+      button: 'אמת את האימייל שלי ✅',
+      footer: 'Listali - עושים קניות יחד 🛒',
+      dir: 'rtl' as const,
+    },
+    en: {
+      subject: 'Email Verification - Listali 📧',
+      welcome: (name: string) => `Hello ${name} 👋`,
+      body: 'Thanks for joining Listali! To complete your registration and start managing shopping lists together, please verify your email address.',
+      button: 'Verify My Email ✅',
+      footer: 'Listali - Shopping together 🛒',
+      dir: 'ltr' as const,
+    }
+  };
   try {
-    const isHebrew = language === 'he';
-    const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}${isHebrew ? '/he' : '/en'}/auth/verify-email?token=${token}&email=${encodeURIComponent(to)}`;
-    
-    const emailContent = isHebrew ? {
-      subject: 'אימות כתובת אימייל - Smart List 📧',
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; direction: rtl;">
-          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 10px; text-align: center;">
-            <h1 style="margin: 0; font-size: 28px;">Smart List</h1>
-            <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">אימות כתובת אימייל</p>
-          </div>
-          
-          <div style="background: #f8f9fa; padding: 30px; border-radius: 10px; margin-top: 20px;">
-            <h2 style="color: #333; margin-top: 0;">שלום ${username} 👋</h2>
-            
-            <p style="color: #555; font-size: 16px; line-height: 1.6;">
-              תודה שנרשמת ל-Smart List! כדי להשלים את ההרשמה ולגשת לכל התכונות של האפליקציה, 
-              אנא אמת את כתובת האימייל שלך.
-            </p>
-            
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="${verificationUrl}" 
-                 style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                        color: white; 
-                        padding: 15px 30px; 
-                        text-decoration: none; 
-                        border-radius: 25px; 
-                        font-weight: bold; 
-                        font-size: 16px;
-                        display: inline-block;">
-                אמת את האימייל שלי ✅
-              </a>
-            </div>
-            
-            <p style="color: #666; font-size: 14px; line-height: 1.5;">
-              אם הכפתור לא עובד, תוכל להעתיק ולהדביק את הקישור הבא בדפדפן שלך:
-            </p>
-            
-            <div style="background: #e9ecef; padding: 15px; border-radius: 5px; margin: 20px 0;">
-              <code style="color: #495057; font-size: 12px; word-break: break-all;">${verificationUrl}</code>
-            </div>
-            
-            <p style="color: #666; font-size: 14px; line-height: 1.5;">
-              <strong>חשוב:</strong> קישור זה תקף ל-24 שעות בלבד. אם לא אימתת את האימייל שלך בזמן, 
-              תוכל לבקש קישור חדש מהאפליקציה.
-            </p>
-          </div>
-          
-          <div style="text-align: center; margin-top: 20px; color: #666; font-size: 12px;">
-            <p>אם לא ביקשת אימות זה, אנא התעלם מהמייל.</p>
-            <p>Smart List - מערכת חכמה לניהול רשימת קניות קבוצתיות 🛒</p>
-          </div>
-        </div>
-      `
-    } : {
-      subject: 'Email Verification - Smart List 📧',
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 10px; text-align: center;">
-            <h1 style="margin: 0; font-size: 28px;">Smart List</h1>
-            <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">Email Verification</p>
-          </div>
-          
-          <div style="background: #f8f9fa; padding: 30px; border-radius: 10px; margin-top: 20px;">
-            <h2 style="color: #333; margin-top: 0;">Hello ${username} 👋</h2>
-            
-            <p style="color: #555; font-size: 16px; line-height: 1.6;">
-              Thank you for registering with Smart List! To complete your registration and access all app features, 
-              please verify your email address.
-            </p>
-            
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="${verificationUrl}" 
-                 style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                        color: white; 
-                        padding: 15px 30px; 
-                        text-decoration: none; 
-                        border-radius: 25px; 
-                        font-weight: bold; 
-                        font-size: 16px;
-                        display: inline-block;">
-                Verify My Email ✅
-              </a>
-            </div>
-            
-            <p style="color: #666; font-size: 14px; line-height: 1.5;">
-              If the button doesn't work, you can copy and paste the following link into your browser:
-            </p>
-            
-            <div style="background: #e9ecef; padding: 15px; border-radius: 5px; margin: 20px 0;">
-              <code style="color: #495057; font-size: 12px; word-break: break-all;">${verificationUrl}</code>
-            </div>
-            
-            <p style="color: #666; font-size: 14px; line-height: 1.5;">
-              <strong>Important:</strong> This link is valid for 24 hours only. If you don't verify your email in time, 
-              you can request a new link from the app.
-            </p>
-          </div>
-          
-          <div style="text-align: center; margin-top: 20px; color: #666; font-size: 12px;">
-            <p>If you didn't request this verification, please ignore this email.</p>
-            <p>Smart List - Smart system for managing group shopping lists 🛒</p>
-          </div>
-        </div>
-      `
-    };
-    
-    const res = await resend.emails.send({
-      from: 'Smart List <onboarding@resend.dev>',
-      to,
-      subject: emailContent.subject,
-      html: emailContent.html,
-    });
 
-    return res;
+    const lang = language === 'en' ? translations.en : translations.he;
+    
+    const frontendUrl = process.env.FRONTEND_URL || 'https://www.listali.co.il';
+    const verificationUrl = `${frontendUrl}/${language}/auth/verify-email?token=${token}&email=${encodeURIComponent(to)}`;
+    
+    return await resend.emails.send({
+      from: EMAIL_FROM,
+      to,
+      subject: lang.subject,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; direction: ${lang.dir}; text-align: ${lang.dir === 'rtl' ? 'right' : 'left'};">
+          <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 30px; border-radius: 10px; text-align: center;">
+            <h1 style="margin: 0; font-size: 28px;">Listali</h1>
+            <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">${lang.subject.split(' - ')[0]}</p>
+          </div>
+          
+          <div style="background: #f8f9fa; padding: 30px; border-radius: 10px; margin-top: 20px;">
+            <h2 style="color: #333; margin-top: 0;">${lang.welcome(username)}</h2>
+            <p style="color: #555; font-size: 16px; line-height: 1.6;">${lang.body}</p>
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${verificationUrl}" 
+                 style="background: #0070f3; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; display: inline-block;">
+                ${lang.button}
+              </a>
+            </div>
+            
+            <div style="background: #e9ecef; padding: 10px; border-radius: 5px; word-break: break-all;">
+              <code style="font-size: 12px; color: #666;">${verificationUrl}</code>
+            </div>
+          </div>
+          
+          <div style="text-align: center; margin-top: 20px; color: #999; font-size: 12px;">
+            <p>${lang.footer}</p>
+          </div>
+        </div>
+      `
+    });
   } catch (error) {
     console.error('Error sending verification email:', error);
     throw error;
   }
 }
 
-export async function sendGroupInviteEmail(to: string, code: string) {
-  try {
-    const res = await resend.emails.send({
-      from: 'My App <onboarding@resend.dev>',
-      to,
-      subject: 'קוד הצטרפות לקבוצה 🛒',
-      html: `<p>שלום 👋</p><p>קוד ההצטרפות שלך הוא: <strong>${code}</strong></p>`,
-    });
+export async function sendGroupInviteEmail(
+  to: string, 
+  code: string, 
+  inviterName: string = 'A friend', 
+  language: string = 'he',
+  isNewUser: boolean = false
+) {
+  const isHebrew = language === 'he';
+  const frontendUrl = process.env.FRONTEND_URL || 'https://www.listali.co.il';
+  
+  const actionUrl = isNewUser 
+    ? `${frontendUrl}/${language}/auth/register?inviteCode=${code}`
+    : `${frontendUrl}/${language}/dashboard/groups/join?code=${code}`;
 
-    return res;
+  const content = {
+    subject: isHebrew 
+      ? (isNewUser ? `הזמנה להצטרף ל-Listali מ-${inviterName}` : `קוד הצטרפות לקבוצה ב-Listali 🛒`)
+      : (isNewUser ? `Invitation to join Listali from ${inviterName}` : `Group Join Code - Listali 🛒`),
+    
+    title: isHebrew ? `בואו נעשה קניות יחד!` : `Let's shop together!`,
+    
+    description: isHebrew 
+      ? (isNewUser 
+          ? `<strong>${inviterName}</strong> מזמין אותך להצטרף ל-<strong>Listali</strong>. זו הדרך הכי קלה לנהל רשימות קניות משותפות עם המשפחה והחברים בזמן אמת.` 
+          : `<strong>${inviterName}</strong> שלח לך קוד הצטרפות לקבוצת הקניות שלו ב-Listali.`)
+      : (isNewUser
+          ? `<strong>${inviterName}</strong> invited you to join <strong>Listali</strong>. It's the easiest way to manage shared grocery lists with family and friends in real-time.`
+          : `<strong>${inviterName}</strong> sent you a join code for their shopping group on Listali.`),
+    
+    cta: isHebrew 
+      ? (isNewUser ? 'להרשמה והצטרפות' : 'להזנת הקוד באפליקציה')
+      : (isNewUser ? 'Sign Up & Join' : 'Enter Code in App'),
+    
+    dir: isHebrew ? 'rtl' : 'ltr'
+  };
+
+  try {
+    return await resend.emails.send({
+      from: 'Listali <invite@listali.co.il>',
+      to,
+      subject: content.subject,
+      html: `
+        <div dir="${content.dir}" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 15px; overflow: hidden;">
+          <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 30px; text-align: center; color: white;">
+            <h1 style="margin: 0;">Listali</h1>
+            <p style="margin: 5px 0 0 0; opacity: 0.9;">${content.title}</p>
+          </div>
+
+          <div style="padding: 30px; text-align: ${content.dir === 'rtl' ? 'right' : 'left'};">
+            <p style="font-size: 16px; color: #333;">${content.description}</p>
+            
+            <div style="background: #f0f7ff; border-radius: 10px; padding: 20px; margin: 25px 0; border: 2px dashed #0070f3; text-align: center;">
+              <span style="display: block; color: #666; font-size: 13px; margin-bottom: 5px;">${isHebrew ? 'קוד הקבוצה שלכם:' : 'Your group code:'}</span>
+              <strong style="font-size: 32px; color: #0070f3; letter-spacing: 3px;">${code}</strong>
+            </div>
+
+            <div style="text-align: center; margin-top: 30px;">
+              <a href="${actionUrl}" 
+                 style="background-color: #0070f3; color: white; padding: 14px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; display: inline-block;">
+                ${content.cta}
+              </a>
+            </div>
+            
+            ${isNewUser ? `
+            <p style="font-size: 12px; color: #999; margin-top: 25px; text-align: center;">
+              ${isHebrew ? 'ההרשמה לוקחת פחות מדקה והיא חינמית לגמרי.' : 'Registration takes less than a minute and is completely free.'}
+            </p>` : ''}
+          </div>
+        </div>
+      `,
+    });
   } catch (error) {
-    console.error('שגיאה בשליחת מייל:', error);
+    console.error('Error sending group invite email:', error);
     throw error;
   }
 }

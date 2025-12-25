@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import User from '../models/user';
-import { IApiResponse } from '../types';
+import { IApiResponse, IGroup, IGroupMember } from '../types';
 
 interface JwtPayload {
   id: string;
@@ -297,11 +297,14 @@ export const authRateLimit = {
 };
 
 // Extend Express Request interface
+// Using declare global for Express namespace extension (required by Express types)
+/* eslint-disable @typescript-eslint/no-namespace */
 declare global {
   namespace Express {
     interface Request {
-      group?: any;
-      groupMember?: any;
+      group?: IGroup;
+      groupMember?: IGroupMember;
     }
   }
 }
+/* eslint-enable @typescript-eslint/no-namespace */

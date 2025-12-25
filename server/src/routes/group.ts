@@ -2,7 +2,7 @@
 import express from 'express';
 import { 
   createGroup,  
-  joinGroup, 
+  // joinGroup, 
   inviteToGroup,
   updateGroup,
   deleteGroup,
@@ -20,7 +20,7 @@ import {
   updateGroupValidation,
   inviteToGroupValidation,
   updateMemberRoleValidation,
-  joinGroupValidation,
+  // joinGroupValidation,
   validateGroupId,
   validateMemberId
 } from '../middleware/validation';

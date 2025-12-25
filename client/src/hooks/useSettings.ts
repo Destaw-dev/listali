@@ -3,7 +3,6 @@ import { apiClient } from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 import { useNotification } from '@/contexts/NotificationContext';
 
-// Query Keys
 export const settingsKeys = {
   all: ['settings'] as const,
   profile: () => [...settingsKeys.all, 'profile'] as const,
@@ -11,7 +10,6 @@ export const settingsKeys = {
   notifications: () => [...settingsKeys.all, 'notifications'] as const,
 };
 
-// Get User Profile Query
 export const useUserProfile = () => {
   return useQuery({
     queryKey: settingsKeys.profile(),
@@ -19,12 +17,11 @@ export const useUserProfile = () => {
       const response = await apiClient.getUserProfile();
       return response.data;
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
     retry: 1,
   });
 };
 
-// Get User Preferences Query
 export const useUserPreferences = (options?: { enabled?: boolean }) => {
   return useQuery({
     queryKey: settingsKeys.preferences(),
@@ -32,13 +29,12 @@ export const useUserPreferences = (options?: { enabled?: boolean }) => {
       const response = await apiClient.getUserPreferences();
       return response.data;
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
     retry: 1,
-    enabled: options?.enabled !== false, // Default to true, but can be disabled
+    enabled: options?.enabled !== false,
   });
 };
 
-// Get Notification Settings Query
 export const useNotificationSettings = () => {
   return useQuery({
     queryKey: settingsKeys.notifications(),
@@ -46,15 +42,15 @@ export const useNotificationSettings = () => {
       const response = await apiClient.getNotificationSettings();
       return response.data;
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
     retry: 1,
   });
 };
 
-// Update Profile Mutation
 export const useUpdateProfile = () => {
   const queryClient = useQueryClient();
   const { showSuccess, handleApiError } = useNotification();
+  const { setUser, user: currentUser } = useAuthStore();
 
   return useMutation({
     mutationFn: async (profileData: { firstName: string; lastName: string; username?: string }) => {
@@ -63,6 +59,13 @@ export const useUpdateProfile = () => {
     },
     onSuccess: (data) => {
       queryClient.setQueryData(settingsKeys.profile(), data);
+      if (currentUser && data) {
+        setUser({
+          ...currentUser,
+          ...data,
+          groups: data.groups || currentUser.groups,
+        });
+      }
       showSuccess('notifications.profileUpdated');
     },
     onError: (error: any) => {
@@ -71,7 +74,6 @@ export const useUpdateProfile = () => {
   });
 };
 
-// Update Email Mutation
 export const useUpdateEmail = () => {
   const queryClient = useQueryClient();
   const { showSuccess, handleApiError } = useNotification();
@@ -82,9 +84,10 @@ export const useUpdateEmail = () => {
       return response.data;
     },
       onSuccess: (data) => {
-        // Update profile in cache
-        queryClient.setQueryData(settingsKeys.profile(), data);
-        showSuccess('emailUpdated');
+        if (data) {
+          queryClient.setQueryData(settingsKeys.profile(), data);
+        }
+        showSuccess('notifications.emailUpdated');
       },
     onError: (error: any) => {
       handleApiError(error);
@@ -92,10 +95,10 @@ export const useUpdateEmail = () => {
   });
 };
 
-// Update Preferences Mutation
 export const useUpdatePreferences = () => {
   const queryClient = useQueryClient();
   const { handleApiError } = useNotification();
+  const { setUser, user: currentUser } = useAuthStore();
 
   return useMutation({
     mutationFn: async (preferencesData: { language: string; theme: string }) => {
@@ -103,8 +106,16 @@ export const useUpdatePreferences = () => {
       return response.data;
     },
     onSuccess: (data) => {
-      // Update preferences in cache
       queryClient.setQueryData(settingsKeys.preferences(), data);
+      if (currentUser && data) {
+        setUser({
+          ...currentUser,
+          preferences: {
+            ...currentUser.preferences,
+            ...data,
+          },
+        });
+      }
     },
     onError: (error: any) => {
       handleApiError(error);
@@ -112,10 +123,10 @@ export const useUpdatePreferences = () => {
   });
 };
 
-// Update Notification Settings Mutation
 export const useUpdateNotificationSettings = () => {
   const queryClient = useQueryClient();
   const { showSuccess, handleApiError } = useNotification();
+  const { setUser, user: currentUser } = useAuthStore();
 
   return useMutation({
     mutationFn: async (settings: {
@@ -129,9 +140,17 @@ export const useUpdateNotificationSettings = () => {
       return response.data;
     },
       onSuccess: (data) => {
-        // Update notification settings in cache and user preferences
         queryClient.setQueryData(settingsKeys.notifications(), data);
         queryClient.setQueryData(settingsKeys.preferences(), data);
+        if (currentUser && data) {
+          setUser({
+            ...currentUser,
+            preferences: {
+              ...currentUser.preferences,
+              ...data,
+            },
+          });
+        }
         showSuccess('settings.notificationSettingsUpdateSuccess');
       },
     onError: (error: any) => {
@@ -140,7 +159,6 @@ export const useUpdateNotificationSettings = () => {
   });
 };
 
-// Logout Mutation
 export const useLogout = () => {
   const queryClient = useQueryClient();
   const { clearUser } = useAuthStore();
@@ -148,16 +166,12 @@ export const useLogout = () => {
 
   return useMutation({
     mutationFn: async () => {
-      // Cancel all ongoing queries first
       queryClient.cancelQueries();
       
-      // Clear all queries from cache
       queryClient.clear();
       
-      // Clear user from store (this also clears token from localStorage)
       clearUser();
       
-      // Call logout API
       await apiClient.logout();
       
       return null;
@@ -171,7 +185,6 @@ export const useLogout = () => {
   });
 };
 
-// Delete Account Mutation
 export const useDeleteAccount = () => {
   const queryClient = useQueryClient();
   const { showSuccess, handleApiError } = useNotification();
@@ -181,9 +194,7 @@ export const useDeleteAccount = () => {
       return null;
     },
     onSuccess: () => {
-      // Clear all queries from cache
       queryClient.clear();
-      // Clear user from store
       if (typeof window !== 'undefined') {
         localStorage.removeItem('user');
       }

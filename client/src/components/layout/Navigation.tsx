@@ -8,6 +8,7 @@ import { useTranslations } from 'next-intl';
 import LanguageSwitcher from '@/components/common/LanguageSwitcher';
 import { useLogout } from '@/hooks/useSettings';
 import { Button } from '../common/Button';
+import Image from 'next/image';
 
 export function Navigation() {
   const { user, isAuthenticated } = useAuthStore();
@@ -34,24 +35,28 @@ export function Navigation() {
       icon: Home,
       href: `/${locale}/dashboard`,
       active: pathname === `/${locale}/dashboard`,
+      showOnMobile: true,
     },
     {
       label: t('groups'),
       icon: Users,
       href: `/${locale}/groups`,
       active: pathname.startsWith(`/${locale}/groups`),
+      showOnMobile: true,
     },
     {
       label: t('invitations'),
       icon: UserPlus,
       href: `/${locale}/invitations`,
       active: pathname === `/${locale}/invitations`,
+      showOnMobile: true,
     },
     {
       label: t('settings'),
       icon: Settings,
       href: `/${locale}/settings`,
       active: pathname === `/${locale}/settings`,
+      showOnMobile: true,
     },
   ];
 
@@ -61,16 +66,14 @@ export function Navigation() {
       <nav className="hidden md:block bg-gradient-to-r from-white/95 via-white/90 to-white/95 dark:from-neutral-900/95 dark:via-neutral-800/90 dark:to-neutral-900/95 backdrop-blur-xl  shadow-lg">
         <div className="px-4">
           <div className="flex items-center justify-between py-4">
-            {/* Logo/Brand */}
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl">
-                <Home className="w-6 h-6" />
-              </div>
-              <div>
-                <h1 className="text-lg font-bold text-primary">Smart Lists</h1>
-                <p className="text-xs text-secondary">Group Shopping</p>
-              </div>
+            {/* Brand */}
+            <div 
+              className="flex items-center cursor-pointer" 
+              onClick={() => router.push(`/${locale}/dashboard`)}
+            >
+              <h1 className="text-2xl font-bold text-primary">Listali</h1>
             </div>
+
 
             {/* Desktop Navigation Items */}
             <div className="flex items-center gap-4">
@@ -105,10 +108,13 @@ export function Navigation() {
               
               {user?.avatar ? (
                 <div>
-                  <img
+                  <Image
+                    width={40}
+                    height={40}
+                    loading="lazy"
                     src={user.avatar}
                     alt={(user.username || user.firstName) + ' avatar'}
-                    className="w-10 h-10 rounded-full border-2 border-primary/30 shadow-lg hover:border-primary/60 transition-all duration-300 hover:scale-110"
+                    className="rounded-full border-2 border-primary/30 shadow-lg hover:border-primary/60 transition-all duration-300 hover:scale-110"
                   />
                 </div>
               ) : (
@@ -141,12 +147,13 @@ export function Navigation() {
       </nav>
 
       {/* Mobile Navigation - Bottom */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-r from-white/95 via-white/90 to-white/95 dark:from-neutral-900/95 dark:via-neutral-800/90 dark:to-neutral-900/95 backdrop-blur-xl safe-area-inset-bottom shadow-2xl">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-r from-white/95 via-white/90 to-white/95 dark:from-neutral-900/95 dark:via-neutral-800/90 dark:to-neutral-900/95 backdrop-blur-xl shadow-2xl">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between py-3">
             {/* Mobile Navigation Items */}
             <div className="flex items-center gap-1">
               {navItems.map((item) => {
+                if (!item.showOnMobile) return null;
                 const Icon = item.icon;
                 return (
                   <Button
@@ -167,12 +174,14 @@ export function Navigation() {
 
             {/* Mobile User Menu */}
             <div className="flex items-center gap-2">
-              <LanguageSwitcher />
               {user?.avatar ? (
-                <img
+                <Image
+                  loading="lazy"
                   src={user.avatar}
                   alt={(user.username || user.firstName) + ' avatar'}
-                  className="w-8 h-8 rounded-full border-2 border-primary/30 shadow-md"
+                  width={32}
+                  height={32}
+                  className="rounded-full border-2 border-primary/30 shadow-md"
                 />
               ) : (
                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 border-2 border-primary/30 flex items-center justify-center">

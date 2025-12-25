@@ -1,6 +1,5 @@
 import mongoose, { Schema, Model } from 'mongoose';
-import { IGroup, IGroupMember, GroupDocument } from '../types';
-import { nanoid } from 'nanoid';
+import { IGroup, IGroupMember } from '../types';
 
 interface GroupModel extends Model<IGroup> {
   findByUser(userId: string): Promise<IGroup[]>;

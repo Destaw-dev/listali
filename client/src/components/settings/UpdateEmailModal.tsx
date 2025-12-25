@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { X, Mail } from 'lucide-react';
 import { Button, Card, CardHeader, CardBody, Input } from '@/components/common';
 import { useUpdateEmail } from '@/hooks/useSettings';
+import { useModalScrollLock } from '@/hooks/useModalScrollLock';
 
 interface UpdateEmailModalProps {
   isOpen: boolean;
@@ -41,10 +42,11 @@ export default function UpdateEmailModal({ isOpen, onClose, currentEmail }: Upda
       emailSchema.parse({ ...formData, [field]: value });
       setErrors(prev => ({ ...prev, [field]: '' }));
     } catch (error) {
-      const zodError = error as any;
-      const fieldError = zodError.errors.find((e: any) => e.path.includes(field));
-      if (fieldError) {
-        setErrors(prev => ({ ...prev, [field]: t(fieldError.message) }));
+      if (error instanceof z.ZodError) {
+        const fieldError = error.issues.find((e) => e.path.includes(field));
+        if (fieldError) {
+          setErrors(prev => ({ ...prev, [field]: t(fieldError.message) }));
+        }
       }
     }
   };
@@ -65,11 +67,10 @@ export default function UpdateEmailModal({ isOpen, onClose, currentEmail }: Upda
       await updateEmailMutation.mutateAsync({ email: formData.email });
       onClose();
     } catch (error) {
-      const zodError = error as any;
-      if (zodError.errors) {
+      if (error instanceof z.ZodError) {
         const newErrors: Record<string, string> = {};
-        zodError.errors.forEach((err: any) => {
-          const field = err.path[0];
+        error.issues.forEach((err) => {
+          const field = err.path[0] as string;
           newErrors[field] = t(err.message);
         });
         setErrors(newErrors);
@@ -78,6 +79,9 @@ export default function UpdateEmailModal({ isOpen, onClose, currentEmail }: Upda
       setInternalIsLoading(false);
     }
   };
+
+  // Prevent body scroll when modal is open
+  useModalScrollLock(isOpen);
 
   if (!isOpen) return null;
 

@@ -3,7 +3,6 @@ import  User  from '../models/user';
 import { successResponse, validationErrorResponse } from '../middleware/errorHandler';
 import { validationResult } from 'express-validator';
 
-// Get user preferences
 export const getUserPreferences = async (req: Request, res: Response) => {
   const user = await User.findById(req.userId).select('preferences');
   if (!user) {
@@ -16,7 +15,6 @@ export const getUserPreferences = async (req: Request, res: Response) => {
   return res.status(200).json(successResponse(user.preferences, 'User preferences retrieved successfully'));
 };
 
-// Update user preferences
 export const updateUserPreferences = async (req: Request, res: Response) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -33,7 +31,6 @@ export const updateUserPreferences = async (req: Request, res: Response) => {
     });
   }
 
-  // Update preferences
   if (language) {
     user.preferences.language = language;
   }
@@ -46,7 +43,6 @@ export const updateUserPreferences = async (req: Request, res: Response) => {
   return res.status(200).json(successResponse(user.preferences, 'Preferences updated successfully'));
 };
 
-// Get user notification settings
 export const getUserNotificationSettings = async (req: Request, res: Response) => {
   const user = await User.findById(req.userId).select('preferences');
   if (!user) {
@@ -56,7 +52,6 @@ export const getUserNotificationSettings = async (req: Request, res: Response) =
     });
   }
 
-  // Map user preferences to notification settings format
   const notificationSettings = {
     pushNotifications: user.preferences.pushNotifications,
     emailNotifications: user.preferences.emailNotifications,
@@ -68,7 +63,6 @@ export const getUserNotificationSettings = async (req: Request, res: Response) =
   return res.status(200).json(successResponse(notificationSettings, 'Notification settings retrieved successfully'));
 };
 
-// Update user notification settings
 export const updateUserNotificationSettings = async (req: Request, res: Response) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -78,9 +72,9 @@ export const updateUserNotificationSettings = async (req: Request, res: Response
   const {
     pushNotifications,
     emailNotifications,
-    newMessageNotifications,
-    shoppingListUpdates,
-    groupInvitations
+    newMessageNotifications: _newMessageNotifications,
+    shoppingListUpdates: _shoppingListUpdates,
+    groupInvitations: _groupInvitations
   } = req.body;
 
   const user = await User.findById(req.userId);
@@ -92,7 +86,6 @@ export const updateUserNotificationSettings = async (req: Request, res: Response
     });
   }
 
-  // Update notification preferences
   if (pushNotifications !== undefined) {
     user.preferences.pushNotifications = pushNotifications;
   }
@@ -102,7 +95,6 @@ export const updateUserNotificationSettings = async (req: Request, res: Response
 
   await user.save();
 
-  // Return updated notification settings
   const notificationSettings = {
     pushNotifications: user.preferences.pushNotifications,
     emailNotifications: user.preferences.emailNotifications,

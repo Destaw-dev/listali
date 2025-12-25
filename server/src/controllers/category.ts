@@ -12,8 +12,8 @@ export const getAllCategories = async (
   try {
     const categories = await Category.find().sort({ sortOrder: 1 });
     res.status(200).json(successResponse(categories, "קטגוריות נטענו בהצלחה"));
-  } catch(err: any) {
-    res.status(500).json(errorResponse("שגיאה בטעינת קטגוריות", err.stack));
+  } catch(error) {
+    res.status(500).json(errorResponse("שגיאה בטעינת קטגוריות", 500, error instanceof Error ? error.message : 'Failed to get categories'));
   }
 };
 
@@ -22,10 +22,10 @@ export const getActiveCategories = async (
   res: Response<IApiResponse>
 ) => {
   try {
-    const categories = await (Category as any).getActive();
+    const categories = await Category.getActive();
     res.status(200).json(successResponse(categories, "קטגוריות פעילות נטענו בהצלחה"));
-  } catch (err: any){
-    res.status(500).json(errorResponse("שגיאה בטעינת קטגוריות פעילות", err.stack));
+  } catch (error) {
+    res.status(500).json(errorResponse("שגיאה בטעינת קטגוריות פעילות", 500, error instanceof Error ? error.message : 'Failed to get active categories'));
   }
 };
 
@@ -34,14 +34,14 @@ export const getCategoryByNameEn = async (
   res: Response<IApiResponse>
 ) => {
   try {
-    const category = await (Category as any).getByNameEn(req.params.nameEn);
+    const category = await Category.getByNameEn(req.params.nameEn as string);
     if (!category) {
       res.status(404).json(errorResponse("קטגוריה לא נמצאה", 404));
       return;
     }
     res.status(200).json(successResponse(category, "קטגוריה נטענה בהצלחה"));
-  } catch (err: any){
-    res.status(500).json(errorResponse("שגיאה בטעינת קטגוריה", err.stack));
+  } catch (error) {
+    res.status(500).json(errorResponse("שגיאה בטעינת קטגוריה", 500, error instanceof Error ? error.message : 'Failed to get category by name'));
   }
 };
 
@@ -50,10 +50,10 @@ export const getCategoriesWithSubCategories = async (
   res: Response<IApiResponse>
 ) => {
   try {
-    const data = await (Category as any).getWithSubCategories();
+    const data = await Category.getWithSubCategories();
     res.status(200).json(successResponse(data, "קטגוריות ותתי־קטגוריות נטענו בהצלחה"));
-  } catch (err: any){
-    res.status(500).json(errorResponse("שגיאה בטעינת קטגוריות עם תתי־קטגוריות", err.stack));
+  } catch (error) {
+    res.status(500).json(errorResponse("שגיאה בטעינת קטגוריות עם תתי־קטגוריות", 500, error instanceof Error ? error.message : 'Failed to get categories with subcategories'));
   }
 };
 
@@ -65,8 +65,8 @@ export const createCategory = async (
     const newCategory = new Category(req.body);
     const saved = await newCategory.save();
     res.status(201).json(successResponse(saved, "קטגוריה נוצרה בהצלחה"));
-  } catch (err: any) {
-    res.status(400).json(errorResponse(err.message || "שגיאה ביצירת קטגוריה", err.stack));
+  } catch (error) {
+    res.status(400).json(errorResponse(error instanceof Error ? error.message : "שגיאה ביצירת קטגוריה", 400, error instanceof Error ? error.message : 'Failed to create category'));
   }
 };
 
@@ -84,8 +84,8 @@ export const updateCategory = async (
       return;
     }
     res.status(200).json(successResponse(updated, "קטגוריה עודכנה בהצלחה"));
-  } catch (err: any) {
-    res.status(400).json(errorResponse(err.message, err.stack));
+  } catch (error) {
+    res.status(400).json(errorResponse(error instanceof Error ? error.message : "שגיאה בעדכון קטגוריה", 400, error instanceof Error ? error.message : 'Failed to update category'));
   }
 };
 
@@ -100,7 +100,7 @@ export const deleteCategory = async (
       return;
     }
     res.status(200).json(successResponse(null, "קטגוריה נמחקה בהצלחה"));
-  } catch (err: any){
-    res.status(500).json(errorResponse("שגיאה במחיקת קטגוריה", err.stack));
+  } catch (error) {
+    res.status(500).json(errorResponse("שגיאה במחיקת קטגוריה", 500, error instanceof Error ? error.message : 'Failed to delete category'));
   }
 };

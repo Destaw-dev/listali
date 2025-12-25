@@ -33,6 +33,7 @@ import UpdateEmailModal from "@/components/settings/UpdateEmailModal";
 import LanguageThemeModal from "@/components/settings/LanguageThemeModal";
 import NotificationModal from "@/components/settings/NotificationModal";
 import { useNotification } from "@/contexts/NotificationContext";
+import { Theme } from "@/types";
 
 export default function SettingsPage() {
   const { user, isAuthenticated, isInitialized, } = useAuthStore();
@@ -81,7 +82,7 @@ export default function SettingsPage() {
     await updatePreferencesMutation.mutateAsync(data);
     
     const { setTheme } = useThemeStore.getState();
-    setTheme(data.theme as any);
+    setTheme(data.theme as Theme);
     
     document.cookie = `NEXT_LOCALE=${data.language}; path=/; max-age=31536000; SameSite=Lax`;
     if (data.language !== locale) {
@@ -108,7 +109,7 @@ export default function SettingsPage() {
 
   if (!isInitialized) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-50 via-secondary-50 to-accent-50 safe-area-inset flex items-center justify-center">
+      <div className="min-h-screen bg-surface flex items-center justify-center">
         <Card variant="glass" className="bg-white/80 shadow-2xl max-w-md">
           <CardBody className="p-6 text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
@@ -144,20 +145,20 @@ export default function SettingsPage() {
         },
       ],
     },
-    {
-      title: t("email"),
-      description: t("emailDescription"),
-      icon: Mail,
-      color: "secondary",
-      items: [
-        {
-          label: t("email"),
-          value: user?.email || "",
-          icon: Mail,
-          type: "text" as const,
-        },
-      ],
-    },
+    // {
+    //   title: t("email"),
+    //   description: t("emailDescription"),
+    //   icon: Mail,
+    //   color: "secondary",
+    //   items: [
+    //     {
+    //       label: t("email"),
+    //       value: user?.email || "",
+    //       icon: Mail,
+    //       type: "text" as const,
+    //     },
+    //   ],
+    // },
     {
       title: t("settings"),
       description: t("settingsDescription"),
@@ -201,7 +202,7 @@ export default function SettingsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-surface safe-area-inset">
+    <div className="min-h-screen bg-surface">
       <div className="container mx-auto px-4 py-6">
         <div className="max-w-4xl mx-auto space-y-8">
           

@@ -70,10 +70,6 @@ export default function InvitationsPage() {
     }
   };
 
-  const navigateBack = () => {
-    router.push(`/${locale}/groups`);
-  };
-
   // Show loading while auth is initializing
   if (!isInitialized) {
     return (
@@ -110,18 +106,12 @@ export default function InvitationsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-surface">
       {/* Header */}
-      <div className="bg-surface border-b border-border">
+      <div className="bg-surface">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <button
-                onClick={navigateBack}
-                className="p-2 text-secondary hover:text-primary transition-colors"
-              >
-                <ArrowIcon className="w-5 h-5" />
-              </button>
               <div>
                 <h1 className="text-2xl font-bold text-primary">{t('invitations')}</h1>
                 <p className="text-secondary text-sm">{t('manageInvitations')}</p>
@@ -132,9 +122,9 @@ export default function InvitationsPage() {
       </div>
 
       {/* Content */}
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto px-4 py-6 bg-card rounded-lg shadow-lg">
         {invitations.length === 0 ? (
-          <div className="text-center py-12">
+          <div className="text-center py-12 ">
             <UserPlus className="w-16 h-16 text-muted mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-primary mb-2">{t('noInvitations')}</h3>
             <p className="text-secondary">{t('noNewInvitations')}</p>

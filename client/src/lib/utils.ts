@@ -86,3 +86,17 @@ export function findExistingItem(
 
   return existing || null;
 }
+
+// Map server invitation error messages to translation keys
+export function mapInviteErrorToTranslationKey(errorMessage: string): string {
+  const errorMap: Record<string, string> = {
+    'This invitation has expired. Please request a new invitation from the group admin.': 'invitations.expired',
+    'The email address used for registration does not match the email address that received the invitation.': 'invitations.emailMismatch',
+    'Invalid invitation code. Please check the invitation link or request a new one.': 'invitations.invalidCode',
+    'Invalid invitation code. The group may not exist or the invitation may have been cancelled.': 'invitations.invalidCodeOrCancelled',
+    'Failed to process the invitation. Please contact the group admin for assistance.': 'invitations.processingFailed',
+  };
+
+  // Return the mapped key if found, otherwise return the original message
+  return errorMap[errorMessage] || errorMessage;
+}

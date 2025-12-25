@@ -7,6 +7,8 @@ import { z } from 'zod';
 import { useTranslations } from 'next-intl';
 import { X, Calendar, User, Tag, AlertTriangle } from 'lucide-react';
 import { useGroup } from '@/hooks/useGroups';
+import { useModalScrollLock } from '@/hooks/useModalScrollLock';
+import { Button, Input, TextArea } from '../common';
 
 type CreateListFormData = {
   name: string;
@@ -110,15 +112,18 @@ export default function CreateShoppingListModal({
     }
   };
 
+  // Prevent body scroll when modal is open
+  useModalScrollLock(isOpen);
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="card-glass shadow-2xl rounded-xl p-6 w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom-4">
+    <div className="fixed inset-0 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={(e) => e.target === e.currentTarget && handleClose()}>
+      <div className="bg-surface shadow-2xl rounded-xl p-6 w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom-4">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl">
-              <Calendar className="w-5 h-5 text-white" />
+              <Calendar className="w-5 h-5 " />
             </div>
             <div>
               <h2 className="text-xl font-bold text-primary">
@@ -127,13 +132,7 @@ export default function CreateShoppingListModal({
               <p className="text-text-muted text-sm">{t('willBeCreatedForGroup')}: {groupName}</p>
             </div>
           </div>
-          <button
-            onClick={handleClose}
-            disabled={isSubmitting}
-            className="p-2 text-text-muted hover:text-text-primary transition-colors rounded-lg hover:bg-white/50 disabled:opacity-50"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <Button variant="ghost" size="md" icon={<X className="w-5 h-5" />} onClick={handleClose} disabled={isSubmitting} rounded={true}/>
         </div>
 
         {groupName && (
@@ -147,34 +146,24 @@ export default function CreateShoppingListModal({
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
           {/* Name */}
           <div>
-            <label className="block text-sm font-medium text-primary mb-2">
-              {t('listName')} *
-            </label>
-            <input
+            <Input
               {...register('name')}
               type="text"
-              className="w-full px-3 py-2 border border-border rounded-lg bg-background text-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
               placeholder={t('listNamePlaceholder')}
+              error={errors.name?.message}
+              label={`${t('listName')} *`}
             />
-            {errors.name && (
-              <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
-            )}
           </div>
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-primary mb-2">
-              {t('description')}
-            </label>
-            <textarea
+            <TextArea
               {...register('description')}
               rows={3}
-              className="w-full px-3 py-2 border border-border rounded-lg bg-background text-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
               placeholder={t('descriptionPlaceholder')}
+              error={errors.description?.message}
+              label={t('description')}
             />
-            {errors.description && (
-              <p className="text-red-500 text-sm mt-1">{errors.description.message}</p>
-            )}
           </div>
 
           {/* Priority */}
@@ -206,29 +195,6 @@ export default function CreateShoppingListModal({
               />
             </div>
           </div>
-
-          {/* Assigned To */}
-          {/* {group?.members && group.members.length > 1 && (
-            <div>
-              <label className="block text-sm font-medium text-primary mb-2">
-                {t('assignTo')}
-              </label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary w-4 h-4" />
-                <select
-                  {...register('assignedTo')}
-                  className="w-full pl-10 pr-3 py-2 border border-border rounded-lg bg-background text-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-                >
-                  <option value="">{t('notAssigned')}</option>
-                  {group.members.map((member: any) => (
-                    <option key={member.user._id} value={member.user._id}>
-                      {member.user.firstName} {member.user.lastName}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          )} */}
 
           {/* Tags */}
           <div>

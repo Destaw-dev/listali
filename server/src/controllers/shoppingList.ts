@@ -6,7 +6,7 @@ import Group from '../models/group';
 import Item from '../models/item';
 import {ShoppingSession} from '../models/shoppingSession';
 import { AppError, validationErrorResponse, successResponse } from '../middleware/errorHandler';
-import { IApiResponse } from '../types';
+import { IApiResponse, IGroupMember } from '../types';
 
 // Get all shopping lists for a group
 export const getGroupShoppingLists = async (req: express.Request, res: express.Response<IApiResponse>) => {
@@ -23,7 +23,7 @@ export const getGroupShoppingLists = async (req: express.Request, res: express.R
     throw new AppError('Group not found', 404);
   }
 
-  const isMember = group.members.some((member: any) => 
+  const isMember = group.members.some((member: IGroupMember) => 
     member.user.toString() === userId
   );
 
@@ -60,7 +60,7 @@ export const getShoppingList = async (req: express.Request, res: express.Respons
     throw new AppError('Group not found', 404);
   }
 
-  const isMember = group.members.some((member: any) => 
+  const isMember = group.members.some((member: IGroupMember) => 
     member.user.toString() === userId
   );
 
@@ -69,7 +69,7 @@ export const getShoppingList = async (req: express.Request, res: express.Respons
   }
 
   // Prepare response
-  const response: any = {
+  const response: IApiResponse = {
     success: true,
     data: {
       shoppingList: {
@@ -178,7 +178,7 @@ export const createShoppingList = async (req: express.Request, res: express.Resp
     throw new AppError('Group not found', 404);
   }
 
-  const isMember = group.members.some((member: any) => 
+  const isMember = group.members.some((member: IGroupMember) => 
     member.user.toString() === userId
   );
 
@@ -188,7 +188,7 @@ export const createShoppingList = async (req: express.Request, res: express.Resp
 
   // Check if assignedTo is a member of the group
   if (assignedTo) {
-    const isAssignedUserMember = group.members.some((member: any) => 
+    const isAssignedUserMember = group.members.some((member: IGroupMember) => 
       member.user.toString() === assignedTo
     );
     if (!isAssignedUserMember) {
@@ -241,7 +241,7 @@ export const updateShoppingList = async (req: express.Request, res: express.Resp
     throw new AppError('Group not found', 404);
   }
 
-  const isMember = group.members.some((member: any) => 
+  const isMember = group.members.some((member: IGroupMember) => 
     member.user.toString() === userId
   );
 
@@ -283,7 +283,7 @@ export const deleteShoppingList = async (req: express.Request, res: express.Resp
     throw new AppError('Group not found', 404);
   }
 
-  const member = group.members.find((m: any) => m.user.toString() === userId);
+  const member = group.members.find((m: IGroupMember) => m.user.toString() === userId);
   if (!member) {
     throw new AppError('You are not a member of this group', 403);
   }
@@ -326,7 +326,7 @@ export const addItemToList = async (req: express.Request, res: express.Response<
     throw new AppError('Group not found', 404);
   }
 
-  const isMember = group.members.some((member: any) => 
+  const isMember = group.members.some((member: IGroupMember) => 
     member.user.toString() === userId
   );
 
@@ -382,7 +382,7 @@ export const removeItemFromList = async (req: express.Request, res: express.Resp
     throw new AppError('Group not found', 404);
   }
 
-  const isMember = group.members.some((member: any) => 
+  const isMember = group.members.some((member: IGroupMember) => 
     member.user.toString() === userId
   );
 
@@ -428,7 +428,7 @@ export const completeShoppingList = async (req: express.Request, res: express.Re
     throw new AppError('Group not found', 404);
   }
 
-  const isMember = group.members.some((member: any) => 
+  const isMember = group.members.some((member: IGroupMember) => 
     member.user.toString() === userId
   );
 

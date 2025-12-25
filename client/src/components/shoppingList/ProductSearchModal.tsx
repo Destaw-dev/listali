@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, Package, X, Check, Image as ImageIcon } from 'lucide-react';
 import { useSearchProducts } from '@/hooks/useProducts';
 import { useTranslations } from 'next-intl';
+import { useModalScrollLock } from '@/hooks/useModalScrollLock';
 
 interface Product {
   _id: string;
@@ -53,6 +54,9 @@ export default function ProductSearchModal({
     setSelectedProduct(null);
     onClose();
   };
+
+  // Prevent body scroll when modal is open
+  useModalScrollLock(isOpen);
 
   if (!isOpen) return null;
 

@@ -4,7 +4,7 @@ import { validationResult } from 'express-validator';
 import Group from '../models/group';
 import User from '../models/user';
 import { AppError, validationErrorResponse, successResponse, errorResponse } from '../middleware/errorHandler';
-import { IApiResponse } from '../types';
+import { IApiResponse, IGroupMember,  } from '../types';
 import { nanoid } from 'nanoid';
 import { sendGroupInviteEmail } from '@/utils/email';
 import { getIO, emitToGroupExcept } from '@/socket/socketHandler';
@@ -206,7 +206,7 @@ export const inviteToGroup = async (req: express.Request, res: express.Response<
   const group = req.group;
 
   // Check if user is already a member
-  const existingMember = group.members.find((member: any) => 
+  const existingMember = group?.members.find((member: IGroupMember) => 
     member.user.toString() === req.userId
   );
   if (!existingMember) {
@@ -224,7 +224,7 @@ export const inviteToGroup = async (req: express.Request, res: express.Response<
 
   // Check if user is already a member of the group
   if (user) {
-    const isAlreadyMember = group.members.find((member: any) => 
+    const isAlreadyMember = group?.members.find((member: IGroupMember) => 
       member.user.toString() === user._id.toString()
     );
     if (isAlreadyMember) {
@@ -233,14 +233,26 @@ export const inviteToGroup = async (req: express.Request, res: express.Response<
   }
 
   // Check if user already has a pending invite
-  const existingInvite = group.pendingInvites.find((invite: any) => 
+  const existingInvite = group?.pendingInvites.find((invite: any) => 
     invite.email === email || (user && invite.user?.toString() === user._id.toString())
   );
+
   if (existingInvite) {
-    const errorMessage = user 
-      ? `המשתמש ${user.firstName} ${user.lastName} כבר קיבל הזמנה`
-      : `כתובת האימייל ${email} כבר קיבלה הזמנה`;
-    throw new AppError(errorMessage, 400);
+    // check if the invite is pending and if the expired send new invite and update the existing invite
+    if (existingInvite.status === 'pending' && existingInvite.invitedAt < new Date(Date.now() - 1000 * 60 * 60 * 24)) {
+      await group?.updateOne({
+        $set: {
+          pendingInvites: group?.pendingInvites.filter((invite: { code: string }) => invite.code !== existingInvite.code)
+        }
+      });
+      await sendGroupInviteEmail(email, inviteCode, req.user?.firstName || 'A friend', req.user?.preferences?.language || 'he', true);
+      return res.status(200).json(successResponse(null, 'New invite sent successfully'));
+    } else {
+      const errorMessage = user 
+        ? `המשתמש ${user.firstName} ${user.lastName} כבר קיבל הזמנה`
+        : `כתובת האימייל ${email} כבר קיבלה הזמנה`;
+      throw new AppError(errorMessage, 400);
+    }
   }
 
   // Send invitation based on user registration status
@@ -254,7 +266,7 @@ export const inviteToGroup = async (req: express.Request, res: express.Response<
       invitedAt: new Date()
     };
 
-    await group.updateOne({
+    await group?.updateOne({
       $push: { pendingInvites: inviteData }
     });
 
@@ -262,7 +274,7 @@ export const inviteToGroup = async (req: express.Request, res: express.Response<
     await User.findByIdAndUpdate(user._id, {
       $push: {
         pendingInvitations: {
-          group: group._id,
+          group: group?._id,
           invitedBy: req.userId,
           role,
           code: inviteCode,
@@ -275,7 +287,7 @@ export const inviteToGroup = async (req: express.Request, res: express.Response<
     // TODO: Send in-app notification to user
     // This would typically be done via Socket.IO or push notification
 
-    res.status(200).json(successResponse({ 
+    return res.status(200).json(successResponse({ 
       email, 
       type: 'in-app',
       message: `הזמנה נשלחה בהצלחה למשתמש ${user.firstName} ${user.lastName}`
@@ -290,14 +302,14 @@ export const inviteToGroup = async (req: express.Request, res: express.Response<
       invitedAt: new Date()
     };
 
-    await group.updateOne({
+    await group?.updateOne({
       $push: { pendingInvites: inviteData }
     });
 
     // Send email invitation
-    await sendGroupInviteEmail(email, inviteCode);
+    await sendGroupInviteEmail(email, inviteCode, req.user?.firstName || 'A friend', req.user?.preferences?.language || 'he', true);
 
-    res.status(200).json(successResponse({ 
+    return res.status(200).json(successResponse({ 
       email, 
       type: 'email',
       message: `הזמנה נשלחה בהצלחה לאימייל ${email}`
@@ -310,10 +322,10 @@ export const removeGroupMember = async (req: express.Request, res: express.Respo
   const group = req.group;
   const removerId = req.userId!;
 
-  await group.removeMember(userId, removerId);
-  await User.findByIdAndUpdate(userId, { $pull: { groups: group._id } });
+  await group?.removeMember(userId!, removerId);
+  await User.findByIdAndUpdate(userId, { $pull: { groups: group?._id } });
 
-  res.status(200).json(successResponse(null, 'Member removed successfully'));
+  return res.status(200).json(successResponse(null, 'Member removed successfully'));
 };
 
 export const updateMemberRole = async (req: express.Request, res: express.Response<IApiResponse>) => {
@@ -322,20 +334,20 @@ export const updateMemberRole = async (req: express.Request, res: express.Respon
   const group = req.group;
   const updaterId = req.userId!;
 
-  await group.updateMemberRole(userId, role, updaterId);
+  await group?.updateMemberRole(userId!, role, updaterId);
   
   // Update real-time notification for the users in the group with socket.io
   const io = getIO();
   if (io) {
-    emitToGroupExcept(io, group._id.toString(), updaterId, 'memberRoleUpdated', {
-      groupId: group._id.toString(),
+    emitToGroupExcept(io, group?._id.toString() || '', updaterId, 'memberRoleUpdated', {
+      groupId: group?._id.toString(),
       userId,
       role,
       updaterId
     });
   }
   
-  res.status(200).json(successResponse(null, 'Member role updated successfully'));
+  return res.status(200).json(successResponse(null, 'Member role updated successfully'));
 };
 
 export const transferOwnership = async (req: express.Request, res: express.Response<IApiResponse>) => {
@@ -351,8 +363,8 @@ export const transferOwnership = async (req: express.Request, res: express.Respo
     }
 
     // Check if current user is the owner
-    const currentOwner = group.members.find(
-      (member: any) => member.user.toString() === currentOwnerId && member.role === 'owner'
+    const currentOwner = group?.members.find(
+      (member: IGroupMember) => member.user.toString() === currentOwnerId && member.role === 'owner'
     );
 
     if (!currentOwner) {
@@ -361,8 +373,8 @@ export const transferOwnership = async (req: express.Request, res: express.Respo
     }
 
     // Check if new owner exists and is a member
-    const newOwner = group.members.find(
-      (member: any) => member.user.toString() === newOwnerId
+    const newOwner = group?.members.find(
+      (member: IGroupMember) => member.user.toString() === newOwnerId
     );
 
     if (!newOwner) {
@@ -376,16 +388,16 @@ export const transferOwnership = async (req: express.Request, res: express.Respo
     }
 
     // Transfer ownership
-    await group.transferOwnership(currentOwnerId, newOwnerId);
+    await group?.transferOwnership(currentOwnerId, newOwnerId);
 
-    const updatedGroup = await Group.findById(group._id)
+    const updatedGroup = await Group.findById(group?._id)
       .populate('members.user', 'firstName lastName email');
 
     // Update real-time notification for the users in the group with socket.io
     const io = getIO();
     if (io) {
-      emitToGroupExcept(io, group._id.toString(), currentOwnerId, 'ownershipTransferred', {
-        groupId: group._id.toString(),
+      emitToGroupExcept(io, group?._id.toString() || '', currentOwnerId, 'ownershipTransferred', {
+        groupId: group?._id.toString(),
         previousOwnerId: currentOwnerId,
         newOwnerId,
         transferredBy: currentOwnerId

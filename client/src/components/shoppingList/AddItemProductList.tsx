@@ -1,7 +1,7 @@
 import React, { RefObject, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Search, Image as ImageIcon, Check, Package } from 'lucide-react';
-import { Button, LoadingSpinner } from '../common';
+import { Button, LoadingSpinner, Badge, NotificationBadge } from '../common';
 
 interface Props {
   products: any[];
@@ -96,63 +96,66 @@ export function AddItemProductList({ products, onSelect, isLoading, hasNext, isF
               : t('showingProducts', { count: products.length })}
           </div>
 
-          <div ref={listContainerRef} className="grid gap-2 sm:gap-3 max-h-[63vh] sm:max-h-[55vh] overflow-y-auto overflow-x-hidden">
+          <div ref={listContainerRef} className="grid gap-2 sm:gap-3 max-h-[50vh] sm:max-h-[55vh] overflow-y-auto overflow-x-hidden">
             {useVirtualization && <div style={{ height: topSpacer }} />}
             {visibleItems.map((product: any) => {
               const isSelected = multiSelect && selectedProductIds.includes(product._id);
+              const selectedCount = selectedProductIds.filter(id => id === product._id).length;
               return (
-                <button
-                  key={product._id}
-                  type="button"
-                  onClick={() => onSelect(product)}
-                  className={`w-full p-4 sm:p-3 border rounded-lg cursor-pointer transition-colors text-right ${
-                    isSelected 
-                      ? 'border-primary bg-primary/10 hover:bg-primary/15' 
-                      : 'hover:border-primary/50 hover:bg-primary/5'
-                  }`}
-                >
-                  <div className="flex items-center space-x-3 space-x-reverse">
-                    <div className="flex-shrink-0">
-                      {product.image ? (
-                        <img
-                          src={product.image}
-                          alt={product.name}
-                          loading="lazy"
-                          className="w-16 h-16 object-cover rounded-lg border border-border"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = 'none';
-                            const placeholder = target.nextElementSibling as HTMLElement;
-                            if (placeholder) placeholder.classList.remove('hidden');
-                          }}
-                        />
-                      ) : null}
-                      {!product.image && (
-                        <div className="w-16 h-16 bg-gray-100 rounded-lg border border-border flex items-center justify-center">
-                          <ImageIcon className="w-8 h-8 text-gray-400" />
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex-1 text-right">
-                      <h3 className="text-base sm:text-base font-medium text-primary whitespace-normal break-words">{product.name}</h3>
-                      <div className="flex items-center gap-2 mt-1 flex-wrap">
-                        {product.brand && <p className="text-sm text-secondary whitespace-normal break-words">{product.brand}</p>}
-                        {(product.defaultUnit || (product.units && product.units.length > 0)) && (
-                          <span className="text-xs text-secondary bg-gray-100 px-2 py-1 rounded">{product.defaultUnit || product.units?.[0]}</span>
+                <div key={product._id} className="relative">
+                  <NotificationBadge count={selectedCount} variant="primary" size="sm" showZero={false}>
+                    <button
+                      type="button"
+                      onClick={() => onSelect(product)}
+                      className={`w-full p-3 sm:p-3 border-2 rounded-lg cursor-pointer transition-all duration-200 text-right relative ${
+                        isSelected 
+                          ? 'border-primary bg-blue-100 dark:bg-blue-900/30 shadow-md hover:shadow-lg' 
+                          : 'border-border hover:border-primary/70 hover:bg-primary/5 hover:shadow-md'
+                      }`}
+                    >
+                    <div className="flex items-center space-x-2 sm:space-x-3 space-x-reverse">
+                      <div className="flex-shrink-0 relative">
+                        {product.image ? (
+                          <img
+                            src={product.image}
+                            alt={product.name}
+                            loading="lazy"
+                            className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-lg border border-border"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                              const placeholder = target.nextElementSibling as HTMLElement;
+                              if (placeholder) placeholder.classList.remove('hidden');
+                            }}
+                          />
+                        ) : null}
+                        {!product.image && (
+                          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 rounded-lg border border-border flex items-center justify-center">
+                            <ImageIcon className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" />
+                          </div>
+                        )}
+                        {isSelected && (
+                          <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-primary rounded-full flex items-center justify-center border-2 border-white shadow-lg">
+                            <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
+                          </div>
                         )}
                       </div>
-                    </div>
 
-                    <div className="flex-shrink-0">
-                      <div className={`w-6 h-6 border-2 rounded-full flex items-center justify-center ${
-                        isSelected ? 'border-primary bg-primary' : 'border-primary'
-                      }`}>
-                        <Check className={`w-4 h-4 text-white ${isSelected ? 'opacity-100' : 'opacity-0'}`} />
+                      <div className="flex-1 text-right min-w-0">
+                        <h3 className="text-sm sm:text-base font-medium text-primary whitespace-normal break-words">{product.name}</h3>
+                        <div className="flex items-center gap-1.5 sm:gap-2 mt-0.5 sm:mt-1 flex-wrap justify-end">
+                          {product.brand && <p className="text-xs sm:text-sm text-secondary whitespace-normal break-words">{product.brand}</p>}
+                          {(product.defaultUnit || (product.units && product.units.length > 0)) && (
+                            <Badge variant="secondary" size="sm" className="text-xs">
+                              {product.defaultUnit || product.units?.[0]}
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </button>
+                    </button>
+                  </NotificationBadge>
+                </div>
               );
             })}
             {useVirtualization && <div style={{ height: bottomSpacer }} />}
@@ -163,12 +166,6 @@ export function AddItemProductList({ products, onSelect, isLoading, hasNext, isF
               </div>
             )}
           </div>
-
-          {showAddManualButton && debouncedSearchQuery.length < 2 && (
-            <div className="mt-4 pt-4 border-t border-border/30">
-              <Button variant="outline" size='md' fullWidth onClick={onAddManual} aria-label={t('addManualItem')}>{t('addManualItem')}</Button>
-            </div>
-          )}
         </>
       )}
 

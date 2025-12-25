@@ -1,8 +1,9 @@
-import axios from 'axios';
+import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
+import { IRegisterRequest } from '@/types';
 
 export class ApiClient {
   private baseURL: string;
-  private client: any;
+  private client: AxiosInstance;
 
   constructor(baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://192.168.1.204:5000' || 'http://localhost:5000') {
     this.baseURL = baseURL;
@@ -20,7 +21,7 @@ export class ApiClient {
   private setupInterceptors() {
     // Request interceptor
     this.client.interceptors.request.use(
-      (config: any) => {
+      (config: InternalAxiosRequestConfig) => {
         // Add auth token if available
         const token = this.getAuthToken();
         if (token) {
@@ -28,17 +29,17 @@ export class ApiClient {
         }
         return config;
       },
-      (error: any) => {
+      (error: AxiosError) => {
         return Promise.reject(error);
       }
     );
 
     // Response interceptor
     this.client.interceptors.response.use(
-      (response: any) => {
+      (response: AxiosResponse) => {
         return response;
       },
-      async (error: any) => {
+      async (error: AxiosError) => {
         if (error.response?.status === 401) {
           // Handle token refresh or logout
           this.handleAuthError();
@@ -79,23 +80,23 @@ export class ApiClient {
   }
 
   // Generic request methods
-  async get(url: string, config?: any) {
+  async get(url: string, config?: AxiosRequestConfig) {
     return this.client.get(url, config);
   }
 
-  async post(url: string, data?: any, config?: any) {
+  async post(url: string, data?: unknown, config?: AxiosRequestConfig) {
     return this.client.post(url, data, config);
   }
 
-  async put(url: string, data?: any, config?: any) {
+  async put(url: string, data?: unknown, config?: AxiosRequestConfig) {
     return this.client.put(url, data, config);
   }
 
-  async patch(url: string, data?: any, config?: any) {
+  async patch(url: string, data?: unknown, config?: AxiosRequestConfig) {
     return this.client.patch(url, data, config);
   }
 
-  async delete(url: string, config?: any) {
+  async delete(url: string, config?: AxiosRequestConfig) {
     return this.client.delete(url, config);
   }
 
@@ -109,7 +110,8 @@ export class ApiClient {
     throw new Error(response.data.message || 'Login failed');
   }
 
-  async register(userData: any) {
+
+  async register(userData: IRegisterRequest) {
     const response = await this.post('/auth/register', userData);
     if (response.data.success && response.data.data) {
       this.setAuthToken(response.data.data.token);

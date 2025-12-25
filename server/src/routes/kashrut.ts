@@ -1,10 +1,10 @@
 import express from 'express';
 import {
   getAllKashrut,
-  createKashrut,
-  deleteKashrut
+  // createKashrut,
+  // deleteKashrut
 } from '../controllers/kashrut';
-import { authenticateToken } from '@/middleware/auth';
+// import { authenticateToken } from '@/middleware/auth';
 
 const router = express.Router();
 

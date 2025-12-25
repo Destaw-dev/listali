@@ -1,6 +1,8 @@
 import React, { memo } from 'react';
 import { useTranslations } from 'next-intl';
-import { Search, Plus, Trash2 } from 'lucide-react';
+import { Search, Plus, Trash2, X } from 'lucide-react';
+import { Button } from '@/components/common';
+import { ArrowIcon } from '@/components/common/Arrow';
 
 interface ItemFormSingleProps {
   index: number;
@@ -229,8 +231,8 @@ export const ItemForm = memo(({
 }: ItemFormProps) => {
   const tForm = useTranslations('AddItemsModalItemForm');
   return (
-  <form onSubmit={onSubmit} className="space-y-4">
-    <div className="space-y-4">
+  <form onSubmit={onSubmit} className="space-y-3">
+    <div className="space-y-3">
       {fields.map((field, index) => {
         const item = watchedItems?.[index] || {};
 
@@ -256,44 +258,53 @@ export const ItemForm = memo(({
     </div>
 
     <div className="flex gap-2">
-      <button
+      <Button
+        variant="outline"
         type="button"
+        size='md'
         onClick={onBack}
-        className="items-center gap-2 px-4 py-2 text-text-muted hover:text-text-primary transition-colors rounded-lg hover:bg-surface-hover border border-border/30"
+        icon={<ArrowIcon className="w-4 h-4" />}
       >
-        <Search className="w-4 h-4 inline" />
-        <span>{tForm('backToProductSearch')}</span>
-      </button>
-      <button
+        {tForm('backToProductSearch')}
+      </Button>
+      <Button
+        variant="dashed"
         type="button"
+        size='md'
         onClick={onAddManual}
-        className="flex items-center justify-center gap-2 px-4 py-2.5 border-2 border-dashed border-border rounded-lg hover:border-primary hover:bg-primary/5 transition-colors text-text-secondary font-medium"
+        icon={<Plus className="w-4 h-4" />}
       >
-        <Plus className="w-4 h-4" />
         {tForm('addAnotherItem')}
-      </button>
+      </Button>
+
     </div>
 
     <div className="flex gap-3 pt-4 border-t border-border">
-      <button
+      <Button
+        variant="outline"
         type="button"
+        size='lg'
         onClick={onClose}
         disabled={isSubmitting}
-        className="flex-1 px-4 py-2.5 border border-border rounded-lg hover:bg-surface-hover transition-colors disabled:opacity-50 font-medium"
+        fullWidth
       >
         {tForm('cancel')}
-      </button>
-      <button
-        type="submit"
+      </Button>
+      <Button
+        variant="primary"
+        type="button"
+        size='lg'
+        onClick={onSubmit}
         disabled={isSubmitting}
-        className="flex-1 px-4 py-2.5 bg-primary text-text-on-primary rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 font-medium"
+        icon={<Plus className="w-4 h-4" />}
+        fullWidth
       >
         {isSubmitting
           ? tForm('adding')
           : fields.length === 1
           ? tForm('addItems', { count: fields.length })
           : tForm('addItemsPlural', { count: fields.length })}
-      </button>
+      </Button>
     </div>
   </form>
   );

@@ -2,9 +2,7 @@ import { Server, Socket } from 'socket.io';
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
 import User from '../models/user';
-import Group from '../models/group';
-import Message from '../models/message';
-import { ISocketUser, ISocketMessage, ISocketItemUpdate, ISocketUserStatus } from '../types';
+import { IGroup, ISocketUser, ISocketUserStatus } from '../types';
 
 // Global io instance for external access
 let globalIO: Server | null = null;
@@ -19,14 +17,15 @@ interface AuthenticatedSocket extends Socket {
 }
 
 // For debug: log all connected users per connection/disconnection
-function logConnectedUsers(where: string) {
-  const list = Array.from(connectedUsers.values()).map(u => ({
-    userId: u.userId,
-    username: u.username,
-    socketId: u.socketId,
-    groups: u.groups,
-    status: u.status
-  }));
+function logConnectedUsers(_where: string) {
+  // Uncomment if needed for debugging
+  // const list = Array.from(connectedUsers.values()).map(u => ({
+  //   userId: u.userId,
+  //   username: u.username,
+  //   socketId: u.socketId,
+  //   groups: u.groups,
+  //   status: u.status
+  // }));
 }
 
 export const initializeSocket = (io: Server): void => {
@@ -73,32 +72,9 @@ export const initializeSocket = (io: Server): void => {
     handleUserConnect(socket, io).finally(() => logConnectedUsers('CONNECT'));
     handleJoinGroups(socket);
 
-    // ---------- Event wiring (with aliases) ----------
-
-    // REMOVED: Direct chat event handlers
-    // These events should now be sent only from the backend after proper processing
-    // The client should use REST API calls instead of direct WebSocket emissions
-
-    // REMOVED: Direct item update handlers
-    // Item updates should now be handled only through REST API
-    // The client should use REST API calls instead of direct WebSocket emissions
-
-    // User status
     socket.on('user:status_changed', (data) => handleStatusUpdate(socket, io, data));
-    socket.on('status:update', (data) => handleStatusUpdate(socket, io, data)); // alias
-    socket.on('status_update', (data) => handleStatusUpdate(socket, io, data)); // alias
-
-    // REMOVED: Direct group event handlers
-    // These events should now be sent only from the backend after proper processing
-    // The client should use REST API calls instead of direct WebSocket emissions
-
-    // REMOVED: Direct item event handlers
-    // These events should now be sent only from the backend after proper processing
-    // The client should use REST API calls instead of direct WebSocket emissions
-
-    // REMOVED: Direct chat typing event handlers
-    // These events should now be sent only from the backend after proper processing
-    // The client should use REST API calls instead of direct WebSocket emissions
+    socket.on('status:update', (data) => handleStatusUpdate(socket, io, data));
+    socket.on('status_update', (data) => handleStatusUpdate(socket, io, data));
 
     // Disconnect
     socket.on('disconnect', () => {
@@ -114,14 +90,14 @@ export const initializeSocket = (io: Server): void => {
 
 // ---------------- Handlers ----------------
 
-const handleUserConnect = async (socket: AuthenticatedSocket, io: Server): Promise<void> => {
+const handleUserConnect = async (socket: AuthenticatedSocket, _io: Server): Promise<void> => {
   try {
     const userId = socket.userId!;
     const user = socket.user;
 
     await User.findByIdAndUpdate(userId, { lastSeen: new Date() });
 
-    const userGroups = user.groups.map((g: any) => g._id.toString());
+    const userGroups = user.groups.map((g: IGroup) => g._id.toString());
 
     const socketUser: ISocketUser = {
       userId,
@@ -154,7 +130,7 @@ const handleUserConnect = async (socket: AuthenticatedSocket, io: Server): Promi
   }
 };
 
-const handleUserDisconnect = async (socket: AuthenticatedSocket, io: Server): Promise<void> => {
+const handleUserDisconnect = async (socket: AuthenticatedSocket, _io: Server): Promise<void> => {
   try {
     const userId = socket.userId!;
     const socketUser = connectedUsers.get(socket.id);
@@ -181,7 +157,7 @@ const handleUserDisconnect = async (socket: AuthenticatedSocket, io: Server): Pr
 const handleJoinGroups = (socket: AuthenticatedSocket): void => {
   try {
     const user = socket.user;
-    const userGroups = user.groups.map((g: any) => g._id.toString());
+    const userGroups = user.groups.map((g: IGroup) => g._id.toString());
     userGroups.forEach((groupId: string) => socket.join(`group:${groupId}`));
   } catch (err) {
     console.error('Error joining groups:', err);
@@ -224,7 +200,6 @@ export const sendNotificationToUser = (io: Server, userId: string, notification:
   if (socketId) io.to(socketId).emit('notification', notification);
 };
 
-// helper: שדר לחדר קבוצה לכל המשתמשים *חוץ* ממשתמש אחד
 export const emitToGroupExcept = (
   io: Server,
   groupId: string,
@@ -233,13 +208,12 @@ export const emitToGroupExcept = (
   payload: any
 ) => {
   const room = `group:${groupId}`;
-  const sid = userSockets.get(excludeUserId); // מזהה הסוקט של המבצע
+  const sid = userSockets.get(excludeUserId);
   
   
   if (sid) {
     io.to(room).except(sid).emit(event, payload);
   } else {
-    // אם אין socketId (edge case) — נשדר לכל החדר
     io.to(room).emit(event, payload);
   }
   

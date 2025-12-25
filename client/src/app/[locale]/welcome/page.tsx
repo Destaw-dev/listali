@@ -23,7 +23,7 @@ export default function WelcomePage() {
 
   if (!isInitialized) {
     return (
-      <div className="min-h-screen bg-surface safe-area-inset flex items-center justify-center">
+      <div className="min-h-screen bg-surface flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-secondary">{t('auth.loading')}</p>
@@ -37,7 +37,7 @@ export default function WelcomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-surface safe-area-inset">
+    <div className="min-h-screen bg-surface">
       <div className="container mx-auto px-4 py-8">
         <div className="text-center mb-12">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-primary rounded-full mb-6">

@@ -1,7 +1,7 @@
-import React, { memo } from 'react';
+import React, { memo, useMemo, useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { Search, X } from 'lucide-react';
-import { Button, Input } from '@/components/common';
+import { Search, X, Filter } from 'lucide-react';
+import { Button, Input, Dropdown, DropdownOption, Badge } from '@/components/common';
 
 interface ActiveFilter {
   type: string;
@@ -76,10 +76,213 @@ export const FiltersSection = memo(({
   onGlutenFreeChange,
 }: FiltersSectionProps) => {
   const t = useTranslations('AddItemsModalFilters');
+
+  // Prepare category dropdown options
+  const categoryOptions: DropdownOption[] = useMemo(() => {
+    const options: DropdownOption[] = [
+      {
+        value: '',
+        label: `${t('all')} (${t('categories')})`,
+      },
+    ];
+
+    if (categories && categories.length > 0) {
+      options.push({
+        value: '__divider__',
+        label: '',
+        divider: true,
+      } as DropdownOption);
+
+      categories.forEach((category: any) => {
+        options.push({
+          value: category._id,
+          label: category.name,
+          icon: category.icon,
+        });
+      });
+    }
+
+    return options;
+  }, [categories, t]);
+
+  // Prepare sort dropdown options
+  const sortOptions: DropdownOption[] = useMemo(() => [
+    {
+      value: 'name-asc',
+      label: t('sortNameAsc'),
+    },
+    {
+      value: 'name-desc',
+      label: t('sortNameDesc'),
+    },
+  ], [t]);
+
+  // Prepare subcategory dropdown options
+  const subCategoryOptions: DropdownOption[] = useMemo(() => {
+    const options: DropdownOption[] = [
+      {
+        value: '',
+        label: t('all'),
+      },
+    ];
+
+    if (subCategories && subCategories.length > 0) {
+      options.push({
+        value: '__divider__',
+        label: '',
+        divider: true,
+      } as DropdownOption);
+
+      subCategories.forEach((subCategory: any) => {
+        options.push({
+          value: subCategory._id,
+          label: subCategory.name,
+        });
+      });
+    }
+
+    return options;
+  }, [subCategories, t]);
+
+  // Temporary filter states (before applying)
+  const [tempFilterKosher, setTempFilterKosher] = useState<boolean>(filterKosher);
+  const [tempFilterOrganic, setTempFilterOrganic] = useState<boolean>(filterOrganic);
+  const [tempFilterGlutenFree, setTempFilterGlutenFree] = useState<boolean>(filterGlutenFree);
+  const [tempSelectedSubCategoryId, setTempSelectedSubCategoryId] = useState<string | null>(selectedSubCategoryId);
+
+  // Sync temporary state when dropdown opens
+  useEffect(() => {
+    if (advancedOpen) {
+      setTempFilterKosher(filterKosher);
+      setTempFilterOrganic(filterOrganic);
+      setTempFilterGlutenFree(filterGlutenFree);
+      setTempSelectedSubCategoryId(selectedSubCategoryId);
+    }
+  }, [advancedOpen, filterKosher, filterOrganic, filterGlutenFree, selectedSubCategoryId]);
+
+  // Prepare advanced filters dropdown options (single dropdown with all options)
+  const advancedFilterOptions: DropdownOption[] = useMemo(() => {
+    const options: DropdownOption[] = [];
+
+    // SubCategory Group (only if category is selected and subcategories exist)
+    if (selectedCategoryIdForSub && subCategories.length > 0) {
+      options.push(
+        { label: t('subCategory'), value: '_header-subCategory', disabled: true },
+        { label: t('all'), value: 'subCategory-all' }
+      );
+      subCategories.forEach((subCategory: any) => {
+        options.push({
+          label: subCategory.name,
+          value: `subCategory-${subCategory._id}`,
+        });
+      });
+      options.push({ divider: true, label: '', value: '_divider-subCategory' });
+    }
+
+    // Kosher Group
+    options.push(
+      { label: t('kosher'), value: '_header-kosher', disabled: true },
+      { label: t('off'), value: 'kosher-off' },
+      { label: t('on'), value: 'kosher-on' },
+      { divider: true, label: '', value: '_divider-kosher' }
+    );
+
+    // Organic Group
+    options.push(
+      { label: t('organic'), value: '_header-organic', disabled: true },
+      { label: t('off'), value: 'organic-off' },
+      { label: t('on'), value: 'organic-on' },
+      { divider: true, label: '', value: '_divider-organic' }
+    );
+
+    // Gluten Free Group
+    options.push(
+      { label: t('glutenFree'), value: '_header-glutenFree', disabled: true },
+      { label: t('off'), value: 'glutenFree-off' },
+      { label: t('on'), value: 'glutenFree-on' }
+    );
+
+    return options;
+  }, [t, selectedCategoryIdForSub, subCategories]);
+
+  const optionsWithSelection = advancedFilterOptions.map(option => {
+    let isSelected = false;
+    const optionValue = String(option.value);
+    if (optionValue.startsWith('subCategory-')) {
+      const subCategoryValue = optionValue.replace('subCategory-', '');
+      if (subCategoryValue === 'all') {
+        isSelected = !tempSelectedSubCategoryId;
+      } else {
+        isSelected = tempSelectedSubCategoryId === subCategoryValue;
+      }
+    } else if (optionValue.startsWith('kosher-')) {
+      const kosherValue = optionValue.replace('kosher-', '');
+      isSelected = (kosherValue === 'on' && tempFilterKosher) || (kosherValue === 'off' && !tempFilterKosher);
+    } else if (optionValue.startsWith('organic-')) {
+      const organicValue = optionValue.replace('organic-', '');
+      isSelected = (organicValue === 'on' && tempFilterOrganic) || (organicValue === 'off' && !tempFilterOrganic);
+    } else if (optionValue.startsWith('glutenFree-')) {
+      const glutenFreeValue = optionValue.replace('glutenFree-', '');
+      isSelected = (glutenFreeValue === 'on' && tempFilterGlutenFree) || (glutenFreeValue === 'off' && !tempFilterGlutenFree);
+    }
+    return { ...option, isSelected };
+  });
+
+  const getActiveFiltersCount = () => {
+    let count = 0;
+    if (selectedSubCategoryId) count++;
+    if (filterKosher) count++;
+    if (filterOrganic) count++;
+    if (filterGlutenFree) count++;
+    return count;
+  };
+
+  const activeFiltersCount = getActiveFiltersCount();
+
+  const handleCategorySelect = (value: string | number) => {
+    if (value === '__divider__') return;
+    onCategoryFilter(value === '' ? null : String(value));
+  };
+
+  const handleSortSelect = (value: string | number) => {
+    onSortChange(value as 'name-asc' | 'name-desc');
+  };
+
+  const handleSubCategorySelect = (value: string | number) => {
+    if (value === '__divider__') return;
+    onSubCategoryFilter(value === '' ? null : String(value));
+  };
+
+  const handleAdvancedFilterSelect = (value: string | number) => {
+    const stringValue = String(value);
+    if (stringValue.startsWith('subCategory-')) {
+      const subCategoryValue = stringValue.replace('subCategory-', '');
+      setTempSelectedSubCategoryId(subCategoryValue === 'all' ? null : subCategoryValue);
+    } else if (stringValue.startsWith('kosher-')) {
+      setTempFilterKosher(stringValue.replace('kosher-', '') === 'on');
+    } else if (stringValue.startsWith('organic-')) {
+      setTempFilterOrganic(stringValue.replace('organic-', '') === 'on');
+    } else if (stringValue.startsWith('glutenFree-')) {
+      setTempFilterGlutenFree(stringValue.replace('glutenFree-', '') === 'on');
+    }
+  };
+
+  const handleApplyAdvancedFilters = () => {
+    onSubCategoryFilter(tempSelectedSubCategoryId);
+    onKosherChange(tempFilterKosher);
+    onOrganicChange(tempFilterOrganic);
+    onGlutenFreeChange(tempFilterGlutenFree);
+    onToggleAdvanced();
+  };
+
+  const selectedCategory = categories.find((c: any) => c._id === selectedCategoryId);
+  const selectedSortLabel = sortOptions.find(opt => opt.value === sortOption)?.label || t('sortNameAsc');
+  const selectedSubCategory = subCategories.find((sc: any) => sc._id === selectedSubCategoryId);
+
   return (
   <>
     {/* Search Bar */}
-    <div className="mb-4">
+    <div className="mb-3 sm:mb-4">
       <Input
         value={searchQuery}
         onChange={onSearchChange}
@@ -90,86 +293,75 @@ export const FiltersSection = memo(({
         fullWidth
         containerClassName="w-full"
       />
-      <div className="mt-2 flex items-center gap-3 ">
-        <Button variant="ghost" size="md" onClick={onToggleCategories} aria-label={t('categories')}>{categoriesOpen ? t('hideCategories') : t('categories')}</Button>
-            {/* Sorting Bar */}
-    <div className="flex items-center justify-between gap-3">
-      <div className="flex items-center gap-2">
-        <label className="text-xs text-gray-600">{t('sort')}</label>
-        <select
-          value={sortOption}
-          onChange={(e) => onSortChange(e.target.value as 'name-asc' | 'name-desc')}
-          className="px-2 py-1 border border-gray-300 rounded-md text-sm"
-        >
-          <option value="name-asc">{t('sortNameAsc')}</option>
-          <option value="name-desc">{t('sortNameDesc')}</option>
-        </select>
-      </div>
-      <button
-        type="button"
-        onClick={onToggleAdvanced}
-        className="text-sm text-primary hover:underline"
-      >
-        {advancedOpen ? t('hideAdvanced') : t('advancedFilters')}
-      </button>
-    </div>
-      </div>
-    </div>
+      <div className="mt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-1">
+        {/* Category Dropdown */}
+        <Dropdown
+          options={categoryOptions}
+          value={selectedCategoryId || ''}
+          onSelect={handleCategorySelect}
+          placeholder={t('categories')}
+          size="md"
+          variant='ghost'
+          triggerClassName='border-none shadow-sm hover:shadow-md focus:ring-0'
+          fullWidth
+        />
 
-    {/* Category Filters */}
-    {categoriesOpen && !searchQuery && categories.length > 0 && (
-      <div className="mb-4">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-medium text-gray-600">{t('filterByCategory')}</span>
-          {selectedCategoryId && (
-            <button
-              type="button"
-              onClick={() => onCategoryFilter(null)}
-              className="text-xs text-primary hover:underline"
+        {/* Sort Dropdown */}
+        <Dropdown
+          options={sortOptions}
+          value={sortOption}
+          onSelect={handleSortSelect}
+          placeholder={t('sort')}
+          size="md"
+          variant='ghost'
+          triggerClassName='border-none shadow-sm hover:shadow-md focus:ring-0'
+        />
+
+        {/* Advanced Filters Dropdown */}
+        <Dropdown
+          options={optionsWithSelection}
+          value={t('advancedFilters')}
+          placeholder={t('advancedFilters')}
+          onSelect={handleAdvancedFilterSelect}
+          closeOnSelect={false}
+          isOpen={advancedOpen}
+          onOpenChange={onToggleAdvanced}
+          fullWidth
+          // className="sm:flex-1"
+          trigger={
+            <Button
+              variant={activeFiltersCount > 0 ? "primary" : "ghost"}
+              size="md"
+              icon={<Filter className="w-4 h-4" />}
+              fullWidth
+              className="relative"
             >
-              {t('clearFilter')}
-            </button>
-          )}
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => onCategoryFilter(null)}
-            className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
-              !selectedCategoryId
-                ? 'bg-primary text-white shadow-md'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            {t('all')}
-          </button>
-          {(showAllCategories ? categories : categories.slice(0, 6)).map((category: any) => (
-            <button
-              key={category._id}
-              type="button"
-              onClick={() => onCategoryFilter(category._id)}
-              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all flex items-center gap-1.5 ${
-                selectedCategoryId === category._id
-                  ? 'bg-primary text-white shadow-md'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+             {t('advancedFilters')}
+              {activeFiltersCount > 0 && (
+                <Badge
+                  variant='warning'
+                  size="sm"
+                  className="absolute -top-1 -start-1 min-w-[20px] h-5 flex items-center justify-center px-1"
+                >
+                  {activeFiltersCount}
+                </Badge>
+              )}
+            </Button>
+          }
+          footer={
+            <Button
+              variant="primary"
+              size="sm"
+              fullWidth
+              onClick={handleApplyAdvancedFilters}
             >
-              {category.icon && <span>{category.icon}</span>}
-              <span>{category.name}</span>
-            </button>
-          ))}
-          {categories.length > 6 && (
-            <button
-              type="button"
-              onClick={onToggleShowAll}
-              className="px-3 py-1.5 rounded-full text-sm font-medium transition-all bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100"
-            >
-              {showAllCategories ? t('showLess') : t('showAll')}
-            </button>
-          )}
-        </div>
+              {t('apply')}
+            </Button>
+          }
+          // align='end'
+        />
       </div>
-    )}
+    </div>
 
     {/* Active Filters Bar */}
     {activeFilters.length > 0 && (
@@ -210,51 +402,6 @@ export const FiltersSection = memo(({
       </button>
     </div> */}
 
-    {/* Advanced Filters */}
-    {advancedOpen && (
-      <div className="mb-4 p-3 border border-gray-200 rounded-lg bg-gray-50">
-        {/* SubCategory Filters */}
-        {selectedCategoryIdForSub && subCategories.length > 0 && (
-          <div className="mb-3">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-medium text-gray-600">{t('subCategory')}</span>
-
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Button variant={!selectedSubCategoryId ? 'secondary' : 'ghost'} size="xs" rounded onClick={() => onSubCategoryFilter(null)} aria-label={t('all')}>{t('all')}
-              </Button>
-              {subCategories.map((sc: any) => (
-                <Button key={sc._id} variant={selectedSubCategoryId === sc._id ? 'secondary' : 'ghost'} size="xs" rounded onClick={() => onSubCategoryFilter(sc._id)} aria-label={sc.name}>{sc.name}
-                </Button>
-              ))}
-                            {selectedSubCategoryId && (
-                              <div className="flex items-center gap-2">
-                              
-                              <Button variant="ghost" size="xs" onClick={() => onSubCategoryFilter(null)} aria-label={t('clearSubCategory')} icon={<X className="w-3 h-3" />}>{t('clearSubCategory')}
-                </Button>
-                              </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Quick Filters */}
-        <div className="flex items-center gap-3 text-sm">
-          <label className="flex items-center gap-1 cursor-pointer">
-            <input type="checkbox" checked={filterKosher} onChange={(e) => onKosherChange(e.target.checked)} />
-            {t('kosher')}
-          </label>
-          <label className="flex items-center gap-1 cursor-pointer">
-            <input type="checkbox" checked={filterOrganic} onChange={(e) => onOrganicChange(e.target.checked)} />
-            {t('organic')}
-          </label>
-          <label className="flex items-center gap-1 cursor-pointer">
-            <input type="checkbox" checked={filterGlutenFree} onChange={(e) => onGlutenFreeChange(e.target.checked)} />
-            {t('glutenFree')}
-          </label>
-        </div>
-      </div>
-    )}
   </>
   );
 });

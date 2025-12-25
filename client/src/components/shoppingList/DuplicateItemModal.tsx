@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { X, Plus, Package } from 'lucide-react';
+import { useModalScrollLock } from '@/hooks/useModalScrollLock';
 
 interface DuplicateItemModalProps {
   isOpen: boolean;
@@ -26,6 +27,9 @@ export default function DuplicateItemModal({
   newQuantity,
 }: DuplicateItemModalProps) {
   const t = useTranslations('DuplicateItemModal');
+
+  // Prevent body scroll when modal is open
+  useModalScrollLock(isOpen);
 
   if (!isOpen) return null;
 

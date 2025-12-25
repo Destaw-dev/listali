@@ -2,7 +2,6 @@ import mongoose, { Schema, Model } from "mongoose";
 import {
   IProduct,
   ProductUnit,
-  INutritionalValue,
 } from "../types";
 
 const NUTRITIONAL: string[] = [

@@ -55,7 +55,9 @@ interface Group {
   members?: GroupMember[];
 }
 
-interface GroupSettingsPageProps {}
+interface GroupSettingsPageProps {
+  // Add props here when needed
+}
 
 interface MemberActionsDropdownProps {
   children: React.ReactNode;

@@ -1,10 +1,10 @@
 import express from 'express';
 import {
   getAllAllergens,
-  createAllergen,
-  deleteAllergen
+  // createAllergen,
+  // deleteAllergen
 } from '../controllers/allergen';
-import { authenticateToken } from '@/middleware/auth';
+// import { authenticateToken } from '@/middleware/auth';
 
 const router = express.Router();
 

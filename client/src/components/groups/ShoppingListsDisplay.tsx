@@ -33,7 +33,7 @@ export function ShoppingListsDisplay({
 
     if (filteredLists?.length === 0) {
         return (
-            <Card variant="glass" className="bg-white/80 shadow-lg">
+            <Card className="shadow-lg">
                 <CardBody className="p-8 text-center">
                     <ShoppingCart className="w-12 h-12 text-muted mx-auto mb-4" />
                     <h3 className="text-lg font-bold text-primary mb-2">

@@ -1,31 +1,29 @@
 import { Request, Response, NextFunction } from 'express';
 import { IApiResponse, IApiError } from '../types';
 
-// Custom error class
 export class AppError extends Error {
   statusCode: number;
   status: string;
   isOperational: boolean;
+  isEmailVerified?: boolean;
 
-  constructor(message: string, statusCode: number) {
+  constructor(message: string, statusCode: number, isEmailVerified: boolean = false) {
     super(message);
     this.statusCode = statusCode;
     this.status = `${statusCode}`.startsWith('4') ? 'fail' : 'error';
     this.isOperational = true;
-
+    this.isEmailVerified = isEmailVerified;
     Error.captureStackTrace(this, this.constructor);
   }
 }
 
-// Async error wrapper
 export const asyncHandler = (
-    fn: (req: Request, res: Response, next: NextFunction) => Promise<any>
+    fn: (req: Request, res: Response, next: NextFunction) => Promise<void>
   ) =>
     (req: Request, res: Response, next: NextFunction) => {
       Promise.resolve(fn(req, res, next)).catch(next);
     };
 
-// MongoDB duplicate key error
 const handleDuplicateKeyError = (err: any): AppError => {
     const field = Object.keys(err?.keyValue || {})[0];
     if (field) {
@@ -41,27 +39,23 @@ const handleDuplicateKeyError = (err: any): AppError => {
 //   return new AppError(message, 400);
 };
 
-// MongoDB validation error
 const handleValidationError = (err: any): AppError => {
   const errors = Object.values(err.errors).map((val: any) => val.message);
   const message = `Invalid input data. ${errors.join('. ')}`;
   return new AppError(message, 400);
 };
 
-// MongoDB cast error (invalid ObjectId)
 const handleCastError = (err: any): AppError => {
   const message = `Invalid ${err.path}: ${err.value}`;
   return new AppError(message, 400);
 };
 
-// JWT error handling
 const handleJWTError = (): AppError => 
   new AppError('Invalid token. Please log in again.', 401);
 
 const handleJWTExpiredError = (): AppError =>
   new AppError('Your token has expired. Please log in again.', 401);
 
-// Send error in development
 const sendErrorDev = (err: any, res: Response<IApiResponse>): void => {
   res.status(err.statusCode || 500).json({
     success: false,
@@ -71,21 +65,20 @@ const sendErrorDev = (err: any, res: Response<IApiResponse>): void => {
     details: {
       name: err.name,
       statusCode: err.statusCode,
-      isOperational: err.isOperational
-    }
+      isOperational: err.isOperational,
+    },
+    isEmailVerified: err.isEmailVerified
   });
 };
 
-// Send error in production
 const sendErrorProd = (err: any, res: Response<IApiResponse>): void => {
-  // Operational, trusted error: send message to client
   if (err.isOperational) {
     res.status(err.statusCode).json({
       success: false,
-      message: err.message
+      message: err.message,
+      isEmailVerified: err.isEmailVerified
     });
   } else {
-    // Programming or other unknown error: don't leak error details
     console.error('ERROR 💥:', err);
 
     res.status(500).json({
@@ -95,17 +88,15 @@ const sendErrorProd = (err: any, res: Response<IApiResponse>): void => {
   }
 };
 
-// Main error handling middleware
 export const errorHandler = (
   err: any,
   req: Request,
   res: Response<IApiResponse>,
-  next: NextFunction
+  _next: NextFunction
 ): void => {
   let error = { ...err };
   error.message = err.message;
 
-  // Log error
   console.error(`🚨 Error: ${err.message}`);
   console.error(`📍 URL: ${req.method} ${req.originalUrl}`);
   console.error(`👤 User: ${req.user?.id || 'unauthenticated'}`);
@@ -114,26 +105,21 @@ export const errorHandler = (
     console.error('📚 Stack:', err.stack);
   }
 
-  // Set default values if missing
   error.statusCode = error.statusCode || 500;
   error.status = error.status || 'error';
 
-  // MongoDB duplicate key error
   if (err.code === 11000) {
     error = handleDuplicateKeyError(err);
   }
 
-  // MongoDB validation error
   if (err.name === 'ValidationError') {
     error = handleValidationError(err);
   }
 
-  // MongoDB cast error
   if (err.name === 'CastError') {
     error = handleCastError(err);
   }
 
-  // JWT errors
   if (err.name === 'JsonWebTokenError') {
     error = handleJWTError();
   }
@@ -142,15 +128,15 @@ export const errorHandler = (
     error = handleJWTExpiredError();
   }
 
-  // Handle AppError instances
   if (err instanceof AppError) {
     error.statusCode = err.statusCode;
     error.status = err.status;
     error.message = err.message;
     error.isOperational = err.isOperational;
+    error.isEmailVerified = err.isEmailVerified;
+    console.log('error.isEmailVerified', error.isEmailVerified, err);
   }
 
-  // Handle generic Error instances
   if (err instanceof Error && !err.message) {
     error.statusCode = 500;
     error.status = 'error';
@@ -158,13 +144,11 @@ export const errorHandler = (
     error.isOperational = false;
   }
 
-  // Ensure response hasn't been sent
   if (res.headersSent) {
     console.error('🚨 Response already sent, cannot send error');
     return;
   }
 
-  // Send error response
   try {
     if (process.env.NODE_ENV === 'development') {
       sendErrorDev(error, res);
@@ -174,7 +158,6 @@ export const errorHandler = (
   } catch (sendError) {
     console.error('🚨 Failed to send error response:', sendError);
     
-    // Fallback error response
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -182,7 +165,6 @@ export const errorHandler = (
   }
 };
 
-// 404 handler
 export const notFound = (req: Request, res: Response<IApiResponse>): void => {
   const message = `Route ${req.originalUrl} not found`;
   res.status(404).json({
@@ -191,7 +173,6 @@ export const notFound = (req: Request, res: Response<IApiResponse>): void => {
   });
 };
 
-// Validation error helper
 export const validationErrorResponse = (errors: any[]): IApiResponse => {
   const errorMessages = errors.reduce((acc, error) => {
     acc[error.path || error.param] = error.msg;
@@ -205,7 +186,6 @@ export const validationErrorResponse = (errors: any[]): IApiResponse => {
   };
 };
 
-// Success response helper
 export const successResponse = <T>(
   data?: T,
   message?: string,
@@ -230,15 +210,18 @@ export const successResponse = <T>(
   return response;
 };
 
-// אופציונלי: אם אין לך, תוכל להוסיף את זה:
-export const errorResponse = (message: string, statusCode = 400, stack: string = ""): IApiResponse<null> => ({
+export const errorResponse = (message: string, statusCode: number = 400, stack: string = ""): IApiResponse<null> => ({
   success: false,
   message,
   data: null,
   stack,
+  details: {
+    name: 'Error',
+    statusCode,
+    isOperational: true
+  }
 });
 
-// Error response helper
 export const errorResponseOne = (
   message: string,
   statusCode: number = 500,
@@ -256,7 +239,6 @@ export const errorResponseOne = (
   return response;
 };
 
-// Pagination helper
 export const getPagination = (
   page: number = 1,
   limit: number = 10,
@@ -279,9 +261,11 @@ export const getPagination = (
   };
 };
 
-export function getPaginationParams(query: any) {
-  const rawPage = parseInt(query.page);
-  const rawLimit = parseInt(query.limit);
+export function getPaginationParams(query: { page?: string | string[]; limit?: string | string[] }): { page: number, limit: number, skip: number } {
+  const pageStr = (Array.isArray(query.page) ? query.page[0] : query.page) || '1';
+  const limitStr = (Array.isArray(query.limit) ? query.limit[0] : query.limit) || '20';
+  const rawPage = parseInt(pageStr, 10);
+  const rawLimit = parseInt(limitStr, 10);
 
   const page = Number.isNaN(rawPage) || rawPage < 1 ? 1 : rawPage;
   const limit = Number.isNaN(rawLimit) || rawLimit < 1 ? 20 : Math.min(rawLimit, 100);
@@ -291,22 +275,19 @@ export function getPaginationParams(query: any) {
 }
 
 
-// Validate ObjectId helper
 export const isValidObjectId = (id: string): boolean => {
   return /^[0-9a-fA-F]{24}$/.test(id);
 };
 
-// Request logging middleware
 export const requestLogger = (req: Request, res: Response, next: NextFunction): void => {
   const start = Date.now();
   
   res.on('finish', () => {
     const duration = Date.now() - start;
     const { method, originalUrl, ip } = req;
-    const { statusCode } = res;
     
     console.log(
-      `${method} ${originalUrl} ${statusCode} ${duration}ms - ${ip}`
+      `${method} ${originalUrl} ${res.statusCode} ${duration}ms - ${ip}`
     );
   });
   

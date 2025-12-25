@@ -132,10 +132,9 @@ export const getBySearchByNameHebrew = async (
   res: Response<IApiResponse>
 ) => {
   try {
-    const { page, limit, skip, } = getPaginationParams(req.query);
+    const { page, limit } = getPaginationParams(req.query);
 
     const searchTerm = req.query.query as string;
-    const query = req.query.query as string;
 
     
 
@@ -169,7 +168,7 @@ export const getKosherProducts = async (
   res: Response<IApiResponse>
 ) => {
   try {
-    const { page, limit, skip } = getPaginationParams(req.query);
+    const { page, limit } = getPaginationParams(req.query);
 
     const [products, total] = await Product.getKosherProducts(page, limit);
     const pagination = {
@@ -192,7 +191,7 @@ export const getOrganicProducts = async (
   res: Response<IApiResponse>
 ) => {
   try {
-    const { page, limit, skip } = getPaginationParams(req.query);
+    const { page, limit } = getPaginationParams(req.query);
 
     const [products, total] = await Product.getOrganicProducts(page, limit);
     const pagination = {
@@ -215,7 +214,7 @@ export const getGlutenFreeProducts = async (
   res: Response<IApiResponse>
 ) => {
   try {
-    const { page, limit, skip } = getPaginationParams(req.query);
+    const { page, limit } = getPaginationParams(req.query);
 
     const [products, total] = await Product.getGlutenFreeProducts(page, limit);
     const pagination = {

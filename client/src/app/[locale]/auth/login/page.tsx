@@ -40,17 +40,15 @@ type LoginForm = z.infer<typeof loginSchema>;
     resolver: zodResolver(loginSchema),
   });
 
-  // Redirect logic - only redirect when needed
   useEffect(() => {
     if (isInitialized && isAuthenticated) {
       router.push(`/${locale}/dashboard`);
     }
   }, [isAuthenticated, isInitialized, locale, router]);
 
-  // Show loading while auth is initializing
   if (!isInitialized) {
     return (
-      <div className="min-h-screen bg-surface safe-area-inset flex items-center justify-center">
+      <div className="min-h-screen bg-surface flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-secondary">{t('auth.loading')}</p>
@@ -59,7 +57,6 @@ type LoginForm = z.infer<typeof loginSchema>;
     );
   }
 
-  // Don't render login page for authenticated users
   if (isAuthenticated) {
     return null;
   }
@@ -71,8 +68,15 @@ type LoginForm = z.infer<typeof loginSchema>;
       setUser(response.user);
       showSuccess('auth.loginSuccess');
       router.push(`/${locale}/dashboard`);
-    } catch (error: any) {
-      handleApiError(error);
+    } catch (error: unknown) {
+      const apiError = error as { response?: { data?: { isEmailVerified?: boolean } } };
+      console.log('error.isEmailVerified', apiError.response?.data?.isEmailVerified);
+      if (apiError.response?.data?.isEmailVerified === false) {
+        router.push(`/${locale}/auth/verify-email?email=${encodeURIComponent(data.email)}&&status=emailNotVerified`);
+        return;
+      } else {
+        handleApiError(error);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -81,7 +85,6 @@ type LoginForm = z.infer<typeof loginSchema>;
   const handleGoogleAuth = async () => {
     setIsLoading(true);
     try {
-      // Get Google OAuth URL from backend
       const callbackUrl = `${window.location.origin}/${locale}/auth/callback`;
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/google/url?callback=${encodeURIComponent(callbackUrl)}`);
       const data = await response.json();
@@ -91,7 +94,7 @@ type LoginForm = z.infer<typeof loginSchema>;
       } else {
         throw new Error(data.message || 'Failed to get Google OAuth URL');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       handleApiError(error);
     } finally {
       setIsLoading(false);
@@ -99,9 +102,8 @@ type LoginForm = z.infer<typeof loginSchema>;
   };
 
   return (
-    <div className="min-h-[calc(100vh-54px)] bg-surface safe-area-inset flex justify-center p-4 pt-5">
+    <div className="min-h-[calc(100vh-54px)] bg-surface flex justify-center p-4 pt-5">
       <div className="w-full max-w-md">
-        {/* Header */}
         <div className="text-center mb-8 flex items-center justify-center">
           <IntlLink
             href={`/welcome`}
@@ -115,10 +117,8 @@ type LoginForm = z.infer<typeof loginSchema>;
           </div>
         </div>
 
-        {/* Login Form */}
         <div className="mobile-card">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Email Field */}
                 <Input
                   {...register('email')}
                   type="email"
@@ -129,7 +129,6 @@ type LoginForm = z.infer<typeof loginSchema>;
                   error={errors.email?.message}
               />
 
-            {/* Password Field */}
                 <Input
                   {...register('password')}
                   type={showPassword ? 'text' : 'password'}
@@ -147,7 +146,6 @@ type LoginForm = z.infer<typeof loginSchema>;
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
                   }/>
-            {/* Submit Button */}
             <Button
               variant="primary"
               size="lg"
@@ -160,21 +158,18 @@ type LoginForm = z.infer<typeof loginSchema>;
             </Button>
           </form>
 
-          {/* Divider */}
           <div className="my-5 flex items-center">
             <div className="flex-1 border-t border-border-light"></div>
             <span className="px-4 text-sm text-muted">{t('welcome.or')}</span>
             <div className="flex-1 border-t border-border-light"></div>
           </div>
 
-          {/* Google Auth Button */}
           <GoogleAuthButton 
             type="login" 
             onGoogleAuth={handleGoogleAuth}
             isLoading={isLoading}
           />
 
-          {/* Register Link */}
           <div className="text-center mt-5">
             <p className='text-secondary'>
               {t('auth.noAccount')}{' '}

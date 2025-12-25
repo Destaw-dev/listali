@@ -3,7 +3,7 @@ import { validationResult } from 'express-validator';
 import crypto from 'crypto';
 import User from '../models/user';
 import { asyncHandler, AppError, validationErrorResponse, successResponse } from '../middleware/errorHandler';
-import { IApiResponse, IAuthRequest, IRegisterRequest, IAuthResponse, UserDocument } from '../types';
+import { IApiResponse, IAuthRequest, IRegisterRequest, IAuthResponse, UserDocument, IBasePendingInvite, IGroupMember } from '../types';
 import { sendEmailVerification } from '../utils/email';
 
 const setAuthCookie = (res: Response, token: string): void => {
@@ -22,9 +22,8 @@ export const register = asyncHandler(async (req: Request, res: Response<IApiResp
     res.status(400).json(validationErrorResponse(errors.array()));
     return;
   }
-  const { username, email, password, firstName, lastName }: IRegisterRequest = req.body;
+  const { username, email, password, firstName, lastName, inviteCode }: IRegisterRequest & { inviteCode?: string } = req.body;
   
-  // Generate email verification token
   const verificationToken = crypto.randomBytes(32).toString('hex');
   const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
   
@@ -43,20 +42,95 @@ export const register = asyncHandler(async (req: Request, res: Response<IApiResp
   const newUser = await User.findById(user._id);
   const language = newUser?.preferences?.language || 'he';
   
-  // Send verification email
-  try {
-    await sendEmailVerification(email, verificationToken, username, language);
-  } catch (emailError) {
-    console.error('Failed to send verification email:', emailError);
-    // Don't fail registration if email fails, but log it
+
+
+  let groupJoined = null;
+  let inviteError = null;
+  if (inviteCode) {
+    try {
+      const Group = (await import('../models/group')).default;
+      const group = await Group.findOne({
+        'pendingInvites.code': inviteCode,
+        isActive: true
+      });
+
+      if (group) {
+        const invite = group.pendingInvites.find((i: IBasePendingInvite) => i.code === inviteCode);
+        if (invite) {
+          const inviteAge = Date.now() - new Date(invite.invitedAt).getTime();
+          const inviteExpirationTime = 1000 * 60 * 60 * 24; // 24 hours in milliseconds
+          if (inviteAge > inviteExpirationTime) {
+            const hoursExpired = Math.round(inviteAge / (1000 * 60 * 60));
+            console.error(`Invitation expired: invite code ${inviteCode} expired ${hoursExpired} hours ago`);
+            inviteError = 'This invitation has expired. Please request a new invitation from the group admin.';
+          } else {
+            if (invite.type === 'email' && invite.email) {
+              if (invite.email.toLowerCase() !== email.toLowerCase()) {
+                console.error(`Email mismatch: invite email ${invite.email} does not match user email ${email}`);
+                inviteError = 'The email address used for registration does not match the email address that received the invitation.';
+              } else {
+                const alreadyMember = group.members.find((m: IGroupMember) => m.user.toString() === user._id.toString());
+                if (!alreadyMember) {
+                  await group.addMember(user._id.toString(), invite.role || 'member');
+                  
+                  group.pendingInvites = group.pendingInvites.filter((i: IBasePendingInvite) => i.code !== inviteCode);
+                  await group.save();
+                  
+                  await User.findByIdAndUpdate(user._id, { 
+                    $push: { groups: group._id },
+                    $set: { 
+                      isEmailVerified: true, 
+                      emailVerification: { token: '', expiresAt: new Date() } 
+                    }
+                  });
+                  
+                  groupJoined = group._id.toString();
+                }
+              }
+            }
+          }
+        } else {
+          console.error(`Invite code not found: ${inviteCode}`);
+          inviteError = 'Invalid invitation code. Please check the invitation link or request a new one.';
+        }
+      } else {
+        console.error(`Group not found for invite code: ${inviteCode}`);
+        inviteError = 'Invalid invitation code. The group may not exist or the invitation may have been cancelled.';
+      }
+    } catch (error) {
+      console.error('Failed to join group with invite code:', error);
+      inviteError = 'Failed to process the invitation. Please contact the group admin for assistance.';
+    }
   }
   
   const token = user.getSignedJwtToken();
   setAuthCookie(res, token);
   const userResponse = user.toObject();
+  
+  let message = 'User registered successfully! Please check your email for verification link.';
+  if (groupJoined) {
+    message = 'User registered successfully and joined the group! Please check your email for verification link.';
+  } else if (inviteError) {
+    message = `User registered successfully! However, ${inviteError}`;
+  }
+if (!user.isEmailVerified && !groupJoined) {
+    try {
+      await sendEmailVerification(email, verificationToken, username, language);
+    } catch (emailError) {
+      console.error('Failed to send verification email:', emailError);
+    }
+  }
+  
+  const responseData: IAuthResponse = {
+    user: userResponse,
+    token,
+    ...(groupJoined && { groupJoined }),
+    ...(inviteError && { inviteError })
+  };
+  
   res.status(201).json(successResponse<IAuthResponse>(
-    { user: userResponse, token }, 
-    'User registered successfully! Please check your email for verification link.'
+    responseData, 
+    message
   ));
 });
 
@@ -69,10 +143,10 @@ export const login = asyncHandler(async (req: Request, res: Response<IApiRespons
   const { email, password }: IAuthRequest = req.body;
   try {
     const user = await User.findByCredentials(email, password) as UserDocument;
-    
-    // Check if email is verified
+
+    console.log('user', user);
     if (!user.isEmailVerified) {
-      throw new AppError('Please verify your email address before logging in. Check your email for verification link.', 403);
+      throw new AppError('Please verify your email address before logging in. Check your email for verification link.', 403, false);
     }
     
     const token = user.getSignedJwtToken();
@@ -84,7 +158,7 @@ export const login = asyncHandler(async (req: Request, res: Response<IApiRespons
     if (error instanceof AppError) {
       throw error;
     }
-    throw new AppError('Invalid credentials', 400);
+    throw new AppError('Invalid credentials', 400, true);
   }
 });
 
@@ -100,7 +174,6 @@ export const getMe = asyncHandler(async (req: Request, res: Response<IApiRespons
   const user = await User.findById(req.userId).populate('groups', 'name description avatar membersCount');
   if (!user) throw new AppError('User not found', 404);
   
-  // Check if email is verified
   if (!user.isEmailVerified) {
     throw new AppError('Please verify your email address to access your account.', 403);
   }
@@ -144,22 +217,18 @@ export const updateEmail = asyncHandler(async (req: Request, res: Response<IApiR
   const user = await User.findById(req.userId);
   if (!user) throw new AppError('User not found', 404);
 
-  // Check if email is already taken by another user
   const existingUser = await User.findOne({ email, _id: { $ne: req.userId } });
   if (existingUser) {
     throw new AppError('Email is already registered by another user', 400);
   }
 
-  // Check if it's the same email
   if (user.email === email) {
     throw new AppError('This is already your current email', 400);
   }
 
-  // Generate new verification token
   const verificationToken = crypto.randomBytes(32).toString('hex');
   const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
-  // Update user's email and set verification status
   user.email = email;
   user.isEmailVerified = false;
   user.emailVerification = {
@@ -168,7 +237,6 @@ export const updateEmail = asyncHandler(async (req: Request, res: Response<IApiR
   };
   await user.save();
 
-  // Send verification email
   try {
     const language = user.preferences?.language || 'he';
     await sendEmailVerification(email, verificationToken, user.username, language);
@@ -220,7 +288,6 @@ export const checkEmailAvailability = asyncHandler(async (req: Request, res: Res
   res.status(200).json(successResponse({ available: isAvailable }, isAvailable ? 'Email is available' : 'Email is already registered'));
 });
 
-// Invitation-related endpoints
 export const getMyInvitations = asyncHandler(async (req: Request, res: Response<IApiResponse>) => {
   const user = await User.findById(req.userId)
     .populate({
@@ -253,7 +320,6 @@ export const acceptInvitation = asyncHandler(async (req: Request, res: Response<
   }
 
 
-  // Add user to group
   const Group = (await import('../models/group')).default;
   const group = await Group.findById(invitation.group);
   if (!group) throw new AppError('Group not found', 404);
@@ -263,19 +329,15 @@ export const acceptInvitation = asyncHandler(async (req: Request, res: Response<
     throw new AppError('Invalid or expired invite code', 404);
   }
 
-  // Check if user is already a member
   const alreadyMember = group.members.find(m => m.user.toString() === userId);
   if (alreadyMember) {
     throw new AppError('You are already a member of this group', 400);
   }
 
-  // Add user to group
   await group.addMember(userId, invite.role);
 
-  // Remove the invite from pending invites
   group.pendingInvites = group.pendingInvites.filter(i => i.code !== invitationId);
   
-  // Update invitation status
   invitation.status = 'accepted';
   await user.save();
 
@@ -310,17 +372,14 @@ export const declineInvitation = asyncHandler(async (req: Request, res: Response
     throw new AppError('Invalid or expired invite code', 404);
   }
 
-  // Check if user is already a member
   const alreadyMember = group.members.find(m => m.user.toString() === userId);
   if (alreadyMember) {
     throw new AppError('You are already a member of this group', 400);
   }
 
-  // Remove the invite from pending invites
   group.pendingInvites = group.pendingInvites.filter(i => i.code !== code);
   await group.save();
 
-  // Update invitation status
   invitation.status = 'declined';
   await user.save();
 
@@ -334,7 +393,6 @@ export const verifyEmail = asyncHandler(async (req: Request, res: Response<IApiR
     throw new AppError('Verification token is required', 400);
   }
 
-  // If email is provided, check if user is already verified first
   if (email) {
     const existingUser = await User.findOne({ email });
     if (existingUser && existingUser.isEmailVerified) {
@@ -342,7 +400,6 @@ export const verifyEmail = asyncHandler(async (req: Request, res: Response<IApiR
     }
   }
 
-  // Find user by verification token
   const user = await User.findOne({ 
     'emailVerification.token': token 
   });
@@ -351,17 +408,14 @@ export const verifyEmail = asyncHandler(async (req: Request, res: Response<IApiR
     throw new AppError('Invalid verification token', 400);
   }
 
-  // Double-check if user is already verified
   if (user.isEmailVerified) {
     throw new AppError('Email is already verified', 400);
   }
 
-  // Check if token is expired
   if (!user.emailVerification || user.emailVerification.expiresAt < new Date()) {
     throw new AppError('Verification token has expired', 400);
   }
 
-  // Mark email as verified
   user.isEmailVerified = true;
   user.emailVerification = {
     token: '',
@@ -369,7 +423,21 @@ export const verifyEmail = asyncHandler(async (req: Request, res: Response<IApiR
   };
   await user.save();
 
-  res.status(200).json(successResponse(null, 'Email verified successfully'));
+  
+  const userResponse = user.toObject();
+
+  const publicUser = {
+    _id: userResponse._id,
+    username: userResponse.username,
+    email: userResponse.email,
+    firstName: userResponse.firstName,
+    lastName: userResponse.lastName,
+    avatar: userResponse.avatar,
+    isEmailVerified: userResponse.isEmailVerified,
+    groups: userResponse.groups,
+    preferences: userResponse.preferences
+  };
+  res.status(200).json(successResponse({ user: publicUser }, 'Email verified successfully'));
 });
 
 export const resendVerification = asyncHandler(async (req: Request, res: Response<IApiResponse>) => {
@@ -388,7 +456,6 @@ export const resendVerification = asyncHandler(async (req: Request, res: Respons
     throw new AppError('Email is already verified', 400);
   }
 
-  // Generate new verification token
   const verificationToken = crypto.randomBytes(32).toString('hex');
   const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
@@ -398,7 +465,6 @@ export const resendVerification = asyncHandler(async (req: Request, res: Respons
   };
   await user.save();
 
-  // Send verification email
   try {
     const newUser = await User.findById(user._id);
     const language = newUser?.preferences?.language || 'he';
@@ -413,7 +479,6 @@ export const resendVerification = asyncHandler(async (req: Request, res: Respons
   }
 });
 
-// New endpoint: resend verification for login attempts
 export const resendVerificationForLogin = asyncHandler(async (req: Request, res: Response<IApiResponse>) => {
   const { email } = req.body;
   
@@ -430,9 +495,7 @@ export const resendVerificationForLogin = asyncHandler(async (req: Request, res:
     throw new AppError('Email is already verified', 400);
   }
 
-  // Check if user has a valid verification token
   if (user.emailVerification && user.emailVerification.expiresAt > new Date()) {
-    // Token is still valid, just resend the email
     try {
       const newUser = await User.findById(user._id);
       const language = newUser?.preferences?.language || 'he';
@@ -446,7 +509,6 @@ export const resendVerificationForLogin = asyncHandler(async (req: Request, res:
       });
     }
   } else {
-    // Generate new verification token
     const verificationToken = crypto.randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
@@ -456,7 +518,6 @@ export const resendVerificationForLogin = asyncHandler(async (req: Request, res:
     };
     await user.save();
 
-    // Send verification email
     try {
       const newUser = await User.findById(user._id);
       const language = newUser?.preferences?.language || 'he';

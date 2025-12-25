@@ -7,9 +7,9 @@ import {
   getKosherProducts,
   getOrganicProducts,
   getGlutenFreeProducts,
-  markAsKosher,
-  markAsOrganic,
-  markAsGlutenFree,
+  // markAsKosher,
+  // markAsOrganic,
+  // markAsGlutenFree,
   getBySearchByNameHebrew,
   getProductById
 } from '../controllers/product';

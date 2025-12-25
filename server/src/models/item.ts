@@ -1,4 +1,4 @@
-import mongoose, { Schema, Model } from 'mongoose';
+import mongoose, { Schema, Model, FilterQuery } from 'mongoose';
 import { IItem, ItemDocument, ItemCategory, ItemUnit } from '../types';
 
 type ItemModel = Model<IItem> & {
@@ -12,7 +12,7 @@ type ItemModel = Model<IItem> & {
       sort?: string;
     }
   ): Promise<ItemDocument[]>;
-  getPopularItems(groupId?: string, limit?: number): Promise<any[]>;
+  getPopularItems(groupId?: string, limit?: number): Promise<ItemDocument[]>;
   getCategoryStats(shoppingListId?: string): Promise<any[]>;
   searchItems(searchTerm: string, options?: any): Promise<ItemDocument[]>;
   findByProduct(productId: string, options?: any): Promise<ItemDocument[]>;
@@ -20,8 +20,9 @@ type ItemModel = Model<IItem> & {
   findProductBasedItems(shoppingListId?: string, options?: any): Promise<ItemDocument[]>;
 };
 
-// Predefined categories and units
-const CATEGORIES: ItemCategory[] = [
+// Predefined categories and units (not currently used, kept for future reference)
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _CATEGORIES: ItemCategory[] = [
   'fruits_vegetables', 'meat_fish', 'dairy', 'bakery', 'pantry',
   'frozen', 'beverages', 'snacks', 'household', 'personal_care', 'other'
 ];
@@ -119,7 +120,7 @@ const itemSchema = new Schema<IItem, ItemModel>({
     default: 0,
     min: [0, 'Purchased quantity cannot be negative'],
     validate: {
-      validator: function(this: any, value: number) {
+      validator: function(this: IItem, value: number) {
         return value <= this.quantity;
       },
       message: 'Purchased quantity cannot exceed total quantity'
@@ -400,7 +401,7 @@ itemSchema.statics.findByCategory = function(categoryId: string, options: any = 
 
 // Static method to find similar items
 itemSchema.statics.findSimilar = function(itemName: string, category?: ItemCategory) {
-  const query: any = {
+  const query: FilterQuery<IItem> = {
     name: { $regex: itemName, $options: 'i' }
   };
   
@@ -452,7 +453,7 @@ itemSchema.statics.getPopularItems = function(groupId?: string, limit: number = 
 
 // Static method to get category statistics
 itemSchema.statics.getCategoryStats = function(shoppingListId?: string) {
-  const matchConditions: any = {};
+  const matchConditions: FilterQuery<IItem> = {};
   
   if (shoppingListId) {
     matchConditions.shoppingList = new mongoose.Types.ObjectId(shoppingListId);
@@ -490,7 +491,7 @@ itemSchema.statics.getCategoryStats = function(shoppingListId?: string) {
 itemSchema.statics.searchItems = function(searchTerm: string, options: any = {}) {
   const { category, limit = 20, skip = 0 } = options;
   
-  const query: any = {
+  const query: FilterQuery<IItem> = {
     $text: { $search: searchTerm }
   };
   
@@ -520,7 +521,7 @@ itemSchema.statics.findByProduct = function(productId: string, options: any = {}
 itemSchema.statics.findManualItems = function(shoppingListId?: string, options: any = {}) {
   const { limit = 20, skip = 0 } = options;
   
-  const query: any = { isManualEntry: true };
+  const query: FilterQuery<IItem> = { isManualEntry: true };
   
   if (shoppingListId) {
     query.shoppingList = new mongoose.Types.ObjectId(shoppingListId);
@@ -539,7 +540,7 @@ itemSchema.statics.findManualItems = function(shoppingListId?: string, options: 
 itemSchema.statics.findProductBasedItems = function(shoppingListId?: string, options: any = {}) {
   const { limit = 20, skip = 0 } = options;
   
-  const query: any = { 
+  const query: FilterQuery<IItem> = { 
     isManualEntry: { $ne: true },
     product: { $exists: true, $ne: null }
   };

@@ -3,8 +3,8 @@ import { validationResult } from 'express-validator';
 import Message from '../models/message';
 import Group from '../models/group';
 import { io } from '../app';
-import { AppError, validationErrorResponse, successResponse, getPagination } from '../middleware/errorHandler';
-import { IApiResponse } from '../types';
+import { AppError, validationErrorResponse, successResponse } from '../middleware/errorHandler';
+import { IApiResponse, IGroupMember, IUser } from '../types';
 
 export const getMessages = async (req: express.Request, res: express.Response<IApiResponse>) => {
   const errors = validationResult(req);
@@ -164,8 +164,8 @@ export const deleteMessage = async (req: express.Request, res: express.Response<
           id: message._id.toString(),
           content: 'הודעה זו נמחקה',
           senderId: (message.sender as any)._id.toString(),
-          senderName: (message.sender as any).username,
-          senderAvatar: (message.sender as any).avatar,
+          senderName: (message.sender as unknown as IUser).username,
+          senderAvatar: (message.sender as unknown as IUser).avatar,
           timestamp: message.createdAt,
           type: message.messageType,
           status: "deleted",
@@ -205,7 +205,7 @@ export const markGroupMessagesAsRead = async (req: express.Request, res: express
   }
 
   const group = await Group.findById(groupId);
-  if (!group || !group.members.some((m: any) => m.user.toString() === userId)) {
+  if (!group || !group.members.some((m: IGroupMember) => m.user.toString() === userId)) {
     res.status(403).json({ success: false, message: 'Access denied' });
     return;
   }
@@ -311,7 +311,7 @@ export const getUnreadCountAndLastRead = async (req: express.Request, res: expre
 
   // Check if user is member of the group
   const group = await Group.findById(groupId);
-  if (!group || !group.members.some((m: any) => m.user.toString() === userId)) {
+  if (!group || !group.members.some((m: IGroupMember) => m.user.toString() === userId)) {
     res.status(403).json({ success: false, message: 'Access denied' });
     return;
   }

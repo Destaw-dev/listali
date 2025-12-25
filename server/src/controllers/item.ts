@@ -8,16 +8,16 @@ import Group from '../models/group';
 import Product from '../models/product';
 import Message from '../models/message';
 import { AppError, validationErrorResponse, successResponse } from '../middleware/errorHandler';
-import { ItemCategory, IApiResponse } from '../types';
-import { UNITS, CATEGORIES } from '../middleware/validation';
+import { ItemCategory, IApiResponse, IGroup, IGroupMember,  } from '../types';
+import { UNITS } from '../middleware/validation';
 import { io } from '../app';
 import { emitToGroupExcept, getIO } from '@/socket/socketHandler';
 
 const verifyShoppingListAccess = async (shoppingListId: string, userId: string) => {
   const shoppingList = await ShoppingList.findById(shoppingListId).populate('group');
   if (!shoppingList) throw new AppError('Shopping list not found', 404);
-  const group = shoppingList.group as any;
-  if (!group.members.some((m: any) => m.user.toString() === userId)) throw new AppError('Access denied', 403);
+  const group = shoppingList.group as unknown as IGroup;
+  if (!group.members.some((m: IGroupMember) => m.user.toString() === userId)) throw new AppError('Access denied', 403);
   return { shoppingList, group };
 };
 
@@ -120,7 +120,7 @@ export const createItem = async (req: express.Request, res: express.Response<IAp
 
   const item = await Item.create(itemData);
   await shoppingList.addItem(item._id.toString());
-  const listId = (item.shoppingList as any)._id.toString();
+  const listId = (item.shoppingList as  any)._id.toString();
 
   const user = await (await import('../models/user')).default.findById(userId);
   await Message.createItemUpdateMessage(group._id.toString(), item._id.toString(), 'add', user?.username || 'משתמש', listId);
@@ -511,8 +511,10 @@ try {
     }
     const popularItems = await Item.getPopularItems(groupId as string, parseInt(limit as string));
     res.status(200).json(successResponse(popularItems, 'Popular items retrieved'));
-} catch (error) {
-}
+  } catch (error) {
+    // Error handling would go here if needed
+    throw new AppError(error instanceof Error ? error.message : 'Failed to get popular items', 500, true);
+  }
 };
 
 export const searchItems = async (req: express.Request, res: express.Response<IApiResponse>) => {

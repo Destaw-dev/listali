@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "Smart Group Shopping",
+    "name": "Listali",
     "description": "מערכת חכמה לניהול קניות קבוצתיות",
     "version": "גרסה 1.0.0",
     "rights": "כל הזכויות שמורות"
@@ -160,6 +160,7 @@
     "resendVerification": "שלח מחדש אימייל אימות",
     "sending": "שולח...",
     "verificationEmailSent": "אימייל האימות נשלח בהצלחה!",
+    "pleaseCheckYourEmail": "אנא בדוק את האימייל שלך ואמת את החשבון כדי להמשיך.",
     "verificationEmailError": "נכשל בשליחת אימייל האימות. אנא נסה שוב.",
     "emailAlreadyVerified": "האימייל כבר אומת",
     "emailAlreadyVerifiedMessage": "כתובת האימייל שלך כבר אומתה. כעת תוכל להתחבר לחשבון שלך.",
@@ -174,10 +175,14 @@
     "passwordsDoNotMatch": "סיסמאות אינן תואמות",
     "googleLoginSuccess": "התחברת בהצלחה עם Google!",
     "googleLoginError": "שגיאה בהתחברות עם Google",
-    "processingGoogleLogin": "מעבד התחברות עם Google..."
+    "processingGoogleLogin": "מעבד התחברות עם Google...",
+    "inviteError": "שגיאת הזמנה",
+    "inviteErrorMessage": "הייתה בעיה עם ההזמנה.",
+    "emailNotVerified": "אימייל לא מאומת",
+    "emailNotVerifiedMessage": "כתובת האימייל שלך לא אומתה. אנא אמת את האימייל שלך כדי להמשיך."
   },
   "welcome": {
-    "title": "Smart Group Shopping",
+    "title": "Listali",
     "subtitle": "מערכת חכמה לניהול קניות קבוצתיות עם המשפחה והחברים",
     "features": {
       "groups": {
@@ -300,7 +305,12 @@
     "acceptSuccess": "ההזמנה התקבלה בהצלחה",
     "acceptError": "שגיאה בקבלת ההזמנה",
     "declineSuccess": "ההזמנה נדחתה",
-    "declineError": "שגיאה בדחיית ההזמנה"
+    "declineError": "שגיאה בדחיית ההזמנה",
+    "expired": "ההזמנה פגה. אנא בקש הזמנה חדשה ממנהל הקבוצה.",
+    "emailMismatch": "כתובת האימייל שבה השתמשת לרישום אינה תואמת לכתובת האימייל שקיבלה את ההזמנה.",
+    "invalidCode": "קוד הזמנה לא תקין. אנא בדוק את קישור ההזמנה או בקש אחד חדש.",
+    "invalidCodeOrCancelled": "קוד הזמנה לא תקין. הקבוצה אולי לא קיימת או שההזמנה בוטלה, אך הרשמה עברה בהצלחה נשלח אימות אימייל.",
+    "processingFailed": "נכשל בעיבוד ההזמנה. אנא פנה למנהל הקבוצה לקבלת עזרה."
   },
   "lists": {
     "title": "רשימות קניות",
@@ -616,7 +626,12 @@
     "adding": "מוסיף...",
     "addItem": "הוסף פריט",
     "clearSelection": "נקה בחירה",
-    "continueToFillDetails": "המשך למילוי פרטים"
+    "clearAllProducts": "נקה את כל המוצרים",
+    "clearAllItems": "נקה את פריטים",
+    "continueToFillDetails": "המשך למילוי פרטים",
+    "selectProductsFromCatalog": "בחר מוצרים מהקטלוג בצד שמאל",
+    "products": "מוצרים",
+    "selectedItems": "פריטים נבחרים"
   },
   "CreateShoppingListModal": {
     "nameMinLength": "שם הרשימה חייב להיות לפחות 2 תווים",
@@ -762,6 +777,7 @@
     "lastNameMinLength": "שם משפחה חייב להיות לפחות 2 תווים",
     "emailRequired": "אימייל הוא חובה",
     "emailInvalid": "אנא הכנס כתובת אימייל תקינה",
+    "invalidEmail": "אנא הכנס כתובת אימייל תקינה",
     "passwordMinLength": "סיסמה חייבת להיות לפחות 6 תווים",
     "pleaseFixErrors": "אנא תקן את השגיאות למעלה",
     "firstNamePlaceholder": "הכנס את השם הפרטי שלך",
@@ -1070,10 +1086,15 @@
     "hideAdvanced": "הסתר סינון מתקדם",
     "advancedFilters": "סינון מתקדם",
     "subCategory": "תת־קטגוריה:",
+    "selectSubCategory": "בחר תת־קטגוריה",
     "clearSubCategory": "נקה תת־קטגוריה",
     "kosher": "כשר",
     "organic": "אורגני",
     "glutenFree": "ללא גלוטן",
+    "quickFilters": "פילטרים מהירים:",
+    "on": "מופעל",
+    "off": "כבוי",
+    "apply": "החל",
     "searchLabel": "חיפוש: \"{query}\""
   },
   "AddItemsModalItemForm": {
