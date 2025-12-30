@@ -1,4 +1,4 @@
-import { app, server } from './app';
+import { server } from './app';
 import { connectDB } from './config/database';
 import dotenv from 'dotenv';
 
@@ -7,15 +7,12 @@ dotenv.config();
 const PORT = process.env.PORT || 5000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
-// Wrap server startup in try-catch
 async function startServer() {
   try {
-    // Connect to database first
     console.log('🍃 Connecting to MongoDB...');
     await connectDB();
     console.log('✅ MongoDB Connected successfully');
 
-    // Start server
     server.listen(PORT, () => {
       console.log('🚀 Server running on port', PORT);
       console.log('📊 Environment:', NODE_ENV);
@@ -23,8 +20,7 @@ async function startServer() {
       console.log('📡 Socket.IO ready for connections');
     });
 
-    // Handle server errors
-    server.on('error', (error: any) => {
+    server.on('error', (error: Error & { code?: string }) => {
       console.error('🚨 Server error:', error);
       
       if (error.code === 'EADDRINUSE') {
@@ -42,10 +38,8 @@ async function startServer() {
   }
 }
 
-// Start the server
 startServer();
 
-// Graceful shutdown
 process.on('SIGTERM', () => {
   console.log('🔄 SIGTERM received, shutting down gracefully');
   server.close(() => {
@@ -62,8 +56,6 @@ process.on('SIGINT', () => {
   });
 });
 
-// Handle unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {
   console.error('🚨 Unhandled Rejection at:', promise, 'reason:', reason);
-  // Don't exit the process, just log the error
 });

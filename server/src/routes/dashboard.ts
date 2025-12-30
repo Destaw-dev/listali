@@ -1,6 +1,6 @@
 import express from 'express';
 import { getDashboardData } from '../controllers/dashboard';
-import { asyncHandler } from '../middleware/errorHandler';
+import { asyncHandler } from '../middleware/handlers';
 
 const router = express.Router();
 

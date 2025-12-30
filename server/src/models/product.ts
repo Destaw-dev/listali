@@ -23,11 +23,11 @@ const NUTRITIONAL: string[] = [
 ];
 
 export interface ProductModel extends Model<IProduct, ProductModel> {
-  getKosherProducts(page?: number, limit?: number): Promise<IProduct[]>;
-  getOrganicProducts(page?: number, limit?: number): Promise<IProduct[]>;
-  getGlutenFreeProducts(page?: number, limit?: number): Promise<IProduct[]>;
-  searchByNameHebrew(searchTerm: string, page?: number, limit?: number): Promise<IProduct[]>;
-  getByPriceRange(minPrice: number, maxPrice: number, page?: number, limit?: number): Promise<IProduct[]>;
+  getKosherProducts(page?: number, limit?: number): Promise<[IProduct[], number]>;
+  getOrganicProducts(page?: number, limit?: number): Promise<[IProduct[], number]>;
+  getGlutenFreeProducts(page?: number, limit?: number): Promise<[IProduct[], number]>;
+  searchByNameHebrew(searchTerm: string, page?: number, limit?: number): Promise<[IProduct[], number]>;
+  getByPriceRange(minPrice: number, maxPrice: number, page?: number, limit?: number): Promise<[IProduct[], number]>;
 }
 
 const ProductSchema = new Schema<IProduct>(

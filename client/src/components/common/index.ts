@@ -19,3 +19,7 @@ export { ErrorBoundary } from './ErrorBoundary';
 // Dropdown Components
 export { Dropdown } from './Dropdown';
 export type { DropdownOption } from './Dropdown';
+
+// MenuButton Component
+export { MenuButton } from './MenuButton';
+export type { MenuOption } from './MenuButton';

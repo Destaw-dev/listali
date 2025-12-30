@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useRef, useEffect, ReactNode, RefObject } from "react";
-import { cn } from "@/lib/utils";
+import React, { useState, useRef, useEffect, ReactNode, RefObject, useCallback } from "react";
+import { cn } from "../../lib/utils";
 import { ChevronDown } from "lucide-react";
 
 export interface DropdownOption {
@@ -9,7 +9,7 @@ export interface DropdownOption {
   label: string;
   icon?: ReactNode;
   disabled?: boolean;
-  divider?: boolean; 
+  divider?: boolean;
   isSelected?: boolean; 
 }
 
@@ -46,12 +46,7 @@ interface DropdownWithTriggerProps extends BaseDropdownProps {
 
 type DropdownProps = DropdownWithTriggerProps;
 
-/**
- * Safely converts a value to a string for use in DOM IDs.
- * Only uses primitives to ensure valid CSS selectors.
- * Falls back to index for objects/complex types.
- */
-function safeValueToString(value: unknown, fallback: string | number): string {
+function safeValueToString(value: string | number | boolean | null | undefined, fallback: string | number): string {
   if (value === null || value === undefined) {
     return String(fallback);
   }
@@ -75,7 +70,6 @@ const variantClasses = {
   ghost: "bg-transparent hover:bg-surface",
 };
 
-// ---------------------------
 interface DropdownTriggerProps {
   selectedOption?: DropdownOption;
   placeholder: string;
@@ -150,7 +144,6 @@ function DropdownTrigger({
   );
 }
 
-// ---------------------------
 interface DropdownMenuProps {
   options: DropdownOption[];
   value?: string | number;
@@ -281,7 +274,6 @@ function DropdownMenu({
 }
 
 
-// ---------------------------
 export function Dropdown({
   options,
   value,
@@ -318,7 +310,7 @@ export function Dropdown({
 
   const selectedOption = options.find((opt) => opt.value === value);
 
-  const setIsOpen = (value: boolean | ((prev: boolean) => boolean)) => {
+  const setIsOpen = useCallback((value: boolean | ((prev: boolean) => boolean)) => {
     const newState = typeof value === "function" 
       ? value(controlledIsOpen !== undefined ? controlledIsOpen : internalIsOpen) 
       : value;
@@ -327,18 +319,18 @@ export function Dropdown({
       setInternalIsOpen(newState);
     }
     onOpenChange?.(newState);
-  };
+  }, [controlledIsOpen, internalIsOpen, onOpenChange]);
   
-  const handleSelect = (option: DropdownOption) => {
+  const handleSelect = useCallback((option: DropdownOption) => {
     if (option.disabled || option.divider) return;
 
-    onSelect?.(option.value, option);
-    
-    if (closeOnSelect) {
-      setIsOpen(false);
-      setFocusedIndex(-1);
-    }
-  };
+      onSelect?.(option.value, option);
+      
+      if (closeOnSelect) {
+        setIsOpen(false);
+        setFocusedIndex(-1);
+      }
+    }, [onSelect, closeOnSelect, setIsOpen, setFocusedIndex]);
 
   const handleToggle = () => {
     if (disabled) return;
@@ -377,7 +369,7 @@ export function Dropdown({
       document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("touchstart", handleClickOutside);
     };
-  }, [isOpen, controlledIsOpen]);
+  }, [isOpen, controlledIsOpen, setIsOpen]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -431,7 +423,7 @@ export function Dropdown({
       document.addEventListener("keydown", handleKeyDown);
       return () => document.removeEventListener("keydown", handleKeyDown);
     }
-  }, [isOpen, focusedIndex, options, controlledIsOpen]);
+  }, [isOpen, focusedIndex, options, controlledIsOpen, handleSelect, setIsOpen]);
 
   useEffect(() => {
     if (focusedIndex >= 0 && menuRef.current) {

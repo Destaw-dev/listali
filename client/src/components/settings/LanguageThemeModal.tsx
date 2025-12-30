@@ -3,10 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { X, Globe, Palette, Check } from 'lucide-react';
-import { Card, CardBody } from '@/components/common/Card';
-import { Button } from '@/components/common/Button';
-import { useNotification } from '@/contexts/NotificationContext';
-import { useModalScrollLock } from '@/hooks/useModalScrollLock';
+import { Card, CardBody, Button } from '../common';
+import { useNotification } from '../../contexts/NotificationContext';
+import { useModalScrollLock } from '../../hooks/useModalScrollLock';
 
 interface LanguageThemeModalProps {
   isOpen: boolean;
@@ -69,7 +68,9 @@ export default function LanguageThemeModal({
       onClose();
     } catch (error) {
       console.error('Preferences update error:', error);
-      handleApiError(error);
+      if (error instanceof Error) {
+        handleApiError(error);
+      }
     } finally {
       setInternalIsLoading(false);
     }
@@ -81,7 +82,6 @@ export default function LanguageThemeModal({
     }
   };
 
-  // Prevent body scroll when modal is open
   useModalScrollLock(isOpen);
 
   if (!isOpen) return null;

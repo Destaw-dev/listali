@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { useAuthStore } from "@/store/authStore";
+import { useAuthStore } from "../../../store/authStore";
 import { useRouter, useParams, usePathname } from "next/navigation";
 import {
   useLogout,
@@ -10,8 +10,8 @@ import {
   useUpdateProfile,
   useUpdatePreferences,
   useUpdateNotificationSettings,
-} from "@/hooks/useSettings";
-import { useThemeStore } from "@/store/themeStore";
+} from "../../../hooks/useSettings";
+import { useThemeStore } from "../../../store/themeStore";
 import {
   Settings,
   User,
@@ -25,15 +25,13 @@ import {
   Smartphone,
   AlertTriangle,
 } from "lucide-react";
-import { Card, CardBody } from "@/components/common/Card";
-import { Button } from "@/components/common/Button";
-import { Badge } from "@/components/common/Badge";
-import EditProfileModal from "@/components/settings/EditProfileModal";
-import UpdateEmailModal from "@/components/settings/UpdateEmailModal";
-import LanguageThemeModal from "@/components/settings/LanguageThemeModal";
-import NotificationModal from "@/components/settings/NotificationModal";
-import { useNotification } from "@/contexts/NotificationContext";
-import { Theme } from "@/types";
+import { Card, CardBody, Button, Badge } from "../../../components/common";
+import EditProfileModal from "../../../components/settings/EditProfileModal";
+import UpdateEmailModal from "../../../components/settings/UpdateEmailModal";
+import LanguageThemeModal from "../../../components/settings/LanguageThemeModal";
+import NotificationModal from "../../../components/settings/NotificationModal";
+import { useNotification } from "../../../contexts/NotificationContext";
+import { Theme } from "../../../types";
 
 export default function SettingsPage() {
   const { user, isAuthenticated, isInitialized, } = useAuthStore();
@@ -369,13 +367,15 @@ export default function SettingsPage() {
         </div>
       </div>
 
-            <EditProfileModal
-        isOpen={showEditProfileModal}
-        onClose={() => setShowEditProfileModal(false)}
-        user={user}
-        onSave={handleEditProfile}
-        isLoading={updateProfileMutation.isPending}
-      />
+            {user && (
+        <EditProfileModal
+          isOpen={showEditProfileModal}
+          onClose={() => setShowEditProfileModal(false)}
+          user={user}
+          onSave={handleEditProfile}
+          isLoading={updateProfileMutation.isPending}
+        />
+      )}
 
       <UpdateEmailModal
         isOpen={showUpdateEmailModal}

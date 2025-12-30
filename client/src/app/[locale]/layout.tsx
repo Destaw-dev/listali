@@ -2,10 +2,10 @@ import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
-import { Navigation } from '@/components/layout/Navigation';
-import { Providers } from '@/components/providers/Providers';
+import { Navigation } from '../../components/layout/Navigation';
+import { Providers } from '../../components/providers/Providers';
 import '../globals.css';
-import { locales } from '@/i18n/config';
+import { locales } from '../../i18n/config';
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -101,15 +101,12 @@ export default async function LocaleLayout({
         <NextIntlClientProvider messages={messages} locale={locale}>
           <Providers locale={locale}>
             <div id="root" className="min-h-screen">
-              {/* Navigation - Responsive (top on desktop, bottom on mobile) */}
               <Navigation />
               
-              {/* Main content with responsive padding */}
               <div className="pt-0 md:pt-0">
                 {children}
               </div>
               
-              {/* Footer - Only show for authenticated users */}
               <footer className="text-center py-4 bg-white/50 dark:bg-neutral-800/50 backdrop-blur-sm">
                 <p className="text-xs text-muted px-4">
                   © 2025 Listali. {locale === 'he' ? 'כל הזכויות שמורות.' : 'All rights reserved.'}

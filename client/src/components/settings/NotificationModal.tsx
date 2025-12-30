@@ -1,14 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { X, Bell, Smartphone, Mail, Check, X as XIcon } from 'lucide-react';
-import { Card, CardBody } from '@/components/common/Card';
-import { Button } from '@/components/common/Button';
-import { Badge } from '@/components/common/Badge';
-import { useNotification } from '@/contexts/NotificationContext';
+import { X, Bell, Smartphone, Mail } from 'lucide-react';
+import { Card, CardBody, Button } from '../common';
+import { useNotification } from '../../contexts/NotificationContext';
 import { Toggle } from '../common/Toggle';
-import { useModalScrollLock } from '@/hooks/useModalScrollLock';
+import { useModalScrollLock } from '../../hooks/useModalScrollLock';
 
 interface NotificationModalProps {
   isOpen: boolean;
@@ -71,7 +69,7 @@ export default function NotificationModal({
   isLoading: externalIsLoading
 }: NotificationModalProps) {
   const t = useTranslations('settings');
-  const { showSuccess, handleApiError } = useNotification();
+  const { handleApiError } = useNotification();
   const [internalIsLoading, setInternalIsLoading] = useState(false);
   const isLoading = externalIsLoading || internalIsLoading;
   const [settings, setSettings] = useState(currentSettings);
@@ -103,7 +101,7 @@ export default function NotificationModal({
       onClose();
     } catch (error) {
       console.error('Notification settings update error:', error);
-      handleApiError(error);
+      handleApiError(error as Error);
     } finally {
       setInternalIsLoading(false);
     }
@@ -115,7 +113,6 @@ export default function NotificationModal({
     }
   };
 
-  // Prevent body scroll when modal is open
   useModalScrollLock(isOpen);
 
   if (!isOpen) return null;

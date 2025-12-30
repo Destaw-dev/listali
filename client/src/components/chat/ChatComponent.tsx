@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { Send, Edit3, Trash2, Clock, Check, CheckCheck, MoreVertical, MessageCircle } from 'lucide-react';
-import { Button } from '@/components/common/Button';
-import { useAuthStore } from '@/store/authStore';
+import { Send, Edit3, Trash2, Clock, Check, CheckCheck, MessageCircle } from 'lucide-react';
+import { Button } from '../../components/common/Button';
+import { useAuthStore } from '../../store/authStore';
 import { 
   useGroupMessages, 
   useSendMessage, 
@@ -13,8 +13,9 @@ import {
   useMarkGroupMessagesAsRead,
   useChatWebSocket,
   useUnreadInfo
-} from '@/hooks/useChat';
+} from '../../hooks/useChat';
 import { SystemMessage } from './SystemMessage';
+import { MenuButton, TextArea } from '../common';
 
 interface Message {
   _id: string;
@@ -61,7 +62,6 @@ export function ChatComponent({ groupId, groupName }: ChatComponentProps ) {
   const [editingMessage, setEditingMessage] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
   const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false);
-  const [showMessageMenu, setShowMessageMenu] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
@@ -81,12 +81,22 @@ const { data: unreadInfo } = useUnreadInfo(groupId, {
   const deleteMessageMutation = useDeleteMessage();
   const markGroupAsReadMutation = useMarkGroupMessagesAsRead();
 
-  // Mark messages as read when component loads and user has unread messages
+  const scrollToLastReadMessage = useCallback(() => {
+    if (lastReadMessage?._id) {
+      const lastReadElement = document.getElementById(`message-${lastReadMessage._id}`);
+      if (lastReadElement) {
+        lastReadElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+    }
+    scrollToBottom();
+  }, [lastReadMessage]);
+
   useEffect(() => {
     if (groupId && !isLoading && unreadCount > 0 && !markGroupAsReadMutation.isPending) {
       markGroupAsReadMutation.mutate(groupId);
     }
-  }, [groupId, isLoading, unreadCount, markGroupAsReadMutation.isPending]);
+  }, [groupId, isLoading, unreadCount, markGroupAsReadMutation.isPending, markGroupAsReadMutation.mutate]);
 
   useEffect(() => {
     if (messages.length === 0) return;
@@ -103,7 +113,7 @@ const { data: unreadInfo } = useUnreadInfo(groupId, {
         scrollToLastReadMessage();
       }, 100);
     }
-  }, [messages, sendMessageMutation.isSuccess, lastReadMessage]);
+  }, [messages, sendMessageMutation.isSuccess, lastReadMessage, hasScrolledToBottom, scrollToLastReadMessage]);
 
   const sendMessage = async () => {
     if (!newMessage.trim() || sendMessageMutation.isPending) return;
@@ -146,16 +156,7 @@ const { data: unreadInfo } = useUnreadInfo(groupId, {
     setHasScrolledToBottom(true);
   };
 
-  const scrollToLastReadMessage = () => {
-    if (lastReadMessage?._id) {
-      const lastReadElement = document.getElementById(`message-${lastReadMessage._id}`);
-      if (lastReadElement) {
-        lastReadElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        return;
-      }
-    }
-    scrollToBottom();
-  };
+
 
   const handleScroll = () => {
     if (!messagesContainerRef.current) return;
@@ -259,7 +260,6 @@ const { data: unreadInfo } = useUnreadInfo(groupId, {
 
   return (
     <div className="flex flex-col h-full bg-card rounded-lg overflow-hidden shadow-sm">
-      {/* Chat Header */}
       <div className="flex items-center justify-between p-4 bg-card border-b border-border">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-gradient-to-br from-primaryT-700 to-primaryT-700 rounded-full flex items-center justify-center">
@@ -324,7 +324,7 @@ const { data: unreadInfo } = useUnreadInfo(groupId, {
                   </div>
                 )}
                 
-                                {isSystemMessage ? (
+                {isSystemMessage ? (
                   <SystemMessage message={message} groupId={groupId} />
                 ) : (
                   <div
@@ -352,52 +352,32 @@ const { data: unreadInfo } = useUnreadInfo(groupId, {
                           className={`px-4 py-2 rounded-2xl shadow-sm transition-all duration-200 hover:shadow-md ${
                             isMyMessage
                               ? 'bg-gradient-to-r from-primaryT-700 to-primaryT-700 text-white hover:from-primaryT-700 hover:to-primaryT-700'
-                              : 'bg-card text-text-secondary border border-border hover:border-border'
+                              : 'bg-accentT-300 hover:bg-accentT-600'
                           }`}
                         >
                           <p className="text-sm leading-relaxed">{message.content}</p>
                           
                           {(canEditMessage(message) || canDeleteMessage(message)) && (
-                            <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-all duration-200 transform scale-90 group-hover:scale-100">
-                              <button
-                                onClick={() => setShowMessageMenu(showMessageMenu === message._id ? null : message._id)}
-                                className="p-1.5 rounded-full bg-black/10 hover:bg-black/20 transition-colors"
-                              >
-                                <MoreVertical className="w-3 h-3" />
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                        
-                        {showMessageMenu === message._id && (
-                          <div className="absolute top-8 right-0 bg-card border border-border rounded-lg shadow-lg z-10 min-w-[120px] animate-fade-in">
-                            {canEditMessage(message) && (
-                              <button
-                                onClick={() => {
+                            <MenuButton size='sm' variant='ghost' className='absolute top-1 start-0 opacity-0 group-hover:opacity-100 transition-all duration-200 transform scale-90 group-hover:scale-100' options={[
+                              {
+                                label: t('edit'),
+                                onClick: () => {
                                   setEditingMessage(message._id);
                                   setEditContent(message.content);
-                                  setShowMessageMenu(null);
-                                }}
-                                className="flex items-center gap-2 w-full px-3 py-2 text-sm text-text-secondary hover:bg-surface-hover transition-colors"
-                              >
-                                <Edit3 className="w-3 h-3" />
-                                {t('edit')}
-                              </button>
-                            )}
-                            {canDeleteMessage(message) && (
-                              <button
-                                onClick={() => {
+                                },
+                                icon: <Edit3 className="w-3 h-3" />
+                              },
+                              {
+                                label: t('delete'),
+                                onClick: () => {
                                   deleteMessage(message._id);
-                                  setShowMessageMenu(null);
-                                }}
-                                className="flex items-center gap-2 w-full px-3 py-2 text-sm text-error-600 hover:bg-error-50 transition-colors"
-                              >
-                                <Trash2 className="w-3 h-3" />
-                                {t('delete')}
-                              </button>
-                            )}
-                          </div>
-                        )}
+                                },
+                                variant: 'danger',
+                                icon: <Trash2 className="w-3 h-3" />
+                              }
+                            ]} align='start' position='top' />
+                          )}
+                        </div>
                       </div>
                       
                       <div className={`flex items-center gap-2 mt-1 ${isMyMessage ? 'justify-end' : 'justify-start'}`}>
@@ -418,55 +398,37 @@ const { data: unreadInfo } = useUnreadInfo(groupId, {
 
       <div className="p-4 bg-card border-t border-border">
         {editingMessage ? (
-          <div className="flex items-center gap-2">
-            <div className="flex-1 bg-surface-hover rounded-lg p-2">
-              <span className="text-xs text-text-muted mb-1 block">{t('editingMessage')}</span>
-              <input
-                type="text"
-                value={editContent}
-                onChange={(e) => setEditContent(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && editMessage(editingMessage)}
-                className="w-full bg-transparent border-none outline-none text-sm"
-                placeholder={t('editMessagePlaceholder')}
-              />
+          <div className="flex gap-2 items-end">
+            <div className='w-full'>
+            <span className="text-xs text-text-muted mb-1 block">{t('editingMessage')}</span>
+            <TextArea
+              value={editContent}
+              rows={2}
+              onChange={(e) => setEditContent(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && editMessage(editingMessage)}
+              placeholder={t('editMessagePlaceholder')}
+              fullWidth
+            />
             </div>
-            <button
-              onClick={() => editMessage(editingMessage)}
-              disabled={!editContent.trim() || editMessageMutation.isPending}
-              className="px-4 py-2 bg-primaryT-700 text-white rounded-lg hover:bg-primaryT-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {t('save')}
-            </button>
-            <button
-              onClick={() => {
-                setEditingMessage(null);
-                setEditContent('');
-              }}
-              className="px-4 py-2 text-text-muted hover:text-text-secondary transition-colors"
-            >
-              {t('cancel')}
-            </button>
+            <Button variant='primary' size='md' onClick={() => editMessage(editingMessage)} disabled={!editContent.trim() || editMessageMutation.isPending} loading={editMessageMutation.isPending}>{t('save')}</Button>
+            <Button variant='ghost' size='md' onClick={() => {
+              setEditingMessage(null);
+              setEditContent('');
+            }}>{t('cancel')}</Button>
           </div>
         ) : (
           <div className="flex items-center gap-3">
-            <div className="flex-1 bg-surface-hover rounded-full px-4 py-2">
-              <input
-                type="text"
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder={t('typeMessagePlaceholder')}
-                className="w-full bg-transparent border-none outline-none text-sm"
-                disabled={sendMessageMutation.isPending}
-              />
-            </div>
-            <button
-              onClick={sendMessage}
-              disabled={!newMessage.trim() || sendMessageMutation.isPending}
-              className="p-3 bg-gradient-to-r from-primaryT-700 to-primaryT-700 text-white rounded-full hover:from-primaryT-700 hover:to-primaryT-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-md hover:shadow-lg"
-            >
-              <Send className="w-4 h-4" />
-            </button>
+            <TextArea
+              value={newMessage}
+              rows={2}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder={t('typeMessagePlaceholder')}
+              disabled={sendMessageMutation.isPending}
+              icon={<Send className="w-5 h-5 text-muted" />}
+              fullWidth
+            />
+            <Button variant='primary' size='sm' onClick={sendMessage} disabled={!newMessage.trim() || sendMessageMutation.isPending} loading={sendMessageMutation.isPending}><Send className="w-5 h-5" /></Button>
           </div>
         )}
       </div>

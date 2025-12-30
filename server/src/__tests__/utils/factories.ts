@@ -1,6 +1,6 @@
 import User from '../../models/user';
 import Group from '../../models/group';
-import jwt from 'jsonwebtoken';
+import { signAccessToken } from '../../utils/tokens';
 
 export const createUser = async (overrides = {}) => {
   const user = await User.create({
@@ -11,7 +11,7 @@ export const createUser = async (overrides = {}) => {
     lastName: 'User',
     ...overrides
   });
-  const token = user.getSignedJwtToken();
+  const token = signAccessToken(user._id.toString());
   return { user, token };
 };
 

@@ -8,7 +8,7 @@ import {
   // updateCategory,
   // deleteCategory
 } from '../controllers/category';
-// import { authenticateToken } from '@/middleware/auth';
+// import { authenticateToken } from '../middleware/auth';
 
 const router = Router();
 

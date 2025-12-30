@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { Theme, ThemeStore } from '@/types';
-import { apiClient } from '@/lib/api';
+import type { Theme, ThemeStore } from '../types';
+import { apiClient } from '../lib/api';
 
 export const useThemeStore = create<ThemeStore>()(
   persist(

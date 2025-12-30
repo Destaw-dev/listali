@@ -1,9 +1,10 @@
 import { useEffect, useCallback, useRef } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api';
-import websocketService from '@/services/websocket';
-import { useAuthStore } from '@/store/authStore';
-import { useNotification } from '@/contexts/NotificationContext';
+import { apiClient } from '../lib/api';
+import websocketService from '../services/websocket';
+import { useAuthStore } from '../store/authStore';
+import { useNotification } from '../contexts/NotificationContext';
+import { IChatMessage } from '../types';
 
 
 export type MessageType = 'text' | 'image' | 'system' | 'item_update' | 'list_update';
@@ -28,7 +29,6 @@ export interface MessageMetadata {
   imageUrl?: string;
   fileName?: string;
   fileSize?: number;
-  [k: string]: unknown;
 }
 
 export interface Message {
@@ -42,8 +42,8 @@ export interface Message {
   isDeleted?: boolean;
   createdAt: Date;
   updatedAt: Date;
-  readBy: string[]; // user ids
-  group: string; // group id
+  readBy: string[];
+  group: string;
 }
 
 export interface SendMessageData {
@@ -70,9 +70,49 @@ export const QK = {
 
 const uniq = <T,>(arr: T[]) => Array.from(new Set(arr));
 
-const toDate = (v: unknown): Date => (v instanceof Date ? v : new Date(String(v)));
+/**
+ * Raw message data as it comes from the server before normalization.
+ * This represents the various formats that messages can have when received from the API.
+ */
+export interface RawMessageInput {
+  _id?: string;
+  id?: string;
+  content?: string;
+  sender?: {
+    _id?: string;
+    username?: string;
+    firstName?: string;
+    lastName?: string;
+    avatar?: string;
+  };
+  senderId?: string;
+  senderName?: string;
+  senderAvatar?: string;
+  messageType?: MessageType;
+  type?: MessageType;
+  metadata?: MessageMetadata;
+  isEdited?: boolean;
+  editedAt?: string | number | Date;
+  isDeleted?: boolean;
+  createdAt?: string | number | Date;
+  timestamp?: string | number | Date;
+  updatedAt?: string | number | Date;
+  readBy?: string[] | number[];
+  group?: string;
+  groupId?: string;
+}
 
-const normalizeMessage = (m: any): Message => ({
+/**
+ * Unread info structure for a group
+ */
+export interface UnreadInfo {
+  unreadCount: number;
+  lastReadMessage: Message | null;
+}
+
+const toDate = (v: string | number | Date): Date => (v instanceof Date ? v : new Date(String(v)));
+
+const normalizeMessage = (m: RawMessageInput): Message => ({
   _id: String(m._id ?? m.id),
   content: String(m.content ?? ''),
   sender: {
@@ -95,7 +135,7 @@ const normalizeMessage = (m: any): Message => ({
   group: String(m.group ?? m.groupId ?? ''),
 });
 
-const normalizeMany = (arr: any[]): Message[] => arr.map(normalizeMessage);
+const normalizeMany = (arr: RawMessageInput[]): Message[] => arr.map(normalizeMessage);
 
 function upsertMessage(list: Message[] | undefined, incoming: Message): Message[] {
   if (!list) return [incoming];
@@ -124,6 +164,8 @@ function replaceTempMessage(list: Message[] | undefined, tempId: string, real: M
 
 
 export function useGroupMessages(groupId: string, options?: { enabled?: boolean }) {
+  const { authReady, accessToken } = useAuthStore();
+  
   return useQuery({
     queryKey: QK.messages(groupId),
     queryFn: async () => {
@@ -131,7 +173,7 @@ export function useGroupMessages(groupId: string, options?: { enabled?: boolean 
       const messages = normalizeMany(data?.data?.messages ?? []);
       return [...messages].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
     },
-    enabled: options?.enabled !== false && Boolean(groupId),
+    enabled: authReady && !!accessToken && options?.enabled !== false && Boolean(groupId),
     staleTime: 30_000,
     gcTime: 10 * 60_000,
     refetchOnWindowFocus: false,
@@ -149,6 +191,8 @@ export function useUnreadInfo(groupId: string, options?: {
   refetchOnMount?: boolean;
   refetchOnWindowFocus?: boolean;
 }) {
+  const { authReady, accessToken } = useAuthStore();
+  
   return useQuery({
     queryKey: QK.unreadInfo(groupId),
     queryFn: async ({ signal }) => {
@@ -160,7 +204,7 @@ export function useUnreadInfo(groupId: string, options?: {
           : null,
       };
     },
-    enabled: options?.enabled !== false && !!groupId,
+    enabled: authReady && !!accessToken && options?.enabled !== false && !!groupId,
     staleTime: options?.staleTime ?? 30_000,
     gcTime: 10 * 60_000,
     refetchOnWindowFocus: options?.refetchOnWindowFocus ?? false,
@@ -179,6 +223,7 @@ export function useMessages(groupId: string, options?: {
   after?: string;
 }) {
   const { page = 1, limit = 50, before, after } = options || {};
+  const { authReady, accessToken } = useAuthStore();
   
   return useQuery({
     queryKey: QK.messages(groupId, page),
@@ -195,7 +240,7 @@ export function useMessages(groupId: string, options?: {
         hasMore: data?.data?.hasMore ?? false
       };
     },
-    enabled: options?.enabled !== false && Boolean(groupId),
+    enabled: authReady && !!accessToken && options?.enabled !== false && Boolean(groupId),
     staleTime: 30_000,
     gcTime: 10 * 60_000,
     refetchOnWindowFocus: false,
@@ -205,11 +250,6 @@ export function useMessages(groupId: string, options?: {
   });
 }
 
-/**
- * ---------------------------
- * Mutations
- * ---------------------------
- */
 export function useSendMessage() {
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
@@ -223,7 +263,7 @@ export function useSendMessage() {
     onMutate: async (variables) => {
       const tempId = `temp-${Date.now()}`;
       await queryClient.cancelQueries({ queryKey: QK.messages(variables.groupId) });
-      const previous = queryClient.getQueryData<any>(QK.messages(variables.groupId));
+      const previous = queryClient.getQueryData<Message[]>(QK.messages(variables.groupId));
 
       const optimistic: Message = {
         _id: tempId,
@@ -262,8 +302,7 @@ export function useSendMessage() {
         return replaceTempMessage(old, ctx.tempId, realNormalized);
       });
 
-      // Update unread info cache
-      queryClient.setQueryData(QK.unreadInfo(ctx.groupId), (old: any) => {
+      queryClient.setQueryData<UnreadInfo>(QK.unreadInfo(ctx.groupId), (old) => {
         if (!old) return { unreadCount: 0, lastReadMessage: realNormalized };
         return {
           ...old,
@@ -273,11 +312,11 @@ export function useSendMessage() {
       
       showSuccess('chat.messageSent');
     },
-    onError: (err, vars, ctx) => {
+    onError: (error: Error, vars, ctx) => {
       if (ctx?.previous) {
         queryClient.setQueryData(QK.messages(ctx.groupId), ctx.previous);
       }
-      handleApiError(err);
+      handleApiError(error);
     },
   });
 }
@@ -300,8 +339,8 @@ export function useEditMessage() {
       );
       showSuccess('chat.messageEdited');
     },
-    onError: (e) => {
-      handleApiError(e);
+    onError: (error: Error) => {
+      handleApiError(error);
     },
   });
 }
@@ -325,8 +364,8 @@ export function useDeleteMessage() {
       );
       showSuccess('chat.messageDeleted');
     },
-    onError: (e) => {
-      handleApiError(e);
+    onError: (error: Error) => {
+      handleApiError(error);
     },
   });
 }
@@ -347,10 +386,7 @@ export function useMarkMessagesAsRead() {
         const uid = user?._id ?? 'current-user';
         return old.map((m) => ({ ...m, readBy: uniq([...(m.readBy ?? []), uid]) }));
       });
-    },
-    onError: (e) => {
-      // Silent error - not critical for UX
-    },
+    },  
   });
 }
 
@@ -361,27 +397,23 @@ export function useMarkGroupMessagesAsRead() {
 
   return useMutation({
     mutationFn: async (groupId: string) => {
-      // Clear existing timeout
       if (debounceRef.current) {
         clearTimeout(debounceRef.current);
       }
 
-      // Return a promise that resolves after debounce
-      return new Promise<{ groupId: string; server: any }>((resolve) => {
+      return new Promise<{ groupId: string; server: unknown }>((resolve) => {
         debounceRef.current = setTimeout(async () => {
           try {
             const res = await apiClient.post(`/messages/group/${groupId}/mark-read`);
-            resolve({ groupId, server: res.data?.data });
-          } catch (error) {
-            // Silent error - not critical for UX
+            resolve({ groupId, server: res.data?.data ?? null });
+          } catch {
             resolve({ groupId, server: null });
           }
-        }, 1000); // 1 second debounce
+        }, 1000);
       });
     },
     onSuccess: (_data, groupId) => {
-      // Update unread info cache
-      queryClient.setQueryData(QK.unreadInfo(groupId), (old: any) => {
+      queryClient.setQueryData<UnreadInfo>(QK.unreadInfo(groupId), (old) => {
         if (!old) return { unreadCount: 0, lastReadMessage: null };
         return {
           ...old,
@@ -389,10 +421,9 @@ export function useMarkGroupMessagesAsRead() {
         };
       });
       
-      // Update messages cache for all pages
-      queryClient.setQueriesData(
+      queryClient.setQueriesData<Message[]>(
         { queryKey: ['chat', 'messages', groupId] },
-        (old: any) => {
+        (old) => {
           if (!old) return old;
           const uid = user?._id ?? 'current-user';
           return old.map((m: Message) => ({ 
@@ -401,9 +432,6 @@ export function useMarkGroupMessagesAsRead() {
           }));
         }
       );
-    },
-    onError: (e) => {
-      // Silent error - not critical for UX
     },
   });
 }
@@ -418,14 +446,15 @@ export function useChatWebSocket(
   const uid = user?._id;
 
   const handleNewMessage = useCallback(
-    (data: { groupId: string; message: any }) => {
+    (data: { groupId: string; message: RawMessageInput | { _id?: string; id?: string; senderId?: string; sender?: { _id?: string } } }) => {
       if (data.groupId !== groupId) return;
-      const incomingId: string = data.message._id ?? data.message.id;
+      const incomingId = data.message._id ?? (data.message as { id?: string }).id;
       if (!incomingId) return;
       if (processedIds.current.has(incomingId)) return;
-      if (uid && (data.message.senderId === uid || data.message.sender?._id === uid)) return;
+      const messageSenderId = (data.message as { senderId?: string }).senderId ?? ((data.message as { sender?: { _id?: string } }).sender?._id);
+      if (uid && messageSenderId === uid) return;
 
-      const newMsg = normalizeMessage({ ...data.message, groupId });
+      const newMsg = normalizeMessage({ ...data.message, groupId } as RawMessageInput);
 
       queryClient.setQueryData<Message[]>(QK.messages(groupId), (old) => {
         const tempIdx = old?.findIndex(
@@ -444,9 +473,8 @@ export function useChatWebSocket(
         return upsertMessage(old, newMsg);
       });
 
-      // Update unread count when new message arrives and chat is not active
       if (!options?.isActive) {
-        queryClient.setQueryData(QK.unreadInfo(groupId), (old: any) => {
+        queryClient.setQueryData<UnreadInfo>(QK.unreadInfo(groupId), (old) => {
           if (!old) return { unreadCount: 1, lastReadMessage: null };
           return {
             ...old,
@@ -460,7 +488,22 @@ export function useChatWebSocket(
 
   useEffect(() => {
     websocketService.connect();
-    const offNewMessage = websocketService.on('chat:message', handleNewMessage);
+    const offNewMessage = websocketService.on('chat:message', (data: { groupId: string; message: IChatMessage }) => {
+      // Convert IChatMessage to RawMessageInput format
+      const rawMessage: RawMessageInput = {
+        id: data.message.id,
+        _id: data.message.id,
+        content: data.message.content,
+        senderId: data.message.senderId,
+        senderName: data.message.senderName,
+        senderAvatar: data.message.senderAvatar,
+        messageType: (data.message.type === 'shopping_update' ? 'item_update' : (data.message.type === 'text' ? 'text' : 'system')) as MessageType,
+        type: data.message.type === 'shopping_update' ? 'item_update' : (data.message.type === 'text' ? 'text' : 'system'),
+        createdAt: data.message.timestamp,
+        timestamp: data.message.timestamp,
+      };
+      handleNewMessage({ groupId: data.groupId, message: rawMessage });
+    });
     const offTyping = websocketService.on('chat:typing', (data: { groupId: string; user: { username: string } }) => {
       if (data.groupId === groupId) {
         // typing indicator externally
@@ -472,7 +515,3 @@ export function useChatWebSocket(
     };
   }, [groupId, handleNewMessage]);
 }
-
-// REMOVED: Direct WebSocket emission
-// All events should now be sent only from the backend after proper processing
-// The client should use REST API calls instead of direct WebSocket emissions

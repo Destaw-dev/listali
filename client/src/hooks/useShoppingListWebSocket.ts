@@ -1,11 +1,11 @@
 "use client";
 import { useState, useEffect, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { useAuthStore } from '@/store/authStore';
-import { useNotification } from '@/contexts/NotificationContext';
+import { useAuthStore } from '../store/authStore';
+import { useNotification } from '../contexts/NotificationContext';
 import { useTranslations } from 'next-intl';
-import websocketService from '@/services/websocket';
-import { IWebSocketEvents } from '@/types';
+import websocketService from '../services/websocket';
+import { IWebSocketEvents } from '../types';
 
 export function useShoppingListWebSocket(listId: string, groupId: string) {
   const [isConnected, setIsConnected] = useState(false);
@@ -19,21 +19,24 @@ export function useShoppingListWebSocket(listId: string, groupId: string) {
     try {
       const socket = websocketService.getSocket();
       return socket && socket.connected;
-    } catch (err) {
+    } catch {
       return false;
     }
   }, []);
 
-  const safeWebSocketHandler = useCallback((eventName: string, handler: (data: any) => void) => {
+  const safeWebSocketHandler = useCallback(<K extends keyof IWebSocketEvents>(
+    eventName: K, 
+    handler: (data: IWebSocketEvents[K]) => void
+  ) => {
     try {
-      return websocketService.on(eventName as keyof IWebSocketEvents, (data: any) => {
+      return websocketService.on(eventName, (data: IWebSocketEvents[K]) => {
         try {
           handler(data);
-        } catch (err) {
+        } catch {
           setError(`Failed to handle ${eventName} event`);
         }
       });
-    } catch (err) {
+    } catch {
       setError(`Failed to set up ${eventName} listener`);
       return () => {};
     }
@@ -59,72 +62,56 @@ export function useShoppingListWebSocket(listId: string, groupId: string) {
         setError('notifications.websocketError');
       }
 
-      const offStarted = safeWebSocketHandler('shopping:started', (e: any) => {
+      const offStarted = safeWebSocketHandler('shopping:started', (e: IWebSocketEvents['shopping:started']) => {
         if (e.listId !== listId) return;
         
-        try {
           queryClient.invalidateQueries({ queryKey: ['shopping-lists', 'full-data', listId] });
           if (e.user?.id !== user?._id) {
             showSuccess('shopping.started', { username: e.user?.username || t('user') });
           }
-        } catch (err) {
-         
-        }
       });
 
-      const offStopped = safeWebSocketHandler('shopping:stopped', (e: any) => {
+      const offStopped = safeWebSocketHandler('shopping:stopped', (e: IWebSocketEvents['shopping:stopped']) => {
         if (e.listId !== listId) return;
-        try {
           queryClient.invalidateQueries({ queryKey: ['shopping-lists', 'full-data', listId] });
           if (e.user?.id !== user?._id) {
             showInfo('shopping.stopped', { username: e.user?.username || t('user') });
           }
-        } catch (err) {
-         
-        }
+
       });
 
-      const offPaused = safeWebSocketHandler('shopping:paused', (e: any) => {
+      const offPaused = safeWebSocketHandler('shopping:paused', (e: IWebSocketEvents['shopping:paused']) => {
         if (e.listId !== listId) return;
         
-        try {
           queryClient.invalidateQueries({ queryKey: ['shopping-lists', 'full-data', listId] });
           if (e.user?.id !== user?._id) {
             showInfo('shopping.paused', { username: e.user?.username || t('user') });
-          }
-        } catch (err) {
-         
-        }
+          } 
       });
 
-      const offResumed = safeWebSocketHandler('shopping:resumed', (e: any) => {
+      const offResumed = safeWebSocketHandler('shopping:resumed', (e: IWebSocketEvents['shopping:resumed']) => {
         if (e.listId !== listId) return;
         
-        try {
           queryClient.invalidateQueries({ queryKey: ['shopping-lists', 'full-data', listId] });
           if (e.user?.id !== user?._id) {
             showInfo('shopping.resumed', { username: e.user?.username || t('user') });
-          }
-        } catch (err) {
-         
-        }
+          } 
       });
 
-      const offLocationUpdated = safeWebSocketHandler('shopping:location_updated', (e: any) => {
+      const offLocationUpdated = safeWebSocketHandler('shopping:location_updated', (e: IWebSocketEvents['shopping:location_updated']) => {
         if (e.listId !== listId) return;
         
-        try {
           queryClient.invalidateQueries({ queryKey: ['shopping-lists', 'full-data', listId] });
-        } catch (err) {
-         
-        }
       });
 
-      const offItemUpdated = safeWebSocketHandler('item:updated', (e: any) => {
-        const eventListId = e.listId || e.item?.shoppingList?._id || e.item?.shoppingList;
+      const offItemUpdated = safeWebSocketHandler('item_updated', (e: IWebSocketEvents['item_updated']) => {
+        const eventListId = e.listId || (typeof e.item?.shoppingList === 'string' 
+          ? e.item.shoppingList 
+          : (typeof e.item?.shoppingList === 'object' && e.item.shoppingList !== null && '_id' in e.item.shoppingList
+            ? (e.item.shoppingList as { _id: string })._id
+            : undefined));
         if (eventListId !== listId) return;
         
-        try {
           queryClient.invalidateQueries({ queryKey: ['shopping-lists', 'full-data', listId] });
           
           if (e.updatedBy?.id !== user?._id) {
@@ -145,19 +132,12 @@ export function useShoppingListWebSocket(listId: string, groupId: string) {
               });
             }
           }
-        } catch (err) {
-         
-        }
       });
 
-      const offListUpdated = safeWebSocketHandler('list:updated', (e: any) => {
+      const offListUpdated = safeWebSocketHandler('list:updated', (e: IWebSocketEvents['list:updated']) => {
         if (e.listId !== listId) return;
         
-        try {
           queryClient.invalidateQueries({ queryKey: ['shopping-lists', 'full-data', listId] });
-        } catch (err) {
-         
-        }
       });
 
       setIsConnected(true);
@@ -171,13 +151,9 @@ export function useShoppingListWebSocket(listId: string, groupId: string) {
     }
 
     return () => {
-      try {
         cleanupFunctions.forEach(cleanup => cleanup?.());
-      } catch (err) {
-       
-      }
     };
-  }, [listId, groupId, user?._id]);
+  }, [listId, groupId, user?._id, checkWebSocketConnection, safeWebSocketHandler, queryClient, showSuccess, showInfo, t]);
 
   const retryConnection = useCallback(() => {
     setError(null);
@@ -191,10 +167,10 @@ export function useShoppingListWebSocket(listId: string, groupId: string) {
       } else {
         setError('WebSocket connection failed');
       }
-    } catch (err) {
+    } catch {
       setError('Failed to reconnect');
     }
-  }, [listId, groupId, checkWebSocketConnection]);
+  }, [checkWebSocketConnection]);
 
 
   return {

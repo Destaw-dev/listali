@@ -1,5 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
-import { IShoppingSession } from '@/types';
+import { IShoppingSession } from '../types';
 
 
 const shoppingSessionSchema = new Schema<IShoppingSession>({

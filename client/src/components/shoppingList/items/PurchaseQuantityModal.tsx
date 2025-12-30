@@ -2,14 +2,16 @@
 
 import { memo, useEffect, useState } from "react";
 import { Minus, Plus } from "lucide-react";
-import { Button } from "@/components/common/Button";
-import { useModalScrollLock } from "@/hooks/useModalScrollLock";
+import { Button } from "../../common";
+import { useModalScrollLock } from "../../../hooks/useModalScrollLock";
+
+import { IItem } from "../../../types";
 
 interface PurchaseQuantityModalProps {
-  item: any | null;
+  item: IItem | null;
   onClose: () => void;
   onConfirm: (quantity: number) => void;
-  tItems: (key: string, values?: Record<string, any>) => string;
+  tItems: (key: string, values?: Record<string, string | number>) => string;
 }
 
 export const PurchaseQuantityModal = memo(function PurchaseQuantityModal({
@@ -22,16 +24,34 @@ export const PurchaseQuantityModal = memo(function PurchaseQuantityModal({
 
   useEffect(() => {
     if (item) {
-      setQuantity(item.quantity ?? 0);
+      // If item is partially purchased, start from remaining quantity
+      const purchasedQty = item.purchasedQuantity || 0;
+      const totalQty = item.quantity ?? 0;
+      const remainingQty = item.remainingQuantity ?? (totalQty - purchasedQty);
+      
+      // Start from remaining quantity if partially purchased, otherwise start from 1
+      // This allows user to select partial purchase
+      if (purchasedQty > 0 && purchasedQty < totalQty) {
+        // Partially purchased - start from remaining
+        setQuantity(remainingQty);
+      } else {
+        // Not purchased - start from 1 (user can increase)
+        setQuantity(1);
+      }
     }
   }, [item]);
 
-  // Prevent body scroll when modal is open
   useModalScrollLock(!!item);
 
   if (!item) return null;
 
-  const maxQuantity = item.quantity ?? 0;
+  const purchasedQty = item.purchasedQuantity || 0;
+  const totalQty = item.quantity ?? 0;
+  const remainingQty = item.remainingQuantity ?? (totalQty - purchasedQty);
+  const isPartiallyPurchased = purchasedQty > 0 && purchasedQty < totalQty;
+  
+  // Max quantity is the remaining quantity if partially purchased
+  const maxQuantity = isPartiallyPurchased ? remainingQty : totalQty;
 
   const handleIncrement = () => {
     if (quantity >= maxQuantity) return;
@@ -45,7 +65,10 @@ export const PurchaseQuantityModal = memo(function PurchaseQuantityModal({
 
   const handleConfirm = () => {
     if (quantity <= 0 || quantity > maxQuantity) return;
-    onConfirm(quantity || maxQuantity);
+    
+    // Send the quantity to purchase (amount to add), not the total
+    // The backend will add it to the existing purchasedQuantity
+    onConfirm(quantity);
   };
 
   return (
@@ -61,7 +84,22 @@ export const PurchaseQuantityModal = memo(function PurchaseQuantityModal({
           {tItems("selectQuantityTitle")}
         </h3>
         <p className="mt-2 text-sm text-text-muted">
-          {item.name} · {tItems("totalQuantity")}: {maxQuantity} {item.unit}
+          {item.name}
+        </p>
+        {isPartiallyPurchased && (
+          <p className="mt-1 text-xs text-text-muted">
+            {tItems("alreadyPurchased", { 
+              purchased: purchasedQty, 
+              total: totalQty, 
+              unit: item.unit 
+            }) || `נקנה כבר: ${purchasedQty}/${totalQty} ${item.unit}`}
+          </p>
+        )}
+        <p className="mt-1 text-sm text-text-muted">
+          {isPartiallyPurchased 
+            ? (tItems("remainingQuantity", { remaining: remainingQty, unit: item.unit }) || `נותר: ${remainingQty} ${item.unit}`)
+            : `${tItems("totalQuantity")}: ${totalQty} ${item.unit}`
+          }
         </p>
 
         <div className="mt-6 flex items-center justify-center gap-6">
@@ -98,7 +136,6 @@ export const PurchaseQuantityModal = memo(function PurchaseQuantityModal({
             rounded={true}
             shadow={true}
             glow={true}
-            className="flex-1"
           >
             {tItems("cancel")}
           </Button>
@@ -111,7 +148,6 @@ export const PurchaseQuantityModal = memo(function PurchaseQuantityModal({
             rounded={true}
             shadow={true}
             glow={true}
-            className="flex-1"
           >
             {tItems("confirm")}
           </Button>  

@@ -2,9 +2,10 @@
 
 import { memo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { cn } from "@/lib/utils";
+import { cn } from "../../../lib/utils";
 import { ChevronDown, ChevronUp, ShoppingBag } from "lucide-react";
 import { ShoppingItemCard } from "./ShoppingItemCard";
+import { IItem } from "../../../types";
 
 interface CategorySectionProps {
   title: string;
@@ -12,12 +13,15 @@ interface CategorySectionProps {
   groups: Array<{
     categoryId: string;
     categoryName: string;
-    items: any[];
+    items: IItem[];
   }>;
-  onOpenPurchaseModal: (item: any) => void;
+  onOpenPurchaseModal: (item: IItem) => void;
   onUnpurchase: (itemId: string) => void;
-  onPreview: (item: any) => void;
-  onEdit?: (item: any) => void;
+  onPreview: (item: IItem) => void;
+  onEdit?: (item: IItem) => void;
+  onDelete?: (itemId: string) => void;
+  canEdit?: boolean;
+  canDelete?: boolean;
   isItemLoading: (itemId: string) => boolean;
   defaultOpen?: boolean;
   tone?: "default" | "purchased";
@@ -31,6 +35,9 @@ export const CategorySection = memo(function CategorySection({
   onUnpurchase,
   onPreview,
   onEdit,
+  onDelete,
+  canEdit = false,
+  canDelete = false,
   isItemLoading,
   defaultOpen = true,
   tone = "default",
@@ -89,7 +96,7 @@ export const CategorySection = memo(function CategorySection({
               </div>
 
               <div className="divide-y divide-slate-100 border-y border-slate-100">
-                {group.items.map((item: any) => (
+                {group.items.map((item) => (
                   <ShoppingItemCard
                     key={item._id}
                     item={item}
@@ -98,6 +105,9 @@ export const CategorySection = memo(function CategorySection({
                     onUnpurchase={onUnpurchase}
                     onPreview={onPreview}
                     onEdit={onEdit}
+                    onDelete={onDelete}
+                    canEdit={canEdit}
+                    canDelete={canDelete}
                   />
                 ))}
               </div>

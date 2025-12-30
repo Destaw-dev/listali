@@ -1,16 +1,19 @@
 import { useTranslations } from "next-intl";
 import { Edit, Info, Trash2, Package } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/common/Button";
-import { Badge } from "@/components/common/Badge";
+import { cn } from "../../../lib/utils";
+import { Button, Badge } from "../../common";
+import { IItem } from "../../../types";
 
 interface ShoppingItemCardProps {
-  item: any;
+  item: IItem;
   isLoading: boolean;
-  onOpenPurchaseModal: (item: any) => void;
+  onOpenPurchaseModal: (item: IItem) => void;
   onUnpurchase: (itemId: string) => void;
-  onPreview: (item: any) => void;
-  onEdit?: (item: any) => void;
+  onPreview: (item: IItem) => void;
+  onEdit?: (item: IItem) => void;
+  onDelete?: (itemId: string) => void;
+  canEdit?: boolean;
+  canDelete?: boolean;
 }
 
 export function ShoppingItemCard({ 
@@ -19,10 +22,15 @@ export function ShoppingItemCard({
   onOpenPurchaseModal, 
   onUnpurchase, 
   onPreview, 
-  onEdit 
+  onEdit,
+  onDelete,
+  canEdit = false,
+  canDelete = false,
 }: ShoppingItemCardProps) {
   const tItems = useTranslations("ShoppingListItems");
-  const brand = item?.brand ?? item?.product?.brand;
+  const product = item.product;
+  const productBrand = typeof product === 'object' && product !== null && 'brand' in product ? (product as { brand?: string }).brand : undefined;
+  const brand = item?.brand ?? productBrand;
   const unitLabel = item?.unit ? tItems(String(item.unit)) : "";
 
   const getPriorityBadge = () => {
@@ -34,48 +42,82 @@ export function ShoppingItemCard({
     }
   };
 
+  const isPartiallyPurchased = 
+    !!(item?.isPartiallyPurchased || (item?.purchasedQuantity && item.purchasedQuantity > 0 && item.purchasedQuantity < item.quantity));
+  const purchasedQty = item?.purchasedQuantity || 0;
+  const remainingQty = item?.remainingQuantity || (item?.quantity - purchasedQty);
+  
+  const getQuantityDisplay = () => {
+    if (isPartiallyPurchased) {
+      return (
+        <div className="flex flex-col gap-0.5">
+          <span className="font-medium text-[12px] text-muted">
+            {tItems("purchasedQuantityLabel", { 
+              purchased: purchasedQty, 
+              total: item.quantity, 
+              unit: unitLabel 
+            }) || `${purchasedQty}/${item.quantity} ${unitLabel}`}
+          </span>
+          <span className="text-[11px] text-muted">
+            {tItems("remainingQuantityLabel", { 
+              remaining: remainingQty, 
+              unit: unitLabel 
+            }) || `נותר: ${remainingQty} ${unitLabel}`}
+          </span>
+        </div>
+      );
+    }
+    return <span className="font-medium">{item.quantity} {unitLabel}</span>;
+  };
+
   return (
     <article className={cn(
-      "relative flex items-center gap-2 bg-white py-3 pl-2 pr-1 active:bg-slate-50 transition-colors hover:bg-slate-50 cursor-pointer",
-      item?.isPurchased && "bg-slate-50/50"
+      "relative flex items-center gap-2 bg-card py-3 pl-2 pr-1 active:bg-card/80 transition-colors hover:bg-card/80 cursor-pointer",
+      (item?.isPurchased) && "bg-success-50/50"
     )}>
       
       <Button
       variant="checkbox"
       checked={item?.isPurchased}
-      onClick={() => item?.isPurchased ? onUnpurchase(item._id) : onOpenPurchaseModal(item)}
+      onClick={() => {
+        if (item?.isPurchased ) {
+          onUnpurchase(item._id);
+        } else {
+          onOpenPurchaseModal(item);
+        }
+      }}
       disabled={isLoading}
       />
 
-      <div className="size-11 shrink-0 overflow-hidden rounded-lg bg-slate-50 ring-1 ring-slate-100" onClick={() => onPreview(item)}>
-        {item?.product?.image ? (
-          <img src={item.product.image} alt="" className="h-full w-full object-contain p-1" />
+      <div className="size-11 shrink-0 overflow-hidden rounded-lg bg-card ring-1 ring-border" onClick={() => onPreview(item)}>
+        {typeof item?.product === 'object' && item?.product !== null && 'image' in item.product && (item.product as { image?: string }).image ? (
+          <img src={(item.product as { image: string }).image} alt="" className="h-full w-full object-contain p-1" />
         ) : (
-          <div className="grid h-full w-full place-items-center"><Package className="h-4 w-4 text-slate-200" /></div>
+          <div className="grid h-full w-full place-items-center"><Package className="h-4 w-4 text-border" /></div>
         )}
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col" onClick={() => onPreview(item)}>
         <div className="flex items-center gap-1.5">
           <h3 className={cn(
-            "truncate text-[15px] font-semibold text-slate-800",
-            item?.isPurchased && "line-through text-slate-400 font-normal"
+            "truncate text-[15px] font-semibold text-primary",
+            item?.isPurchased && !isPartiallyPurchased && "line-through text-muted font-normal"
           )}>
             {item?.name}
           </h3>
 
         </div>
-        <div className="flex items-center gap-1 text-[12px] text-slate-500">
-          <span className="font-medium">{item.quantity} {unitLabel}</span>
+        <div className="flex items-center gap-1 text-[12px] text-text-muted">
+          {getQuantityDisplay()}
           {brand && <span className="truncate opacity-70">• {brand}</span>}
           <div className="hidden sm:block">
-        {!item?.isPurchased && item.priority && (
+        {!item?.isPurchased && !isPartiallyPurchased && item.priority && (
             getPriorityBadge()
         )}
       </div>
         </div>
               <div className="block sm:hidden">
-        {!item?.isPurchased && item.priority && (
+        {!item?.isPurchased && !isPartiallyPurchased && item.priority && (
             getPriorityBadge()
         )}
       </div>
@@ -85,23 +127,30 @@ export function ShoppingItemCard({
       <div className="flex shrink-0 items-center gap-1">
         {!item?.isPurchased && (
           <>
-          <Button
-            variant="ghost"
-            size="xs"
-            onClick={() => onEdit?.(item)}
-            className="p-2 text-slate-400 hover:text-primaryT-500 cursor-pointer"
-            aria-label="עריכה"
-          >
-            <Edit className="h-4 w-4 hover:text-primaryT-500" />
-          </Button>
+          {canEdit && (
             <Button
               variant="ghost"
               size="xs"
-              className="p-2 text-slate-400 hover:text-error-500 cursor-pointer"
+              onClick={() => onEdit?.(item)}
+              className="p-2 text-muted hover:text-primaryT-500 cursor-pointer"
+              aria-label="עריכה"
+              disabled={isLoading}
+            >
+              <Edit className="h-4 w-4 hover:text-primaryT-500" />
+            </Button>
+          )}
+          {canDelete && (
+            <Button
+              variant="ghost"
+              size="xs"
+              onClick={() => onDelete?.(item._id)}
+              className="p-2 text-muted hover:text-error-500 cursor-pointer"
               aria-label="מחיקה"
+              disabled={isLoading}
             >
               <Trash2 className="h-4 w-4 hover:text-error-500" />
             </Button>
+          )}
           </>
         )}
         {item?.isPurchased && (
@@ -110,10 +159,9 @@ export function ShoppingItemCard({
             size="xs"
             onClick={() => onPreview(item)}
             rounded={true}
-            className="p-2 text-slate-300 hover:text-slate-400 cursor-pointer"
             aria-label="מידע"
           >
-            <Info className="h-4 w-4" />
+            <Info className="h-4 w-4 text-muted" />
           </Button>
         )}
       </div>

@@ -2,22 +2,23 @@
 
 import { QueryProvider } from './QueryProvider';
 import { Toaster } from 'react-hot-toast';
-import { AuthInitializer } from '@/components/auth/AuthInitializer';
+import { AuthBootstrapProvider } from '../auth/AuthBootstrapProvider';
 import { ThemeProvider } from './ThemeProvider';
-import { NotificationProvider } from '@/contexts/NotificationContext';
+import { NotificationProvider } from '../../contexts/NotificationContext';
 
 interface ProvidersProps {
   children: React.ReactNode;
   locale: string;
 }
 
-export function Providers({ children, locale }: ProvidersProps) {
+export function Providers({ children }: ProvidersProps) {
   return (
     <QueryProvider>
       <NotificationProvider>
         <ThemeProvider>
-          <AuthInitializer locale={locale} />
-          {children}
+          <AuthBootstrapProvider>
+            {children}
+          </AuthBootstrapProvider>
           <Toaster position="top-center" />
         </ThemeProvider>
       </NotificationProvider>

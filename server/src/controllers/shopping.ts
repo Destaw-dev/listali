@@ -2,10 +2,10 @@ import { Request, Response } from 'express';
 import { ShoppingSession } from '../models/shoppingSession';
 import ShoppingList from '../models/shoppingList';
 import Item from '../models/item';
-import { AppError } from '../middleware/errorHandler';
+import { AppError } from '../middleware/handlers';
 import { getIO, emitToGroupExcept } from '../socket/socketHandler';
 import { Types } from 'mongoose';
-import { IGroup, IGroupMember } from '@/types';
+import { IGroup, IGroupMember } from '../types';
 
 export const startShopping = async (req: Request, res: Response) => {
   try {
@@ -29,7 +29,7 @@ export const startShopping = async (req: Request, res: Response) => {
     }
 
     const shoppingList = await ShoppingList.findById(listObjId)
-      .populate('group', 'members');
+      .populate<{ group: IGroup }>('group', 'members');
 
     if (!shoppingList) {
       return res.status(404).json({ success: false, message: 'Shopping list not found' });
@@ -39,7 +39,7 @@ export const startShopping = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, message: 'Shopping list is not active' });
     }
 
-    const group: IGroup = shoppingList.group as unknown as IGroup;
+    const group = shoppingList.group;
     if (!group?.members) {
       return res.status(403).json({ success: false, message: 'Access denied to this shopping list' });
     }
@@ -104,23 +104,31 @@ export const startShopping = async (req: Request, res: Response) => {
       message: 'Shopping session started successfully'
     });
 
-  } catch (error: any) {
+  } catch (error) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    const errorWithExtras = err as Error & { 
+      name?: string; 
+      code?: number; 
+      errors?: Record<string, { message: string }>; 
+      path?: string;
+    };
+    
     console.error('startShopping error:', {
-      name: error?.name,
-      message: error?.message,
-      code: error?.code,
-      errors: error?.errors,
-      stack: error?.stack
+      name: errorWithExtras?.name,
+      message: errorWithExtras?.message,
+      code: errorWithExtras?.code,
+      errors: errorWithExtras?.errors,
+      stack: errorWithExtras?.stack
     });
 
     if (error instanceof AppError) throw error;
 
-    if (error?.name === 'CastError') {
-      throw new AppError(`Invalid ID format for field "${error?.path}"`, 400);
+    if (errorWithExtras?.name === 'CastError') {
+      throw new AppError(`Invalid ID format for field "${errorWithExtras?.path}"`, 400);
     }
 
-    if (error?.name === 'ValidationError') {
-      const msgs = Object.values(error.errors ?? {}).map((e: any) => e.message);
+    if (errorWithExtras?.name === 'ValidationError' && errorWithExtras?.errors) {
+      const msgs = Object.values(errorWithExtras.errors).map((e) => e.message);
       throw new AppError(`Validation failed: ${msgs.join('; ')}`, 400);
     }
 
@@ -129,7 +137,6 @@ export const startShopping = async (req: Request, res: Response) => {
 };
 
 
-// Stop shopping session
 export const stopShopping = async (req: Request, res: Response) => {
   try {
     const { sessionId } = req.body;
@@ -143,7 +150,6 @@ export const stopShopping = async (req: Request, res: Response) => {
       throw new AppError('Session ID is required', 400);
     }
 
-    // Find and verify shopping session
     const shoppingSession = await ShoppingSession.findById(sessionId);
     if (!shoppingSession) {
       throw new AppError('Shopping session not found', 404);
@@ -157,14 +163,12 @@ export const stopShopping = async (req: Request, res: Response) => {
       throw new AppError('Shopping session is already inactive', 400);
     }
 
-    // End the shopping session
     shoppingSession.isActive = false;
     shoppingSession.endedAt = new Date();
     shoppingSession.status = 'completed';
     shoppingSession.shoppingTime = Math.round((Date.now() - shoppingSession.startedAt.getTime()) / (1000 * 60));
     await shoppingSession.save();
 
-    // Emit WebSocket event to group members (excluding the performer)
     const io = getIO();
     if (io) {
       const _roomName = `group:${shoppingSession.groupId.toString()}`;
@@ -213,7 +217,6 @@ export const stopShopping = async (req: Request, res: Response) => {
   }
 };
 
-// Pause shopping session
 export const pauseShopping = async (req: Request, res: Response) => {
   try {
     const { sessionId } = req.body;
@@ -227,7 +230,6 @@ export const pauseShopping = async (req: Request, res: Response) => {
       throw new AppError('Session ID is required', 400);
     }
 
-    // Find and verify shopping session
     const shoppingSession = await ShoppingSession.findById(sessionId);
     if (!shoppingSession) {
       throw new AppError('Shopping session not found', 404);
@@ -241,12 +243,10 @@ export const pauseShopping = async (req: Request, res: Response) => {
       throw new AppError('Shopping session is not active', 400);
     }
 
-    // Pause the shopping session
     shoppingSession.status = 'paused';
     shoppingSession.lastActivity = new Date();
     await shoppingSession.save();
 
-    // Emit WebSocket event to group members (excluding the performer)
     const io = getIO();
     if (io) {
       const _roomName = `group:${shoppingSession.groupId.toString()}`;
@@ -289,7 +289,6 @@ export const pauseShopping = async (req: Request, res: Response) => {
   }
 };
 
-// Resume shopping session
 export const resumeShopping = async (req: Request, res: Response) => {
   try {
     const { sessionId } = req.body;
@@ -303,7 +302,6 @@ export const resumeShopping = async (req: Request, res: Response) => {
       throw new AppError('Session ID is required', 400);
     }
 
-    // Find and verify shopping session
     const shoppingSession = await ShoppingSession.findById(sessionId);
     if (!shoppingSession) {
       throw new AppError('Shopping session not found', 404);
@@ -317,12 +315,10 @@ export const resumeShopping = async (req: Request, res: Response) => {
       throw new AppError('Shopping session is not paused', 400);
     }
 
-    // Resume the shopping session
     shoppingSession.status = 'active';
     shoppingSession.lastActivity = new Date();
     await shoppingSession.save();
 
-    // Emit WebSocket event to group members (excluding the performer)
     const io = getIO();
     if (io) {
       const _roomName = `group:${shoppingSession.groupId.toString()}`;
@@ -365,7 +361,6 @@ export const resumeShopping = async (req: Request, res: Response) => {
   }
 };
 
-// Update shopping location
 export const updateShoppingLocation = async (req: Request, res: Response) => {
   try {
     const { sessionId, location } = req.body;
@@ -383,7 +378,6 @@ export const updateShoppingLocation = async (req: Request, res: Response) => {
       throw new AppError('Location data is required', 400);
     }
 
-    // Find and verify shopping session
     const shoppingSession = await ShoppingSession.findById(sessionId);
     if (!shoppingSession) {
       throw new AppError('Shopping session not found', 404);
@@ -397,12 +391,10 @@ export const updateShoppingLocation = async (req: Request, res: Response) => {
       throw new AppError('Shopping session is not active', 400);
     }
 
-    // Update location
     shoppingSession.location = location;
     shoppingSession.lastActivity = new Date();
     await shoppingSession.save();
 
-    // Emit WebSocket event to group members (excluding the performer)
     const io = getIO();
     if (io) {
       const _roomName = `group:${shoppingSession.groupId.toString()}`;
@@ -445,7 +437,6 @@ export const updateShoppingLocation = async (req: Request, res: Response) => {
   }
 }; 
 
-// Get current user's shopping session for a list
 export const getCurrentUserSession = async (req: Request, res: Response): Promise<void> => {
   try {
     const { listId } = req.params;
@@ -488,7 +479,6 @@ export const getCurrentUserSession = async (req: Request, res: Response): Promis
   }
 };
 
-// Get all active shopping sessions for a list
 export const getActiveSessions = async (req: Request, res: Response) => {
   try {
     const { listId } = req.params;
@@ -521,7 +511,6 @@ export const getActiveSessions = async (req: Request, res: Response) => {
   }
 };
 
-// Get shopping statistics for a list
 export const getShoppingStats = async (req: Request, res: Response) => {
   try {
     const { listId } = req.params;
@@ -562,7 +551,6 @@ export const getShoppingStats = async (req: Request, res: Response) => {
   }
 }; 
 
-// Get comprehensive shopping list data (list, items, sessions, stats)
 export const getShoppingListData = async (req: Request, res: Response) => {
   try {
     const { listId } = req.params;
@@ -576,12 +564,12 @@ export const getShoppingListData = async (req: Request, res: Response) => {
       throw new AppError('List ID is required', 400);
     }
 
-    const shoppingList = await ShoppingList.findById(listId).populate('group');
+    const shoppingList = await ShoppingList.findById(listId).populate<{ group: IGroup }>('group');
     if (!shoppingList) {
       throw new AppError('Shopping list not found', 404);
     }
 
-    const group = shoppingList.group as unknown as IGroup;
+    const group = shoppingList.group as IGroup;
     const isMember = group.members.some(
       (member: IGroupMember) => member.user.toString() === userId
     );
@@ -589,23 +577,19 @@ export const getShoppingListData = async (req: Request, res: Response) => {
       throw new AppError('Access denied to this shopping list', 403);
     }
 
-    // Get all items for this list
     const items = await Item.find({ shoppingList: listId }).sort({ createdAt: 1 });
 
-    // Get current user's active session
     const currentUserSession = await ShoppingSession.findOne({
       userId,
       listId,
       isActive: true
     });
 
-    // Get all active sessions for this list
     const activeSessions = await ShoppingSession.find({
       listId,
       isActive: true
     }).populate('userId', 'username firstName lastName avatar');
 
-    // Calculate statistics
     const totalItems = items.length;
     const purchasedItems = items.filter(item => item.status === 'purchased').length;
     const remainingItems = totalItems - purchasedItems;

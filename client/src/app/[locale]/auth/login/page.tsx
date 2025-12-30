@@ -7,14 +7,15 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useAuthStore } from '@/store/authStore';
-import { apiClient } from '@/lib/api';
-import { useNotification } from '@/contexts/NotificationContext';
-import { Link as IntlLink } from '@/i18n/navigation';
-import { GoogleAuthButton } from '@/components/auth/GoogleAuthButton';
+import { useAuthStore } from '../../../../store/authStore';
+import { apiClient } from '../../../../lib/api';
+import { useNotification } from '../../../../contexts/NotificationContext';
+import { Link as IntlLink } from '../../../../i18n/navigation';
+import { GoogleAuthButton } from '../../../../components/auth/GoogleAuthButton';
 import { useParams } from 'next/navigation';
-import { Button, Input } from '@/components/common';
-import { ArrowIcon } from '@/components/common/Arrow';
+import { Button, Input } from '../../../../components/common';
+import { ArrowIcon } from '../../../../components/common/Arrow';
+import { createLoginSchema } from '../../../../lib/schemas';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -25,12 +26,9 @@ export default function LoginPage() {
   const { showSuccess, handleApiError } = useNotification();
   const t = useTranslations('auth');
   const locale = params?.locale as string || 'he';
-  const loginSchema = z.object({
-    email: z.string().email(t('emailInvalid')),
-    password: z.string().min(6, t('passwordMinLength')),
-  });
 
-type LoginForm = z.infer<typeof loginSchema>;
+  const loginSchema = createLoginSchema(t);
+  type LoginForm = z.infer<typeof loginSchema>;
 
   const {
     register,
@@ -68,14 +66,19 @@ type LoginForm = z.infer<typeof loginSchema>;
       setUser(response.user);
       showSuccess('auth.loginSuccess');
       router.push(`/${locale}/dashboard`);
-    } catch (error: unknown) {
-      const apiError = error as { response?: { data?: { isEmailVerified?: boolean } } };
-      console.log('error.isEmailVerified', apiError.response?.data?.isEmailVerified);
-      if (apiError.response?.data?.isEmailVerified === false) {
-        router.push(`/${locale}/auth/verify-email?email=${encodeURIComponent(data.email)}&&status=emailNotVerified`);
-        return;
-      } else {
+    } catch (error) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const apiError = error as { response?: { data?: { isEmailVerified?: boolean } } };
+        console.log('error.isEmailVerified', apiError.response?.data?.isEmailVerified);
+        if (apiError.response?.data?.isEmailVerified === false) {
+          router.push(`/${locale}/auth/verify-email?email=${encodeURIComponent(data.email)}&status=emailNotVerified`);
+          return;
+        }
+      }
+      if (error instanceof Error) {
         handleApiError(error);
+      } else {
+        handleApiError(new Error('Login failed'));
       }
     } finally {
       setIsLoading(false);
@@ -94,8 +97,12 @@ type LoginForm = z.infer<typeof loginSchema>;
       } else {
         throw new Error(data.message || 'Failed to get Google OAuth URL');
       }
-    } catch (error: unknown) {
-      handleApiError(error);
+    } catch (error) {
+      if (error instanceof Error) {
+        handleApiError(error);
+      } else {
+        handleApiError(new Error('Failed to get Google OAuth URL'));
+      }
     } finally {
       setIsLoading(false);
     }
@@ -124,7 +131,7 @@ type LoginForm = z.infer<typeof loginSchema>;
                   type="email"
                   id="email"
                   placeholder={t('auth.emailPlaceholder')}
-                  icon={<Mail className="w-4 h-4 text-muted" />}
+                  icon={<Mail className="w-5 h-5 text-muted" />}
                   label={t('auth.email')}
                   error={errors.email?.message}
               />
@@ -134,17 +141,16 @@ type LoginForm = z.infer<typeof loginSchema>;
                   type={showPassword ? 'text' : 'password'}
                   id="password"
                   placeholder={t('auth.passwordPlaceholder')}
-                  icon={<Lock className="w-4 h-4 text-muted" />}
+                  icon={<Lock className="w-5 h-5 text-muted" />}
                   label={t('auth.password')}
                   error={errors.password?.message}
                   iconTwo={
-                  <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="text-muted hover:text-secondary transition-colors"
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
+                  <span
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="text-muted hover:text-secondary transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </span>
                   }/>
             <Button
               variant="primary"

@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
-import { app } from '../../app'; // ודא שזה הנתיב הנכון
+import { app } from '../../app';
 import request from 'supertest';
 
 let mongo: MongoMemoryServer;

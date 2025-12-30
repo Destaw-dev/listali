@@ -19,8 +19,8 @@ export function MetricCard({
         {icon}
       </div>
       <div>
-        <p className="text-2xl font-bold text-gray-900">{value}</p>
-        <p className="text-sm text-gray-600">{label}</p>
+        <p className="text-2xl font-bold text-primary">{value}</p>
+        <p className="text-sm text-secondary">{label}</p>
       </div>
     </div>
   );

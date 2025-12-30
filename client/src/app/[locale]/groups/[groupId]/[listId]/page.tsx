@@ -1,21 +1,25 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { LoadingSpinner } from '@/components/common/LoadingSpinner';
-import { ShoppingListHeaderBar } from '@/components/shoppingList/ShoppingListHeaderBar';
-import { ShoppingListStats } from '@/components/shoppingList/ShoppingListStats';
-import { ShoppingListFilters, ShoppingStatusFilter } from '@/components/shoppingList/ShoppingListFilters';
-import { ShoppingListItems } from '@/components/shoppingList/ShoppingListItems';
-import AddItemsModal from '@/components/shoppingList/AddItemsModal';
-import { useShoppingListData } from '@/hooks/useShoppingListData';
-import { useShoppingListWebSocket } from '@/hooks/useShoppingListWebSocket';
-import { useCreateMultipleItems } from '@/hooks/useItems';
-import { useAvailableCategories } from '@/hooks/useItems';
-import { useAuthRedirect } from '@/hooks/useAuthRedirect';
-import { ShoppingModeCard } from '@/components/shoppingList/ShoppingModeCard';
-import { ICategory, IItem } from '@/types';
+import { useQueryClient } from '@tanstack/react-query';
+import { LoadingSpinner } from '../../../../../components/common';
+import { ShoppingListHeaderBar } from '../../../../../components/shoppingList/ShoppingListHeaderBar';
+import { ShoppingListStats } from '../../../../../components/shoppingList/ShoppingListStats';
+import { ShoppingListFilters, ShoppingStatusFilter } from '../../../../../components/shoppingList/ShoppingListFilters';
+import { ShoppingListItems } from '../../../../../components/shoppingList/ShoppingListItems';
+import AddItemsModal from '../../../../../components/shoppingList/AddItemsModal';
+import { useShoppingListData } from '../../../../../hooks/useShoppingListData';
+import { useShoppingListWebSocket } from '../../../../../hooks/useShoppingListWebSocket';
+import { useCreateMultipleItems } from '../../../../../hooks/useItems';
+import { useAvailableCategories } from '../../../../../hooks/useItems';
+import { useAuthRedirect } from '../../../../../hooks/useAuthRedirect';
+import { ShoppingModeCard } from '../../../../../components/shoppingList/ShoppingModeCard';
+import { ICategory, IItem, IGroupMember, ItemInput } from '../../../../../types';
+import { useGroup } from '../../../../../hooks/useGroups';
+import { useAuthStore } from '../../../../../store/authStore';
+import { useUpdateItem } from '../../../../../hooks/useItems';
 
 export default function ShoppingListPage() {
   const params = useParams();
@@ -37,7 +41,10 @@ export default function ShoppingListPage() {
     error,
     purchasedItems,
     totalItems,
-  } = useShoppingListData(listId, groupId);
+  } = useShoppingListData(listId);
+
+  const { data: group } = useGroup(groupId);
+  const { user } = useAuthStore();
 
   useShoppingListWebSocket(listId, groupId);
 
@@ -49,6 +56,7 @@ export default function ShoppingListPage() {
   const { data: categories = [] } = useAvailableCategories();
 
   const createItemsMutation = useCreateMultipleItems();
+  const updateItemMutation = useUpdateItem();
 
   const activeShoppers = shoppingSession?.activeSessions?.length || 0;
 
@@ -87,9 +95,14 @@ export default function ShoppingListPage() {
     const stats: Record<string, { id: string; name: string; count: number }> = {};
     
     items?.forEach((item: IItem) => {
-      const categoryId = typeof item.category === 'string' 
-        ? item.category 
-        : (item.category as any)?._id || (item.category as any)?.id || 'no-category';
+      let categoryId: string;
+      if (typeof item.category === 'string') {
+        categoryId = item.category;
+      } else if (item.category && typeof item.category === 'object') {
+        categoryId = '_id' in item.category ? item.category._id : 'no-category';
+      } else {
+        categoryId = 'no-category';
+      }
       const categoryName = categories.find((c: ICategory) => c._id === categoryId)?.name || 'No Category';
       
       const categoryKey = String(categoryId);
@@ -115,21 +128,49 @@ export default function ShoppingListPage() {
     return items?.filter((item: IItem) => !item.isPurchased && item.status !== 'purchased').length || 0;
   }, [items]);
 
-  const handleAddItems = async (itemsData: any[]) => {
-    try {
+  const queryClient = useQueryClient();
+
+  const handleAddItems = async (itemsData: ItemInput[]) => {
       const itemsWithListId = itemsData.map(item => ({
         ...item,
         shoppingListId: listId,
+        name: (item.name || '').trim().replace(/\s+/g, ' '),
       }));
-      await createItemsMutation.mutateAsync(itemsWithListId);
+
+      if (itemsWithListId.length > 0) {
+        await createItemsMutation.mutateAsync(itemsWithListId);
+      }
       setShowAddItemsModal(false);
-    } catch (error) {
-    }
+      return true;
   };
 
-  const handleEditItem = (item: any) => {
-    console.log('Edit item:', item);
+  const handleMergeDuplicateFromSidebar = async (existingItemId: string, newQuantity: number) => {
+      await updateItemMutation.mutateAsync({
+        itemId: existingItemId,
+        itemData: { quantity: newQuantity },
+      });
+      await queryClient.refetchQueries({ queryKey: ['shopping-lists', 'full-data', listId] });
   };
+
+
+  const getMemberUserId = (member: IGroupMember): string => {
+    return typeof member.user === "object" ? member.user.id : member.userId;
+  };
+
+  const currentUserMembership = useMemo(() => {
+    if (!group?.members || !user?._id) return undefined;
+    return group.members.find((member: IGroupMember) => getMemberUserId(member) === user._id);
+  }, [group?.members, user?._id]);
+
+  const canEdit = useMemo(() => {
+    if (!currentUserMembership) return false;
+    return currentUserMembership.permissions?.canEditLists ?? false;
+  }, [currentUserMembership]);
+
+  const canDelete = useMemo(() => {
+    return !!currentUserMembership;
+  }, [currentUserMembership]);
+
 
   if (!isInitialized || isLoading) {
     return (
@@ -173,7 +214,7 @@ export default function ShoppingListPage() {
       <ShoppingModeCard
         listId={listId}
         groupId={groupId}
-        shoppingSession={shoppingSession}
+        shoppingSession={shoppingSession || undefined}
         totalItems={totalItems}
         purchasedItems={purchasedItems}
       />
@@ -196,14 +237,19 @@ export default function ShoppingListPage() {
         listId={listId}
         groupId={groupId}
         loading={isLoading}
-        onEditItem={handleEditItem}
+        canEdit={canEdit}
+        canDelete={canDelete}
       />
 
       <AddItemsModal
         isOpen={showAddItemsModal}
-        onClose={() => setShowAddItemsModal(false)}
+        onClose={() => {
+          setShowAddItemsModal(false);
+        }}
         onSubmit={handleAddItems}
         listId={listId}
+        existingItems={items}
+        onMergeDuplicate={handleMergeDuplicateFromSidebar}
       />
     </div>
     </div>

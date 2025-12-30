@@ -8,11 +8,12 @@ import React, {
 } from "react";
 import { useTranslations } from "next-intl";
 import { Package, X } from "lucide-react";
-import { useAvailableCategories } from "@/hooks/useItems";
-import { useModalScrollLock } from "@/hooks/useModalScrollLock";
+import { useAvailableCategories } from "../../hooks/useItems";
+import { useModalScrollLock } from "../../hooks/useModalScrollLock";
 import { ProductsSelectionView } from "./AddItemsModal/ProductsSelectionView";
 import { SelectedItemsSidebar } from "./AddItemsModal/SelectedItemsSidebar";
 import { Button } from "../common";
+import { IProduct, IItem, IManualProduct } from "../../types";
 
 type SingleItemFormData = {
   name: string;
@@ -32,8 +33,10 @@ type SingleItemFormData = {
 interface AddItemsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (items: SingleItemFormData[]) => Promise<void>;
+  onSubmit: (items: SingleItemFormData[]) => Promise<boolean | void>;
   listId: string;
+  existingItems?: IItem[]; // Items that already exist in the shopping list
+  onMergeDuplicate?: (existingItemId: string, newQuantity: number) => Promise<void>;
 }
 
 
@@ -41,17 +44,16 @@ export default function AddItemsModal({
   isOpen,
   onClose,
   onSubmit,
-  listId,
+  existingItems = [],
+  onMergeDuplicate,
 }: AddItemsModalProps) {
   const t = useTranslations("AddItemModal");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedProducts, setSelectedProducts] = useState<any[]>([]);
-  const [currentItems, setCurrentItems] = useState<SingleItemFormData[]>([]);
+  const [selectedProducts, setSelectedProducts] = useState<(IProduct | IManualProduct)[]>([]);
   const [mobileView, setMobileView] = useState<'products' | 'items'>('products');
   const { data: categories = [] } = useAvailableCategories();
 
-  // Memoized callbacks
-  const handleProductSelect = useCallback((product: any) => {
+  const handleProductSelect = useCallback((product: IProduct) => {
     setSelectedProducts((prev) => {
       const isSelected = prev.some((p) => p._id === product._id);
       if (isSelected) {
@@ -67,17 +69,15 @@ export default function AddItemsModal({
 
   const handleClearAllProducts = useCallback(() => {
     setSelectedProducts([]);
-    setCurrentItems([]);
   }, []);
 
   const addManualItem = useCallback(() => {
-    // Add a manual item (empty product) to the selected products
-    const manualProduct = {
+    const manualProduct: IManualProduct = {
       _id: `manual-${Date.now()}`,
       name: "",
       defaultUnit: "piece",
       units: ["piece", "kg", "g", "l", "ml", "package", "box", "bag", "bottle", "can"],
-      priority: "medium" as const,
+      priority: "medium",
       notes: "",
       brand: "",
       description: "",
@@ -95,7 +95,6 @@ export default function AddItemsModal({
   const handleClose = useCallback(() => {
     if (!isSubmitting) {
       setSelectedProducts([]);
-      setCurrentItems([]);
       onClose();
     }
   }, [isSubmitting, onClose]);
@@ -104,9 +103,11 @@ export default function AddItemsModal({
     async (items: SingleItemFormData[]) => {
       setIsSubmitting(true);
       try {
-        await onSubmit(items);
-        handleClose();
-      } catch (error) {
+        const result = await onSubmit(items);
+        if (result !== false) {
+          handleClose();
+        }
+      } catch {
         // Error handled by parent
       } finally {
         setIsSubmitting(false);
@@ -115,19 +116,12 @@ export default function AddItemsModal({
     [onSubmit, handleClose]
   );
 
-  const handleItemsChange = useCallback((items: SingleItemFormData[]) => {
-    setCurrentItems(items);
-  }, []);
-
-  // Reset when modal opens
   useEffect(() => {
     if (isOpen) {
       setSelectedProducts([]);
-      setCurrentItems([]);
     }
   }, [isOpen]);
 
-  // Prevent body scroll when modal is open
   useModalScrollLock(isOpen);
 
   if (!isOpen) return null;
@@ -135,7 +129,6 @@ export default function AddItemsModal({
   return (
     <div className="fixed inset-0 backdrop-blur-sm z-50 flex items-center justify-center p-0 sm:p-4">
       <div className="bg-surface shadow-xl rounded-none sm:rounded-2xl w-full sm:max-w-7xl h-full sm:max-h-[100vh] flex flex-col">
-        {/* Modal Header */}
         <div className="border-b border-border flex-shrink-0">
           <div className="flex items-center justify-between p-3 sm:p-4">
             <div className="flex items-center gap-2 sm:gap-3">
@@ -150,7 +143,6 @@ export default function AddItemsModal({
           </div>
         </div>
 
-        {/* Mobile Tabs Navigation */}
         <div className="sm:hidden border-b border-border flex-shrink-0">
           <div className="flex">
             <button
@@ -181,9 +173,7 @@ export default function AddItemsModal({
           </div>
         </div>
 
-        {/* Layout: Tabs on mobile, side-by-side on desktop */}
         <div className="flex-1 flex flex-col sm:flex-row overflow-hidden">
-          {/* Left Side - Products Catalog */}
           <div className={`${mobileView === 'products' ? 'flex' : 'hidden'} sm:flex flex-1 sm:flex-[0.6] flex-col overflow-hidden `}>
             <div className="flex-1 overflow-y-auto p-3 sm:p-4">
               <ProductsSelectionView
@@ -191,20 +181,19 @@ export default function AddItemsModal({
                 onAddManual={addManualItem}
                 selectedProductIds={selectedProductIds}
                 selectedProductsCount={selectedProducts.length}
-                onContinue={() => {}} // Not needed in side-by-side layout
+                onContinue={() => {}}
                 isSubmitting={isSubmitting}
                 t={t}
                 onClearAllProducts={handleClearAllProducts}
+                existingItems={existingItems}
               />
             </div>
           </div>
 
-          {/* Right Side - Selected Items Sidebar */}
           <div className={`${mobileView === 'items' ? 'flex' : 'hidden'} sm:flex flex-1 sm:flex-[0.4] flex-col overflow-hidden`}>
             <SelectedItemsSidebar
               selectedProducts={selectedProducts}
               onProductRemove={handleProductRemove}
-              onItemsChange={handleItemsChange}
               onSubmit={handleSubmit}
               onClose={handleClose}
               onAddManual={addManualItem}
@@ -212,6 +201,8 @@ export default function AddItemsModal({
               isSubmitting={isSubmitting}
               onClearAllItems={handleClearAllProducts}
               t={t}
+              existingItems={existingItems}
+              onMergeDuplicate={onMergeDuplicate}
             />
           </div>
         </div>

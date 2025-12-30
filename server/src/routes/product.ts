@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { asyncHandler } from '../middleware/errorHandler';
+import { asyncHandler } from '../middleware/handlers';
 import {
   getAllProducts,
   getProductsByCategory,
@@ -13,7 +13,7 @@ import {
   getBySearchByNameHebrew,
   getProductById
 } from '../controllers/product';
-import { authenticateToken } from '@/middleware/auth';
+import { authenticateToken } from '../middleware/auth';
 
 const router = Router();
 

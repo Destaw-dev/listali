@@ -1,12 +1,11 @@
 'use client';
 
 import { useEffect } from 'react';
-import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useRouter, useParams } from 'next/navigation';
-import { useAuthStore } from '@/store/authStore';
+import { useAuthStore } from '../../../store/authStore';
 import { ShoppingCart, Users, Zap } from 'lucide-react';
-import { Link as IntlLink } from '@/i18n/navigation';
+import { Link as IntlLink } from '../../../i18n/navigation';
 
 export default function WelcomePage() {
   const t = useTranslations();
@@ -19,7 +18,7 @@ export default function WelcomePage() {
     if (isInitialized && isAuthenticated) {
       router.push(`/${locale}/dashboard`);
     }
-  }, [isAuthenticated, isInitialized]);
+  }, [isAuthenticated, isInitialized, router, locale]);
 
   if (!isInitialized) {
     return (

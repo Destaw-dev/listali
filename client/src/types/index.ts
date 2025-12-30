@@ -47,7 +47,6 @@ export interface IUserWithPassword extends IUser {
 // User methods for server-side operations
 export interface IUserMethods {
   comparePassword(candidatePassword: string): Promise<boolean>;
-  getSignedJwtToken(): string;
 }
 
 // User document type for server
@@ -129,18 +128,28 @@ export interface IPendingInvitation extends BaseDocument {
 // SHOPPING LIST TYPES
 // ============================================================================
 
+// User info for populated fields
+export interface IPopulatedUserInfo {
+  _id: string;
+  id: string;
+  username: string;
+  firstName: string;
+  lastName: string;
+  avatar?: string;
+}
+
 // Core shopping list interface - used across the entire application
 export interface IShoppingList extends BaseDocument {
   name: string;
   description?: string;
   group: string;
   groupId: string;
-  createdBy: string;
+  createdBy: string | IPopulatedUserInfo;
   status: "active" | "completed" | "archived";
   isActive: boolean;
   isCompleted: boolean;
   items: string[];
-  assignedTo?: string;
+  assignedTo?: string | IPopulatedUserInfo;
   dueDate?: Date;
   completedAt?: Date | null;
   priority: "low" | "medium" | "high";
@@ -157,11 +166,12 @@ export interface IShoppingList extends BaseDocument {
 // Shopping session interface
 export interface IShoppingSession {
   id: string;
+  _id?: string;
   listId: string;
   userId: string;
   groupId: string;
-  startedAt: Date;
-  endedAt?: Date;
+  startedAt: Date | string;
+  endedAt?: Date | string;
   isActive: boolean;
   location?: {
     latitude: number;
@@ -173,8 +183,15 @@ export interface IShoppingSession {
   totalItems: number;
   shoppingTime?: number; // in minutes
   status: 'active' | 'paused' | 'completed' | 'cancelled';
-  lastActivity: Date;
+  lastActivity: Date | string;
   user?: IUserSimple; // For populated sessions
+}
+
+// Shopping session data structure (from API with activeSessions)
+export interface IShoppingSessionData {
+  currentUserSession: IShoppingSession | null;
+  activeSessions: IShoppingSession[];
+  totalActiveSessions: number;
 }
 
 // ============================================================================
@@ -188,7 +205,7 @@ export interface IItem extends BaseDocument {
   description?: string;
   quantity: number;
   unit: string;
-  category: string;
+  category: string | ICategory | { _id: string; id?: string };
   brand?: string;
   estimatedPrice?: number;
   actualPrice?: number;
@@ -200,8 +217,8 @@ export interface IItem extends BaseDocument {
   isPartiallyPurchased?: boolean;
   purchasedQuantity?: number;
   remainingQuantity?: number;
-  addedBy: string;
-  purchasedBy?: string | null;
+  addedBy: string | IPopulatedUserInfo;
+  purchasedBy?: string | IPopulatedUserInfo | null;
   purchasedAt?: Date | null;
   updatedBy?: string;
   beingPurchasedBy?: string;
@@ -229,6 +246,57 @@ export interface IShoppingListItem extends BaseDocument {
   notes?: string;
   addedBy: string;
   addedAt: Date;
+}
+
+export type ItemInput = {
+  name: string;
+  quantity: number;
+  unit: string;
+  category?: string;
+  priority: 'low' | 'medium' | 'high';
+  notes?: string;
+  brand?: string;
+  description?: string;
+  product?: string;
+  image?: string;
+  units?: string[];
+};
+
+// Create multiple items input (for API)
+export interface ICreateMultipleItemsInput {
+  name: string;
+  description?: string;
+  quantity: number;
+  unit: string;
+  category?: string;
+  brand?: string;
+  estimatedPrice?: number;
+  priority?: 'low' | 'medium' | 'high';
+  notes?: string;
+  alternatives?: string[];
+  shoppingListId: string;
+  product?: string;
+  isManualEntry?: boolean;
+}
+
+// Manual product type (for AddItemsModal)
+export interface IManualProduct {
+  _id: string;
+  name: string;
+  defaultUnit: string;
+  units: string[];
+  priority: 'low' | 'medium' | 'high';
+  notes: string;
+  brand: string;
+  description: string;
+  image: string;
+  isManual: true;
+  categoryId?: never; // Explicitly not present
+}
+
+// Type guard to check if product is manual
+export function isManualProduct(product: IProduct | IManualProduct): product is IManualProduct {
+  return 'isManual' in product && product.isManual === true;
 }
 
 // ============================================================================
@@ -741,6 +809,34 @@ export interface ICreateShoppingListData {
   description?: string;
   groupId: string;
   priority?: "low" | "medium" | "high";
+}
+
+// Create list form data (without groupId - added separately)
+export interface ICreateListFormData {
+  name: string;
+  description?: string;
+  priority?: "low" | "medium" | "high";
+  dueDate?: string;
+  tags?: string[];
+}
+
+// Helper type guards and utilities
+export function isPopulatedUserInfo(value: string | IPopulatedUserInfo): value is IPopulatedUserInfo {
+  return typeof value === 'object' && value !== null && '_id' in value && 'username' in value;
+}
+
+export function getCreatedByDisplayName(createdBy: string | IPopulatedUserInfo): string {
+  if (isPopulatedUserInfo(createdBy)) {
+    return createdBy.username || `${createdBy.firstName} ${createdBy.lastName}`.trim();
+  }
+  return '';
+}
+
+export function getCreatedByFullName(createdBy: string | IPopulatedUserInfo): string {
+  if (isPopulatedUserInfo(createdBy)) {
+    return `${createdBy.firstName} ${createdBy.lastName}`.trim();
+  }
+  return '';
 }
 
 // Add shopping item data interface

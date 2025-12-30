@@ -1,12 +1,12 @@
 import React, { memo } from 'react';
-import { Package, FileText, X } from 'lucide-react';
+import { Package } from 'lucide-react';
 import { AddItemProductList } from '../AddItemProductList';
 import { FiltersSection } from './FiltersSection';
 import { useProductsSelection } from './hooks/useProductsSelection';
-import { Button } from '@/components/common';
+import { IProduct, IItem } from '../../../types';
 
 interface ProductsSelectionViewProps {
-  onProductSelect: (product: any) => void;
+  onProductSelect: (product: IProduct) => void;
   onAddManual: () => void;
   selectedProductIds: string[];
   selectedProductsCount: number;
@@ -14,6 +14,7 @@ interface ProductsSelectionViewProps {
   isSubmitting: boolean;
   t: (key: string) => string;
   onClearAllProducts?: () => void;
+  existingItems?: IItem[];
 }
 
 export const ProductsSelectionView = memo(({
@@ -21,13 +22,10 @@ export const ProductsSelectionView = memo(({
   onAddManual,
   selectedProductIds,
   selectedProductsCount,
-  onContinue,
-  isSubmitting,
   t,
-  onClearAllProducts,
+  existingItems = [],
 }: ProductsSelectionViewProps) => {
   const {
-    // State
     searchQuery,
     selectedCategoryId,
     selectedSubCategoryId,
@@ -42,18 +40,15 @@ export const ProductsSelectionView = memo(({
     subCategories,
     activeFilters,
     
-    // Computed
     productsToShow,
     isLoading,
     hasNext,
     isFetchingNext,
     debouncedSearchQuery,
     
-    // Refs
     listContainerRef,
     loadMoreRef,
     
-    // Handlers
     handleSearchChange,
     handleCategoryFilter,
     setSelectedSubCategoryId,
@@ -99,31 +94,16 @@ export const ProductsSelectionView = memo(({
           onOrganicChange={setFilterOrganic}
           onGlutenFreeChange={setFilterGlutenFree}
         />
-        
-        {/* Clear All Products Button */}
-        {selectedProductsCount > 0 && onClearAllProducts && (
-          <div className="mt-3">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onClearAllProducts}
-              disabled={isSubmitting}
-              icon={<X className="w-4 h-4" />}
-            >
-              {t('clearAllProducts')}
-            </Button>
-          </div>
-        )}
       </div>
 
     {selectedProductsCount === 0 && !searchQuery && (
       <div className="mb-3 sm:mb-4 p-3 sm:p-4 bg-surface-hover border border-border rounded-lg">
         <div className="flex items-start gap-2 sm:gap-3">
           <div className="p-1 bg-surface-hover rounded flex-shrink-0">
-            <Package className="w-4 h-4 text-text-primary" />
+            <Package className="w-4 h-4 text-primary" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs sm:text-sm text-text-secondary font-medium mb-1">{t('howItWorks')}</p>
+            <p className="text-xs sm:text-sm text-secondary font-medium mb-1">{t('howItWorks')}</p>
             <ul className="text-xs text-text-muted space-y-1 mr-2 sm:mr-4">
               <li>• {t('howItWorksStep1')}</li>
               <li>• {t('howItWorksStep2')}</li>
@@ -149,9 +129,9 @@ export const ProductsSelectionView = memo(({
       selectedProductIds={selectedProductIds}
       multiSelect={true}
       selectedCategoryId={selectedCategoryId}
+      existingItems={existingItems}
     />
 
-    {/* Continue button removed - not needed in side-by-side layout */}
     </>
   );
 });

@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import  User  from '../models/user';
-import { successResponse, validationErrorResponse } from '../middleware/errorHandler';
+import { successResponse, validationErrorResponse } from '../middleware/handlers';
 import { validationResult } from 'express-validator';
 
 export const getUserPreferences = async (req: Request, res: Response) => {

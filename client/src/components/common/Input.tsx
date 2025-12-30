@@ -1,23 +1,19 @@
 "use client";
 
 import React, { forwardRef, useState, useEffect } from "react";
-import { cn } from "@/lib/utils";
+import { cn } from "../../lib/utils";
 import { AlertCircle, CheckCircle, Info } from "lucide-react";
-
-// ---------------------------
-// Types
-// ---------------------------
 
 type Size = "sm" | "md" | "lg";
 type Variant = "default" | "outlined" | "filled";
-type Status = "default" | "success" | "warning" | "error"; // visual state
+type Status = "default" | "success" | "warning" | "error";
 
 interface BaseProps {
   label?: string;
-  floatingLabel?: boolean; // ✨ enables Material-like label
+  floatingLabel?: boolean;
   helperText?: string;
-  status?: Status; // ✨ success | warning | error styles
-  error?: string; // keeps backward compatibility; if provided -> status=error
+  status?: Status;
+  error?: string;
   leftIcon?: React.ReactNode;
   iconTwo?: React.ReactNode;
   variant?: Variant;
@@ -37,10 +33,6 @@ interface TextAreaProps
     BaseProps {
   rows?: number;
 }
-
-// ---------------------------
-// Design tokens (Tailwind classes)
-// ---------------------------
 
 const sizePad: Record<Size, string> = {
   sm: "px-3 py-2 text-sm",
@@ -105,10 +97,6 @@ const statusIcon = {
   error: AlertCircle,
 } as const;
 
-// ---------------------------
-// Input
-// ---------------------------
-
 export const Input = forwardRef<HTMLInputElement, InputProps>(
   (
     {
@@ -128,10 +116,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     },
     ref
   ) => {
-    // If error text provided, force status to error
     const finalStatus: Status = error ? "error" : status;
 
-    // Check if page is RTL or LTR (only on client side)
     const [isRTL, setIsRTL] = useState(false);
     
     useEffect(() => {
@@ -159,7 +145,6 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       className,
     );
 
-    // Helper function to render icon at a specific position
     const renderIcon = (
       iconNode: React.ReactNode | undefined,
       position: 'left' | 'right',
@@ -197,7 +182,6 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 
     return (
       <div className={cn("space-y-1", fullWidth && "w-full", containerClassName)}>
-        {/* Static label (non-floating) */}
         {!floatingLabel && label && (
           <label className="block text-base font-medium text-text-primary">{label}</label>
         )}
@@ -225,10 +209,6 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 );
 Input.displayName = "Input";
 
-// ---------------------------
-// TextArea (with floating label too)
-// ---------------------------
-
 export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
   (
     {
@@ -237,7 +217,6 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
       helperText,
       status = "default",
       error,
-      icon,
       variant = "default",
       size = "md",
       fullWidth,

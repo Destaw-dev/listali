@@ -1,7 +1,6 @@
 import mongoose, { Schema, Model, FilterQuery } from 'mongoose';
 import bcrypt from 'bcryptjs';
-import jwt, { SignOptions } from 'jsonwebtoken';
-import { IUser, IUserMethods } from '../types';
+import { IUser, IUserMethods, IRefreshSession } from '../types';
 
 type UserModel = Model<IUser, Record<string, never>, IUserMethods> & {
   findByCredentials(email: string, password: string): Promise<IUser>;
@@ -113,33 +112,60 @@ const userSchema = new Schema<IUser, UserModel, IUserMethods>({
       enum: ['pending', 'accepted', 'declined'],
       default: 'pending'
     }
+  }],
+  refreshSessions: [{
+    sessionId: {
+      type: String,
+      required: true,
+      unique: true
+    },
+    refreshTokenHash: {
+      type: String,
+      required: true
+    },
+    expiresAt: {
+      type: Date,
+      required: true
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now
+    },
+    lastUsedAt: {
+      type: Date,
+      default: Date.now
+    },
+    userAgent: {
+      type: String
+    },
+    ip: {
+      type: String
+    }
   }]
 }, {
   timestamps: true,
   toJSON: {
     virtuals: true,
-    transform(doc, ret) {
-      delete (ret as any).password;
-      delete (ret as any).__v;
+    transform(_doc, ret: Partial<IUser> & { password?: string; __v?: number }) {
+      delete ret.password;
+      delete ret.__v;
       return ret;
     }
   },
   toObject: {
     virtuals: true,
-    transform(doc, ret) {
-      delete (ret as any).password;
-      delete (ret as any).__v;
+    transform(_doc, ret: Partial<IUser> & { password?: string; __v?: number }) {
+      delete ret.password;
+      delete ret.__v;
       return ret;
     }
   }
   
 });
 
-// Indexes
 userSchema.index({ groups: 1 });
 userSchema.index({ lastSeen: -1 });
 
-// Hash password
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
   const salt = await bcrypt.genSalt(parseInt(process.env.BCRYPT_SALT_ROUNDS || '12'));
@@ -147,7 +173,6 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
-// Update lastSeen
 userSchema.pre('save', function (next) {
   if (this.isModified('lastSeen') || this.isNew) {
     this.lastSeen = new Date();
@@ -155,32 +180,10 @@ userSchema.pre('save', function (next) {
   next();
 });
 
-// Compare password
 userSchema.methods.comparePassword = async function (candidatePassword: string) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-// JWT token
-userSchema.methods.getSignedJwtToken = function () {
-  const payload = {
-    id: this._id,
-    username: this.username,
-    email: this.email
-  };
-
-  const secret = process.env.JWT_SECRET || 'fallback-secret';
-
-  const options: SignOptions = {
-    expiresIn: '7d',
-    issuer: 'smart-group-shopping',
-    audience: 'smart-group-shopping-users'
-  };
-
-  return jwt.sign(payload, secret, options);
-};
-
-
-// Static: find by credentials
 userSchema.statics.findByCredentials = async function (email: string, password: string) {
   const user = await this.findOne({ email, isActive: true }).select('+password');
   if (!user) throw new Error('Invalid credentials');
@@ -191,14 +194,12 @@ userSchema.statics.findByCredentials = async function (email: string, password: 
   return user;
 };
 
-// Static: check if user can login (email verified and active)
 userSchema.statics.canLogin = async function (email: string) {
   const user = await this.findOne({ email, isActive: true });
   if (!user) return false;
   return user.isEmailVerified;
 };
 
-// Static: check username availability
 userSchema.statics.isUsernameAvailable = async function (username: string, excludeId?: string) {
   const query: FilterQuery<IUser> = {
     username: { $regex: new RegExp(`^${username}$`, 'i') }
@@ -207,14 +208,81 @@ userSchema.statics.isUsernameAvailable = async function (username: string, exclu
   return !(await this.findOne(query));
 };
 
-// Static: check email availability
 userSchema.statics.isEmailAvailable = async function (email: string, excludeId?: string) {
   const query: FilterQuery<IUser> = { email: email.toLowerCase() };
   if (excludeId) query._id = { $ne: excludeId };
   return !(await this.findOne(query));
 };
 
-// Virtuals
+userSchema.methods.pruneExpiredSessions = function (now: Date = new Date()) {
+  this.refreshSessions = this.refreshSessions.filter(
+    (session: IRefreshSession) => session.expiresAt > now
+  );
+};
+
+userSchema.methods.enforceMaxSessions = function (max: number = 5) {
+  this.pruneExpiredSessions();
+  const activeSessions = this.refreshSessions.filter(
+    (session: IRefreshSession) => session.expiresAt && session.expiresAt > new Date()
+  );
+  
+  if (activeSessions.length >= max) {
+    const sortedSessions = [...activeSessions].sort(
+      (a: IRefreshSession, b: IRefreshSession) => (a.createdAt?.getTime() || 0) - (b.createdAt?.getTime() || 0)
+    );
+    const oldestSessionId = sortedSessions[0]?.sessionId;
+    if (oldestSessionId) {
+      this.refreshSessions = this.refreshSessions.filter(
+        (session: IRefreshSession) => session.sessionId !== oldestSessionId
+      );
+    }
+  }
+};
+
+userSchema.methods.addSession = function (session: {
+  sessionId: string;
+  refreshTokenHash: string;
+  expiresAt: Date;
+  userAgent?: string;
+  ip?: string;
+}) {
+  const sessionData: IRefreshSession = {
+    sessionId: session.sessionId,
+    refreshTokenHash: session.refreshTokenHash,
+    expiresAt: session.expiresAt,
+    createdAt: new Date(),
+    lastUsedAt: new Date(),
+    ...(session.userAgent !== undefined && { userAgent: session.userAgent }),
+    ...(session.ip !== undefined && { ip: session.ip }),
+  };
+  this.refreshSessions.push(sessionData);
+};
+
+userSchema.methods.rotateSession = function (
+  sessionId: string,
+  newRefreshTokenHash: string,
+  newExpiresAt: Date
+) {
+  const session = this.refreshSessions.find(
+    (s: IRefreshSession) => s.sessionId === sessionId
+  );
+  if (session) {
+    session.refreshTokenHash = newRefreshTokenHash;
+    session.expiresAt = newExpiresAt;
+    session.lastUsedAt = new Date();
+  }
+};
+
+userSchema.methods.revokeSession = function (sessionId: string) {
+  this.refreshSessions = this.refreshSessions.filter(
+    (session: IRefreshSession) => session.sessionId !== sessionId
+  );
+};
+
+userSchema.methods.revokeAllSessions = function () {
+  this.refreshSessions = [];
+};
+
 userSchema.virtual('fullName').get(function () {
   return `${this.firstName} ${this.lastName}`;
 });

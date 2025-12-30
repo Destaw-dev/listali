@@ -1,14 +1,14 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { Button } from '@/components/common/Button';
-import { LoadingSpinner } from '@/components/common/LoadingSpinner';
-import { apiClient } from '@/lib/api';
-import { useAuthStore } from '@/store/authStore';
-import { mapInviteErrorToTranslationKey } from '@/lib/utils';
-import { useNotification } from '@/contexts/NotificationContext';
+import { AxiosError } from 'axios';
+import { LoadingSpinner, Button } from '../../../../components/common';
+import { apiClient } from '../../../../lib/api';
+import { useAuthStore } from '../../../../store/authStore';
+import { mapInviteErrorToTranslationKey } from '../../../../lib/utils';
+import { useNotification } from '../../../../contexts/NotificationContext';
 
 function VerifyEmailContent() {
 
@@ -31,6 +31,32 @@ function VerifyEmailContent() {
   const inviteError = searchParams.get('inviteError');
   const status = searchParams.get('status');
 
+  const verifyEmail = useCallback(async (verificationToken: string) => {
+    try {
+      const data = await apiClient.verifyEmail(verificationToken, email || undefined);
+      setUser(data.user);
+      setVerificationStatus('success');
+    } catch (error) {
+      console.error('Verification error:', error);
+      
+      if (error instanceof AxiosError) {
+        const errorMessage = error.response?.data?.message || '';
+        
+        if (errorMessage.includes('expired') || errorMessage.includes('TOKEN_EXPIRED')) {
+          setVerificationStatus('expired');
+        } else if (errorMessage.includes('already verified')) {
+          setVerificationStatus('alreadyVerified');
+        } else {
+          setVerificationStatus('error');
+        }
+      } else if (error instanceof Error) {
+        setVerificationStatus('error');
+      } else {
+        setVerificationStatus('error');
+      }
+    }
+  }, [email, setUser]);
+
   useEffect(() => {
     if (token) {
       verifyEmail(token);
@@ -41,7 +67,7 @@ function VerifyEmailContent() {
     } else {
       setVerificationStatus('default');
     }
-  }, [token, inviteError]);
+  }, [token, inviteError, status, verifyEmail]);
 
   useEffect(() => {
     if (verificationStatus === 'success') {
@@ -64,24 +90,8 @@ function VerifyEmailContent() {
     }
   }, [verificationStatus, countdown, router, locale]);
 
-  const verifyEmail = async (verificationToken: string) => {
-    try {
-      const data = await apiClient.verifyEmail(verificationToken, email || undefined);
-      setUser(data.user);
-      setVerificationStatus('success');
-    } catch (error: any) {
-      console.error('Verification error:', error);
-      if (error.response.data.message?.includes('expired') || error.response.data.message?.includes('TOKEN_EXPIRED')) {
-        setVerificationStatus('expired');
-      } else if (error.response.data.message?.includes('already verified')) {
-        setVerificationStatus('alreadyVerified');
-      } else {
-        setVerificationStatus('error');
-      }
-    }
-  };
 
-  const resendVerification = async () => {
+  const resendVerification = useCallback(async () => {
     if (!email) return;
     
     setIsResending(true);
@@ -89,12 +99,16 @@ function VerifyEmailContent() {
       await apiClient.resendVerification(email);
       showSuccess('auth.verificationEmailSent');
       setVerificationSent(true);
-    } catch (error: any) {
-      showError('auth.verificationEmailError');
+    } catch (error) {
+      if (error instanceof Error) {
+        showError(error);
+      } else {
+        showError('auth.verificationEmailError');
+      }
     } finally {
       setIsResending(false);
     }
-  };
+  }, [email, showSuccess, showError]);
 
   const renderContent = () => {
     switch (verificationStatus) {

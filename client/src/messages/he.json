@@ -299,7 +299,50 @@
     "transferOwnershipSuccess": "בעלות הקבוצה הועברה בהצלחה",
     "transferOwnershipError": "שגיאה בהעברת בעלות הקבוצה",
     "leaveSuccess": "עזבת את הקבוצה בהצלחה",
-    "leaveError": "שגיאה בעזיבת הקבוצה"
+    "leaveError": "שגיאה בעזיבת הקבוצה",
+    "settings": {
+      "unknownUser": "משתמש לא ידוע",
+      "owner": "בעלים",
+      "admin": "מנהל",
+      "member": "חבר",
+      "groupNameRequired": "שם הקבוצה הוא שדה חובה",
+      "deleteGroupConfirmation": "האם אתה בטוח שברצונך למחוק את הקבוצה? פעולה זו אינה הפיכה.",
+      "removeMemberConfirmation": "האם אתה בטוח שברצונך להסיר את {memberName} מהקבוצה?",
+      "failedToTransferOwnership": "נכשל בהעברת בעלות",
+      "failedToInviteMember": "נכשל בהזמנת חבר",
+      "failedToLeaveGroup": "נכשל בעזיבת הקבוצה",
+      "errorLoadingGroup": "שגיאה בטעינת הקבוצה",
+      "backToGroups": "חזור לקבוצות",
+      "noPermission": "אין הרשאה",
+      "notAMember": "אתה לא חבר בקבוצה זו",
+      "backToGroup": "חזור לקבוצה",
+      "groupSettings": "הגדרות הקבוצה",
+      "defaultGroupAvatar": "ק",
+      "edit": "ערוך",
+      "groupNamePlaceholder": "שם הקבוצה",
+      "groupName": "שם הקבוצה",
+      "groupDescription": "תיאור הקבוצה",
+      "saveChanges": "שמור שינויים",
+      "cancel": "ביטול",
+      "groupMembers": "חברי הקבוצה",
+      "members": "חברים",
+      "inviteMembers": "הזמן חברים",
+      "you": "אתה",
+      "mainManager": "מנהל ראשי",
+      "teamManager": "מנהל בצוות",
+      "teamMember": "חבר בצוות",
+      "makeAdmin": "הפוך למנהל",
+      "makeMember": "הפוך לחבר רגיל",
+      "transferOwnership": "העבר בעלות",
+      "removeFromGroup": "הסר מהקבוצה",
+      "leaveGroup": "עזוב קבוצה",
+      "dangerZone": "אזור סכנה",
+      "leaveGroupConfirmation": "פעולה זו תסיר אותך מהקבוצה",
+      "leavingGroup": "עוזב...",
+      "deleteGroup": "מחיקת הקבוצה לצמיתות",
+      "deletingGroup": "מוחק...",
+      "createdAt": "נוצר ב-"
+    }
   },
   "invitations": {
     "acceptSuccess": "ההזמנה התקבלה בהצלחה",
@@ -551,6 +594,9 @@
     "confirm": "אישור",
     "purchasedQuantityLabel": "{purchased}/{total} {unit}",
     "partiallyPurchasedQuantityLabel": "{purchased}/{total} {unit}",
+    "remainingQuantityLabel": "נותר: {remaining} {unit}",
+    "alreadyPurchased": "נקנה כבר: {purchased}/{total} {unit}",
+    "remainingQuantity": "נותר: {remaining} {unit}",
     "markPurchased": "סמן כנרכש",
     "markPending": "החזר למצב ממתין",
     "viewDetails": "הצג פרטים",
@@ -574,7 +620,16 @@
     "box": "קופסאות",
     "bag": "שקיות",
     "bottle": "בקבוקים",
-    "can": "קופסאות שימורים"
+    "can": "קופסאות שימורים",
+    "editItem": "ערוך פריט",
+    "update": "עדכן",
+    "updating": "מעדכן...",
+    "deleteConfirm": "האם אתה בטוח שברצונך למחוק את הפריט?",
+    "catalogItemEditNote": "זהו מוצר מהקטלוג. ניתן לערוך רק כמות, עדיפות והערות.",
+    "partiallyPurchasedEditTitle": "מוצר זה נקנה חלקית",
+    "quantityWarning": "⚠️ שים לב: הכמות החדשה ({newQuantity}) קטנה מהכמות שנקנתה ({purchasedQuantity}). הכמות שנקנתה תתעדכן אוטומטית.",
+    "purchasedInfo": "נקנה כבר: {purchased} {unit}",
+    "quantityMinPurchased": "הכמות חייבת להיות לפחות {min} (הכמות שנקנתה)"
   },
   "ShoppingListHeader": {
     "defaultDescription": "רשימת קניות",
@@ -631,7 +686,8 @@
     "continueToFillDetails": "המשך למילוי פרטים",
     "selectProductsFromCatalog": "בחר מוצרים מהקטלוג בצד שמאל",
     "products": "מוצרים",
-    "selectedItems": "פריטים נבחרים"
+    "selectedItems": "פריטים נבחרים",
+    "atLeastOneItem": "יש להוסיף לפחות פריט אחד"
   },
   "CreateShoppingListModal": {
     "nameMinLength": "שם הרשימה חייב להיות לפחות 2 תווים",
@@ -892,16 +948,6 @@
     "stats": "סטטיסטיקות",
     "activeLists": "רשימות פעילות"
   },
-  "ProductSearchModal": {
-    "searchExistingProducts": "חפש מוצרים קיימים במערכת",
-    "searchProducts": "חיפוש מוצרים",
-    "searchProductsPlaceholder": "חפש מוצרים...",
-    "searchingProducts": "מחפש מוצרים...",
-    "searchError": "שגיאה בחיפוש מוצרים",
-    "foundProducts": "נמצאו {count} מוצרים",
-    "noProductsFound": "לא נמצאו מוצרים",
-    "selectProduct": "בחר מוצר"
-  },
   "AddMultipleItemsModal": {
     "nameRequired": "שם הפריט הוא חובה",
     "nameMaxLength": "שם הפריט לא יכול לעלות על 100 תווים",
@@ -1060,14 +1106,6 @@
     "accept": "קבל",
     "decline": "דחה"
   },
-  "DuplicateItemModal": {
-    "title": "המוצר כבר קיים ברשימה",
-    "existingQuantity": "כמות קיימת",
-    "newQuantity": "כמות חדשה",
-    "totalQuantity": "הכמות הכוללת תהיה",
-    "createNew": "צור מוצר חדש",
-    "updateQuantity": "עדכן כמות"
-  },
   "AddItemsModalFilters": {
     "searchPlaceholder": "חפש מוצר...",
     "hideCategories": "הסתר קטגוריות",
@@ -1098,6 +1136,14 @@
     "searchLabel": "חיפוש: \"{query}\""
   },
   "AddItemsModalItemForm": {
+    "alreadyInList": "קיים ברשימה",
+    "existingQuantity": "כמות קיימת: {quantity} {unit}",
+    "newQuantity": "כמות חדשה: {quantity} {unit}",
+    "mergedQuantity": "סה\"כ אחרי מיזוג: {quantity} {unit}",
+    "merge": "מזג",
+    "editExisting": "ערוך קיים",
+    "remove": "הסר",
+    "hasUntreatedDuplicates": "יש מוצרים קיימים ברשימה. אנא מזג או הסר אותם לפני הוספה",
     "selectCategory": "בחר קטגוריה",
     "backToProductSearch": "חזור לחיפוש מוצרים",
     "brand": "מותג",
@@ -1112,6 +1158,7 @@
     "itemNumber": "פריט {number}"
   },
   "AddItemProductList": {
+    "alreadyInList": "קיים ברשימה",
     "noResults": "לא נמצאו תוצאות",
     "noResultsDescription": "נסה לחפש עם מילה אחרת או הוסף את המוצר ידנית",
     "addManualItem": "הוסף פריט ידנית",
@@ -1128,6 +1175,7 @@
     "editingMessage": "עורך הודעה...",
     "edit": "ערוך",
     "delete": "מחק",
+    "deleteConfirm": "האם אתה בטוח שברצונך למחוק את ההודעה?",
     "toList": "לרשימה",
     "loading": "טוען...",
     "noMessages": "אין הודעות",

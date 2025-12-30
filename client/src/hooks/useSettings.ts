@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api';
-import { useAuthStore } from '@/store/authStore';
-import { useNotification } from '@/contexts/NotificationContext';
+import { apiClient } from '../lib/api';
+import { useAuthStore } from '../store/authStore';
+import { useNotification } from '../contexts/NotificationContext';
 
 export const settingsKeys = {
   all: ['settings'] as const,
@@ -11,6 +11,8 @@ export const settingsKeys = {
 };
 
 export const useUserProfile = () => {
+  const { authReady, accessToken } = useAuthStore();
+  
   return useQuery({
     queryKey: settingsKeys.profile(),
     queryFn: async () => {
@@ -19,10 +21,13 @@ export const useUserProfile = () => {
     },
     staleTime: 5 * 60 * 1000,
     retry: 1,
+    enabled: authReady && !!accessToken,
   });
 };
 
 export const useUserPreferences = (options?: { enabled?: boolean }) => {
+  const { authReady, accessToken } = useAuthStore();
+  
   return useQuery({
     queryKey: settingsKeys.preferences(),
     queryFn: async () => {
@@ -31,11 +36,13 @@ export const useUserPreferences = (options?: { enabled?: boolean }) => {
     },
     staleTime: 5 * 60 * 1000,
     retry: 1,
-    enabled: options?.enabled !== false,
+    enabled: authReady && !!accessToken && (options?.enabled !== false),
   });
 };
 
 export const useNotificationSettings = () => {
+  const { authReady, accessToken } = useAuthStore();
+  
   return useQuery({
     queryKey: settingsKeys.notifications(),
     queryFn: async () => {
@@ -44,6 +51,7 @@ export const useNotificationSettings = () => {
     },
     staleTime: 5 * 60 * 1000,
     retry: 1,
+    enabled: authReady && !!accessToken,
   });
 };
 
@@ -68,7 +76,7 @@ export const useUpdateProfile = () => {
       }
       showSuccess('notifications.profileUpdated');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       handleApiError(error);
     },
   });
@@ -89,7 +97,7 @@ export const useUpdateEmail = () => {
         }
         showSuccess('notifications.emailUpdated');
       },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       handleApiError(error);
     },
   });
@@ -117,7 +125,7 @@ export const useUpdatePreferences = () => {
         });
       }
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       handleApiError(error);
     },
   });
@@ -153,7 +161,7 @@ export const useUpdateNotificationSettings = () => {
         }
         showSuccess('settings.notificationSettingsUpdateSuccess');
       },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       handleApiError(error);
     },
   });
@@ -179,7 +187,7 @@ export const useLogout = () => {
     onSuccess: () => {
       showSuccess('notifications.logoutSuccess');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       handleApiError(error);
     },
   });
@@ -200,7 +208,7 @@ export const useDeleteAccount = () => {
       }
       showSuccess('deleteSuccess');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       handleApiError(error);
     },
   });

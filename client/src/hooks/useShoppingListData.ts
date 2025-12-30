@@ -1,19 +1,22 @@
 "use client";
 import { useQuery } from '@tanstack/react-query';
-import { ApiClient } from '@/lib/api';
+import { ApiClient } from '../lib/api';
+import { useAuthStore } from '../store/authStore';
+import { IShoppingList, IItem, IShoppingSessionData } from '../types';
 
 interface ShoppingListData {
-  shoppingList: any;
-  items: any[];
-  shoppingSession: any;
+  shoppingList: IShoppingList | null;
+  items: IItem[];
+  shoppingSession: IShoppingSessionData | null;
   isLoading: boolean;
-  error: any;
+  error: Error | null;
   purchasedItems: number;
   totalItems: number;
 }
 
-export function useShoppingListData(listId: string, groupId: string): ShoppingListData {
+export function useShoppingListData(listId: string): ShoppingListData {
   const apiClient = new ApiClient();
+  const { authReady, accessToken } = useAuthStore();
   
   const {
     data: fullData,
@@ -32,7 +35,7 @@ export function useShoppingListData(listId: string, groupId: string): ShoppingLi
     },
     staleTime: 2 * 60 * 1000,
     gcTime: 5 * 60 * 1000,
-    enabled: !!listId,
+    enabled: authReady && !!accessToken && !!listId,
   });
 
   const shoppingList = fullData?.shoppingList || null;

@@ -1,7 +1,16 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api';
+import { apiClient } from '../lib/api';
+import { IProduct } from '../types';
 
-// Query keys
+interface PaginatedResponse<T> {
+  data?: T[];
+  pagination?: {
+    page: number;
+    pages: number;
+    total?: number;
+  };
+}
+
 export const productKeys = {
   all: ['products'] as const,
   list: (page: number, limit: number) => [...productKeys.all, 'list', page, limit] as const,
@@ -10,17 +19,15 @@ export const productKeys = {
   category: (categoryId: string, page: number, limit: number) => [...productKeys.all, 'category', categoryId, page, limit] as const,
 };
 
-// Search products
 export const useSearchProducts = (query: string, page: number = 1, limit: number = 20) => {
   return useQuery({
     queryKey: productKeys.search(query, page, limit),
     queryFn: () => apiClient.searchProducts(query, page, limit),
-    enabled: !!query && query.length >= 2, // Only search if query is at least 2 characters
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    enabled: !!query && query.length >= 2,
+    staleTime: 5 * 60 * 1000,
   });
 };
 
-// Get product by ID
 export const useProduct = (productId: string) => {
   return useQuery({
     queryKey: productKeys.detail(productId),
@@ -29,22 +36,20 @@ export const useProduct = (productId: string) => {
   });
 };
 
-// Get all products
 export const useAllProducts = (page: number = 1, limit: number = 50) => {
   return useQuery({
     queryKey: productKeys.list(page, limit),
     queryFn: () => apiClient.getAllProducts(page, limit),
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 };
 
-// Infinite: all products
 export const useInfiniteAllProducts = (limit: number = 50) => {
   return useInfiniteQuery({
     queryKey: [...productKeys.all, 'list', 'infinite', limit],
     queryFn: ({ pageParam = 1 }) => apiClient.getAllProducts(pageParam as number, limit),
     initialPageParam: 1,
-    getNextPageParam: (lastPage: any) => {
+    getNextPageParam: (lastPage: PaginatedResponse<IProduct>) => {
       const page = lastPage?.pagination?.page ?? 1;
       const pages = lastPage?.pagination?.pages ?? 1;
       return page < pages ? page + 1 : undefined;
@@ -53,7 +58,6 @@ export const useInfiniteAllProducts = (limit: number = 50) => {
   });
 };
 
-// Get products by category
 export const useProductsByCategory = (categoryId: string, page: number = 1, limit: number = 20) => {
   return useQuery({
     queryKey: productKeys.category(categoryId, page, limit),
@@ -62,29 +66,27 @@ export const useProductsByCategory = (categoryId: string, page: number = 1, limi
   });
 }; 
 
-// Infinite: products by category
 export const useInfiniteProductsByCategory = (categoryId: string, limit: number = 20) => {
   return useInfiniteQuery({
     queryKey: [...productKeys.all, 'category', 'infinite', categoryId, limit],
     queryFn: ({ pageParam = 1 }) => apiClient.getProductsByCategory(categoryId, pageParam as number, limit),
     initialPageParam: 1,
-    getNextPageParam: (lastPage: any) => {
+    getNextPageParam: (lastPage: PaginatedResponse<IProduct>) => {
       const page = lastPage?.pagination?.page ?? 1;
       const pages = lastPage?.pagination?.pages ?? 1;
-      return page < pages ? page + 1 : undefined;
+      return page < pages ? page + 1 : undefined; 
     },
     enabled: !!categoryId,
     staleTime: 5 * 60 * 1000,
   });
 };
 
-// Infinite: search products
 export const useInfiniteSearchProducts = (query: string, limit: number = 20) => {
   return useInfiniteQuery({
     queryKey: [...productKeys.all, 'search', 'infinite', query, limit],
     queryFn: ({ pageParam = 1 }) => apiClient.searchProducts(query, pageParam as number, limit),
     initialPageParam: 1,
-    getNextPageParam: (lastPage: any) => {
+    getNextPageParam: (lastPage: PaginatedResponse<IProduct>) => {
       const page = lastPage?.pagination?.page ?? 1;
       const pages = lastPage?.pagination?.pages ?? 1;
       return page < pages ? page + 1 : undefined;

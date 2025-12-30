@@ -3,10 +3,11 @@ import { validationResult } from 'express-validator';
 import Message from '../models/message';
 import Group from '../models/group';
 import { io } from '../app';
-import { AppError, validationErrorResponse, successResponse } from '../middleware/errorHandler';
-import { IApiResponse, IGroupMember, IUser } from '../types';
+import { AppError, validationErrorResponse, successResponse } from '../middleware/handlers';
+import { IApiResponse, IGroupMember, PopulatedSender, IGroup, IMessage, PopulatedMessage, PopulatedMessageWithGroup, IReadStatus, IBaseMessage, IMessageStatistic } from '../types';
+import { errorResponse } from '../middleware/handlers';
 
-export const getMessages = async (req: express.Request, res: express.Response<IApiResponse>) => {
+export const getMessages = async (req: express.Request, res: express.Response<IApiResponse<{ messages: IMessage[]; hasMore: boolean } | null | void>>) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     res.status(400).json(validationErrorResponse(errors.array()));
@@ -16,16 +17,16 @@ export const getMessages = async (req: express.Request, res: express.Response<IA
   const { page = 1, limit = 50, before, after, messageType, search, includeDeleted = false } = req.query;
   const groupId = req.params.groupId;
   const group = await Group.findById(groupId);
-  if (!group || !group.members.some((m: any) => m.user.toString() === req.userId)) throw new AppError('Access denied to this group', 403);
+  if (!group || !group.members.some((m: IGroupMember) => m.user.toString() === req.userId)) throw new AppError('Access denied to this group', 403);
 
   const options = {
     page: parseInt(page as string),
     limit: parseInt(limit as string),
     before: before as string,
     after: after as string,
-    messageType: messageType as string,
+    messageType: messageType as IBaseMessage['messageType'],
     search: search as string,
-    includeDeleted: includeDeleted === 'true'
+    includeDeleted: includeDeleted === 'true' ? true : false
   };
 
   const messages = await Message.findByGroup(groupId as string, options);
@@ -33,7 +34,7 @@ export const getMessages = async (req: express.Request, res: express.Response<IA
   res.status(200).json(successResponse({ messages, hasMore: messages.length === options.limit }, 'Messages retrieved successfully'));
 };
 
-export const createMessage = async (req: express.Request, res: express.Response<IApiResponse>) => {
+export const createMessage = async (req: express.Request, res: express.Response<IApiResponse<PopulatedMessage | null | void>>) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     res.status(400).json(validationErrorResponse(errors.array()));
@@ -44,7 +45,7 @@ export const createMessage = async (req: express.Request, res: express.Response<
   const userId = req.userId!;
 
   const group = await Group.findById(groupId);
-  if (!group || !group.members.some((m: any) => m.user.toString() === userId)) throw new AppError('Access denied to this group', 403);
+  if (!group || !group.members.some((m: IGroupMember) => m.user.toString() === userId)) throw new AppError('Access denied to this group', 403);
 
   const message = await Message.create({
     content,
@@ -56,7 +57,7 @@ export const createMessage = async (req: express.Request, res: express.Response<
   });
 
   const populatedMessage = await Message.findById(message._id)
-    .populate('sender', 'username firstName lastName avatar')
+    .populate<{ sender: PopulatedSender }>('sender', 'username firstName lastName avatar')
     .populate('metadata.itemId', 'name')
     .populate('metadata.listId', 'name');
 
@@ -69,9 +70,9 @@ export const createMessage = async (req: express.Request, res: express.Response<
         message: {
           id: populatedMessage._id.toString(),
           content: populatedMessage.content,
-          senderId: (populatedMessage.sender as any)._id.toString(),
-          senderName: (populatedMessage.sender as any).username,
-          senderAvatar: (populatedMessage.sender as any).avatar,
+          senderId: populatedMessage.sender._id.toString(),
+          senderName: populatedMessage.sender.username,
+          senderAvatar: populatedMessage.sender.avatar,
           timestamp: populatedMessage.createdAt,
           type: populatedMessage.messageType,
           status: "delivered",
@@ -85,42 +86,40 @@ export const createMessage = async (req: express.Request, res: express.Response<
   res.status(201).json(successResponse(populatedMessage, 'Message created successfully'));
 };
 
-export const getMessageById = async (req: express.Request, res: express.Response<IApiResponse>) => {
-  const message = await Message.findById(req.params.id)
-    .populate('sender', 'username firstName lastName avatar')
-    .populate('group', 'name members')
-    .populate('metadata.itemId', 'name')
-    .populate('metadata.listId', 'name')
-    .populate('readBy.user', 'username firstName lastName');
+export const getMessageById = async (req: express.Request, res: express.Response<IApiResponse<PopulatedMessageWithGroup | null>>) => {
+  const message = await Message.findById(req.params.id).populate<{ sender: PopulatedSender }>('sender', 'username firstName lastName avatar').populate<{ group: IGroup }>('group', 'name members').populate('metadata.itemId', 'name').populate('metadata.listId', 'name').populate('readBy.user', 'username firstName lastName');
 
   if (!message) throw new AppError('Message not found', 404);
 
-  const group = message.group as any;
-  if (!group.members.some((m: any) => m.user.toString() === req.userId)) throw new AppError('Access denied to this message', 403);
+  const group = message.group as IGroup;
+  if (!group || !('members' in group) || !group.members.some((m: IGroupMember) => m.user.toString() === req.userId)) {
+    throw new AppError('Access denied to this message', 403);
+  }
 
-  // Note: Messages are now marked as read via separate API endpoint
 
-  res.status(200).json(successResponse(message, 'Message retrieved successfully'));
+  res.status(200).json(successResponse(message as PopulatedMessageWithGroup, 'Message retrieved successfully'));
 };
 
-export const editMessage = async (req: express.Request, res: express.Response<IApiResponse>) => {
+export const editMessage = async (req: express.Request, res: express.Response<IApiResponse<PopulatedMessage | null | void>>) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     res.status(400).json(validationErrorResponse(errors.array()));
     return;
   }
 
-  const message = await Message.findById(req.params.id).populate('group', 'members');
+  const message = await Message.findById(req.params.id).populate<{ group: IGroup }>('group', 'members');
   if (!message) throw new AppError('Message not found', 404);
 
-  const group = message.group as any;
-  if (!group.members.some((m: any) => m.user.toString() === req.userId)) throw new AppError('Access denied to this message', 403);
+  const group = message.group as IGroup;
+  if (!group || !('members' in group) || !group.members.some((m: IGroupMember) => m.user.toString() === req.userId)) {
+    throw new AppError('Access denied to this message', 403);
+  }
 
   const { content } = req.body;
   await message.editMessage(content, req.userId!);
 
   const updatedMessage = await Message.findById(message._id)
-    .populate('sender', 'username firstName lastName avatar')
+    .populate<{ sender: PopulatedSender }>('sender', 'username firstName lastName avatar')
     .populate('metadata.itemId', 'name')
     .populate('metadata.listId', 'name');
 
@@ -131,9 +130,9 @@ export const editMessage = async (req: express.Request, res: express.Response<IA
         message: {
           id: updatedMessage._id.toString(),
           content: updatedMessage.content,
-          senderId: (updatedMessage.sender as any)._id.toString(),
-          senderName: (updatedMessage.sender as any).username,
-          senderAvatar: (updatedMessage.sender as any).avatar,
+          senderId: updatedMessage.sender._id.toString(),
+          senderName: updatedMessage.sender.username,
+          senderAvatar: updatedMessage.sender.avatar,
           timestamp: updatedMessage.createdAt,
           type: updatedMessage.messageType,
           status: "delivered",
@@ -147,25 +146,38 @@ export const editMessage = async (req: express.Request, res: express.Response<IA
   res.status(200).json(successResponse(updatedMessage, 'Message updated successfully'));
 };
 
-export const deleteMessage = async (req: express.Request, res: express.Response<IApiResponse>) => {
-  const message = await Message.findById(req.params.id).populate('group', 'members');
+export const deleteMessage = async (req: express.Request, res: express.Response<IApiResponse<null | void>>) => {
+  const message = await Message.findById(req.params.id).populate<{ group: IGroup; sender: PopulatedSender }>([
+    { path: 'group', select: 'name members' },
+    { path: 'sender', select: 'username firstName lastName avatar' }
+  ]);
   if (!message) throw new AppError('Message not found', 404);
 
-  const group = message.group as any;
-  if (!group.members.some((m: any) => m.user.toString() === req.userId)) throw new AppError('Access denied to this message', 403);
+  const group = message.group as IGroup;
+  if (!group || !('members' in group) || !group.members.some((m: IGroupMember) => m.user.toString() === req.userId)) {
+    throw new AppError('Access denied to this message', 403);
+  }
 
-  await message.deleteMessage(req.userId!);
+  try {
+    await message.deleteMessage(req.userId!);
+  } catch (error) {
+    if (error instanceof Error) {
+      throw new AppError(error.message, 400);
+    }
+    throw error;
+  }
 
   try {
     if (io) {
+      const sender = message.sender as PopulatedSender;
       io.to(`group:${group._id.toString()}`).emit('chat:message', {
         groupId: group._id.toString(),
         message: {
           id: message._id.toString(),
-          content: 'הודעה זו נמחקה',
-          senderId: (message.sender as any)._id.toString(),
-          senderName: (message.sender as unknown as IUser).username,
-          senderAvatar: (message.sender as unknown as IUser).avatar,
+          content: 'this message has been deleted',
+          senderId: sender._id.toString(),
+          senderName: sender.username,
+          senderAvatar: sender.avatar,
           timestamp: message.createdAt,
           type: message.messageType,
           status: "deleted",
@@ -179,7 +191,7 @@ export const deleteMessage = async (req: express.Request, res: express.Response<
   res.status(200).json(successResponse(null, 'Message deleted successfully'));
 };
 
-export const markMessageAsRead = async (req: express.Request, res: express.Response<IApiResponse>) => {
+export const markMessageAsRead = async (req: express.Request, res: express.Response<IApiResponse<null | void>>) => {
   const message = await Message.findById(req.params.id);
   if (!message) throw new AppError('Message not found', 404);
   await message.markAsRead(req.userId!);
@@ -188,25 +200,25 @@ export const markMessageAsRead = async (req: express.Request, res: express.Respo
 
 export const updateMessage = editMessage;
 
-export const markAllMessagesAsRead = async (req: express.Request, res: express.Response<IApiResponse>) => {
+export const markAllMessagesAsRead = async (req: express.Request, res: express.Response<IApiResponse<{ count: number } | null >>) => {
   const groupId = req.body.groupId;
   if (!groupId) throw new AppError('Missing groupId parameter', 400);
   const count = await Message.markAllAsRead(req.userId!, groupId);
   res.status(200).json(successResponse({ count }, 'All messages marked as read'));
 };
 
-export const markGroupMessagesAsRead = async (req: express.Request, res: express.Response<IApiResponse>) => {
+export const markGroupMessagesAsRead = async (req: express.Request, res: express.Response<IApiResponse<{ modifiedCount: number } | null >>) => {
   const { groupId } = req.params;
   const userId = req.userId!;
 
   if (!userId) {
-    res.status(401).json({ success: false, message: 'Unauthorized' });
+    res.status(401).json(errorResponse('unauthorized', 401));
     return;
   }
 
   const group = await Group.findById(groupId);
   if (!group || !group.members.some((m: IGroupMember) => m.user.toString() === userId)) {
-    res.status(403).json({ success: false, message: 'Access denied' });
+    res.status(403).json(errorResponse('access denied', 403));
     return;
   }
 
@@ -230,51 +242,48 @@ export const markGroupMessagesAsRead = async (req: express.Request, res: express
     }
   );
 
-  res.json({
-    success: true,
-    data: { 
-      modifiedCount: result.modifiedCount,
-      message: 'Messages marked as read'
-    }
-  });
+  res.json(successResponse({
+    modifiedCount: result.modifiedCount,
+    message: 'Messages marked as read'
+  }, 'Messages marked as read'));
 };
 
-export const getUnreadMessages = async (req: express.Request, res: express.Response<IApiResponse>) => {
+export const getUnreadMessages = async (req: express.Request, res: express.Response<IApiResponse<IMessage[] >>) => {
   const messages = await Message.getUnreadMessages(req.userId!, req.query.groupId as string);
   res.status(200).json(successResponse(messages, 'Unread messages retrieved'));
 };
 
-export const searchMessages = async (req: express.Request, res: express.Response<IApiResponse>) => {
+export const searchMessages = async (req: express.Request, res: express.Response<IApiResponse<IMessage[] | null>>) => {
   try {
     const { groupId, q } = req.query;
     const messages = await Message.searchMessages(groupId as string, q as string, req.query);
     res.status(200).json(successResponse(messages, 'Search results'));
   } catch (error) {
-    console.error('searchMessages error:', error);
+    res.status(500).json(errorResponse('error searching messages', 500, error instanceof Error ? error.message : 'Unknown error'));
   }
 };
 
-export const getMessageStats = async (req: express.Request, res: express.Response<IApiResponse>) => {
+export const getMessageStats = async (req: express.Request, res: express.Response<IApiResponse<IMessageStatistic[] | null>>) => {
   const groupId = req.query.groupId;
   if (!groupId) throw new AppError('Missing groupId parameter', 400);
   const stats = await Message.getStatistics(groupId as string);
   res.status(200).json(successResponse(stats, 'Message statistics retrieved'));
 };
 
-export const getMostActiveUsers = async (req: express.Request, res: express.Response<IApiResponse>) => {
+export const getMostActiveUsers = async (req: express.Request, res: express.Response<IApiResponse<IMessage[] | null>>) => {
   const groupId = req.query.groupId;
   if (!groupId) throw new AppError('Missing groupId parameter', 400);
   const users = await Message.getMostActiveUsers(groupId as string);
   res.status(200).json(successResponse(users, 'Most active users retrieved'));
 };
 
-export const getMessageReadStatus = async (req: express.Request, res: express.Response<IApiResponse>) => {
+export const getMessageReadStatus = async (req: express.Request, res: express.Response<IApiResponse<IReadStatus[] | null>>) => {
   const message = await Message.findById(req.params.id).populate('readBy.user', 'username firstName lastName avatar');
   if (!message) throw new AppError('Message not found', 404);
   res.status(200).json(successResponse(message.readBy, 'Read status retrieved'));
 };
 
-export const getMessagesByType = async (req: express.Request, res: express.Response<IApiResponse>) => {
+export const getMessagesByType = async (req: express.Request, res: express.Response<IApiResponse<IMessage[] | null>>) => {
   const messages = await Message.find({
     group: req.params.groupId,
     messageType: req.params.type,
@@ -283,7 +292,7 @@ export const getMessagesByType = async (req: express.Request, res: express.Respo
   res.status(200).json(successResponse(messages, 'Messages by type retrieved'));
 };
 
-export const getRecentMessages = async (req: express.Request, res: express.Response<IApiResponse>) => {
+export const getRecentMessages = async (req: express.Request, res: express.Response<IApiResponse<IMessage[]>>) => {
   const messages = await Message.find({
     group: req.params.groupId,
     isDeleted: false
@@ -291,7 +300,7 @@ export const getRecentMessages = async (req: express.Request, res: express.Respo
   res.status(200).json(successResponse(messages, 'Recent messages retrieved'));
 };
 
-export const exportMessages = async (req: express.Request, res: express.Response<IApiResponse>) => {
+export const exportMessages = async (req: express.Request, res: express.Response<IApiResponse<IMessage[] >>) => {
   const messages = await Message.find({
     group: req.params.groupId,
     isDeleted: false
@@ -299,36 +308,32 @@ export const exportMessages = async (req: express.Request, res: express.Response
   res.status(200).json(successResponse(messages, 'Messages exported'));
 };
 
-// New function: Get unread count and last read message in one call
-export const getUnreadCountAndLastRead = async (req: express.Request, res: express.Response<IApiResponse>) => {
+export const getUnreadCountAndLastRead = async (req: express.Request, res: express.Response<IApiResponse<{ unreadCount: number; lastReadMessage: PopulatedMessage | null } | null>>) => {
   const { groupId } = req.params;
   const userId = req.userId!;
 
   if (!userId) {
-    res.status(401).json({ success: false, message: 'Unauthorized' });
+    res.status(401).json(errorResponse('unauthorized', 401));
     return;
   }
 
-  // Check if user is member of the group
   const group = await Group.findById(groupId);
   if (!group || !group.members.some((m: IGroupMember) => m.user.toString() === userId)) {
-    res.status(403).json({ success: false, message: 'Access denied' });
+    res.status(403).json(errorResponse('access denied', 403));
     return;
   }
 
-  // Get unread count
   const unreadCount = await Message.countDocuments({
     group: groupId,
     isDeleted: false,
     sender: { $ne: userId },
     $or: [
-      { readBy: { $exists: false } },                    // Messages with no readBy array
-      { readBy: { $not: { $elemMatch: { user: userId } } } }  // Messages where current user is not in readBy
+      { readBy: { $exists: false } },
+      { readBy: { $not: { $elemMatch: { user: userId } } } }
     ]
   });
 
 
-  // Get last read message - find the message with the latest createdAt that the user has read
   const lastReadMessage = await Message.findOne({
     group: groupId,
     isDeleted: false,
@@ -336,13 +341,10 @@ export const getUnreadCountAndLastRead = async (req: express.Request, res: expre
   })
   .sort({ createdAt: -1 })
   .select('_id content createdAt readBy')
-  .populate('sender', 'username firstName lastName avatar');
+  .populate<{ sender: PopulatedSender }>('sender', 'username firstName lastName avatar');
 
-  res.json({
-    success: true,
-    data: { 
-      unreadCount,
-      lastReadMessage
-    }
-  });
+  res.json(successResponse({
+    unreadCount,
+    lastReadMessage: lastReadMessage as PopulatedMessage | null
+  }, 'Unread count and last read message retrieved'));
 };

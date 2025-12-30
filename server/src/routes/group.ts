@@ -25,7 +25,7 @@ import {
   validateMemberId
 } from '../middleware/validation';
 import { authenticateToken, checkGroupMembership, checkOwnership } from '../middleware/auth';
-import { asyncHandler } from '../middleware/errorHandler';
+import { asyncHandler } from '../middleware/handlers';
 
 const router = express.Router();
 

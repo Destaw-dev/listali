@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { z } from 'zod';
 import { X, Mail } from 'lucide-react';
-import { Button, Card, CardHeader, CardBody, Input } from '@/components/common';
-import { useUpdateEmail } from '@/hooks/useSettings';
-import { useModalScrollLock } from '@/hooks/useModalScrollLock';
+import { Button, Card, CardHeader, CardBody, Input } from '../common';
+import { useUpdateEmail } from '../../hooks/useSettings';
+import { useModalScrollLock } from '../../hooks/useModalScrollLock';
+import { createEmailSchema } from '../../lib/schemas';
 
 interface UpdateEmailModalProps {
   isOpen: boolean;
@@ -12,19 +13,13 @@ interface UpdateEmailModalProps {
   currentEmail: string;
 }
 
-const emailSchema = z.object({
-  email: z
-    .string()
-    .min(1, 'emailRequired')
-    .email('invalidEmail')
-});
-
-type EmailFormData = z.infer<typeof emailSchema>;
 
 export default function UpdateEmailModal({ isOpen, onClose, currentEmail }: UpdateEmailModalProps) {
   const t = useTranslations('settings');
+  const emailSchema = createEmailSchema(t);
+  type EmailInput = z.infer<typeof emailSchema>;
   const updateEmailMutation = useUpdateEmail();
-  const [formData, setFormData] = useState<EmailFormData>({ email: '' });
+  const [formData, setFormData] = useState<EmailInput>({ email: '' });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [internalIsLoading, setInternalIsLoading] = useState(false);
 
@@ -37,7 +32,7 @@ export default function UpdateEmailModal({ isOpen, onClose, currentEmail }: Upda
     }
   }, [isOpen]);
 
-  const validateField = (field: keyof EmailFormData, value: string) => {
+  const validateField = (field: keyof EmailInput, value: string) => {
     try {
       emailSchema.parse({ ...formData, [field]: value });
       setErrors(prev => ({ ...prev, [field]: '' }));
@@ -51,7 +46,7 @@ export default function UpdateEmailModal({ isOpen, onClose, currentEmail }: Upda
     }
   };
 
-  const handleInputChange = (field: keyof EmailFormData, value: string) => {
+  const handleInputChange = (field: keyof EmailInput, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     validateField(field, value);
   };
@@ -80,7 +75,6 @@ export default function UpdateEmailModal({ isOpen, onClose, currentEmail }: Upda
     }
   };
 
-  // Prevent body scroll when modal is open
   useModalScrollLock(isOpen);
 
   if (!isOpen) return null;

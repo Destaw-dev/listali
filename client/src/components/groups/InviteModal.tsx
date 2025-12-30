@@ -2,13 +2,12 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { X, UserPlus, Mail, Bell, Copy, Check } from 'lucide-react';
+import { X, UserPlus, Mail, Bell } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Button, Dropdown } from '../common';
-import { useNotification } from '../../contexts/NotificationContext';
-import { useModalScrollLock } from '@/hooks/useModalScrollLock';
+import { Button, Dropdown, Input } from '../common';
+import { useModalScrollLock } from '../../hooks/useModalScrollLock';
+import { createInviteSchema } from '../../lib/schemas';
 
 type InviteFormData = {
   email: string;
@@ -23,13 +22,9 @@ interface InviteModalProps {
 
 export function InviteModal({ isOpen, onClose, onInvite, groupName }: InviteModalProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const { showSuccess } = useNotification();
   const t = useTranslations('InviteModal');
 
-  const inviteSchema = z.object({
-    email: z.string().email(t('emailInvalid')),
-    role: z.enum(['member', 'admin']),
-  });
+  const inviteSchema = createInviteSchema(t);
   
   const {
     register,
@@ -49,14 +44,10 @@ export function InviteModal({ isOpen, onClose, onInvite, groupName }: InviteModa
   const selectedRole = watch('role');
 
   const onSubmit = async (data: InviteFormData) => {
-    try {
       setIsLoading(true);
       await onInvite(data);
-    } catch (error: any) {
-      console.error('Error inviting user:', error);
-    } finally {
       setIsLoading(false);
-    }
+  
   };
 
   const handleClose = () => {
@@ -64,14 +55,8 @@ export function InviteModal({ isOpen, onClose, onInvite, groupName }: InviteModa
     onClose();
   };
 
-  // Prevent body scroll when modal is open
   useModalScrollLock(isOpen);
 
-  const handleCopyInviteCode = (code: string) => {
-    navigator.clipboard.writeText(code);
-    // Show success toast
-    showSuccess('groups.inviteCodeCopied');
-  };
 
   if (!isOpen) return null;
 
@@ -96,23 +81,16 @@ export function InviteModal({ isOpen, onClose, onInvite, groupName }: InviteModa
 
         {/* Form */}
         <form onSubmit={handleSubmit(onSubmit)} className="px-6 py-3 space-y-4">
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-primary mb-2">
-              {t('emailAddress')} *
-            </label>
-            <input
+            <Input
               {...register('email')}
               type="email"
               id="email"
               placeholder={t('enterEmailAddress')}
-              className="w-full px-4 py-3 border border-border rounded-lg bg-surface text-primary placeholder:text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
-              dir="ltr"
-              autoComplete="email"
+              error={errors.email?.message}
+              label={t('emailAddress') + ' *'}
+              fullWidth
+              icon={<Mail className="w-5 h-5 text-muted" />}
             />
-            {errors.email && (
-              <p className="text-error text-sm mt-1">{errors.email.message}</p>
-            )}
-          </div>
 
           <div>
             <label htmlFor="role" className="block text-sm font-medium text-primary mb-2">

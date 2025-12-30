@@ -1,0 +1,48 @@
+{
+    "compilerOptions": {
+      "types": ["jest", "node"],
+      "target": "ES2020",
+      "module": "ESNext",
+      "lib": ["ES2020"],
+      "outDir": "./dist",
+      "rootDir": "./src",
+      "strict": true,
+      "esModuleInterop": true,
+      "skipLibCheck": true,
+      "forceConsistentCasingInFileNames": true,
+      "moduleResolution": "node",
+      "resolveJsonModule": true,
+      "declaration": true,
+      "declarationMap": true,
+      "sourceMap": true,
+      "removeComments": true,
+      "noImplicitAny": true,
+      "strictNullChecks": true,
+      "strictFunctionTypes": true,
+      "noImplicitThis": true,
+      "noImplicitReturns": true,
+      "noFallthroughCasesInSwitch": true,
+      "noUncheckedIndexedAccess": true,
+      "noImplicitOverride": true,
+      "allowUnusedLabels": false,
+      "allowUnreachableCode": false,
+      "exactOptionalPropertyTypes": true,
+      "paths": {
+        "@/*": ["./src/*"],
+        "@/types/*": ["./src/types/*"],
+        "@/utils/*": ["./src/utils/*"],
+        "@/config/*": ["./src/config/*"],
+        "@/models/*": ["./src/models/*"],
+        "@/controllers/*": ["./src/controllers/*"],
+        "@/routes/*": ["./src/routes/*"],
+        "@/middleware/*": ["./src/middleware/*"]
+      }
+    },
+    "include": [
+      "src/**/*"
+, "src/__tests__/group", "src/__tests__/items", "src/__tests__/message", "src/__tests__/shoppingLists", "src/models/seeders/allergens_full.ts", "src/models/seeders/diet_information.ts", "src/models/seeders/productGroups.ts", "src/models/seeders/subCategoryNames.ts"],
+    "exclude": [
+      "node_modules",
+      "dist",
+    ]
+  }

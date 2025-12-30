@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter, useParams } from "next/navigation";
 import {
   Settings,
@@ -16,7 +17,7 @@ import {
   UserMinus,
   Calendar,
 } from "lucide-react";
-import { LoadingSpinner } from "@/components/common/LoadingSpinner";
+import { LoadingSpinner, Button, Input, TextArea } from "../../../../../components/common";
 import {
   useGroup,
   useUpdateGroup,
@@ -27,12 +28,11 @@ import {
   useInviteToGroup,
   useLeaveGroup,
   useGroupMemberRoleWebSocket,
-} from "@/hooks/useGroups";
-import { useAuthRedirect } from "@/hooks/useAuthRedirect";
-import { useAuthStore } from "@/store/authStore";
-import { InviteModal } from "@/components/groups/InviteModal";
-import { ArrowIcon } from "@/components/common/Arrow";
-import { Button, Input } from "@/components/common";
+} from "../../../../../hooks/useGroups";
+import { useAuthRedirect } from "../../../../../hooks/useAuthRedirect";
+import { useAuthStore } from "../../../../../store/authStore";
+import { InviteModal } from "../../../../../components/groups/InviteModal";
+import { ArrowIcon } from "../../../../../components/common/Arrow";
 
 type MemberRole = "owner" | "admin" | "member";
 
@@ -55,9 +55,6 @@ interface Group {
   members?: GroupMember[];
 }
 
-interface GroupSettingsPageProps {
-  // Add props here when needed
-}
 
 interface MemberActionsDropdownProps {
   children: React.ReactNode;
@@ -97,7 +94,7 @@ const MemberActionsDropdown: React.FC<MemberActionsDropdownProps> = ({
   );
 };
 
-export default function GroupSettingsPage({}: GroupSettingsPageProps) {
+export default function GroupSettingsPage({}) {
   const [isEditing, setIsEditing] = useState(false);
   const [groupName, setGroupName] = useState("");
   const [groupDescription, setGroupDescription] = useState("");
@@ -107,6 +104,8 @@ export default function GroupSettingsPage({}: GroupSettingsPageProps) {
   );
   const [isRemovingMember, setIsRemovingMember] = useState<string | null>(null);
   const [showInviteModal, setShowInviteModal] = useState(false);
+
+  const t = useTranslations("groups.settings");
 
   const router = useRouter();
   const params = useParams();
@@ -126,7 +125,6 @@ export default function GroupSettingsPage({}: GroupSettingsPageProps) {
     error,
   } = useGroup(groupId);
 
-  // Assert minimal shape we actually use
   const group = groupRaw as Group | undefined;
 
   const updateGroupMutation = useUpdateGroup();
@@ -138,7 +136,6 @@ export default function GroupSettingsPage({}: GroupSettingsPageProps) {
   const leaveGroupMutation = useLeaveGroup();
 
   useGroupMemberRoleWebSocket(groupId);
-  // ---------- Helpers ----------
 
   const getMemberUserId = (member: GroupMember): string => {
     return typeof member.user === "object" ? member.user._id : member.user;
@@ -149,9 +146,9 @@ export default function GroupSettingsPage({}: GroupSettingsPageProps) {
       const fn = member.user.firstName ?? "";
       const ln = member.user.lastName ?? "";
       const full = `${fn} ${ln}`.trim();
-      return full || "משתמש ללא שם";
+      return full || t('unknownUser');
     }
-    return "משתמש לא ידוע";
+    return t('unknownUser');
   };
 
   const getRoleIcon = (role: MemberRole) => {
@@ -168,11 +165,11 @@ export default function GroupSettingsPage({}: GroupSettingsPageProps) {
   const getRoleText = (role: MemberRole) => {
     switch (role) {
       case "owner":
-        return "בעלים";
+        return t('owner');
       case "admin":
-        return "מנהל";
+        return t('admin');
       default:
-        return "חבר";
+        return t('member');
     }
   };
 
@@ -207,24 +204,19 @@ export default function GroupSettingsPage({}: GroupSettingsPageProps) {
     const memberUserId = getMemberUserId(member);
     const currentUserId = user?._id;
 
-    // Owner can't manage himself via this menu
     if (memberUserId === currentUserId && member.role === "owner") return false;
 
-    // Everyone can manage their own "leave group" action
     if (memberUserId === currentUserId) return true;
 
-    // To manage admins/owner you must be owner
     if (member.role === "admin" || member.role === "owner") {
       return currentUserMembership.role === "owner";
     }
 
-    // For regular members: admin or owner
     return hasAdminPermissions;
   };
 
   const canTransferOwnership = () => currentUserMembership?.role === "owner";
 
-  // ---------- Click outside to close actions menu ----------
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -240,7 +232,6 @@ export default function GroupSettingsPage({}: GroupSettingsPageProps) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // ---------- Handlers ----------
 
   const handleEdit = () => {
     if (!group) return;
@@ -259,7 +250,7 @@ export default function GroupSettingsPage({}: GroupSettingsPageProps) {
 
   const handleSave = async () => {
     if (!groupName.trim()) {
-      setGroupNameError("שם הקבוצה הוא שדה חובה");
+      setGroupNameError(t('groupNameRequired'));
       return;
     }
 
@@ -279,7 +270,7 @@ export default function GroupSettingsPage({}: GroupSettingsPageProps) {
 
   const handleDeleteGroup = async () => {
     const confirmed = window.confirm(
-      "האם אתה בטוח שברצונך למחוק את הקבוצה? פעולה זו אינה הפיכה."
+      t('deleteGroupConfirmation')
     );
     if (!confirmed) return;
 
@@ -293,7 +284,7 @@ export default function GroupSettingsPage({}: GroupSettingsPageProps) {
 
   const handleRemoveMember = async (memberId: string, memberName: string) => {
     const confirmed = window.confirm(
-      `האם אתה בטוח שברצונך להסיר את ${memberName} מהקבוצה?`
+      t('removeMemberConfirmation', { memberName })
     );
     if (!confirmed) return;
 
@@ -322,13 +313,11 @@ export default function GroupSettingsPage({}: GroupSettingsPageProps) {
   };
 
   const handleTransferOwnership = async (newOwnerId: string) => {
-    // Add a modal to confirm the transfer of ownership and use the transferOwnershipMutation 
-
     try {
       await transferOwnershipMutation.mutateAsync({ groupId, newOwnerId });
       setShowMemberActions(null);
     } catch (err) {
-      console.error("Failed to transfer ownership", err);
+      console.error(t('failedToTransferOwnership'), err);
     }
   };
 
@@ -342,7 +331,7 @@ export default function GroupSettingsPage({}: GroupSettingsPageProps) {
       await inviteToGroupMutation.mutateAsync({ groupId, inviteData: data });
       setShowInviteModal(false);
     } catch (err) {
-      console.error("Failed to invite member", err);
+      console.error(t('failedToInviteMember'), err);
     }
   };
 
@@ -351,11 +340,10 @@ export default function GroupSettingsPage({}: GroupSettingsPageProps) {
       await leaveGroupMutation.mutateAsync({ groupId });
       router.push(`/${locale}/groups`);
     } catch (err) {
-      console.error("Failed to leave group", err);
+      console.error(t('failedToLeaveGroup'), err);
     }
   };
 
-  // ---------- Loading / Error / Permission states ----------
 
   if (!isInitialized || isGroupLoading) {
     return (
@@ -369,14 +357,14 @@ export default function GroupSettingsPage({}: GroupSettingsPageProps) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-500 mb-4">שגיאה בטעינת הקבוצה</p>
+          <p className="text-red-500 mb-4">{t('errorLoadingGroup')}</p>
           <Button
             onClick={navigateBack}
             variant="primary"
             size="md"
             className="px-4 py-2 rounded-lg"
           >
-            חזור לקבוצות
+            {t('backToGroups')}
           </Button>
         </div>
       </div>
@@ -388,21 +376,19 @@ export default function GroupSettingsPage({}: GroupSettingsPageProps) {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <Settings className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-primary mb-2">אין הרשאה</h3>
-          <p className="text-secondary mb-6">אתה לא חבר בקבוצה זו</p>
+          <h3 className="text-xl font-semibold text-primary mb-2">{t('noPermission')}</h3>
+          <p className="text-secondary mb-6">{t('notAMember')}</p>
           <Button onClick={navigateBack} variant="primary" size="md">
-            חזור לקבוצה
+            {t('backToGroup')}
           </Button>
         </div>
       </div>
     );
   }
 
-  // ---------- Main UI ----------
 
   return (
     <div className="min-h-screen bg-surface pb-12" dir="rtl">
-      {/* Header */}
       <div className="border-b border-gray-200">
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center gap-3">
@@ -414,34 +400,27 @@ export default function GroupSettingsPage({}: GroupSettingsPageProps) {
             >
               <ArrowIcon />
             </Button>
-            <h1 className="text-xl font-bold">הגדרות הקבוצה</h1>
+            <h1 className="text-xl font-bold">{t('groupSettings')}</h1>
           </div>
         </div>
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
-        {/* 1. Group Information */}
         <div className="bg-surface rounded-2xl shadow-lg overflow-hidden">
-          <div className="h-16 bg-gradient-to-l from-blue-500 to-indigo-600" />
+          <div className="h-16 bg-gradient-to-l from-primaryT-500 to-primaryT-600" />
 
           <div className="px-6 pb-6 relative">
             <div className="flex justify-between items-end -mt-10 mb-4">
-              {/* Group Avatar */}
               <div className="w-16 h-16 rounded-xl bg-surface p-1 shadow-md">
                 <div className="w-full h-full bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 text-xl font-bold">
-                  {group.name?.[0] ?? "ק"}
+                  {group.name?.[0] ?? t('defaultGroupAvatar')}
                 </div>
               </div>
 
-              {/* Edit button */}
               {!isEditing && hasAdminPermissions && (
-                <button
-                  onClick={handleEdit}
-                  className="flex items-center gap-1 px-3 py-1 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium shadow-sm"
-                >
-                  <Edit2 className="w-4 h-4" />
-                  ערוך
-                </button>
+                <Button variant='primary' size="md" onClick={handleEdit} icon={<Edit2 className="w-4 h-4" />}>
+                  {t('edit')}
+                </Button>
               )}
             </div>
 
@@ -456,52 +435,36 @@ export default function GroupSettingsPage({}: GroupSettingsPageProps) {
                     }}
                     onBlur={() =>
                       setGroupNameError(
-                        groupName.trim() ? null : "שם הקבוצה הוא שדה חובה"
+                        groupName.trim() ? null : t('groupNameRequired')
                       )
                     }
-                    placeholder="שם הקבוצה"
-                    label="שם הקבוצה"
+                    placeholder={t('groupNamePlaceholder')}
+                    label={t('groupName')}
                     required
-                    error={groupNameError ?? undefined}
+                    error={groupNameError || undefined}
                     status={groupNameError ? "error" : "default"}
-                    variant="outlined"
+                    variant='default'
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    תיאור הקבוצה
-                  </label>
-                  <textarea
+                  <TextArea
                     value={groupDescription}
                     onChange={(e) => setGroupDescription(e.target.value)}
                     rows={2}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    dir="rtl"
+                    placeholder={t('groupDescriptionPlaceholder')}
+                    label={t('groupDescription')}
+                    variant='default'
                   />
                 </div>
 
                 <div className="flex gap-3 pt-2">
-                  <button
-                    onClick={handleSave}
-                    disabled={updateGroupMutation.isPending}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 text-sm font-medium"
-                  >
-                    {updateGroupMutation.isPending ? (
-                      <LoadingSpinner />
-                    ) : (
-                      <Save className="w-4 h-4" />
-                    )}
-                    שמור שינויים
-                  </button>
-                  <button
-                    onClick={handleCancel}
-                    disabled={updateGroupMutation.isPending}
-                    className="flex items-center gap-2 px-4 py-2 border border-gray-300 bg-white text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 text-sm font-medium"
-                  >
-                    <X className="w-4 h-4" />
-                    ביטול
-                  </button>
+                  <Button variant='ghost' size="md" onClick={handleCancel} disabled={updateGroupMutation.isPending} loading={updateGroupMutation.isPending} icon={<X className="w-4 h-4" />}>
+                    {t('cancel')}
+                  </Button>
+                  <Button variant='primary' size="md" onClick={handleSave} disabled={updateGroupMutation.isPending} loading={updateGroupMutation.isPending} icon={<Save className="w-4 h-4" />}>
+                    {t('saveChanges')}
+                  </Button>
                 </div>
               </div>
             ) : (
@@ -516,8 +479,7 @@ export default function GroupSettingsPage({}: GroupSettingsPageProps) {
                 <div className="flex items-center gap-2 pt-2 text-sm text-gray-500">
                   <Calendar size={14} />
                   <span>
-                    נוצר ב-
-                    {new Date(group.createdAt).toLocaleDateString("he-IL")}
+                    {t('createdAt')}{new Date(group.createdAt).toLocaleDateString("he-IL")}
                   </span>
                 </div>
               </div>
@@ -525,24 +487,19 @@ export default function GroupSettingsPage({}: GroupSettingsPageProps) {
           </div>
         </div>
 
-        {/* 2. Members List */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-100">
           <div className="p-6 border-b border-gray-100 flex justify-between items-center">
             <div>
-              <h2 className="text-xl font-bold text-gray-900">חברי הקבוצה</h2>
+              <h2 className="text-xl font-bold text-gray-900">{t('groupMembers')}</h2>
               <p className="text-sm text-gray-500">
-                {group.members?.length ?? 0} חברים
+                {group.members?.length ?? 0} {t('members')}
               </p>
             </div>
 
             {hasAdminPermissions && (
-              <button
-                onClick={handleInviteMembers}
-                className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition shadow-md shadow-blue-200 text-sm font-medium"
-              >
-                <UserPlus className="w-4 h-4" />
-                הזמן חברים
-              </button>
+              <Button variant='primary' size="md" onClick={handleInviteMembers} icon={<UserPlus className="w-4 h-4" />} rounded>
+                {t('inviteMembers')}
+              </Button>
             )}
           </div>
 
@@ -567,7 +524,7 @@ export default function GroupSettingsPage({}: GroupSettingsPageProps) {
                     <div>
                       <div className="flex items-center gap-2">
                         <p className="font-medium text-gray-900">
-                          {isCurrentUser ? "אתה" : memberName}
+                          {isCurrentUser ? t('you') : memberName}
                         </p>
                         <span
                           className={`text-xs px-2 py-0.5 rounded-full flex items-center gap-1 ${
@@ -584,10 +541,10 @@ export default function GroupSettingsPage({}: GroupSettingsPageProps) {
                       </div>
                       <span className="text-xs text-gray-500">
                         {currentRole === "owner"
-                          ? "מנהל ראשי"
+                          ? t('mainManager')
                           : currentRole === "admin"
-                          ? "מנהל בצוות"
-                          : "חבר בצוות"}
+                          ? t('teamManager')
+                          : t('teamMember')}
                       </span>
                     </div>
                   </div>
@@ -601,7 +558,6 @@ export default function GroupSettingsPage({}: GroupSettingsPageProps) {
                         memberActionsRef as React.RefObject<HTMLDivElement>
                       }
                     >
-                      {/* Admin/Owner actions for OTHER members */}
                       {!isCurrentUser && canManage && (
                         <>
                           {currentRole === "member" && (
@@ -617,9 +573,10 @@ export default function GroupSettingsPage({}: GroupSettingsPageProps) {
                               className="w-full flex items-center gap-2 px-3 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-50"
                             >
                               <Shield className="w-4 h-4" />
-                              הפוך למנהל
+                              {t('makeAdmin')}
                             </button>
                           )}
+
                           {currentRole === "admin" && (
                             <button
                               onClick={() =>
@@ -633,8 +590,9 @@ export default function GroupSettingsPage({}: GroupSettingsPageProps) {
                               className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors disabled:opacity-50"
                             >
                               <User className="w-4 h-4" />
-                              הפוך לחבר רגיל
+                              {t('makeMember')}
                             </button>
+
                           )}
 
                           {canTransferOwnership() &&
@@ -647,7 +605,7 @@ export default function GroupSettingsPage({}: GroupSettingsPageProps) {
                                 className="w-full flex items-center gap-2 px-3 py-2 text-sm text-yellow-700 hover:bg-yellow-50 rounded-lg transition-colors disabled:opacity-50 border-t border-gray-100 mt-1 pt-2"
                               >
                                 <Crown className="w-4 h-4" />
-                                העבר בעלות
+                                {t('transferOwnership')}
                               </button>
                             )}
 
@@ -662,12 +620,11 @@ export default function GroupSettingsPage({}: GroupSettingsPageProps) {
                             className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 border-t border-gray-100 mt-1 pt-2"
                           >
                             <UserMinus className="w-4 h-4" />
-                            הסר מהקבוצה
+                            {t('removeFromGroup')}
                           </button>
                         </>
                       )}
 
-                      {/* Current User actions (Leave Group) */}
                       {isCurrentUser && currentRole !== "owner" && (
                         <button
                           onClick={handleLeaveGroup}
@@ -675,7 +632,7 @@ export default function GroupSettingsPage({}: GroupSettingsPageProps) {
                           className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
                         >
                           <UserMinus className="w-4 h-4" />
-                          עזוב קבוצה
+                          {t('leaveGroup')}
                         </button>
                       )}
                     </MemberActionsDropdown>
@@ -686,24 +643,22 @@ export default function GroupSettingsPage({}: GroupSettingsPageProps) {
           </div>
         </div>
 
-        {/* 3. Danger Zone */}
         <div className="bg-white rounded-2xl shadow-lg border border-red-200 overflow-hidden">
           <div className="bg-red-50/50 p-4 border-b border-red-100 flex items-center gap-2 text-red-800">
             <Trash2 size={18} />
-            <span className="font-bold text-sm">אזור סכנה</span>
+            <span className="font-bold text-sm">{t('dangerZone')}</span>
           </div>
 
           <div className="divide-y divide-gray-100">
-            {/* Leave Group (non-owner) */}
             {currentUserMembership &&
               currentUserMembership.role !== "owner" && (
                 <div className="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
                   <div>
                     <h3 className="text-sm font-medium text-gray-700">
-                      עזיבת הקבוצה
+                      {t('leaveGroup')}
                     </h3>
                     <p className="text-xs text-gray-500 mt-0.5">
-                      פעולה זו תסיר אותך מהקבוצה
+                      {t('leaveGroupConfirmation')}
                     </p>
                   </div>
                   <button
@@ -711,20 +666,19 @@ export default function GroupSettingsPage({}: GroupSettingsPageProps) {
                     disabled={leaveGroupMutation.isPending}
                     className="text-red-600 hover:text-red-700 hover:bg-red-50 px-4 py-2 rounded-lg text-sm font-medium transition-colors border border-transparent hover:border-red-100"
                   >
-                    {leaveGroupMutation.isPending ? "עוזב..." : "עזוב קבוצה"}
+                    {leaveGroupMutation.isPending ? t('leavingGroup') : t('leaveGroup')}
                   </button>
                 </div>
               )}
 
-            {/* Delete Group (owner only) */}
             {canDeleteGroup && (
               <div className="p-4 flex items-center justify-between hover:bg-red-50/30 transition-colors">
                 <div>
                   <h3 className="text-sm font-medium text-red-600">
-                    מחיקת הקבוצה לצמיתות
+                    {t('deleteGroup')}
                   </h3>
                   <p className="text-xs text-red-400 mt-0.5">
-                    כל הרשימות והנתונים יימחקו לצמיתות.
+                    {t('deleteGroupConfirmation')}
                   </p>
                 </div>
                 <button
@@ -732,7 +686,7 @@ export default function GroupSettingsPage({}: GroupSettingsPageProps) {
                   disabled={deleteGroupMutation.isPending}
                   className="bg-red-600 border border-red-600 text-white hover:bg-red-700 px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-md shadow-red-200"
                 >
-                  {deleteGroupMutation.isPending ? "מוחק..." : "מחק קבוצה"}
+                  {deleteGroupMutation.isPending ? t('deletingGroup') : t('deleteGroup')}
                 </button>
               </div>
             )}
@@ -740,7 +694,6 @@ export default function GroupSettingsPage({}: GroupSettingsPageProps) {
         </div>
       </div>
 
-      {/* Invite Modal */}
       {showInviteModal && (
         <InviteModal
           isOpen={showInviteModal}

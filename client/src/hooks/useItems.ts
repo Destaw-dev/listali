@@ -1,8 +1,22 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
-import { apiClient } from '@/lib/api';
-import { useNotification } from '@/contexts/NotificationContext';
+import { apiClient } from '../lib/api';
+import { useNotification } from '../contexts/NotificationContext';
 import { shoppingListKeys } from './useShoppingLists';
+import { useAuthStore } from '../store/authStore';
+import { ICreateMultipleItemsInput, IItem, ISubCategory, IShoppingList, IShoppingSession } from '../types';
+
+interface ShoppingListFullData {
+  shoppingList?: IShoppingList;
+  items?: IItem[];
+  stats?: {
+    totalItems: number;
+    purchasedItems: number;
+    remainingItems: number;
+    progress: number;
+  };
+  shoppingSession?: IShoppingSession;
+}
 
 export const itemKeys = {
   all: ['items'] as const,
@@ -19,21 +33,25 @@ export const useItems = (shoppingListId: string, options?: {
   sort?: string;
   populateProduct?: boolean;
 }) => {
+  const { authReady, accessToken } = useAuthStore();
+  
   return useQuery({
     queryKey: itemKeys.list(shoppingListId),
     queryFn: async () => {
       const response = await apiClient.getItems(shoppingListId, options)
       return response.data || [];
     },
-    enabled: !!shoppingListId,
+    enabled: authReady && !!accessToken && !!shoppingListId,
   });
 };
 
 export const useItem = (itemId: string) => {
+  const { authReady, accessToken } = useAuthStore();
+  
   return useQuery({
     queryKey: itemKeys.detail(itemId),
     queryFn: () => apiClient.getItemById(itemId),
-    enabled: !!itemId,
+    enabled: authReady && !!accessToken && !!itemId,
   });
 };
 
@@ -57,7 +75,6 @@ export const useCreateItem = () => {
       product?: string;
       isManualEntry?: boolean;
     }) => {
-      // Ensure category is string, not empty object
       const cleanData = {
         ...itemData,
         category: itemData.category || '',
@@ -66,13 +83,11 @@ export const useCreateItem = () => {
     },
     onSuccess: (data, variables) => {
       const shoppingListId = variables.shoppingListId;
-      // Invalidate items list
       queryClient.invalidateQueries({ queryKey: itemKeys.list(shoppingListId) });
-      // Invalidate shopping list full data to update the list
       queryClient.invalidateQueries({ queryKey: ['shopping-lists', 'full-data', shoppingListId] });
       showSuccess('items.createSuccess');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       handleApiError(error);
     },
   });
@@ -83,32 +98,16 @@ export const useCreateMultipleItems = () => {
   const { showSuccess, handleApiError } = useNotification();
   
   return useMutation({
-    mutationFn: (items: Array<{
-      name: string;
-      description?: string;
-      quantity: number;
-      unit: string;
-      category: string;
-      brand?: string;
-      estimatedPrice?: number;
-      priority?: 'low' | 'medium' | 'high';
-      notes?: string;
-      alternatives?: string[];
-      shoppingListId: string;
-      product?: string;
-      isManualEntry?: boolean;
-    }>) => apiClient.createMultipleItems(items),
+    mutationFn: (items: ICreateMultipleItemsInput[]) => apiClient.createMultipleItems(items),
     onSuccess: (data, variables) => {
       const shoppingListId = variables[0]?.shoppingListId;
       if (shoppingListId) {
-        // Invalidate items list
         queryClient.invalidateQueries({ queryKey: itemKeys.list(shoppingListId) });
-        // Invalidate shopping list full data to update the list
         queryClient.invalidateQueries({ queryKey: ['shopping-lists', 'full-data', shoppingListId] });
         showSuccess('items.createMultipleSuccess');
       }
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       handleApiError(error);
     },
   });
@@ -138,11 +137,10 @@ export const useUpdateItem = () => {
     }) => apiClient.updateItem(itemId, itemData),
     onSuccess: (data, { itemId }) => {
       queryClient.invalidateQueries({ queryKey: itemKeys.detail(itemId) });
-      // Invalidate shopping list full data to update the list
       queryClient.invalidateQueries({ queryKey: ['shopping-lists', 'full-data'] });
       showSuccess('items.updateSuccess');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       handleApiError(error);
     },
   });
@@ -153,15 +151,17 @@ export const useDeleteItem = () => {
   const { showSuccess, handleApiError } = useNotification();
   
   return useMutation({
-    mutationFn: ({ itemId, shoppingListId }: { itemId: string; shoppingListId: string }) => 
+    mutationFn: ({ itemId }: { itemId: string; shoppingListId: string }) => 
       apiClient.deleteItem(itemId),
-    onSuccess: (data, { shoppingListId }) => {
+    onSuccess: (data, { itemId, shoppingListId }) => {
       queryClient.invalidateQueries({ queryKey: itemKeys.list(shoppingListId) });
+      queryClient.invalidateQueries({ queryKey: ['shopping-lists', 'full-data', shoppingListId] });
+      queryClient.invalidateQueries({ queryKey: itemKeys.detail(itemId) });
       showSuccess('items.deleteSuccess');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       handleApiError(error);
-    },
+    }, 
   });
 };
 
@@ -170,39 +170,43 @@ export const usePurchaseItem = () => {
   const { showSuccess, handleApiError } = useNotification();
   
   return useMutation({
-    mutationFn: ({ itemId, shoppingListId, groupId, purchasedQuantity, actualPrice }: { 
+    mutationFn: ({ itemId, quantityToPurchase, actualPrice }: { 
       itemId: string; 
       shoppingListId: string; 
       groupId: string;
-      purchasedQuantity?: number;
+      quantityToPurchase?: number;
       actualPrice?: number;
     }) => 
-      apiClient.purchaseItem(itemId, { purchasedQuantity, actualPrice }),
-    onSuccess: (data, { itemId, shoppingListId, groupId, purchasedQuantity }) => {
-      queryClient.setQueryData(['shopping-lists', 'full-data', shoppingListId], (oldData: any) => {
+      apiClient.purchaseItem(itemId, { quantityToPurchase, actualPrice }),
+    onSuccess: (data, { itemId, shoppingListId, groupId, }) => {
+      queryClient.setQueryData(['shopping-lists', 'full-data', shoppingListId], (oldData: ShoppingListFullData | undefined) => {
         if (!oldData) return oldData;
         
-        const updatedItems = oldData.items?.map((item: any) => {
+        const updatedItems = (oldData.items?.map((item: IItem) => {
           if (item._id === itemId) {
-            const purchasedQty = purchasedQuantity !== undefined ? purchasedQuantity : item.quantity;
+            // Use the updated item from response
+            const updatedItem = data.data || item;
+            const purchasedQty = updatedItem.purchasedQuantity || item.purchasedQuantity || 0;
             const isFullyPurchased = purchasedQty >= item.quantity;
+            const isPartiallyPurchased = purchasedQty > 0 && purchasedQty < item.quantity;
             return {
               ...item,
-              status: isFullyPurchased ? 'purchased' : 'pending',
+              ...updatedItem,
+              status: (isFullyPurchased ? 'purchased' : (isPartiallyPurchased ? 'partially_purchased' : 'pending')) as IItem['status'],
               isPurchased: isFullyPurchased,
-              isPartiallyPurchased: purchasedQty > 0 && purchasedQty < item.quantity,
+              isPartiallyPurchased: isPartiallyPurchased,
               purchasedQuantity: purchasedQty,
               remainingQuantity: Math.max(0, item.quantity - purchasedQty),
-            };
+            } as IItem;
           }
           return item;
-        }) || oldData.items;
+        }) || oldData.items || []) as IItem[];
         
         const updatedStats = oldData.stats ? {
           ...oldData.stats,
-          purchasedItems: updatedItems.filter((item: any) => item.status === 'purchased').length,
-          remainingItems: updatedItems.filter((item: any) => item.status !== 'purchased').length,
-          progress: updatedItems.length > 0 ? Math.round((updatedItems.filter((item: any) => item.status === 'purchased').length / updatedItems.length) * 100) : 0
+          purchasedItems: updatedItems.filter((item) => item.status === 'purchased').length,
+          remainingItems: updatedItems.filter((item) => item.status !== 'purchased').length,
+          progress: updatedItems.length > 0 ? Math.round((updatedItems.filter((item) => item.status === 'purchased').length / updatedItems.length) * 100) : 0
         } : oldData.stats;
         
         return {
@@ -219,25 +223,24 @@ export const usePurchaseItem = () => {
       
       showSuccess('items.purchaseSuccess');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       handleApiError(error);
     },
   });
 };
 
-// Unpurchase item
 export const useUnpurchaseItem = () => {
   const queryClient = useQueryClient();
   const { showSuccess, handleApiError } = useNotification();
   
   return useMutation({
-    mutationFn: ({ itemId, shoppingListId, groupId }: { itemId: string; shoppingListId: string; groupId: string }) => 
+    mutationFn: ({ itemId }: { itemId: string; shoppingListId: string; groupId: string }) => 
       apiClient.unpurchaseItem(itemId),
     onSuccess: (data, { itemId, shoppingListId, groupId }) => {
-      queryClient.setQueryData(['shopping-lists', 'full-data', shoppingListId], (oldData: any) => {
+      queryClient.setQueryData(['shopping-lists', 'full-data', shoppingListId], (oldData: ShoppingListFullData | undefined) => {
         if (!oldData) return oldData;
         
-        const updatedItems = oldData.items?.map((item: any) => {
+        const updatedItems = oldData.items?.map((item: IItem) => {
           if (item._id === itemId) {
             return {
               ...item,
@@ -249,13 +252,13 @@ export const useUnpurchaseItem = () => {
             };
           }
           return item;
-        }) || oldData.items;
+        }) || oldData.items || [];
         
         const updatedStats = oldData.stats ? {
           ...oldData.stats,
-          purchasedItems: updatedItems.filter((item: any) => item.status === 'purchased').length,
-          remainingItems: updatedItems.filter((item: any) => item.status !== 'purchased').length,
-          progress: updatedItems.length > 0 ? Math.round((updatedItems.filter((item: any) => item.status === 'purchased').length / updatedItems.length) * 100) : 0
+          purchasedItems: updatedItems.filter((item) => item.status === 'purchased').length,
+          remainingItems: updatedItems.filter((item) => item.status !== 'purchased').length,
+          progress: updatedItems.length > 0 ? Math.round((updatedItems.filter((item) => item.status === 'purchased').length / updatedItems.length) * 100) : 0
         } : oldData.stats;
         
         return {
@@ -272,7 +275,7 @@ export const useUnpurchaseItem = () => {
       
       showSuccess('items.unpurchaseSuccess');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       handleApiError(error);
     },
   });
@@ -289,7 +292,7 @@ export const useMarkItemNotAvailable = () => {
       queryClient.invalidateQueries({ queryKey: itemKeys.detail(itemId) });
       showSuccess('items.notAvailableSuccess');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       handleApiError(error);
     },
   });
@@ -306,7 +309,7 @@ export const useUpdateItemQuantity = () => {
       queryClient.invalidateQueries({ queryKey: itemKeys.detail(itemId) });
       showSuccess('items.quantityUpdateSuccess');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       handleApiError(error);
     },
   });
@@ -332,7 +335,6 @@ export const useAvailableUnits = () => {
   });
 }; 
 
-// All subcategories (loaded once, filtered client-side)
 export const useAllSubCategories = () => {
   return useQuery({
     queryKey: ['subCategories', 'all'],
@@ -340,18 +342,22 @@ export const useAllSubCategories = () => {
       const response = await apiClient.get('/sub-categories/active');
       return response?.data?.data || [];
     },
-    staleTime: 10 * 60 * 1000, // 10 minutes - subcategories don't change often
+    staleTime: 10 * 60 * 1000,
   });
 };
 
-// Subcategories by category (client-side filtered from all subcategories)
 export const useSubCategoriesByCategory = (categoryId?: string | null, enabled: boolean = false) => {
   const { data: allSubCategories = [], isLoading } = useAllSubCategories();
   
   const subCategories = useMemo(() => {
     if (!enabled || !categoryId) return [];
-    return allSubCategories.filter((sc: any) => {
-      const scCategoryId = typeof sc.categoryId === 'string' ? sc.categoryId : sc.categoryId?._id || sc.categoryId;
+    return allSubCategories.filter((sc: ISubCategory) => {
+      // categoryId can be string or populated ICategory object
+      const scCategoryId = typeof sc.categoryId === 'string' 
+        ? sc.categoryId 
+        : (typeof sc.categoryId === 'object' && sc.categoryId !== null && '_id' in sc.categoryId 
+          ? (sc.categoryId as { _id: string })._id 
+          : undefined);
       return scCategoryId === categoryId;
     });
   }, [allSubCategories, categoryId, enabled]);

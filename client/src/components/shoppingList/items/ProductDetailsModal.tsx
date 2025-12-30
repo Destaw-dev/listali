@@ -1,15 +1,16 @@
 "use client";
 
-import { memo, useEffect, useMemo, useRef, useState } from "react";
-import { Package, X, Tag } from "lucide-react";
-import { Button } from "@/components/common";
-import { useModalScrollLock } from "@/hooks/useModalScrollLock";
+import { memo, useState } from "react";
+import { Package, X } from "lucide-react";
+import { Button } from "../../common";
+import { useModalScrollLock } from "../../../hooks/useModalScrollLock";
+import { IItem } from "../../../types";
 
 interface ProductDetailsModalProps {
-  item: any | null;
+  item: IItem | null;
   onClose: () => void;
-  tItems: (key: string, values?: Record<string, any>) => string;
-  tCommon: (key: string, values?: Record<string, any>) => string;
+  tItems: (key: string, values?: Record<string, string | number>) => string;
+  tCommon: (key: string, values?: Record<string, string | number>) => string;
 }
 
 export const ProductDetailsModal = memo(function ProductDetailsModal({
@@ -20,15 +21,18 @@ export const ProductDetailsModal = memo(function ProductDetailsModal({
 }: ProductDetailsModalProps) {
   const [imgLoaded, setImgLoaded] = useState(false);
   
-  // Prevent body scroll when modal is open
   useModalScrollLock(!!item);
   
   if (!item) return null;
 
-  const product = item.product ?? {};
-  const title = product.name || item.name || "";
-  const brand = product.brand || item.brand || "";
-  const category = item.category?.name || "";
+  const product = item.product;
+  const productName = typeof product === 'object' && product !== null && 'name' in product ? (product as { name?: string }).name : undefined;
+  const productBrand = typeof product === 'object' && product !== null && 'brand' in product ? (product as { brand?: string }).brand : undefined;
+  const productImage = typeof product === 'object' && product !== null && 'image' in product ? (product as { image?: string }).image : undefined;
+  const productDescription = typeof product === 'object' && product !== null && 'description' in product ? (product as { description?: string }).description : undefined;
+  const title = productName || item.name || "";
+  const brand = productBrand || item.brand || "";
+  const category = typeof item.category === 'object' && item.category !== null && 'name' in item.category ? item.category.name : "";
   const unitLabel = item.unit ? tItems(String(item.unit)) : "";
 
 
@@ -57,7 +61,6 @@ export const ProductDetailsModal = memo(function ProductDetailsModal({
                    animate-[fadeIn_.15s_ease-out] "
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         <header className="flex items-start justify-between gap-3 px-6 pt-6">
           <div className="min-w-0">
             <h3 id="product-dialog-title" className="truncate text-lg font-semibold text-text-primary">
@@ -72,20 +75,18 @@ export const ProductDetailsModal = memo(function ProductDetailsModal({
           </Button>
         </header>
 
-        {/* Body */}
         <div className="px-6 pb-6 pt-4">
           <div className="flex flex-col gap-4 sm:flex-row">
-            {/* Media */}
             <div className="sm:w-40 w-full">
               <div className="aspect-square overflow-hidden rounded-2xl shadow-sm bg-surface">
-                {product.image ? (
+                {productImage ? (
                   <>
                     {!imgLoaded && (
                       <div className="animate-pulse bg-surface" />
                     )}
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={product.image}
+                      src={productImage}
                       alt={title}
                       className={`h-full w-full object-contain transition duration-200 ${imgLoaded ? "opacity-100" : "opacity-0"}`}
                       loading="lazy"
@@ -104,11 +105,10 @@ export const ProductDetailsModal = memo(function ProductDetailsModal({
               </div>
             </div>
 
-            {/* Details */}
             <div className="min-w-0 flex-1">
-              {product.description && (
+              {productDescription && (
                 <p className="mb-3 text-sm leading-relaxed text-text-secondary">
-                  {product.description}
+                  {productDescription}
                 </p>
               )}
 
@@ -123,7 +123,6 @@ export const ProductDetailsModal = memo(function ProductDetailsModal({
             </div>
           </div>
 
-          {/* Footer */}
           <div className=" flex justify-end gap-2">
             <Button variant="primary" size="md" onClick={onClose} aria-label={tCommon("close")}>
               {tCommon("close")}
