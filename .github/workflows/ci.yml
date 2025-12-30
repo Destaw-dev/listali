@@ -8,6 +8,8 @@ on:
 
 permissions:
   contents: read
+  # הוספת הרשאת pull-requests במידה והאקשן צריך לקרוא נתוני PR
+  pull-requests: read 
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -23,18 +25,14 @@ jobs:
       server: ${{ steps.filter.outputs.server }}
 
     steps:
-      - name: Checkout (full history)
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Detect changed files (git diff, no GitHub API)
+      - name: Detect changed files
         uses: dorny/paths-filter@v3
         id: filter
         with:
-          list-files: shell
-          base: ${{ github.event.pull_request.base.sha || github.event.before }}
-          ref:  ${{ github.sha }}
+          # הסרנו את base ו-ref הידניים - האקשן מזהה אותם לבד ב-PR וב-Push
           filters: |
             client:
               - 'client/**'
@@ -53,11 +51,9 @@ jobs:
     if: needs.detect-changes.outputs.client == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
-
     defaults:
       run:
         working-directory: ./client
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -97,28 +93,15 @@ jobs:
         env:
           CI: true
 
-      - name: Upload client artifacts (on failure)
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: client-artifacts
-          path: |
-            client/coverage
-            client/test-results
-            client/.next/trace
-          if-no-files-found: ignore
-
   server-ci:
     name: Server CI
     needs: detect-changes
     if: needs.detect-changes.outputs.server == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 25
-
     defaults:
       run:
         working-directory: ./server
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -146,13 +129,3 @@ jobs:
           NODE_ENV: test
           MONGODB_URI: ${{ secrets.MONGODB_URI_TEST }}
           JWT_ACCESS_SECRET: ${{ secrets.JWT_ACCESS_SECRET }}
-
-      - name: Upload server artifacts (on failure)
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: server-artifacts
-          path: |
-            server/coverage
-            server/test-results
-          if-no-files-found: ignore
