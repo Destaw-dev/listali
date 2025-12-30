@@ -5,8 +5,8 @@ import {
   getPaginationParams,
   successResponse,
   errorResponse,
-} from "@/middleware/handlers";
-import { IApiResponse, IProduct } from "@/types";
+} from "../middleware/handlers";
+import { IApiResponse, IProduct } from "../types";
 
 export const getAllProducts = async (
   req: Request,

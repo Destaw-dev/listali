@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { PurchaseQuantityModal } from '@/components/shoppingList/items/PurchaseQuantityModal';
+import { PurchaseQuantityModal } from '../../../components/shoppingList/items/PurchaseQuantityModal';
 import { mockItems } from '../../mocks/mockData';
 
 // Mock dependencies
-vi.mock('@/hooks/useModalScrollLock', () => ({
+vi.mock('../../../hooks/useModalScrollLock', () => ({
   useModalScrollLock: vi.fn(),
 }));
 

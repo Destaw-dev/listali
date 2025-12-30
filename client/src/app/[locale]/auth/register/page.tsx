@@ -9,15 +9,15 @@ import { Eye, EyeOff, Mail, Lock, User, UserCheck } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useAuthStore } from '@/store/authStore';
-import { apiClient } from '@/lib/api';
-import { useNotification } from '@/contexts/NotificationContext';
-import { Link as IntlLink } from '@/i18n/navigation';
-import { GoogleAuthButton } from '@/components/auth/GoogleAuthButton';
-import { ArrowIcon } from '@/components/common/Arrow';
-import { Button, Input } from '@/components/common';
-import { mapInviteErrorToTranslationKey } from '@/lib/utils';
-import { createRegisterSchema } from '@/lib/schemas';
+import { useAuthStore } from '../../../../store/authStore';
+import { apiClient } from '../../../../lib/api';
+import { useNotification } from '../../../../contexts/NotificationContext';
+import { Link as IntlLink } from '../../../../i18n/navigation';
+import { GoogleAuthButton } from '../../../../components/auth/GoogleAuthButton';
+import { ArrowIcon } from '../../../../components/common/Arrow';
+import { Button, Input } from '../../../../components/common';
+import { mapInviteErrorToTranslationKey } from '../../../../lib/utils';
+import { createRegisterSchema } from '../../../../lib/schemas';
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);

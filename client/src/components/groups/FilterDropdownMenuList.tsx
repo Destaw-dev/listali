@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { Dropdown, DropdownOption } from "@/components/common";
-import { Button } from "@/components/common/Button";
-import { Badge } from "@/components/common/Badge";
+import { Dropdown, DropdownOption, Badge, Button } from "../../components/common";
 import { Filter, X } from "lucide-react";
-
 
 interface FilterDropdownMenuProps {
     t: ReturnType<typeof useTranslations>;

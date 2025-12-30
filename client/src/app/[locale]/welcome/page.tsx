@@ -3,9 +3,9 @@
 import { useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter, useParams } from 'next/navigation';
-import { useAuthStore } from '@/store/authStore';
+import { useAuthStore } from '../../../store/authStore';
 import { ShoppingCart, Users, Zap } from 'lucide-react';
-import { Link as IntlLink } from '@/i18n/navigation';
+import { Link as IntlLink } from '../../../i18n/navigation';
 
 export default function WelcomePage() {
   const t = useTranslations();

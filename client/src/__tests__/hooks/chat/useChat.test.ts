@@ -2,15 +2,15 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useMessages, useSendMessage } from '@/hooks/useChat';
-import { apiClient } from '@/lib/api';
-import { useAuthStore } from '@/store/authStore';
+import { useMessages, useSendMessage } from '../../../hooks/useChat';
+import { apiClient } from '../../../lib/api';
+import { useAuthStore } from '../../../store/authStore';
 import { mockUser } from '../../mocks/mockData';
 
 // Mock dependencies
-vi.mock('@/lib/api');
-vi.mock('@/store/authStore');
-vi.mock('@/contexts/NotificationContext', () => ({
+vi.mock('../../../lib/api');
+vi.mock('../../../store/authStore');
+vi.mock('../../../contexts/NotificationContext', () => ({
   useNotification: () => ({
     showSuccess: vi.fn(),
     handleApiError: vi.fn(),

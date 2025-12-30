@@ -4,7 +4,7 @@ import ShoppingList  from '../models/shoppingList';
 import  Message  from '../models/message';
 import Item  from '../models/item';
 import User from '../models/user';
-import { errorResponse, successResponse } from '@/middleware/handlers';
+import { errorResponse, successResponse } from '../middleware/handlers';
 
 interface DashboardStats {
   groups: number;

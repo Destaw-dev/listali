@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
-import { useAuthRedirect } from '@/hooks/useAuthRedirect';
-import { useAuthStore } from '@/store/authStore';
+import { useAuthRedirect } from '../../../hooks/useAuthRedirect';
+import { useAuthStore } from '../../../store/authStore';
 import { useRouter, useParams } from 'next/navigation';
 
 // Mock dependencies
-vi.mock('@/store/authStore');
+vi.mock('../../../store/authStore');
 vi.mock('next/navigation', () => ({
   useRouter: vi.fn(),
   useParams: vi.fn(),

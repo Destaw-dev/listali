@@ -1,17 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import LanguageThemeModal from '@/components/settings/LanguageThemeModal';
-import { renderWithProviders } from '@/test/test-utils';
+import LanguageThemeModal from '../../../components/settings/LanguageThemeModal';
+import { renderWithProviders } from '../../../test/test-utils';
 
 // Mock dependencies
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
 }));
-vi.mock('@/hooks/useModalScrollLock', () => ({
+vi.mock('../../../hooks/useModalScrollLock', () => ({
   useModalScrollLock: vi.fn(),
 }));
-vi.mock('@/contexts/NotificationContext', () => ({
+vi.mock('../../../contexts/NotificationContext', () => ({
   useNotification: () => ({
     showSuccess: vi.fn(),
     handleApiError: vi.fn(),

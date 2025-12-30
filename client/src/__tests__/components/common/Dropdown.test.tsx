@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { Dropdown } from '@/components/common/Dropdown';
+import { Dropdown } from '../../../components/common/Dropdown';
 
 describe('Dropdown Component', () => {
   const mockOptions = [

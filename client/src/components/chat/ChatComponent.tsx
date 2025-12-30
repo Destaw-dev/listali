@@ -3,8 +3,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { Send, Edit3, Trash2, Clock, Check, CheckCheck, MessageCircle } from 'lucide-react';
-import { Button } from '@/components/common/Button';
-import { useAuthStore } from '@/store/authStore';
+import { Button } from '../../components/common/Button';
+import { useAuthStore } from '../../store/authStore';
 import { 
   useGroupMessages, 
   useSendMessage, 
@@ -13,7 +13,7 @@ import {
   useMarkGroupMessagesAsRead,
   useChatWebSocket,
   useUnreadInfo
-} from '@/hooks/useChat';
+} from '../../hooks/useChat';
 import { SystemMessage } from './SystemMessage';
 import { MenuButton, TextArea } from '../common';
 

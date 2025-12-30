@@ -1,13 +1,13 @@
 'use client';
 
-import { useAuthStore } from '@/store/authStore';
+import { useAuthStore } from '../../store/authStore';
 import { useRouter, usePathname } from 'next/navigation';
 import { useParams } from 'next/navigation';
 import { Home, Users, Settings, LogOut, UserPlus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import LanguageSwitcher from '@/components/common/LanguageSwitcher';
-import { useLogout } from '@/hooks/useSettings';
-import { Button } from '../common/Button';
+import LanguageSwitcher from '../common/LanguageSwitcher';
+import { useLogout } from '../../hooks/useSettings';
+import { Button } from '../common';
 import Image from 'next/image';
 
 export function Navigation() {

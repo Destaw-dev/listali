@@ -1,19 +1,19 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen } from '@testing-library/react';
-import { renderWithProviders } from '@/test/test-utils';
-import ShoppingListPage from '@/app/[locale]/groups/[groupId]/[listId]/page';
-import { useShoppingListData } from '@/hooks/useShoppingListData';
-import { useGroup } from '@/hooks/useGroups';
-import { useAvailableCategories } from '@/hooks/useItems';
+import { renderWithProviders } from '../../test/test-utils';
+import ShoppingListPage from '../../app/[locale]/groups/[groupId]/[listId]/page';
+import { useShoppingListData } from '../../hooks/useShoppingListData';
+import { useGroup } from '../../hooks/useGroups';
+import { useAvailableCategories } from '../../hooks/useItems';
 import { mockShoppingLists, mockItems, mockGroups, mockCategories } from '../mocks/mockData';
 
 // Mock dependencies
-vi.mock('@/hooks/useShoppingListData');
-vi.mock('@/hooks/useShoppingListWebSocket', () => ({
+vi.mock('../../hooks/useShoppingListData');
+vi.mock('../../hooks/useShoppingListWebSocket', () => ({
   useShoppingListWebSocket: vi.fn(),
 }));
-vi.mock('@/hooks/useGroups');
-vi.mock('@/hooks/useItems', () => ({
+vi.mock('../../hooks/useGroups');
+vi.mock('../../hooks/useItems', () => ({
   useAvailableCategories: vi.fn(),
   usePurchaseItem: vi.fn(() => ({
     mutateAsync: vi.fn(),
@@ -40,13 +40,13 @@ vi.mock('@/hooks/useItems', () => ({
     isPending: false,
   })),
 }));
-vi.mock('@/hooks/useAuthRedirect', () => ({
+vi.mock('../../hooks/useAuthRedirect', () => ({
   useAuthRedirect: () => ({
     isAuthenticated: true,
     isInitialized: true,
   }),
 }));
-vi.mock('@/store/authStore', () => ({
+vi.mock('../../store/authStore', () => ({
   useAuthStore: () => ({
     user: { _id: 'user1' },
   }),
@@ -61,7 +61,7 @@ vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
 }));
 // Don't mock @tanstack/react-query - use the real one with QueryClientProvider
-vi.mock('@/components/shoppingList/AddItemsModal', () => ({
+vi.mock('../../components/shoppingList/AddItemsModal', () => ({
   default: ({ isOpen }: { isOpen: boolean }) => isOpen ? <div>AddItemsModal</div> : null,
 }));
 

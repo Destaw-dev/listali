@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { Category } from "../models/category";
-import { errorResponse, successResponse } from "@/middleware/handlers";
-import { IApiResponse, ICategory } from "@/types";
+import { errorResponse, successResponse } from "../middleware/handlers";
+import { IApiResponse, ICategory } from "../types";
 
 
 export const getAllCategories = async (

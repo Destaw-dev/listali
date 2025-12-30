@@ -8,14 +8,14 @@ import {
   useUnpurchaseItem,
   useUpdateItem,
   useDeleteItem,
-} from "@/hooks/useItems";
+} from "../../hooks/useItems";
 import { CheckCircle, ShoppingBag } from "lucide-react";
-import { LoadingSpinner } from "../common/LoadingSpinner";
+import { LoadingSpinner } from "../common";
 import { CategorySection } from "./items/CategorySection";
 import { PurchaseQuantityModal } from "./items/PurchaseQuantityModal";
 import { ProductDetailsModal } from "./items/ProductDetailsModal";
 import { EditItemModal } from "./items/EditItemModal";
-import { ICategory, IItem } from "@/types";
+import { ICategory, IItem } from "../../types";
 
 interface ShoppingListItemsProps {
   items: IItem[];

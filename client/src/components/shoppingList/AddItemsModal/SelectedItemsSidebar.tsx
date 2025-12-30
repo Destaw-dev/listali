@@ -4,11 +4,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useTranslations } from 'next-intl';
 import { Trash2, ShoppingCart, Plus } from 'lucide-react';
-import { Button } from '@/components/common';
+import { Button } from '../../common';
 import { ItemFormSingle } from './ItemFormSingle';
-import { getProductUnit, findExistingItem, findExistingItemById } from '@/lib/utils';
-import { itemsSchema } from '@/lib/schemas';
-import { IProduct, IManualProduct, ICategory, ItemInput, IItem, isManualProduct } from '@/types';
+import { getProductUnit, findExistingItem, findExistingItemById } from '../../../lib/utils';
+import { itemsSchema } from '../../../lib/schemas';
+import { IProduct, IManualProduct, ICategory, ItemInput, IItem, isManualProduct } from '../../../types';
 
 interface SelectedItemsSidebarProps {
   selectedProducts: (IProduct | IManualProduct)[];
@@ -20,7 +20,7 @@ interface SelectedItemsSidebarProps {
   categories: ICategory[];
   isSubmitting: boolean;
   t: (key: string) => string;
-  existingItems?: IItem[]; // Items that already exist in the shopping list
+  existingItems?: IItem[];
   onMergeDuplicate?: (existingItemId: string, newQuantity: number) => Promise<void>;
   onEditExisting?: (existingItemId: string) => void;
 }

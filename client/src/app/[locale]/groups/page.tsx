@@ -11,19 +11,19 @@ import {
   Grid,
   List,
 } from "lucide-react";
-import { CreateGroupModal } from "@/components/groups/CreateGroupModal";
-import { JoinGroupModal } from "@/components/groups/JoinGroupModal";
-import { LoadingSpinner } from "@/components/common/LoadingSpinner";
+import { CreateGroupModal } from "../../../components/groups/CreateGroupModal";
+import { JoinGroupModal } from "../../../components/groups/JoinGroupModal";
 import {
   Card,
   CardBody,
   CardFooter,
-} from "@/components/common/Card";
-import { Button } from "@/components/common/Button";
-import { Input } from "@/components/common/Input";
-import { useGroups, useCreateGroup, useJoinGroup } from "@/hooks/useGroups";
-import { useAuthRedirect } from "@/hooks/useAuthRedirect";
-import { IGroup, IGroupMember } from "@/types";
+  Button,
+  Input,
+  LoadingSpinner
+} from "../../../components/common";
+import { useGroups, useCreateGroup, useJoinGroup } from "../../../hooks/useGroups";
+import { useAuthRedirect } from "../../../hooks/useAuthRedirect";
+import { IGroup, IGroupMember } from "../../../types";
 
 export default function GroupsPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);

@@ -5,10 +5,9 @@ import { createUserAndAuth, createGroupWithList } from '../factories/userFactory
 import Message from '../../models/message';
 import {
   getMessageData,
-  getMessagesArray,
   getResponseData
 } from '../utils/testHelpers';
-import { IMessage } from '@/types';
+import { IMessage } from '../../types';
 
 let token: string;
 let groupId: string;
@@ -16,10 +15,10 @@ let groupId: string;
 beforeAll(async () => {
   await connectDB();
   await Message.syncIndexes();
-  const { userId, token: authToken } = await createUserAndAuth();
+  const { token: authToken } = await createUserAndAuth();
   token = authToken
 
-  const { groupId: groupIdRes } = await createGroupWithList(token, userId);
+  const { groupId: groupIdRes } = await createGroupWithList(token);
 
   groupId = groupIdRes
 }, 60000); // 60 second timeout for MongoDB and setup
@@ -133,9 +132,9 @@ describe('Message API', () => {
   });
 
   it('GET /api/messages/:id/read-status - get read status', async () => {
-    const { userId: localUserId, token: localToken } = await createUserAndAuth(); // מייצר יוזר חדש
+    const { userId: localUserId, token: localToken } = await createUserAndAuth();
   
-    const { groupId: localGroupId } = await createGroupWithList(localToken, localUserId);
+    const { groupId: localGroupId } = await createGroupWithList(localToken);
   
     const msg = await Message.create({
       content: 'Read me',

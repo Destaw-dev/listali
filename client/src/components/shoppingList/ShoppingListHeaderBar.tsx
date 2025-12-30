@@ -1,12 +1,12 @@
 "use client";
 
-import { Button } from "@/components/common/Button";
-import { cn } from "@/lib/utils";
+import { Button } from "../common";
+import { cn } from "../../lib/utils";
 import { Calendar, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { ArrowIcon } from "../common/Arrow";
-import { IShoppingList } from "@/types";
+import { IShoppingList } from "../../types";
 
 interface ShoppingListHeaderBarProps {
   shoppingList: IShoppingList;

@@ -1,18 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { EditItemModal } from '@/components/shoppingList/items/EditItemModal';
-import { renderWithProviders } from '@/test/test-utils';
+import { EditItemModal } from '../../../components/shoppingList/items/EditItemModal';
+import { renderWithProviders } from '../../../test/test-utils';
 import { mockItems, mockCategories } from '../../mocks/mockData';
 
 // Mock dependencies
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
 }));
-vi.mock('@/hooks/useModalScrollLock', () => ({
+vi.mock('../../../hooks/useModalScrollLock', () => ({
   useModalScrollLock: vi.fn(),
 }));
-vi.mock('@/hooks/useItems', () => ({
+vi.mock('../../../hooks/useItems', () => ({
   useAvailableCategories: vi.fn(() => ({
     data: mockCategories,
     isLoading: false,

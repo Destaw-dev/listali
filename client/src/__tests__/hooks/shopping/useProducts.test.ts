@@ -8,12 +8,12 @@ import {
   useAllProducts,
   useInfiniteAllProducts,
   useProductsByCategory,
-} from '@/hooks/useProducts';
-import { apiClient } from '@/lib/api';
+} from '../../../hooks/useProducts';
+import { apiClient } from '../../../lib/api';
 import { mockProducts } from '../../mocks/mockData';
 
 // Mock dependencies
-vi.mock('@/lib/api');
+vi.mock('../../../lib/api');
 
 const createWrapper = () => {
   const queryClient = new QueryClient({

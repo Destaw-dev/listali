@@ -4,14 +4,13 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useParams } from "next/navigation";
 import { Check, X, UserPlus, Calendar } from "lucide-react";
-import { LoadingSpinner } from "@/components/common/LoadingSpinner";
+import { LoadingSpinner, Button } from "../../../components/common";
 import {
   useInvitations,
   useAcceptInvitation,
   useDeclineInvitation,
-} from "@/hooks/useInvitations";
-import { useAuthRedirect } from "@/hooks/useAuthRedirect";
-import { Button } from "@/components/common";
+} from "../../../hooks/useInvitations";
+import { useAuthRedirect } from "../../../hooks/useAuthRedirect";
 
 interface Invitation {
   _id: string;

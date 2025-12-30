@@ -1,5 +1,5 @@
 import { vi } from 'vitest';
-import { apiClient } from '@/lib/api';
+import { apiClient } from '../../lib/api';
 import { mockApiResponse, mockApiError } from './mockData';
 import { AxiosRequestConfig } from 'axios';
 

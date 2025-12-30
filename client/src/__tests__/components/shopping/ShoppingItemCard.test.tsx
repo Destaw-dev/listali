@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { ShoppingItemCard } from '@/components/shoppingList/items/ShoppingItemCard';
+import { ShoppingItemCard } from '../../../components/shoppingList/items/ShoppingItemCard';
 import { mockItems } from '../../mocks/mockData';
 
 // Mock dependencies
@@ -158,7 +158,7 @@ describe('ShoppingItemCard', () => {
   });
 
   it('should display priority badge for high priority items', () => {
-    const highPriorityItem = { ...mockItems[0], priority: 'high' };
+    const highPriorityItem = { ...mockItems[0], priority: 'high' as const };
     
     render(
       <ShoppingItemCard
@@ -178,9 +178,10 @@ describe('ShoppingItemCard', () => {
   it('should display partially purchased state', () => {
     const partiallyPurchasedItem = {
       ...mockItems[0],
-      status: 'partially_purchased',
+      status: 'pending' as const,
       purchasedQuantity: 1,
       quantity: 3,
+      isPartiallyPurchased: true,
     };
     
     render(

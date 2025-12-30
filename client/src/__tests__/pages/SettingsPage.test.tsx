@@ -1,14 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen } from '@testing-library/react';
-import { renderWithProviders, createMockMutationResult } from '@/test/test-utils';
-import SettingsPage from '@/app/[locale]/settings/page';
-import { useAuthStore } from '@/store/authStore';
-import { useUserProfile, useUserPreferences, useNotificationSettings, useLogout, useDeleteAccount, useUpdateProfile, useUpdatePreferences, useUpdateNotificationSettings } from '@/hooks/useSettings';
+import { renderWithProviders, createMockMutationResult } from '../../test/test-utils';
+import SettingsPage from '../../app/[locale]/settings/page';
+import { useAuthStore } from '../../store/authStore';
+import { useUserProfile, useUserPreferences, useNotificationSettings, useLogout, useDeleteAccount, useUpdateProfile, useUpdatePreferences, useUpdateNotificationSettings } from '../../hooks/useSettings';
 import { mockUser } from '../mocks/mockData';
 
 // Mock dependencies
-vi.mock('@/store/authStore');
-vi.mock('@/store/themeStore', () => {
+vi.mock('../../store/authStore');
+vi.mock('../../store/themeStore', () => {
   const mockSetTheme = vi.fn();
   const mockStore = {
     theme: 'light',
@@ -20,8 +20,8 @@ vi.mock('@/store/themeStore', () => {
     useThemeStore: () => mockStore,
   };
 });
-vi.mock('@/hooks/useSettings');
-vi.mock('@/hooks/useAuthRedirect', () => ({
+vi.mock('../../hooks/useSettings');
+vi.mock('../../hooks/useAuthRedirect', () => ({
   useAuthRedirect: () => ({
     isAuthenticated: true,
     isInitialized: true,
@@ -37,21 +37,21 @@ vi.mock('next/navigation', () => ({
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
 }));
-vi.mock('@/contexts/NotificationContext', () => ({
+vi.mock('../../contexts/NotificationContext', () => ({
   useNotification: () => ({
     showWarning: vi.fn(),
   }),
 }));
-vi.mock('@/components/settings/EditProfileModal', () => ({
+vi.mock('../../components/settings/EditProfileModal', () => ({
   default: ({ isOpen }: { isOpen: boolean }) => isOpen ? <div>EditProfileModal</div> : null,
 }));
-vi.mock('@/components/settings/UpdateEmailModal', () => ({
+vi.mock('../../components/settings/UpdateEmailModal', () => ({
   default: ({ isOpen }: { isOpen: boolean }) => isOpen ? <div>UpdateEmailModal</div> : null,
 }));
-vi.mock('@/components/settings/LanguageThemeModal', () => ({
+vi.mock('../../components/settings/LanguageThemeModal', () => ({
   default: ({ isOpen }: { isOpen: boolean }) => isOpen ? <div>LanguageThemeModal</div> : null,
 }));
-vi.mock('@/components/settings/NotificationModal', () => ({
+vi.mock('../../components/settings/NotificationModal', () => ({
   default: ({ isOpen }: { isOpen: boolean }) => isOpen ? <div>NotificationModal</div> : null,
 }));
 

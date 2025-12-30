@@ -1,11 +1,11 @@
 "use client";
 import { useState, useEffect, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { useAuthStore } from '@/store/authStore';
-import { useNotification } from '@/contexts/NotificationContext';
+import { useAuthStore } from '../store/authStore';
+import { useNotification } from '../contexts/NotificationContext';
 import { useTranslations } from 'next-intl';
-import websocketService from '@/services/websocket';
-import { IWebSocketEvents } from '@/types';
+import websocketService from '../services/websocket';
+import { IWebSocketEvents } from '../types';
 
 export function useShoppingListWebSocket(listId: string, groupId: string) {
   const [isConnected, setIsConnected] = useState(false);

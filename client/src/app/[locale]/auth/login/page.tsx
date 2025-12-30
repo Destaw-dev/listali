@@ -7,15 +7,15 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useAuthStore } from '@/store/authStore';
-import { apiClient } from '@/lib/api';
-import { useNotification } from '@/contexts/NotificationContext';
-import { Link as IntlLink } from '@/i18n/navigation';
-import { GoogleAuthButton } from '@/components/auth/GoogleAuthButton';
+import { useAuthStore } from '../../../../store/authStore';
+import { apiClient } from '../../../../lib/api';
+import { useNotification } from '../../../../contexts/NotificationContext';
+import { Link as IntlLink } from '../../../../i18n/navigation';
+import { GoogleAuthButton } from '../../../../components/auth/GoogleAuthButton';
 import { useParams } from 'next/navigation';
-import { Button, Input } from '@/components/common';
-import { ArrowIcon } from '@/components/common/Arrow';
-import { createLoginSchema } from '@/lib/schemas';
+import { Button, Input } from '../../../../components/common';
+import { ArrowIcon } from '../../../../components/common/Arrow';
+import { createLoginSchema } from '../../../../lib/schemas';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);

@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { AllergenModel, IAllergen } from '../models/allergen';
-import { IApiResponse } from '@/types';
-import { errorResponse, successResponse } from '@/middleware/handlers';
+import { IApiResponse } from '../types';
+import { errorResponse, successResponse } from '../middleware/handlers';
 
 export const getAllAllergens = async (_: Request, res: Response<IApiResponse<IAllergen[] | null>>) => {
   try {

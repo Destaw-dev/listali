@@ -2,10 +2,10 @@ import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
-import { Navigation } from '@/components/layout/Navigation';
-import { Providers } from '@/components/providers/Providers';
+import { Navigation } from '../../components/layout/Navigation';
+import { Providers } from '../../components/providers/Providers';
 import '../globals.css';
-import { locales } from '@/i18n/config';
+import { locales } from '../../i18n/config';
 
 const inter = Inter({ 
   subsets: ['latin'],

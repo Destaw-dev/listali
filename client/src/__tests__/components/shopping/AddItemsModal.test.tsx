@@ -1,26 +1,26 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import AddItemsModal from '@/components/shoppingList/AddItemsModal';
-import { renderWithProviders } from '@/test/test-utils';
+import AddItemsModal from '../../../components/shoppingList/AddItemsModal';
+import { renderWithProviders } from '../../../test/test-utils';
 import { mockProducts } from '../../mocks/mockData';
-import { IProduct, ItemInput } from '@/types';
+import { IProduct, ItemInput } from '../../../types';
 
 // Mock dependencies
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
 }));
-vi.mock('@/hooks/useModalScrollLock', () => ({
+vi.mock('../../../hooks/useModalScrollLock', () => ({
   useModalScrollLock: vi.fn(),
 }));
-vi.mock('@/hooks/useItems', () => ({
+vi.mock('../../../hooks/useItems', () => ({
   useAvailableCategories: vi.fn(() => ({
     data: [],
     isLoading: false,
     error: null,
   })),
 }));
-vi.mock('@/components/shoppingList/AddItemsModal/ProductsSelectionView', () => ({
+vi.mock('../../../components/shoppingList/AddItemsModal/ProductsSelectionView', () => ({
   ProductsSelectionView: ({ onProductSelect, selectedProductIds }: { onProductSelect: (product: IProduct) => void; selectedProductIds: string[] }) => (
     <div>
       <button onClick={() => onProductSelect(mockProducts[0])}>Select Product</button>
@@ -28,7 +28,7 @@ vi.mock('@/components/shoppingList/AddItemsModal/ProductsSelectionView', () => (
     </div>
   ),
 }));
-vi.mock('@/components/shoppingList/AddItemsModal/SelectedItemsSidebar', () => ({
+vi.mock('../../../components/shoppingList/AddItemsModal/SelectedItemsSidebar', () => ({
   SelectedItemsSidebar: ({ items, onClearAll, onSubmit }: { items: ItemInput[]; onClearAll: () => void; onSubmit: (items: ItemInput[]) => void }) => (
     <div>
       <div>Items: {items?.length || 0}</div>

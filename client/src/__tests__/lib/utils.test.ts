@@ -6,7 +6,7 @@ import {
   findExistingItem,
   mapInviteErrorToTranslationKey,
   normalizeUnit,
-} from '@/lib/utils';
+} from '../../lib/utils';
 
 describe('cn (className utility)', () => {
   it('should merge class names correctly', () => {

@@ -80,7 +80,7 @@ describe('MyComponent', () => {
 Use the `renderWithProviders` helper from `test-utils.tsx`:
 
 ```typescript
-import { renderWithProviders } from '@/test/test-utils';
+import { renderWithProviders } from '../test/test-utils';
 import { MyComponent } from '../MyComponent';
 
 it('should work with React Query', () => {

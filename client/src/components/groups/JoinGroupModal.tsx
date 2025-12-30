@@ -5,10 +5,10 @@ import { useTranslations } from 'next-intl';
 import { X, UserPlus } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useModalScrollLock } from '@/hooks/useModalScrollLock';
+import { useModalScrollLock } from '../../hooks/useModalScrollLock';
 import { Button } from '../common/Button';
 import { Input } from '../common';
-import { createJoinGroupSchema } from '@/lib/schemas';
+import { createJoinGroupSchema } from '../../lib/schemas';
 
 type JoinGroupFormData = {
   inviteCode: string;

@@ -21,7 +21,7 @@ import {
 } from '../types';
 import { UNITS } from '../middleware/validation';
 import { io } from '../app';
-import { emitToGroupExcept, getIO } from '@/socket/socketHandler';
+import { emitToGroupExcept, getIO } from '../socket/socketHandler';
 
 const verifyShoppingListAccess = async (shoppingListId: string, userId: string) => {
   const shoppingList = await ShoppingList.findById(shoppingListId).populate<{ group: IGroup }>('group');

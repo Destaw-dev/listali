@@ -3,10 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { X, Globe, Palette, Check } from 'lucide-react';
-import { Card, CardBody } from '@/components/common/Card';
-import { Button } from '@/components/common/Button';
-import { useNotification } from '@/contexts/NotificationContext';
-import { useModalScrollLock } from '@/hooks/useModalScrollLock';
+import { Card, CardBody, Button } from '../common';
+import { useNotification } from '../../contexts/NotificationContext';
+import { useModalScrollLock } from '../../hooks/useModalScrollLock';
 
 interface LanguageThemeModalProps {
   isOpen: boolean;

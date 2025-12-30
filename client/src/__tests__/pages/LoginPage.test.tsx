@@ -1,15 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { renderWithProviders } from '@/test/test-utils';
-import LoginPage from '@/app/[locale]/auth/login/page';
-import { apiClient } from '@/lib/api';
-import { useAuthStore } from '@/store/authStore';
+import { renderWithProviders } from '../../test/test-utils';
+import LoginPage from '../../app/[locale]/auth/login/page';
+import { apiClient } from '../../lib/api';
+import { useAuthStore } from '../../store/authStore';
 import { mockUser } from '../mocks/mockData';
 
 // Mock dependencies
-vi.mock('@/lib/api');
-vi.mock('@/store/authStore');
+vi.mock('../../lib/api');
+vi.mock('../../store/authStore');
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
     push: vi.fn(),
@@ -19,16 +19,16 @@ vi.mock('next/navigation', () => ({
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
 }));
-vi.mock('@/contexts/NotificationContext', () => ({
+vi.mock('../../contexts/NotificationContext', () => ({
   useNotification: () => ({
     showSuccess: vi.fn(),
     handleApiError: vi.fn(),
   }),
 }));
-vi.mock('@/components/auth/GoogleAuthButton', () => ({
+vi.mock('../../components/auth/GoogleAuthButton', () => ({
   GoogleAuthButton: () => <button>Google Auth</button>,
 }));
-vi.mock('@/i18n/navigation', () => ({
+vi.mock('../../i18n/navigation', () => ({
   Link: ({ children }: { children: React.ReactNode }) => <a>{children}</a>,
 }));
 

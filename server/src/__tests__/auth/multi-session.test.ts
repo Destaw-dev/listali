@@ -1,11 +1,9 @@
-// tests/auth/multi-session.test.ts
 
 import request from 'supertest';
 import mongoose from 'mongoose';
 import { app } from '../../app';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import User from '../../models/user';
-import { IAuthResponse } from '../../types';
 import {
   getAuthResponse,
   getAccessToken,

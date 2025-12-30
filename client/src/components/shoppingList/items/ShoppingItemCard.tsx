@@ -1,10 +1,8 @@
 import { useTranslations } from "next-intl";
 import { Edit, Info, Trash2, Package } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/common/Button";
-import { Badge } from "@/components/common/Badge";
-
-import { IItem } from "@/types";
+import { cn } from "../../../lib/utils";
+import { Button, Badge } from "../../common";
+import { IItem } from "../../../types";
 
 interface ShoppingItemCardProps {
   item: IItem;

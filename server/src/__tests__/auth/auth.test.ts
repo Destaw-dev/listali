@@ -1,5 +1,3 @@
-// tests/auth/auth.test.ts
-
 import request from 'supertest';
 import mongoose from 'mongoose';
 import { app } from '../../app';
@@ -39,7 +37,6 @@ const user = {
   password: 'Password123'
 };
 
-// Helper to verify email for testing
 const verifyUserEmail = async (email: string) => {
   await mongoose.connection.db?.collection('users').updateOne(
     { email },
@@ -47,7 +44,6 @@ const verifyUserEmail = async (email: string) => {
   );
 };
 
-let accessToken: string;
 
 describe('🔐 Auth API', () => {
   test('POST /api/auth/register → should register new user', async () => {
@@ -79,9 +75,6 @@ describe('🔐 Auth API', () => {
     const body = res.body as IApiResponse<IAuthResponse>;
     expect(body.data).toBeDefined();
     expect(body.data?.accessToken).toBeDefined();
-    if (body.data?.accessToken) {
-      accessToken = body.data.accessToken;
-    }
   });
 
   test('GET /api/auth/me → should return current user', async () => {

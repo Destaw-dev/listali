@@ -2,9 +2,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useInvitations, useAcceptInvitation, useDeclineInvitation } from '@/hooks/useInvitations';
-import { apiClient } from '@/lib/api';
-import { useAuthStore } from '@/store/authStore';
+import { useInvitations, useAcceptInvitation, useDeclineInvitation } from '../../../hooks/useInvitations';
+import { apiClient } from '../../../lib/api';
+import { useAuthStore } from '../../../store/authStore';
 
 const mockInvitations = [
   {
@@ -25,15 +25,15 @@ const mockInvitations = [
 ];
 
 // Mock dependencies
-vi.mock('@/lib/api', () => ({
+vi.mock('../../../lib/api', () => ({
   apiClient: {
     getMyInvitations: vi.fn(),
     acceptInvitation: vi.fn(),
     declineInvitation: vi.fn(),
   },
 }));
-vi.mock('@/store/authStore');
-vi.mock('@/contexts/NotificationContext', () => ({
+vi.mock('../../../store/authStore');
+vi.mock('../../../contexts/NotificationContext', () => ({
   useNotification: () => ({
     showSuccess: vi.fn(),
     handleApiError: vi.fn(),

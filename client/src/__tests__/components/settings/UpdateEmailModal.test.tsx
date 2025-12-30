@@ -1,17 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import UpdateEmailModal from '@/components/settings/UpdateEmailModal';
-import { renderWithProviders } from '@/test/test-utils';
+import UpdateEmailModal from '../../../components/settings/UpdateEmailModal';
+import { renderWithProviders } from '../../../test/test-utils';
 
 // Mock dependencies
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
 }));
-vi.mock('@/hooks/useModalScrollLock', () => ({
+vi.mock('../../../hooks/useModalScrollLock', () => ({
   useModalScrollLock: vi.fn(),
 }));
-vi.mock('@/hooks/useSettings', () => ({
+vi.mock('../../../hooks/useSettings', () => ({
   useUpdateEmail: vi.fn(() => ({
     mutateAsync: vi.fn().mockResolvedValue({}),
     isPending: false,

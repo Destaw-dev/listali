@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import React from 'react';
+import { AxiosResponse } from 'axios';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
   useStartShopping,
@@ -9,12 +10,12 @@ import {
   useResumeShopping,
   useCurrentShoppingSession,
   useActiveShoppingSessions,
-} from '@/hooks/useShoppingModeQueries';
-import { apiClient } from '@/lib/api';
+} from '../../../hooks/useShoppingModeQueries';
+import { apiClient } from '../../../lib/api';
 
-// Mock dependencies
-vi.mock('@/lib/api');
-vi.mock('@/contexts/NotificationContext', () => ({
+
+vi.mock('../../../lib/api');
+vi.mock('../../../contexts/NotificationContext', () => ({
   useNotification: () => ({
     showSuccess: vi.fn(),
     handleApiError: vi.fn(),
@@ -44,8 +45,8 @@ describe('useShoppingModeQueries Hooks', () => {
   describe('useStartShopping', () => {
     it('should start shopping session successfully', async () => {
       vi.mocked(apiClient.post).mockResolvedValue({
-        success: true,
         data: {
+          success: true,
           data: {
             sessionId: 'session123',
             userId: 'user1',
@@ -53,7 +54,7 @@ describe('useShoppingModeQueries Hooks', () => {
             totalItems: 10,
           },
         },
-      });
+      } as AxiosResponse);
 
       const { result } = renderHook(() => useStartShopping(), {
         wrapper: createWrapper(),
@@ -95,9 +96,11 @@ describe('useShoppingModeQueries Hooks', () => {
   describe('useStopShopping', () => {
     it('should stop shopping session successfully', async () => {
       vi.mocked(apiClient.post).mockResolvedValue({
-        success: true,
-        data: {},
-      });
+        data: {
+          success: true,
+          data: {},
+        },
+      } as AxiosResponse);
 
       const { result } = renderHook(() => useStopShopping(), {
         wrapper: createWrapper(),
@@ -122,9 +125,11 @@ describe('useShoppingModeQueries Hooks', () => {
   describe('usePauseShopping', () => {
     it('should pause shopping session successfully', async () => {
       vi.mocked(apiClient.post).mockResolvedValue({
-        success: true,
-        data: {},
-      });
+        data: {
+          success: true,
+          data: {},
+        },
+      } as AxiosResponse);
 
       const { result } = renderHook(() => usePauseShopping(), {
         wrapper: createWrapper(),
@@ -149,9 +154,11 @@ describe('useShoppingModeQueries Hooks', () => {
   describe('useResumeShopping', () => {
     it('should resume shopping session successfully', async () => {
       vi.mocked(apiClient.post).mockResolvedValue({
-        success: true,
-        data: {},
-      });
+        data: {
+          success: true,
+          data: {},
+        },
+      } as AxiosResponse);
 
       const { result } = renderHook(() => useResumeShopping(), {
         wrapper: createWrapper(),
@@ -183,9 +190,11 @@ describe('useShoppingModeQueries Hooks', () => {
       };
 
       vi.mocked(apiClient.get).mockResolvedValue({
-        success: true,
-        data: { data: mockSession },
-      });
+        data: {
+          success: true,
+          data: mockSession,
+        },
+      } as AxiosResponse);
 
       const { result } = renderHook(() => useCurrentShoppingSession('list1'), {
         wrapper: createWrapper(),
@@ -220,9 +229,11 @@ describe('useShoppingModeQueries Hooks', () => {
       ];
 
       vi.mocked(apiClient.get).mockResolvedValue({
-        success: true,
-        data: { data: mockSessions },
-      });
+        data: {
+          success: true,
+          data: mockSessions,
+        },
+      } as AxiosResponse);
 
       const { result } = renderHook(() => useActiveShoppingSessions('list1'), {
         wrapper: createWrapper(),

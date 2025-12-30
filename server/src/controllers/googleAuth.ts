@@ -2,10 +2,10 @@ import { OAuth2Client } from 'google-auth-library';
 import { google } from 'googleapis';
 import axios from 'axios';
 import crypto from 'crypto';
-import User from '@/models/user';
+import User from '../models/user';
 import { Response, Request } from 'express';
-import { errorResponse, successResponse } from '@/middleware/handlers';
-import { IBasePendingInvite, IGroupMember } from '@/types';
+import { errorResponse, successResponse } from '../middleware/handlers';
+import { IBasePendingInvite, IGroupMember } from '../types';
 import { signAccessToken, signRefreshToken, hashToken } from '../utils/tokens';
 import { isMobileClient, setRefreshTokenCookies } from './auth';
 

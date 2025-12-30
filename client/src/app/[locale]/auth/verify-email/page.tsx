@@ -4,12 +4,11 @@ import { useState, useEffect, Suspense, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { AxiosError } from 'axios';
-import { Button } from '@/components/common/Button';
-import { LoadingSpinner } from '@/components/common/LoadingSpinner';
-import { apiClient } from '@/lib/api';
-import { useAuthStore } from '@/store/authStore';
-import { mapInviteErrorToTranslationKey } from '@/lib/utils';
-import { useNotification } from '@/contexts/NotificationContext';
+import { LoadingSpinner, Button } from '../../../../components/common';
+import { apiClient } from '../../../../lib/api';
+import { useAuthStore } from '../../../../store/authStore';
+import { mapInviteErrorToTranslationKey } from '../../../../lib/utils';
+import { useNotification } from '../../../../contexts/NotificationContext';
 
 function VerifyEmailContent() {
 

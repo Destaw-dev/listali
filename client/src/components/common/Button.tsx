@@ -1,6 +1,6 @@
 import React from 'react';
 import { ButtonProps as IButtonProps } from '../../types';
-import { cn } from '@/lib/utils';
+import { cn } from '../../lib/utils';
 
 interface ButtonProps extends Omit<IButtonProps, 'variant'> {
   children?: React.ReactNode;

@@ -17,7 +17,7 @@ import {
   UserMinus,
   Calendar,
 } from "lucide-react";
-import { LoadingSpinner } from "@/components/common/LoadingSpinner";
+import { LoadingSpinner, Button, Input, TextArea } from "../../../../../components/common";
 import {
   useGroup,
   useUpdateGroup,
@@ -28,12 +28,11 @@ import {
   useInviteToGroup,
   useLeaveGroup,
   useGroupMemberRoleWebSocket,
-} from "@/hooks/useGroups";
-import { useAuthRedirect } from "@/hooks/useAuthRedirect";
-import { useAuthStore } from "@/store/authStore";
-import { InviteModal } from "@/components/groups/InviteModal";
-import { ArrowIcon } from "@/components/common/Arrow";
-import { Button, Input, TextArea } from "@/components/common";
+} from "../../../../../hooks/useGroups";
+import { useAuthRedirect } from "../../../../../hooks/useAuthRedirect";
+import { useAuthStore } from "../../../../../store/authStore";
+import { InviteModal } from "../../../../../components/groups/InviteModal";
+import { ArrowIcon } from "../../../../../components/common/Arrow";
 
 type MemberRole = "owner" | "admin" | "member";
 

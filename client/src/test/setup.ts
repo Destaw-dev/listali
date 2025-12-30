@@ -2,7 +2,7 @@ import '@testing-library/jest-dom';
 import { cleanup } from '@testing-library/react';
 import { afterEach, beforeAll, afterAll, vi } from 'vitest';
 import React from 'react';
-import { server } from '@/__tests__/mocks/server';
+import { server } from '../__tests__/mocks/server';
 
 // Setup MSW server
 beforeAll(() => {
@@ -75,7 +75,7 @@ vi.mock('socket.io-client', () => ({
 }));
 
 // Mock NotificationContext
-vi.mock('@/contexts/NotificationContext', () => ({
+vi.mock('../contexts/NotificationContext', () => ({
   NotificationProvider: ({ children }: React.PropsWithChildren) => children,
   useNotification: () => ({
     showToast: vi.fn(),

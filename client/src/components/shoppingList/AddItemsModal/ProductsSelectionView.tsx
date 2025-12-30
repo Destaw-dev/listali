@@ -3,7 +3,7 @@ import { Package } from 'lucide-react';
 import { AddItemProductList } from '../AddItemProductList';
 import { FiltersSection } from './FiltersSection';
 import { useProductsSelection } from './hooks/useProductsSelection';
-import { IProduct, IItem } from '@/types';
+import { IProduct, IItem } from '../../../types';
 
 interface ProductsSelectionViewProps {
   onProductSelect: (product: IProduct) => void;

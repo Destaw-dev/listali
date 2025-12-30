@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api';
-import { useAuthStore } from '@/store/authStore';
-import { useNotification } from '@/contexts/NotificationContext';
+import { apiClient } from '../lib/api';
+import { useAuthStore } from '../store/authStore';
+import { useNotification } from '../contexts/NotificationContext';
 
 export const settingsKeys = {
   all: ['settings'] as const,

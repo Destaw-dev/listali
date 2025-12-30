@@ -3,11 +3,10 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { X, Bell, Smartphone, Mail } from 'lucide-react';
-import { Card, CardBody } from '@/components/common/Card';
-import { Button } from '@/components/common/Button';
-import { useNotification } from '@/contexts/NotificationContext';
+import { Card, CardBody, Button } from '../common';
+import { useNotification } from '../../contexts/NotificationContext';
 import { Toggle } from '../common/Toggle';
-import { useModalScrollLock } from '@/hooks/useModalScrollLock';
+import { useModalScrollLock } from '../../hooks/useModalScrollLock';
 
 interface NotificationModalProps {
   isOpen: boolean;

@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { KashrutModel } from '../models/kashrut';
-import { IApiResponse, IKashrut } from '@/types';
-import { errorResponse, successResponse } from '@/middleware/handlers';
+import { IApiResponse, IKashrut } from '../types';
+import { errorResponse, successResponse } from '../middleware/handlers';
 
 export const getAllKashrut = async (_: Request, res: Response<IApiResponse<IKashrut[] | null>>) => {
   try {

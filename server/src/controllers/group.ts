@@ -5,8 +5,8 @@ import User from '../models/user';
 import { AppError, validationErrorResponse, successResponse, errorResponse } from '../middleware/handlers';
 import { IApiResponse, IGroupMember, IGroup, IBasePendingInvite, IGroupStatistics } from '../types';
 import { nanoid } from 'nanoid';
-import { sendGroupInviteEmail } from '@/utils/email';
-import { getIO, emitToGroupExcept } from '@/socket/socketHandler';
+import { sendGroupInviteEmail } from '../utils/email';
+import { getIO, emitToGroupExcept } from '../socket/socketHandler';
 
 export const getUserGroups = async (req: express.Request, res: express.Response<IApiResponse<IGroup[] | null>>) => {
   const groups = await Group.findByUser(req.userId!);

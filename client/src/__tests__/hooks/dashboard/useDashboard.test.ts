@@ -2,14 +2,14 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useDashboard } from '@/hooks/useDashboard';
-import { apiClient } from '@/lib/api';
-import { useAuthStore } from '@/store/authStore';
+import { useDashboard } from '../../../hooks/useDashboard';
+import { apiClient } from '../../../lib/api';
+import { useAuthStore } from '../../../store/authStore';
 import { mockDashboardData } from '../../mocks/mockData';
 
 // Mock dependencies
-vi.mock('@/lib/api');
-vi.mock('@/store/authStore');
+vi.mock('../../../lib/api');
+vi.mock('../../../store/authStore');
 
 const createWrapper = () => {
   const queryClient = new QueryClient({

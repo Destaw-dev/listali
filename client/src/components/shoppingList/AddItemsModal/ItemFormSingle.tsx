@@ -3,15 +3,15 @@ import { useTranslations } from 'next-intl';
 import { Trash2, AlertCircle, GitMerge } from 'lucide-react';
 import { QuantityStepper } from './QuantityStepper';
 import { UnitChips } from './UnitChips';
-import { Button, Dropdown, DropdownOption, Input, TextArea, Badge } from '@/components/common';
+import { Button, Dropdown, DropdownOption, Input, TextArea, Badge } from '../../common';
 import type { 
   UseFormRegister, 
   UseFormWatch, 
   UseFormSetValue, 
   FieldErrors,
 } from 'react-hook-form';
-import type { ICategory, IItem, ItemInput, IProduct, IManualProduct } from '@/types';
-import { getProductUnits } from '@/lib/utils';
+import type { ICategory, IItem, ItemInput, IProduct, IManualProduct } from '../../../types';
+import { getProductUnits } from '../../../lib/utils';
 
 type ItemsFormData = {
   items: ItemInput[];

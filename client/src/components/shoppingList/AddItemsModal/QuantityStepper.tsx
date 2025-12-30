@@ -1,8 +1,7 @@
 import React from 'react';
 import { Minus, Plus } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/common/Button';
-import { Input } from '@/components/common/Input';
+import { cn } from '../../../lib/utils';
+import { Button, Input } from '../../common';
 
 interface QuantityStepperProps {
   value: number;

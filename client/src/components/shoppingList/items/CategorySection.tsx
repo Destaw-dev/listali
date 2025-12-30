@@ -2,10 +2,10 @@
 
 import { memo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { cn } from "@/lib/utils";
+import { cn } from "../../../lib/utils";
 import { ChevronDown, ChevronUp, ShoppingBag } from "lucide-react";
 import { ShoppingItemCard } from "./ShoppingItemCard";
-import { IItem } from "@/types";
+import { IItem } from "../../../types";
 
 interface CategorySectionProps {
   title: string;

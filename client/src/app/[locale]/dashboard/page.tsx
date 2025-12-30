@@ -4,14 +4,12 @@ import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useParams } from 'next/navigation';
 import { Users, ShoppingCart, Plus, TrendingUp, Bell, Sparkles, Activity, Target, Award } from 'lucide-react';
-import { useAuthRedirect } from '@/hooks/useAuthRedirect';
-import { useAuthStore } from '@/store/authStore';
-import { useDashboard } from '@/hooks/useDashboard';
-import { Card, CardHeader, CardBody } from '@/components/common/Card';
-import { Button } from '@/components/common/Button';
-import { Badge } from '@/components/common/Badge';
-import { ArrowIcon } from '@/components/common/Arrow';
-import { IAchievement } from '@/types';
+import { useAuthRedirect } from '../../../hooks/useAuthRedirect';
+import { useAuthStore } from '../../../store/authStore';
+import { useDashboard } from '../../../hooks/useDashboard';
+import { Card, CardHeader, CardBody, Button, Badge } from '../../../components/common';
+import { ArrowIcon } from '../../../components/common/Arrow';
+import { IAchievement } from '../../../types';
 
 export default function DashboardPage() {
   const router = useRouter();

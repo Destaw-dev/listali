@@ -2,9 +2,9 @@
 
 import { memo, useState } from "react";
 import { Package, X } from "lucide-react";
-import { Button } from "@/components/common";
-import { useModalScrollLock } from "@/hooks/useModalScrollLock";
-import { IItem } from "@/types";
+import { Button } from "../../common";
+import { useModalScrollLock } from "../../../hooks/useModalScrollLock";
+import { IItem } from "../../../types";
 
 interface ProductDetailsModalProps {
   item: IItem | null;

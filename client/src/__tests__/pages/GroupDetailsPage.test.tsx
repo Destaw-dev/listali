@@ -1,21 +1,21 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen } from '@testing-library/react';
-import { renderWithProviders, createMockMutationResult } from '@/test/test-utils';
-import GroupDetailsPage from '@/app/[locale]/groups/[groupId]/page';
-import { useGroup, useInviteToGroup } from '@/hooks/useGroups';
-import { useGroupShoppingLists, useCreateShoppingList } from '@/hooks/useShoppingLists';
+import { renderWithProviders, createMockMutationResult } from '../../test/test-utils';
+import GroupDetailsPage from '../../app/[locale]/groups/[groupId]/page';
+import { useGroup, useInviteToGroup } from '../../hooks/useGroups';
+import { useGroupShoppingLists, useCreateShoppingList } from '../../hooks/useShoppingLists';
 import { mockGroups, mockShoppingLists } from '../mocks/mockData';
-import { IShoppingList } from '@/types';
+import { IShoppingList } from '../../types';
 
-vi.mock('@/hooks/useGroups');
-vi.mock('@/hooks/useShoppingLists');
-vi.mock('@/hooks/useAuthRedirect', () => ({
+vi.mock('../../hooks/useGroups');
+vi.mock('../../hooks/useShoppingLists');
+vi.mock('../../hooks/useAuthRedirect', () => ({
   useAuthRedirect: () => ({
     isAuthenticated: true,
     isInitialized: true,
   }),
 }));
-vi.mock('@/store/authStore', () => ({
+vi.mock('../../store/authStore', () => ({
   useAuthStore: () => ({
     user: { _id: 'user1' },
   }),
@@ -31,13 +31,13 @@ vi.mock('next/navigation', () => ({
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
 }));
-vi.mock('@/components/groups/InviteModal', () => ({
+vi.mock('../../components/groups/InviteModal', () => ({
   InviteModal: ({ isOpen }: { isOpen: boolean }) => isOpen ? <div>InviteModal</div> : null,
 }));
-vi.mock('@/components/chat/ChatComponent', () => ({
+vi.mock('../../components/chat/ChatComponent', () => ({
   ChatComponent: () => <div>ChatComponent</div>,
 }));
-vi.mock('@/components/shoppingList/CreateShoppingListModal', () => ({
+vi.mock('../../components/shoppingList/CreateShoppingListModal', () => ({
   default: ({ isOpen }: { isOpen: boolean }) => isOpen ? <div>CreateShoppingListModal</div> : null,
 }));
 

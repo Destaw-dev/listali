@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen } from '@testing-library/react';
-import { renderWithProviders } from '@/test/test-utils';
-import WelcomePage from '@/app/[locale]/welcome/page';
-import { useAuthStore } from '@/store/authStore';
+import { renderWithProviders } from '../../test/test-utils';
+import WelcomePage from '../../app/[locale]/welcome/page';
+import { useAuthStore } from '../../store/authStore';
 import { mockUser } from '../mocks/mockData';
 
 // Mock dependencies
-vi.mock('@/store/authStore');
+vi.mock('../../store/authStore');
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
     push: vi.fn(),
@@ -16,7 +16,7 @@ vi.mock('next/navigation', () => ({
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
 }));
-vi.mock('@/i18n/navigation', () => ({
+vi.mock('../../i18n/navigation', () => ({
   Link: ({ children, href }: { children: React.ReactNode; href: string }) => <a href={href}>{children}</a>,
 }));
 

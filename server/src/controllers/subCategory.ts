@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { SubCategory } from '../models/subCategory';
-import { IApiResponse, ISubCategory } from '@/types';
-import { errorResponse, successResponse } from '@/middleware/handlers';
+import { IApiResponse, ISubCategory } from '../types';
+import { errorResponse, successResponse } from '../middleware/handlers';
 import mongoose from 'mongoose';
 
 export const getAllSubCategories = async (_: Request, res: Response<IApiResponse<ISubCategory[] | null>>) => {

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen } from '@testing-library/react';
-import { ChatComponent } from '@/components/chat/ChatComponent';
-import { renderWithProviders } from '@/test/test-utils';
+import { ChatComponent } from '../../../components/chat/ChatComponent';
+import { renderWithProviders } from '../../../test/test-utils';
 import { mockUser } from '../../mocks/mockData';
 
 const mockMessages = [
@@ -53,7 +53,7 @@ const mockUseAuthStore = vi.fn(() => ({
   },
 }));
 
-vi.mock('@/store/authStore', () => ({
+vi.mock('../../../store/authStore', () => ({
   useAuthStore: () => mockUseAuthStore(),
 }));
 
@@ -78,7 +78,7 @@ const mockUseUnreadInfo = vi.fn(() => ({
   isLoading: false,
 }));
 
-vi.mock('@/hooks/useChat', () => ({
+vi.mock('../../../hooks/useChat', () => ({
   useGroupMessages: () => mockUseGroupMessages(),
   useSendMessage: () => mockUseSendMessage(),
   useEditMessage: vi.fn(() => ({
@@ -99,7 +99,7 @@ vi.mock('@/hooks/useChat', () => ({
   useUnreadInfo: () => mockUseUnreadInfo(),
 }));
 
-vi.mock('@/components/chat/SystemMessage', () => ({
+vi.mock('../../../components/chat/SystemMessage', () => ({
   SystemMessage: ({ message }: { message: { content: string } }) => <div>System: {message.content}</div>,
 }));
 

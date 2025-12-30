@@ -17,18 +17,16 @@ import {
   useGroupShoppingLists,
   useCreateShoppingList,
   useDeleteShoppingList,
-} from "@/hooks/useShoppingLists";
-import { useGroup } from "@/hooks/useGroups";
-import { LoadingSpinner } from "@/components/common/LoadingSpinner";
-import { Card, CardBody } from "@/components/common/Card";
-import { Button } from "@/components/common/Button";
-import { Input } from "@/components/common/Input";
-import CreateShoppingListModal from "@/components/shoppingList/CreateShoppingListModal";
-import { useAuthRedirect } from "@/hooks/useAuthRedirect";
-import { MetricCard } from "@/components/common/MetricCard";
-import { FilterDropdownMenu, ActiveFilterBadges } from "@/components/groups/FilterDropdownMenuList";
-import { ShoppingListsDisplay } from "@/components/groups/ShoppingListsDisplay";
-import { IShoppingList, ICreateListFormData } from "@/types";
+} from "../../hooks/useShoppingLists";
+import { useGroup } from "../../hooks/useGroups";
+import { LoadingSpinner } from "../../components/common/LoadingSpinner";
+import { Card, CardBody, Input, Button } from "../../components/common";
+import CreateShoppingListModal from "../../components/shoppingList/CreateShoppingListModal";
+import { useAuthRedirect } from "../../hooks/useAuthRedirect";
+import { MetricCard } from "../../components/common/MetricCard";
+import { FilterDropdownMenu, ActiveFilterBadges } from "../../components/groups/FilterDropdownMenuList";
+import { ShoppingListsDisplay } from "../../components/groups/ShoppingListsDisplay";
+import { IShoppingList, ICreateListFormData } from "../../types";
 
 
 export function GroupShoppingLists() {

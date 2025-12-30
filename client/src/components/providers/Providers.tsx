@@ -2,9 +2,9 @@
 
 import { QueryProvider } from './QueryProvider';
 import { Toaster } from 'react-hot-toast';
-import { AuthBootstrapProvider } from '@/components/auth/AuthBootstrapProvider';
+import { AuthBootstrapProvider } from '../auth/AuthBootstrapProvider';
 import { ThemeProvider } from './ThemeProvider';
-import { NotificationProvider } from '@/contexts/NotificationContext';
+import { NotificationProvider } from '../../contexts/NotificationContext';
 
 interface ProvidersProps {
   children: React.ReactNode;

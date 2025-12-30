@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api';
-import { useNotification } from '@/contexts/NotificationContext';
-import { IShoppingSessionData, IShoppingSession } from '@/types';
+import { apiClient } from '../lib/api';
+import { useNotification } from '../contexts/NotificationContext';
+import { IShoppingSessionData, IShoppingSession } from '../types';
 
 interface ShoppingListData {
   statistics?: {

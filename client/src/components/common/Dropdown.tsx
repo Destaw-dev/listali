@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, ReactNode, RefObject, useCallback } from "react";
-import { cn } from "@/lib/utils";
+import { cn } from "../../lib/utils";
 import { ChevronDown } from "lucide-react";
 
 export interface DropdownOption {
@@ -9,7 +9,7 @@ export interface DropdownOption {
   label: string;
   icon?: ReactNode;
   disabled?: boolean;
-  divider?: boolean; 
+  divider?: boolean;
   isSelected?: boolean; 
 }
 

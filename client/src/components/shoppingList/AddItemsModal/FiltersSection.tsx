@@ -1,8 +1,8 @@
 import React, { memo, useMemo, useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { Search, X, Filter } from 'lucide-react';
-import { Button, Input, Dropdown, DropdownOption, Badge } from '@/components/common';
-import { ICategory, ISubCategory } from '@/types';
+import { Button, Input, Dropdown, DropdownOption, Badge } from '../../common';
+import { ICategory, ISubCategory } from '../../../types';
 
 interface ActiveFilter {
   type: string;

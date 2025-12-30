@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useAuthStore } from '@/store/authStore';
-import { apiClient } from '@/lib/api';
-import websocketService from '@/services/websocket';
+import { useAuthStore } from '../../store/authStore';
+import { apiClient } from '../../lib/api';
+import websocketService from '../../services/websocket';
 
 interface AuthInitializerProps {
   locale: string;

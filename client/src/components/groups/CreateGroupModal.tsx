@@ -5,9 +5,9 @@ import { useTranslations } from 'next-intl';
 import { X, Users, Group } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useModalScrollLock } from '@/hooks/useModalScrollLock';
+import { useModalScrollLock } from '../../hooks/useModalScrollLock';
 import { Button, Input, TextArea } from '../common';
-import { createGroupSchema } from '@/lib/schemas';
+import { createGroupSchema } from '../../lib/schemas';
 
 type CreateGroupFormData = {
   name: string;

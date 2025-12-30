@@ -1,8 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api';
-import { useNotification } from '@/contexts/NotificationContext';
-import { useAuthStore } from '@/store/authStore';
-import { IShoppingList } from '@/types';
+import { apiClient } from '../lib/api';
+import { useNotification } from '../contexts/NotificationContext';
+import { useAuthStore } from '../store/authStore';
+import { IShoppingList } from '../types';
 
 export const shoppingListKeys = {
   all: ['shoppingLists'] as const,

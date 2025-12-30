@@ -2,14 +2,15 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useShoppingListData } from '@/hooks/useShoppingListData';
-import { apiClient } from '@/lib/api';
-import { useAuthStore } from '@/store/authStore';
+import { AxiosResponse } from 'axios';
+import { useShoppingListData } from '../../../hooks/useShoppingListData';
+import { apiClient } from '../../../lib/api';
+import { useAuthStore } from '../../../store/authStore';
 import { mockShoppingLists, mockItems } from '../../mocks/mockData';
 
 // Mock dependencies
-vi.mock('@/lib/api');
-vi.mock('@/store/authStore');
+vi.mock('../../../lib/api');
+vi.mock('../../../store/authStore');
 
 const createWrapper = () => {
   const queryClient = new QueryClient({
@@ -50,9 +51,9 @@ describe('useShoppingListData Hook', () => {
       data: {
         data: mockData,
       },
-    } as ReturnType<typeof useAuthStore>);
+    } as AxiosResponse);
 
-    const { result } = renderHook(() => useShoppingListData('list1', 'group1'), {
+    const { result } = renderHook(() => useShoppingListData('list1'), {
       wrapper: createWrapper(),
     });
 
@@ -72,7 +73,7 @@ describe('useShoppingListData Hook', () => {
       accessToken: null,
     } as ReturnType<typeof useAuthStore>);
 
-    const { result } = renderHook(() => useShoppingListData('list1', 'group1'), {
+    const { result } = renderHook(() => useShoppingListData('list1'), {
       wrapper: createWrapper(),
     });
 
@@ -84,7 +85,7 @@ describe('useShoppingListData Hook', () => {
   it('should handle errors gracefully', async () => {
     vi.mocked(apiClient.get).mockRejectedValue(new Error('Failed to fetch'));
 
-    const { result } = renderHook(() => useShoppingListData('list1', 'group1'), {
+    const { result } = renderHook(() => useShoppingListData('list1'), {
       wrapper: createWrapper(),
     });
 

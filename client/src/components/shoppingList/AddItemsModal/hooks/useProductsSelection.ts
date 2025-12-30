@@ -1,13 +1,13 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { useAvailableCategories, useSubCategoriesByCategory } from '@/hooks/useItems';
+import { useAvailableCategories, useSubCategoriesByCategory } from '../../../../hooks/useItems';
 import {
   useInfiniteAllProducts,
   useInfiniteSearchProducts,
   useInfiniteProductsByCategory,
-} from '@/hooks/useProducts';
-import { useDebounce } from '@/hooks/useDebounce';
-import { IProduct, ICategory, ISubCategory } from '@/types';
+} from '../../../../hooks/useProducts';
+import { useDebounce } from '../../../../hooks/useDebounce';
+import { IProduct, ICategory, ISubCategory } from '../../../../types';
 
 let lastFetchTime = 0;
 const MIN_FETCH_INTERVAL = 300;

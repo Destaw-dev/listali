@@ -3,9 +3,9 @@
 import { useLocale, useTranslations } from 'next-intl';
 import { usePathname } from 'next/navigation';
 import { Globe } from 'lucide-react';
-import { Locale, locales } from '@/i18n/config';
-import { useUpdatePreferences } from '@/hooks/useSettings';
-import { useThemeStore } from '@/store/themeStore';
+import { Locale, locales } from '../../i18n/config';
+import { useUpdatePreferences } from '../../hooks/useSettings';
+import { useThemeStore } from '../../store/themeStore';
 import { Button } from './Button';
 
 export default function LanguageSwitcher() {

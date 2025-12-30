@@ -1,8 +1,8 @@
 "use client";
 import { useQuery } from '@tanstack/react-query';
-import { ApiClient } from '@/lib/api';
-import { useAuthStore } from '@/store/authStore';
-import { IShoppingList, IItem, IShoppingSessionData } from '@/types';
+import { ApiClient } from '../lib/api';
+import { useAuthStore } from '../store/authStore';
+import { IShoppingList, IItem, IShoppingSessionData } from '../types';
 
 interface ShoppingListData {
   shoppingList: IShoppingList | null;

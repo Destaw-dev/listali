@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { renderWithProviders, createMockMutationResult } from '@/test/test-utils';
-import InvitationsPage from '@/app/[locale]/invitations/page';
-import { useInvitations, useAcceptInvitation, useDeclineInvitation } from '@/hooks/useInvitations';
+import { renderWithProviders, createMockMutationResult } from '../../test/test-utils';
+import InvitationsPage from '../../app/[locale]/invitations/page';
+import { useInvitations, useAcceptInvitation, useDeclineInvitation } from '../../hooks/useInvitations';
 
 const mockInvitations = [
   {
@@ -28,8 +28,8 @@ const mockInvitations = [
 ];
 
 // Mock dependencies
-vi.mock('@/hooks/useInvitations');
-vi.mock('@/hooks/useAuthRedirect', () => ({
+vi.mock('../../hooks/useInvitations');
+vi.mock('../../hooks/useAuthRedirect', () => ({
   useAuthRedirect: () => ({
     isAuthenticated: true,
     isInitialized: true,

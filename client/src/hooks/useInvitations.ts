@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api';
-import { useNotification } from '@/contexts/NotificationContext';
-import { useAuthStore } from '@/store/authStore';
+import { apiClient } from '../lib/api';
+import { useNotification } from '../contexts/NotificationContext';
+import { useAuthStore } from '../store/authStore';
 
 export const invitationKeys = {
   all: ['invitations'] as const,

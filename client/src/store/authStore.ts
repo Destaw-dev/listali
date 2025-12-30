@@ -1,8 +1,8 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { persist } from 'zustand/middleware';
-import type { User } from '@/types';
-import { apiClient } from '@/lib/api';
+import type { User } from '../types';
+import { apiClient } from '../lib/api';
 
 interface AuthStore {
   user: User | null;

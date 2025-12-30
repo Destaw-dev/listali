@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { Toggle } from '@/components/common/Toggle';
+import { Toggle } from '../../../components/common/Toggle';
 
 describe('Toggle Component', () => {
   it('should render toggle', () => {

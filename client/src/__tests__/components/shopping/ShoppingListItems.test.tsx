@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { ShoppingListItems } from '@/components/shoppingList/ShoppingListItems';
+import { ShoppingListItems } from '../../../components/shoppingList/ShoppingListItems';
 import { mockItems, mockCategories } from '../../mocks/mockData';
-import { IItem } from '@/types';
+import { IItem } from '../../../types';
 
 interface CategoryGroup {
   categoryId: string;
@@ -14,7 +14,7 @@ interface CategoryGroup {
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
 }));
-vi.mock('@/hooks/useItems', () => ({
+vi.mock('../../../hooks/useItems', () => ({
   usePurchaseItem: vi.fn(() => ({
     mutateAsync: vi.fn(),
     isPending: false,
@@ -41,7 +41,7 @@ vi.mock('@/hooks/useItems', () => ({
     error: null,
   })),
 }));
-vi.mock('@/components/shoppingList/items/CategorySection', () => ({
+vi.mock('../../../components/shoppingList/items/CategorySection', () => ({
   CategorySection: ({ title, groups }: { title: string; groups: CategoryGroup[] }) => (
     <div>
       <h3>{title}</h3>
@@ -55,13 +55,13 @@ vi.mock('@/components/shoppingList/items/CategorySection', () => ({
     </div>
   ),
 }));
-vi.mock('@/components/shoppingList/items/PurchaseQuantityModal', () => ({
+vi.mock('../../../components/shoppingList/items/PurchaseQuantityModal', () => ({
   PurchaseQuantityModal: () => null,
 }));
-vi.mock('@/components/shoppingList/items/ProductDetailsModal', () => ({
+vi.mock('../../../components/shoppingList/items/ProductDetailsModal', () => ({
   ProductDetailsModal: () => null,
 }));
-vi.mock('@/components/shoppingList/items/EditItemModal', () => ({
+vi.mock('../../../components/shoppingList/items/EditItemModal', () => ({
   EditItemModal: () => null,
 }));
 

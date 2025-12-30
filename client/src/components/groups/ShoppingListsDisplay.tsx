@@ -12,10 +12,9 @@ import {
   AlertTriangle,
   Plus,
 } from "lucide-react";
-import { Button } from "../common/Button";
+import { Button, Badge } from "../common";
 import { useTranslations } from "next-intl";
-import { Badge } from "../common/Badge";
-import { IShoppingList, IGroup, getCreatedByFullName } from "@/types";
+import { IShoppingList, IGroup, getCreatedByFullName } from "../../types";
 
 interface ShoppingListsDisplayProps {
   filteredLists: IShoppingList[] | undefined;

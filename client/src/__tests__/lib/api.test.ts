@@ -27,7 +27,7 @@ vi.mock('axios', () => {
   };
 });
 
-vi.mock('@/store/authStore', () => ({
+vi.mock('../../store/authStore', () => ({
   useAuthStore: {
     getState: () => ({
       accessToken: 'test-token',
@@ -42,7 +42,7 @@ vi.mock('@/store/authStore', () => ({
 }));
 
 // Import after mocks
-import { apiClient } from '@/lib/api';
+import { apiClient } from '../../lib/api';
 
 describe('API Client', () => {
   beforeEach(() => {

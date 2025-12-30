@@ -1,13 +1,13 @@
 "use client";
 
 import { io, Socket } from "socket.io-client";
-import { useAuthStore } from "@/store/authStore";
+import { useAuthStore } from "../store/authStore";
 import type { 
   IWebSocketEvents, 
   IItem, 
   IUserSimple, 
   IChatMessage,
-} from '@/types';
+} from '../types';
 
 export type WebSocketEvents = IWebSocketEvents;
 export type Item = IItem;

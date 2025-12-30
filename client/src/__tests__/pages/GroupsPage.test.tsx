@@ -1,13 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { renderWithProviders, createMockMutationResult } from '@/test/test-utils';
-import GroupsPage from '@/app/[locale]/groups/page';
-import { useGroups, useCreateGroup, useJoinGroup } from '@/hooks/useGroups';
+import { renderWithProviders, createMockMutationResult } from '../../test/test-utils';
+import GroupsPage from '../../app/[locale]/groups/page';
+import { useGroups, useCreateGroup, useJoinGroup } from '../../hooks/useGroups';
 import { mockGroups } from '../mocks/mockData';
 
-vi.mock('@/hooks/useGroups');
-vi.mock('@/hooks/useAuthRedirect', () => ({
+vi.mock('../../hooks/useGroups');
+vi.mock('../../hooks/useAuthRedirect', () => ({
   useAuthRedirect: () => ({
     isAuthenticated: true,
     isInitialized: true,

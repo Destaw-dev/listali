@@ -1,14 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { CreateGroupModal } from '@/components/groups/CreateGroupModal';
-import { renderWithProviders } from '@/test/test-utils';
+import { CreateGroupModal } from '../../../components/groups/CreateGroupModal';
+import { renderWithProviders } from '../../../test/test-utils';
 
 // Mock dependencies
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
 }));
-vi.mock('@/hooks/useModalScrollLock', () => ({
+vi.mock('../../../hooks/useModalScrollLock', () => ({
   useModalScrollLock: vi.fn(),
 }));
 

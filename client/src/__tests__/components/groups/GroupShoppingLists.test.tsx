@@ -1,16 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { GroupShoppingLists } from '@/components/groups/GroupShoppingLists';
-import { renderWithProviders, createMockMutationResult } from '@/test/test-utils';
-import { useGroup } from '@/hooks/useGroups';
-import { useGroupShoppingLists, useCreateShoppingList, useDeleteShoppingList } from '@/hooks/useShoppingLists';
+import { GroupShoppingLists } from '../../../components/groups/GroupShoppingLists';
+import { renderWithProviders, createMockMutationResult } from '../../../test/test-utils';
+import { useGroup } from '../../../hooks/useGroups';
+import { useGroupShoppingLists, useCreateShoppingList, useDeleteShoppingList } from '../../../hooks/useShoppingLists';
 import { mockGroups, mockShoppingLists } from '../../mocks/mockData';
 
 // Mock dependencies
-vi.mock('@/hooks/useGroups');
-vi.mock('@/hooks/useShoppingLists');
-vi.mock('@/hooks/useAuthRedirect', () => ({
+vi.mock('../../../hooks/useGroups');
+vi.mock('../../../hooks/useShoppingLists');
+vi.mock('../../../hooks/useAuthRedirect', () => ({
   useAuthRedirect: () => ({
     isAuthenticated: true,
     isInitialized: true,
@@ -25,7 +25,7 @@ vi.mock('next/navigation', () => ({
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
 }));
-vi.mock('@/components/shoppingList/CreateShoppingListModal', () => ({
+vi.mock('../../../components/shoppingList/CreateShoppingListModal', () => ({
   default: ({ isOpen }: { isOpen: boolean }) => isOpen ? <div>CreateShoppingListModal</div> : null,
 }));
 

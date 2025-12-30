@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { Navigation } from '@/components/layout/Navigation';
-import { useAuthStore } from '@/store/authStore';
+import { Navigation } from '../../../components/layout/Navigation';
+import { useAuthStore } from '../../../store/authStore';
 import { mockUser } from '../../mocks/mockData';
 
 // Mock dependencies
-vi.mock('@/store/authStore');
+vi.mock('../../../store/authStore');
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
     push: vi.fn(),
@@ -16,12 +16,12 @@ vi.mock('next/navigation', () => ({
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
 }));
-vi.mock('@/hooks/useSettings', () => ({
+vi.mock('../../../hooks/useSettings', () => ({
   useLogout: () => ({
     mutate: vi.fn(),
   }),
 }));
-vi.mock('@/components/common/LanguageSwitcher', () => ({
+vi.mock('../../../components/common/LanguageSwitcher', () => ({
   default: () => <div>LanguageSwitcher</div>,
 }));
 vi.mock('next/image', () => ({
@@ -92,7 +92,7 @@ describe('Navigation Component', () => {
     window.confirm = vi.fn(() => true);
 
     // Re-mock useSettings with the mockMutate
-    vi.doMock('@/hooks/useSettings', () => ({
+    vi.doMock('../../../hooks/useSettings', () => ({
       useLogout: () => ({
         mutate: mockMutate,
       }),

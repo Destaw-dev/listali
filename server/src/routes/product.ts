@@ -13,7 +13,7 @@ import {
   getBySearchByNameHebrew,
   getProductById
 } from '../controllers/product';
-import { authenticateToken } from '@/middleware/auth';
+import { authenticateToken } from '../middleware/auth';
 
 const router = Router();
 

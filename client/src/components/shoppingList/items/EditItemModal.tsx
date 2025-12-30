@@ -5,16 +5,13 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
 import { X } from "lucide-react";
-import { Button } from "@/components/common/Button";
-import { Input } from "@/components/common/Input";
-import { TextArea } from "@/components/common";
-import { Dropdown } from "@/components/common/Dropdown";
-import { useModalScrollLock } from "@/hooks/useModalScrollLock";
-import { useAvailableCategories } from "@/hooks/useItems";
-import { itemSchema } from "@/lib/schemas";
+import { Button, Input, TextArea, Dropdown } from "../../common";
+import { useModalScrollLock } from "../../../hooks/useModalScrollLock";
+import { useAvailableCategories } from "../../../hooks/useItems";
+import { itemSchema } from "../../../lib/schemas";
 import { z } from "zod";
 
-import { IItem, ICategory } from "@/types";
+import { IItem, ICategory } from "../../../types";
 
 interface EditItemModalProps {
   item: IItem | null;

@@ -6,8 +6,8 @@ import { X, UserPlus, Mail, Bell } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button, Dropdown, Input } from '../common';
-import { useModalScrollLock } from '@/hooks/useModalScrollLock';
-import { createInviteSchema } from '@/lib/schemas';
+import { useModalScrollLock } from '../../hooks/useModalScrollLock';
+import { createInviteSchema } from '../../lib/schemas';
 
 type InviteFormData = {
   email: string;

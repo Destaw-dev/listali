@@ -1,7 +1,6 @@
 import React, { useMemo } from 'react';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/common/Button';
-import { normalizeUnit, unitLabels } from '@/lib/utils';
+import { cn, normalizeUnit, unitLabels } from '../../../lib/utils';
+import { Button } from '../../common';
 
 interface UnitChipsProps {
   value: string;

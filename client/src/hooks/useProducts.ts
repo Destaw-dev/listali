@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api';
-import { IProduct } from '@/types';
+import { apiClient } from '../lib/api';
+import { IProduct } from '../types';
 
 interface PaginatedResponse<T> {
   data?: T[];

@@ -3,14 +3,12 @@
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { X, User } from "lucide-react";
-import { Card, CardBody, CardHeader } from "@/components/common/Card";
-import { Button } from "@/components/common/Button";
-import { Input } from "@/components/common/Input";
+import { Card, CardBody, CardHeader, Button, Input } from "../common";
 import { z } from "zod";
-import { NotificationType, useNotification } from "@/contexts/NotificationContext";
-import { useModalScrollLock } from "@/hooks/useModalScrollLock";
-import { createProfileSchema } from "@/lib/schemas";
-import { IUser } from "@/types";
+import { NotificationType, useNotification } from "../../contexts/NotificationContext";
+import { useModalScrollLock } from "../../hooks/useModalScrollLock";
+import { createProfileSchema } from "../../lib/schemas";
+import { IUser } from "../../types";
 
 interface EditProfileModalProps {
   isOpen: boolean;

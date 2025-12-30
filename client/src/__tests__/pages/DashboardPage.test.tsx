@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
 import React from 'react';
-import { renderWithProviders, createMockQueryResult } from '@/test/test-utils';
-import DashboardPage from '@/app/[locale]/dashboard/page';
-import { useAuthStore } from '@/store/authStore';
-import { useDashboard } from '@/hooks/useDashboard';
+import { renderWithProviders, createMockQueryResult } from '../../test/test-utils';
+import DashboardPage from '../../app/[locale]/dashboard/page';
+import { useAuthStore } from '../../store/authStore';
+import { useDashboard } from '../../hooks/useDashboard';
 import { mockUser } from '../mocks/mockData';
 
 interface DashboardData {
@@ -46,14 +46,14 @@ interface DashboardData {
 }
 
 // Mock dependencies
-vi.mock('@/store/authStore');
-vi.mock('@/hooks/useDashboard');
+vi.mock('../../store/authStore');
+vi.mock('../../hooks/useDashboard');
 const mockUseAuthRedirect = vi.fn(() => ({
   isAuthenticated: true,
   isInitialized: true,
 }));
 
-vi.mock('@/hooks/useAuthRedirect', () => ({
+vi.mock('../../hooks/useAuthRedirect', () => ({
   useAuthRedirect: () => mockUseAuthRedirect(),
 }));
 vi.mock('next/navigation', () => ({
@@ -183,7 +183,7 @@ describe('DashboardPage', () => {
       })
     );
 
-    vi.mock('@/hooks/useAuthRedirect', () => ({
+    vi.mock('../../hooks/useAuthRedirect', () => ({
       useAuthRedirect: () => ({
         isAuthenticated: false,
         isInitialized: false,

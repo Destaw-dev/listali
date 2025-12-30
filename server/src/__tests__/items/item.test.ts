@@ -17,7 +17,6 @@ import {
 
 describe('Item API Endpoints', () => {
   let token: string;
-let userId: string;
 let groupId: string;
 let shoppingListId: string;
 let itemId: string;
@@ -26,8 +25,7 @@ beforeAll(async () => {
   await connectDB();
   const userRes = await createUserAndAuth();
   token = userRes.token;
-  userId = userRes.userId;
-  const groupRes = await createGroupWithList(token, userId);
+  const groupRes = await createGroupWithList(token);
   groupId = groupRes.groupId;
   shoppingListId = groupRes.shoppingListId;
   await Item.syncIndexes();
@@ -198,8 +196,6 @@ afterAll(async () => {
 
 describe('Item API - Sad Flow', () => {
   let token: string;
-  let userId: string;
-  let groupId: string;
   let listId: string;
   let itemId: string;
 
@@ -208,10 +204,8 @@ describe('Item API - Sad Flow', () => {
     await Item.syncIndexes();
     const auth = await createUserAndAuth();
     token = auth.token;
-    userId = auth.userId;
 
-    const group = await createGroupWithList(token, userId);
-    groupId = group.groupId;
+    const group = await createGroupWithList(token);
     listId = group.shoppingListId;
 
     const res = await request(app)

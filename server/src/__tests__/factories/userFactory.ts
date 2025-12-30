@@ -27,14 +27,10 @@
 import request from 'supertest';
 import { app } from '../../app';
 import User from '../../models/user';
-import Group from '../../models/group';
-import ShoppingList from '../../models/shoppingList';
 import { faker } from '@faker-js/faker';
 import mongoose from 'mongoose';
 
-// מחזיר: { userId, token (accessToken) }
 export const createUserAndAuth = async () => {
-  // Generate unique email and username for each call
   const uniqueId = faker.string.alphanumeric(8);
   const userData = {
     firstName: faker.person.firstName(),
@@ -80,9 +76,7 @@ export const createUserAndAuth = async () => {
   return { userId: loggedInUser._id.toString(), token };
 };
 
-// מחזיר: { groupId, shoppingListId }
-export const createGroupWithList = async (token: string, userId: string) => {
-  // צור קבוצה
+export const createGroupWithList = async (token: string) => {
   const groupRes = await request(app)
     .post('/api/groups')
     .set('Authorization', `Bearer ${token}`)
@@ -90,7 +84,6 @@ export const createGroupWithList = async (token: string, userId: string) => {
 
   const groupId = groupRes.body.data._id;
 
-  // צור רשימת קניות
   const listRes = await request(app)
     .post(`/api/shopping-lists/groups/${groupId}`)
     .set('Authorization', `Bearer ${token}`)

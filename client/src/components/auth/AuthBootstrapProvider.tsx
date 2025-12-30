@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useAuthStore } from '@/store/authStore';
-import { LoadingSpinner } from '@/components/common/LoadingSpinner';
-import websocketService from '@/services/websocket';
+import { useAuthStore } from '../../store/authStore';
+import { LoadingSpinner } from '../../components/common/LoadingSpinner';
+import websocketService from '../../services/websocket';
 
 interface AuthBootstrapProviderProps {
   children: React.ReactNode;

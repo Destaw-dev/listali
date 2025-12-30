@@ -1,4 +1,4 @@
-import { IUser, IGroup, IItem, IProduct, ICategory, IShoppingList, IChatMessage } from '@/types';
+import { IUser, IGroup, IItem, IProduct, ICategory, IShoppingList, IChatMessage } from '../../types';
 
 // Mock Users
 export const mockUser: IUser = {

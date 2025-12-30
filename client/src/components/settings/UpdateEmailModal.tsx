@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { z } from 'zod';
 import { X, Mail } from 'lucide-react';
-import { Button, Card, CardHeader, CardBody, Input } from '@/components/common';
-import { useUpdateEmail } from '@/hooks/useSettings';
-import { useModalScrollLock } from '@/hooks/useModalScrollLock';
-import { createEmailSchema } from '@/lib/schemas';
+import { Button, Card, CardHeader, CardBody, Input } from '../common';
+import { useUpdateEmail } from '../../hooks/useSettings';
+import { useModalScrollLock } from '../../hooks/useModalScrollLock';
+import { createEmailSchema } from '../../lib/schemas';
 
 interface UpdateEmailModalProps {
   isOpen: boolean;

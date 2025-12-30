@@ -2,10 +2,10 @@
 
 import { memo, useEffect, useState } from "react";
 import { Minus, Plus } from "lucide-react";
-import { Button } from "@/components/common/Button";
-import { useModalScrollLock } from "@/hooks/useModalScrollLock";
+import { Button } from "../../common";
+import { useModalScrollLock } from "../../../hooks/useModalScrollLock";
 
-import { IItem } from "@/types";
+import { IItem } from "../../../types";
 
 interface PurchaseQuantityModalProps {
   item: IItem | null;

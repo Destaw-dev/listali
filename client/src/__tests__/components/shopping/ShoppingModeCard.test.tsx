@@ -1,13 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen } from '@testing-library/react';
-import { ShoppingModeCard } from '@/components/shoppingList/ShoppingModeCard';
-import { renderWithProviders } from '@/test/test-utils';
+import { ShoppingModeCard } from '../../../components/shoppingList/ShoppingModeCard';
+import { renderWithProviders } from '../../../test/test-utils';
 
 // Mock dependencies
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
 }));
-vi.mock('@/hooks/useShoppingModeQueries', () => ({
+vi.mock('../../../hooks/useShoppingModeQueries', () => ({
   useStartShopping: vi.fn(() => ({
     mutateAsync: vi.fn().mockResolvedValue({}),
     isPending: false,

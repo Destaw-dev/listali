@@ -1,17 +1,17 @@
 "use client";
 
-import { Button } from "@/components/common/Button";
+import { Button } from "../common";
 import {
   usePauseShopping,
   useResumeShopping,
   useStartShopping,
   useStopShopping,
-} from "@/hooks/useShoppingModeQueries";
-import { useAuthStore } from "@/store/authStore";
+} from "../../hooks/useShoppingModeQueries";
+import { useAuthStore } from "../../store/authStore";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useMemo } from "react";
-import { IShoppingSessionData } from "@/types";
+import { IShoppingSessionData } from "../../types";
 
 interface ShoppingModeCardProps {
   listId: string;

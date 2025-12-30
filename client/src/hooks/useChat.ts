@@ -1,10 +1,10 @@
 import { useEffect, useCallback, useRef } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api';
-import websocketService from '@/services/websocket';
-import { useAuthStore } from '@/store/authStore';
-import { useNotification } from '@/contexts/NotificationContext';
-import { IChatMessage } from '@/types';
+import { apiClient } from '../lib/api';
+import websocketService from '../services/websocket';
+import { useAuthStore } from '../store/authStore';
+import { useNotification } from '../contexts/NotificationContext';
+import { IChatMessage } from '../types';
 
 
 export type MessageType = 'text' | 'image' | 'system' | 'item_update' | 'list_update';

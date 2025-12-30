@@ -8,12 +8,12 @@ import React, {
 } from "react";
 import { useTranslations } from "next-intl";
 import { Package, X } from "lucide-react";
-import { useAvailableCategories } from "@/hooks/useItems";
-import { useModalScrollLock } from "@/hooks/useModalScrollLock";
+import { useAvailableCategories } from "../../hooks/useItems";
+import { useModalScrollLock } from "../../hooks/useModalScrollLock";
 import { ProductsSelectionView } from "./AddItemsModal/ProductsSelectionView";
 import { SelectedItemsSidebar } from "./AddItemsModal/SelectedItemsSidebar";
 import { Button } from "../common";
-import { IProduct, IItem, IManualProduct } from "@/types";
+import { IProduct, IItem, IManualProduct } from "../../types";
 
 type SingleItemFormData = {
   name: string;

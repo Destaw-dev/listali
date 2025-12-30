@@ -5,9 +5,9 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
 import { X, Calendar } from 'lucide-react';
-import { useModalScrollLock } from '@/hooks/useModalScrollLock';
+import { useModalScrollLock } from '../../hooks/useModalScrollLock';
 import { Button, Dropdown, Input, TextArea } from '../common';
-import { createListSchema } from '@/lib/schemas';
+import { createListSchema } from '../../lib/schemas';
 
 type CreateListFormData = {
   name: string;

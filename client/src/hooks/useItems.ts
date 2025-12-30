@@ -1,10 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
-import { apiClient } from '@/lib/api';
-import { useNotification } from '@/contexts/NotificationContext';
+import { apiClient } from '../lib/api';
+import { useNotification } from '../contexts/NotificationContext';
 import { shoppingListKeys } from './useShoppingLists';
-import { useAuthStore } from '@/store/authStore';
-import { ICreateMultipleItemsInput, IItem, ISubCategory, IShoppingList, IShoppingSession } from '@/types';
+import { useAuthStore } from '../store/authStore';
+import { ICreateMultipleItemsInput, IItem, ISubCategory, IShoppingList, IShoppingSession } from '../types';
 
 interface ShoppingListFullData {
   shoppingList?: IShoppingList;

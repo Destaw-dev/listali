@@ -6,10 +6,7 @@ import mongoose from 'mongoose';
 import User from '../../models/user';
 import Group from '../../models/group';
 import {
-  getAuthResponse,
   getAccessToken,
-  getUserFromAuth,
-  getUserData,
   getGroupData,
   getGroupsArray,
   getGroupMembersArray,
@@ -18,9 +15,7 @@ import {
 
 let mongoServer: MongoMemoryServer;
 let token: string;
-let userId: string;
 let groupId: string;
-let inviteCode: string;
 
 const userData = {
   firstName: 'test',
@@ -47,8 +42,6 @@ beforeAll(async () => {
     .send({ email: userData.email, password: userData.password });
 
   token = getAccessToken(res);
-  const user = getUserFromAuth(res);
-  userId = user.id || user._id?.toString() || '';
 
   const groupRes = await request(app)
     .post('/api/groups')
@@ -138,7 +131,6 @@ describe('👥 Group API', () => {
     const user = await User.findOne({ email: 'second@example.com' });
     const invitation = user?.pendingInvitations.find(inv => inv.group.toString() === groupId);
     expect(invitation).toBeDefined();
-    inviteCode = invitation!.code;
   });
 
   test('POST /api/auth/invitations/accept → should accept invitation and join group', async () => {
@@ -200,7 +192,7 @@ describe('👥 Group API', () => {
 
   test('PUT /api/groups/:groupId/members/:userId/role → should update user role in group', async () => {
     // First register the user
-    const newUserRes = await request(app).post('/api/auth/register').send({
+    await request(app).post('/api/auth/register').send({
       firstName: 'Change',
       lastName: 'Role',
       username: 'changerole',
@@ -208,20 +200,17 @@ describe('👥 Group API', () => {
       password: 'Password123'
     });
 
-    // Verify email for testing
     const newUser = await User.findOne({ email: 'changerole@example.com' });
     if (newUser) {
       newUser.isEmailVerified = true;
       await newUser.save();
     }
 
-    // Now invite the user (after they're registered)
     await request(app)
       .post(`/api/groups/${groupId}/invite`)
       .set('Authorization', `Bearer ${token}`)
       .send({ email: 'changerole@example.com' });
 
-    // Refresh user to get the invitation
     const updatedUser = await User.findOne({ email: 'changerole@example.com' });
     const newUserInvitation = updatedUser?.pendingInvitations.find(inv => inv.group.toString() === groupId);
     if (!newUserInvitation) {
@@ -242,7 +231,6 @@ describe('👥 Group API', () => {
       throw new Error(`Failed to accept invitation: ${acceptRes.body.message || acceptRes.status}`);
     }
     
-    // Verify the user was added to the group - refresh the group from DB
     const groupAfterAccept = await Group.findById(groupId);
     if (!groupAfterAccept) {
       throw new Error('Group not found after accepting invitation');
@@ -336,17 +324,13 @@ describe('👥 Group API', () => {
       .post(`/api/groups/${groupId}/leave`)
       .set('Authorization', `Bearer ${secondToken}`);
 
-    // Owner can only leave if they're the only member
     if (isOwner && groupBefore?.members.length === 1) {
       expect(res.status).toBe(200);
-      const group = await Group.findById(groupId);
       const body = getResponseData<{ message: string }>(res);
       expect(body.data?.message || body.message).toMatch(/Successfully left group/i);
     } else if (isOwner && groupBefore && groupBefore.members.length > 1) {
-      // If there are other members, owner cannot leave
       expect(res.status).toBe(400);
     } else {
-      // Non-owner can always leave
       expect(res.status).toBe(200);
     }
   });

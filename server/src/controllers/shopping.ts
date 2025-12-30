@@ -5,7 +5,7 @@ import Item from '../models/item';
 import { AppError } from '../middleware/handlers';
 import { getIO, emitToGroupExcept } from '../socket/socketHandler';
 import { Types } from 'mongoose';
-import { IGroup, IGroupMember } from '@/types';
+import { IGroup, IGroupMember } from '../types';
 
 export const startShopping = async (req: Request, res: Response) => {
   try {

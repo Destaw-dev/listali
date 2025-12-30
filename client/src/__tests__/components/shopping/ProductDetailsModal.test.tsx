@@ -1,11 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { ProductDetailsModal } from '@/components/shoppingList/items/ProductDetailsModal';
-import { mockItems } from '../../mocks/mockData';
+import { ProductDetailsModal } from '../../../components/shoppingList/items/ProductDetailsModal';
+import { mockItems, mockProduct } from '../../mocks/mockData';
+import type { IItem } from '@/types';
 
 // Mock dependencies
-vi.mock('@/hooks/useModalScrollLock', () => ({
+vi.mock('../../../hooks/useModalScrollLock', () => ({
   useModalScrollLock: vi.fn(),
 }));
 
@@ -84,8 +85,8 @@ describe('ProductDetailsModal', () => {
     const itemWithBrand = { 
       ...mockItems[0], 
       brand: 'Test Brand',
-      product: { ...mockItems[0].product, brand: 'Test Brand' },
-    };
+      product: { ...mockProduct, brand: 'Test Brand' },
+    } as IItem & { product: typeof mockProduct };
     
     render(
       <ProductDetailsModal

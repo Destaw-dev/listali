@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/store/authStore';
-import { apiClient } from '@/lib/api';
-import { LoadingSpinner } from '@/components/common/LoadingSpinner';
-import { useNotification } from '@/contexts/NotificationContext';
+import { useAuthStore } from '../../store/authStore';
+import { apiClient } from '../../lib/api';
+import { LoadingSpinner } from '../../components/common/LoadingSpinner';
+import { useNotification } from '../../contexts/NotificationContext';
 import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { mapInviteErrorToTranslationKey } from '@/lib/utils';
+import { mapInviteErrorToTranslationKey } from '../../lib/utils';
 import { Button } from '../common';
 
 export function GoogleCallbackHandler() {

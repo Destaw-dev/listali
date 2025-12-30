@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useAuthStore } from '@/store/authStore';
+import { useAuthStore } from '../store/authStore';
 
 interface UseAuthRedirectOptions {
   redirectTo?: string;

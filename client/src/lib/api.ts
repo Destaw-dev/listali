@@ -1,6 +1,6 @@
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
-import { IRegisterRequest } from '@/types';
-import { useAuthStore } from '@/store/authStore';
+import { IRegisterRequest } from '../types';
+import { useAuthStore } from '../store/authStore';
 
 export class ApiClient {
   private baseURL: string;

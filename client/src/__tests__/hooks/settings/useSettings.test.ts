@@ -10,15 +10,15 @@ import {
   useUpdateEmail,
   useUpdatePreferences,
   useUpdateNotificationSettings,
-} from '@/hooks/useSettings';
-import { apiClient } from '@/lib/api';
-import { useAuthStore } from '@/store/authStore';
+} from '../../../hooks/useSettings';
+import { apiClient } from '../../../lib/api';
+import { useAuthStore } from '../../../store/authStore';
 import { mockUser } from '../../mocks/mockData';
 
 // Mock dependencies
-vi.mock('@/lib/api');
-vi.mock('@/store/authStore');
-vi.mock('@/contexts/NotificationContext', () => ({
+vi.mock('../../../lib/api');
+vi.mock('../../../store/authStore');
+vi.mock('../../../contexts/NotificationContext', () => ({
   useNotification: () => ({
     showSuccess: vi.fn(),
     handleApiError: vi.fn(),

@@ -1,14 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { CategorySection } from '@/components/shoppingList/items/CategorySection';
+import { CategorySection } from '../../../components/shoppingList/items/CategorySection';
 import { mockItems } from '../../mocks/mockData';
 
 // Mock dependencies
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
 }));
-vi.mock('@/components/shoppingList/items/ShoppingItemCard', () => ({
+vi.mock('../../../components/shoppingList/items/ShoppingItemCard', () => ({
   ShoppingItemCard: ({ item }: { item: { name: string } }) => <div>{item.name}</div>,
 }));
 

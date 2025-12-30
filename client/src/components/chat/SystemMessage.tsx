@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslations } from 'next-intl';
-import { Link as IntlLink } from '@/i18n/navigation';
+import { Link as IntlLink } from '../../i18n/navigation';
 
 interface SystemMessageProps {
   message: {

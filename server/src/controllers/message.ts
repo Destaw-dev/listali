@@ -5,7 +5,7 @@ import Group from '../models/group';
 import { io } from '../app';
 import { AppError, validationErrorResponse, successResponse } from '../middleware/handlers';
 import { IApiResponse, IGroupMember, PopulatedSender, IGroup, IMessage, PopulatedMessage, PopulatedMessageWithGroup, IReadStatus, IBaseMessage, IMessageStatistic } from '../types';
-import { errorResponse } from '@/middleware/handlers';
+import { errorResponse } from '../middleware/handlers';
 
 export const getMessages = async (req: express.Request, res: express.Response<IApiResponse<{ messages: IMessage[]; hasMore: boolean } | null | void>>) => {
   const errors = validationResult(req);

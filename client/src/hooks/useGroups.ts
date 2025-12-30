@@ -1,10 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
-import { apiClient } from '@/lib/api';
-import { useNotification } from '@/contexts/NotificationContext';
-import websocketService from '@/services/websocket';
-import { IGroup, IGroupMember, IWebSocketEvents } from '@/types';
-import { useAuthStore } from '@/store/authStore';
+import { apiClient } from '../lib/api';
+import { useNotification } from '../contexts/NotificationContext';
+import websocketService from '../services/websocket';
+import { IGroup, IGroupMember, IWebSocketEvents } from '../types';
+import { useAuthStore } from '../store/authStore';
 import { AxiosError } from 'axios';
 
 export const groupKeys = {

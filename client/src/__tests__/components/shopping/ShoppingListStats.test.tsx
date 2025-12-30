@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { ShoppingListStats } from '@/components/shoppingList/ShoppingListStats';
+import { ShoppingListStats } from '../../../components/shoppingList/ShoppingListStats';
 
 // Mock dependencies
 vi.mock('next-intl', () => ({

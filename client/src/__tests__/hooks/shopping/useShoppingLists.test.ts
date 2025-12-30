@@ -8,15 +8,15 @@ import {
   useCreateShoppingList,
   useUpdateShoppingList,
   useDeleteShoppingList,
-} from '@/hooks/useShoppingLists';
-import { apiClient } from '@/lib/api';
-import { useAuthStore } from '@/store/authStore';
+} from '../../../hooks/useShoppingLists';
+import { apiClient } from '../../../lib/api';
+import { useAuthStore } from '../../../store/authStore';
 import { mockShoppingLists } from '../../mocks/mockData';
 
 // Mock dependencies
-vi.mock('@/lib/api');
-vi.mock('@/store/authStore');
-vi.mock('@/contexts/NotificationContext', () => ({
+vi.mock('../../../lib/api');
+vi.mock('../../../store/authStore');
+vi.mock('../../../contexts/NotificationContext', () => ({
   useNotification: () => ({
     showSuccess: vi.fn(),
     handleApiError: vi.fn(),
