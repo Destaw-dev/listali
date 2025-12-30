@@ -5,13 +5,13 @@
     "ecmaVersion": 2022,
     "sourceType": "module",
     "project": "./tsconfig.json",
-    "tsconfigRootDir": "./server"
+    "tsconfigRootDir": "." 
   },
-  "plugins": ["@typescript-eslint"],
   "extends": [
     "eslint:recommended",
     "plugin:@typescript-eslint/recommended"
   ],
+  "plugins": ["@typescript-eslint"],
   "env": {
     "node": true,
     "es2022": true,
