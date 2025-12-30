@@ -1,87 +1,61 @@
-# dependencies
-node_modules
-server/node_modules/
-server/node_modules/.cache/
+# =========================
+# Node / Package managers
+# =========================
+node_modules/
+**/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# =========================
+# Build outputs
+# =========================
+dist/
+build/
+out/
+coverage/
+
+# =========================
+# Next.js
+# =========================
+.next/
+**/.next/
+
+# =========================
+# Cache
+# =========================
+.cache/
+**/.cache/
 server/node_modules/.cache/mongodb-memory-server/
 
-client/node_modules/
-client/node_modules/.cache/
-client/node_modules/.cache/next/
-client/node_modules/.cache/next/cache/
-client/node_modules/.cache/next/cache/development/
-client/node_modules/.cache/next/cache/production/
-client/node_modules/.cache/next/cache/test/
-client/node_modules/.cache/next/cache/development/
-client/node_modules/.cache/next/cache/production/
-client/node_modules/.cache/next/cache/test/
-# logs
-logs
+# =========================
+# Logs
+# =========================
+logs/
 *.log
 
-# misc
-.DS_Store
+# =========================
+# Environment variables
+# =========================
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*
+!.env.example
 
-# vercel
-.vercel
+# =========================
+# OS / Editor
+# =========================
+.DS_Store
+.idea/
+.vscode/
 
-# typescript
+# =========================
+# TypeScript
+# =========================
 *.tsbuildinfo
 next-env.d.ts
 
-# testing
-coverage
-jest.config.js
-tsconfig.json
-tsconfig.node.json
-tsconfig.app.json
-tsconfig.spec.json
-tsconfig.eslint.json
-tsconfig.json
-tsconfig.node.json
-tsconfig.app.json
-tsconfig.spec.json
-tsconfig.eslint.json
-
-shared/node_modules/
-shared/node_modules/.cache/
-shared/node_modules/.cache/typescript/
-shared/node_modules/.cache/typescript/5.8.3/
-shared/node_modules/.cache/typescript/5.8.3/diagnostics
-shared/node_modules/.cache/typescript/5.8.3/diagnostics/
-shared/node_modules/.cache/typescript/5.8.3/diagnostics/errors
-shared/node_modules/.cache/typescript/5.8.3/diagnostics/errors/
-shared/node_modules/.cache/typescript/5.8.3/diagnostics/errors/errors.json
-shared/node_modules/.cache/typescript/5.8.3/diagnostics/errors/errors.json
-
-# eslint
-eslint.config.mjs
-eslint.config.js
-eslint.config.cjs
-eslint.config.cts
-eslint.config.mts
-eslint.config.cts
-
-# next
-next.config.ts
-next.config.js
-next.config.cjs
-next.config.cts
-next.config.mts
-next.config.cts
-
-# tsconfig
-tsconfig.json
-tsconfig.node.json
-tsconfig.app.json
-tsconfig.spec.json
-tsconfig.eslint.json
-tsconfig.json
-tsconfig.node.json
-tsconfig.app.json
-tsconfig.spec.json
-tsconfig.eslint.json
+# =========================
+# Testing
+# =========================
+coverage/

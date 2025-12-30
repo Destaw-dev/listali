@@ -11,7 +11,7 @@ import type {
   FieldErrors,
 } from 'react-hook-form';
 import type { ICategory, IItem, ItemInput, IProduct, IManualProduct } from '../../../types';
-import { getProductUnits } from '../../../lib/utils';
+import { getProductUnits, hasIsManualProduct } from '../../../lib/utils';
 
 type ItemsFormData = {
   items: ItemInput[];
@@ -50,7 +50,9 @@ export const ItemFormSingle = memo(({
   const quantity = watch(`items.${index}.quantity`);
   const unit = watch(`items.${index}.unit`);
   const categoryValue = watch(`items.${index}.category`);
-  const isManual = item?.isManual || (typeof item?.product === 'object' && item?.product !== null && 'isManual' in item.product && (item.product as IManualProduct).isManual === true);
+  const isManual =
+  !!item?.isManual ||
+  (hasIsManualProduct(item?.product));
 
   const categoryOptions: DropdownOption[] = useMemo(() => {
     const options: DropdownOption[] = [

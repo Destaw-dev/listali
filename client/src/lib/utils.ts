@@ -1,8 +1,15 @@
+import { IManualProduct, IProduct } from '@/types';
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
+}
+
+export function hasIsManualProduct(
+  product: IProduct | IManualProduct | string | undefined
+): product is IManualProduct {
+  return typeof product === 'object' && product !== null && 'isManual' in product && (product as IManualProduct).isManual === true;
 }
 
 
