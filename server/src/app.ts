@@ -34,7 +34,7 @@ dotenv.config();
 
 const io = new Server(server, {
   cors: {
-    origin: ['https://www.listali.co.il', 'http://localhost:3000'],
+    origin: [ process.env.CLIENT_URL || 'http://localhost:3000'],
     methods: ["GET", "POST"],
     credentials: true
   }
@@ -60,7 +60,7 @@ app.use(helmet({
 }));
 
 app.use(cors({
-  origin: ['https://www.listali.co.il', 'http://localhost:3000'],
+  origin: [ process.env.CLIENT_URL || 'http://localhost:3000'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'x-client', 'x-refresh-token', 'x-session-id'],
@@ -81,6 +81,7 @@ app.get('/health', (req, res) => {
   });
 });
 
+app.get("/health", (req, res) => res.status(200).send("OK"));
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/groups', authenticateToken, groupRoutes);
