@@ -1,7 +1,9 @@
 {
     "extends": "./tsconfig.json",
     "compilerOptions": {
-      "types": ["node"]
+      "types": ["node"],
+      "module": "CommonJS",
+      "moduleResolution": "node"
     },
     "exclude": ["src/**/*.test.ts", "src/**/*.spec.ts", "**/__tests__/**", "test/**"]
   }

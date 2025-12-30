@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "Backend server for Smart Group Shopping app",
   "main": "dist/server.js",
-  "type": "module",
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "start": "node dist/server.js",
