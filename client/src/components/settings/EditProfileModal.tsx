@@ -3,17 +3,19 @@
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { X, User } from "lucide-react";
-import { Card, CardBody } from "@/components/common/Card";
+import { Card, CardBody, CardHeader } from "@/components/common/Card";
 import { Button } from "@/components/common/Button";
 import { Input } from "@/components/common/Input";
 import { z } from "zod";
 import { NotificationType, useNotification } from "@/contexts/NotificationContext";
 import { useModalScrollLock } from "@/hooks/useModalScrollLock";
+import { createProfileSchema } from "@/lib/schemas";
+import { IUser } from "@/types";
 
 interface EditProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
-  user: any;
+  user: IUser;
   onSave: (data: {
     firstName: string;
     lastName: string;
@@ -22,25 +24,6 @@ interface EditProfileModalProps {
   isLoading?: boolean;
 }
 
-const profileSchema = z.object({
-  firstName: z
-    .string()
-    .min(2, "firstNameMinLength")
-    .max(50, "firstNameMaxLength")
-    .regex(/^[a-zA-Z\u0590-\u05FF\s]+$/, "firstNameInvalid"),
-  lastName: z
-    .string()
-    .min(2, "lastNameMinLength")
-    .max(50, "lastNameMaxLength")
-    .regex(/^[a-zA-Z\u0590-\u05FF\s]+$/, "lastNameInvalid"),
-  username: z
-    .string()
-    .min(3, "usernameMinLength")
-    .max(30, "usernameMaxLength")
-    .regex(/^[a-zA-Z0-9_\u0590-\u05FF]+$/, "usernameInvalid"),
-});
-
-type ProfileFormData = z.infer<typeof profileSchema>;
 
 export default function EditProfileModal({
   isOpen,
@@ -50,7 +33,9 @@ export default function EditProfileModal({
   isLoading,
 }: EditProfileModalProps) {
   const t = useTranslations("settings");
-  const [formData, setFormData] = useState<ProfileFormData>({
+  const profileSchema = createProfileSchema(t);
+  type ProfileInput = z.infer<typeof profileSchema>;
+  const [formData, setFormData] = useState<ProfileInput>({
     firstName: "",
     lastName: "",
     username: "",
@@ -70,12 +55,10 @@ export default function EditProfileModal({
     }
   }, [isOpen, user]);
 
-  const validateField = (field: keyof ProfileFormData, value: string) => {
+  const validateField = (field: keyof ProfileInput, value: string) => {
     try {
-      // Create a partial object with just this field for validation
       const dataToValidate = { [field]: value };
       
-      // Use the full schema but only validate the specific field
       const fieldSchema = profileSchema.pick({ [field]: true });
       fieldSchema.parse(dataToValidate);
       
@@ -86,8 +69,7 @@ export default function EditProfileModal({
         const zodError = error as z.ZodError;
         const errors = zodError.issues || [];
         
-        // Look for errors that match our field
-        const fieldError = errors.find((e: any) =>
+        const fieldError = errors.find((e: z.ZodIssue) =>
           e.path && e.path.length > 0 && e.path[0] === field
         );
         
@@ -114,10 +96,9 @@ export default function EditProfileModal({
       if (error instanceof z.ZodError) {
         const newErrors: Record<string, string> = {};
         const errors = error.issues || [];
-        errors.forEach((err: any) => {
+        errors.forEach((err: z.ZodIssue) => {
           if (err.path && err.path.length > 0) {
             const field = err.path[0] as string;
-            // Handle default Zod messages that aren't in our translations
             const messageKey = err.message.startsWith('Invalid input') ? 'validationError' : err.message;
             newErrors[field] = t(messageKey, { message: err.message });
           }
@@ -148,7 +129,7 @@ export default function EditProfileModal({
       onClose();
   };
 
-  const handleInputChange = (field: keyof ProfileFormData, value: string) => {
+  const handleInputChange = (field: keyof ProfileInput, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     validateField(field, value);
   };
@@ -159,7 +140,6 @@ export default function EditProfileModal({
     }
   };
 
-  // Prevent body scroll when modal is open
   useModalScrollLock(isOpen);
 
   if (!isOpen) return null;
@@ -172,29 +152,23 @@ export default function EditProfileModal({
       <Card
         className="bg-surface shadow-2xl max-w-md w-full animate-in slide-in-from-bottom-4"
       >
-        <CardBody className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl">
-                <User className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-primary">
-                  {t("editProfile")}
-                </h2>
-                <p className="text-text-muted text-sm">
-                  {t("editProfileDescription")}
-                </p>
-              </div>
+        <CardHeader className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-primaryT-500 rounded-full">
+              <User className="w-5 h-5" />
             </div>
-            <button
-              onClick={onClose}
-              className="p-2 text-text-muted hover:text-text-primary transition-colors rounded-lg hover:bg-white/50"
-            >
-              <X className="w-5 h-5" />
-            </button>
+            <div>
+              <h2 className="text-xl font-bold text-primary">
+                {t("editProfile")}
+              </h2>
+              <p className="text-text-muted text-sm">
+                {t("editProfileDescription")}
+              </p>
+            </div>
           </div>
-
+            <Button variant="ghost" size="xs" icon={<X className="w-4 h-4" />} onClick={onClose} rounded={true}/>
+        </CardHeader>
+        <CardBody className="p-6">
           <form
             onSubmit={handleSubmit}
             className="space-y-4"

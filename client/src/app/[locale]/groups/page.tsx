@@ -20,10 +20,10 @@ import {
   CardFooter,
 } from "@/components/common/Card";
 import { Button } from "@/components/common/Button";
-import { Badge } from "@/components/common/Badge";
 import { Input } from "@/components/common/Input";
 import { useGroups, useCreateGroup, useJoinGroup } from "@/hooks/useGroups";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
+import { IGroup, IGroupMember } from "@/types";
 
 export default function GroupsPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -48,21 +48,13 @@ export default function GroupsPage() {
     name: string;
     description?: string;
   }) => {
-    try {
-      await createGroupMutation.mutateAsync(groupData);
-      setShowCreateModal(false);
-    } catch (error) {
-      // Error is handled by the mutation
-    }
+    await createGroupMutation.mutateAsync(groupData);
+    setShowCreateModal(false);
   };
 
   const handleJoinGroup = async (inviteCode: string) => {
-    try {
-      await joinGroupMutation.mutateAsync(inviteCode);
-      setShowJoinModal(false);
-    } catch (error) {
-      // Error is handled by the mutation
-    }
+    await joinGroupMutation.mutateAsync(inviteCode);
+    setShowJoinModal(false);
   };
 
   const navigateToGroup = (groupId: string) => {
@@ -74,7 +66,7 @@ export default function GroupsPage() {
   };
 
   const filteredGroups = groups.filter(
-    (group: any) =>
+    (group: IGroup) =>
       group.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       group.description?.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -227,7 +219,7 @@ export default function GroupsPage() {
                   : "space-y-4"
               }
             >
-              {filteredGroups.map((group: any) => (
+              {filteredGroups.map((group: IGroup) => (
                 <Card
                   key={group._id}
                   hover
@@ -246,11 +238,11 @@ export default function GroupsPage() {
                           <h3 className="text-base md:text-lg font-bold line-clamp-1">
                             {group.name}
                           </h3>
-                          {group.role === "owner" && (
+                          {/* {group.role === "owner" && (
                             <Badge variant="success" size="sm">
                               {t("owner")}
                             </Badge>
-                          )}
+                          )} */}
                         </div>
 
                         {group.description && (
@@ -269,7 +261,7 @@ export default function GroupsPage() {
                     <div className="flex -space-x-2 space-x-reverse overflow-hidden">
                       {group.members
                         ?.slice(0, 3)
-                        .map((member: any, i: number) => (
+                        .map((member: IGroupMember, i: number) => (
                           <div
                             key={i}
                             className="h-6 w-6 rounded-full ring-2 ring-accentT-50 bg-card flex items-center justify-center text-[10px] text-text-muted font-medium"
@@ -290,17 +282,17 @@ export default function GroupsPage() {
                   </CardFooter>
                 </Card>
               ))}
-
-              <button
+              <Button
                 type="button"
+                variant="dashed"
+                size='xl'
                 onClick={() => setShowCreateModal(true)}
-                className="border-2 border-dashed border-gray-300 rounded-xl p-6 flex flex-col items-center justify-center text-gray-400 hover:border-primary-400 hover:text-primary-500 hover:bg-gray-50 transition-all"
               >
                 <div className="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center mb-3">
-                  <Plus className="h-6 w-6" />
+                  <Plus className="h-6 w-6 text-muted" />
                 </div>
-                <span className="text-sm font-medium">{t("createGroup")}</span>
-              </button>
+                <span className="text-sm font-medium text-muted">{t("createGroup")}</span>
+              </Button>
             </div>
           )}
         </div>

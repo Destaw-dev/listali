@@ -1,20 +1,19 @@
-// controllers/groupController.ts
 import express from 'express';
 import { validationResult } from 'express-validator';
 import Group from '../models/group';
 import User from '../models/user';
-import { AppError, validationErrorResponse, successResponse, errorResponse } from '../middleware/errorHandler';
-import { IApiResponse, IGroupMember,  } from '../types';
+import { AppError, validationErrorResponse, successResponse, errorResponse } from '../middleware/handlers';
+import { IApiResponse, IGroupMember, IGroup, IBasePendingInvite, IGroupStatistics } from '../types';
 import { nanoid } from 'nanoid';
 import { sendGroupInviteEmail } from '@/utils/email';
 import { getIO, emitToGroupExcept } from '@/socket/socketHandler';
 
-export const getUserGroups = async (req: express.Request, res: express.Response<IApiResponse>) => {
+export const getUserGroups = async (req: express.Request, res: express.Response<IApiResponse<IGroup[] | null>>) => {
   const groups = await Group.findByUser(req.userId!);
   res.status(200).json(successResponse(groups, 'Groups retrieved successfully'));
 };
 
-export const createGroup = async (req: express.Request, res: express.Response<IApiResponse>) => {
+export const createGroup = async (req: express.Request, res: express.Response<IApiResponse<IGroup | null | void>>) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     res.status(400).json(validationErrorResponse(errors.array()));
@@ -52,7 +51,7 @@ export const createGroup = async (req: express.Request, res: express.Response<IA
   res.status(201).json(successResponse(populatedGroup, 'Group created successfully'));
 };
 
-export const getGroupById = async (req: express.Request, res: express.Response<IApiResponse>) => {
+export const getGroupById = async (req: express.Request, res: express.Response<IApiResponse<IGroup | null>>) => {
   const group = await Group.findById(req.params.groupId)
     .populate('members.user', 'username firstName lastName avatar lastSeen email')
     .populate('owner', 'username firstName lastName avatar')
@@ -74,16 +73,16 @@ export const getGroupById = async (req: express.Request, res: express.Response<I
   res.status(200).json(successResponse(group, 'Group retrieved successfully'));
 };
 
-export const updateGroup = async (req: express.Request, res: express.Response<IApiResponse>) => {
+export const updateGroup = async (req: express.Request, res: express.Response<IApiResponse<IGroup | null | void>>) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     res.status(400).json(validationErrorResponse(errors.array()));
     return;
   }
 
-  const allowedUpdates = ['name', 'description', 'settings', 'avatar'];
+  const allowedUpdates: (keyof IGroup)[] = ['name', 'description', 'avatar', 'settings'];
   const updates = Object.keys(req.body);
-  const isValidOperation = updates.every(update => allowedUpdates.includes(update));
+  const isValidOperation = updates.every((update: string) => allowedUpdates.includes(update as keyof IGroup));
 
   if (!isValidOperation) {
     throw new AppError('Invalid updates', 400);
@@ -94,13 +93,23 @@ export const updateGroup = async (req: express.Request, res: express.Response<IA
     throw new AppError('Group not found', 404);
   }
 
-  updates.forEach(update => {
+  for (const update of updates) {
     if (update === 'settings') {
       group.settings = { ...group.settings, ...req.body.settings };
-    } else {
-      (group as any)[update] = req.body[update];
+    } else if (allowedUpdates.includes(update as keyof IGroup)) {
+      switch (update) {
+        case 'name':
+          group.name = req.body.name;
+          break;
+        case 'description':
+          group.description = req.body.description;
+          break;
+        case 'avatar':
+          group.avatar = req.body.avatar;
+          break;
+      }
     }
-  });
+  }
 
   await group.save();
 
@@ -111,7 +120,7 @@ export const updateGroup = async (req: express.Request, res: express.Response<IA
   res.status(200).json(successResponse(updatedGroup, 'Group updated successfully'));
 };
 
-export const deleteGroup = async (req: express.Request, res: express.Response<IApiResponse>) => {
+export const deleteGroup = async (req: express.Request, res: express.Response<IApiResponse<null>>) => {
   const group = await Group.findById(req.params.groupId);
   if (!group) {
     throw new AppError('Group not found', 404);
@@ -129,7 +138,7 @@ export const deleteGroup = async (req: express.Request, res: express.Response<IA
   res.status(200).json(successResponse(null, 'Group deleted successfully'));
 };
 
-export const joinGroup = async (req: express.Request, res: express.Response<IApiResponse>) => {
+export const joinGroup = async (req: express.Request, res: express.Response<IApiResponse<IGroup | null>>) => {
   const { inviteCode } = req.params;
   const userId = req.userId!;
 
@@ -146,22 +155,18 @@ export const joinGroup = async (req: express.Request, res: express.Response<IApi
     throw new AppError('Invalid or expired invite code', 404);
   }
 
-  // Find the invite by code (no longer user-specific)
   const invite = group.pendingInvites.find(i => i.code === inviteCode);
   if (!invite) {
     throw new AppError('Invalid or expired invite code', 404);
   }
 
-  // Check if user is already a member
   const alreadyMember = group.members.find(m => m.user.toString() === userId);
   if (alreadyMember) {
     throw new AppError('You are already a member of this group', 400);
   }
 
-  // Add user to group
   await group.addMember(userId, invite.role);
 
-  // Remove the invite from pending invites
   group.pendingInvites = group.pendingInvites.filter(i => i.code !== inviteCode);
   await group.save();
 
@@ -175,7 +180,7 @@ export const joinGroup = async (req: express.Request, res: express.Response<IApi
 };
 
 
-export const leaveGroup = async (req: express.Request, res: express.Response<IApiResponse>) => {
+export const leaveGroup = async (req: express.Request, res: express.Response<IApiResponse<null>>) => {
   const groupId = req.params.groupId;
   const userId = req.userId!;
 
@@ -201,11 +206,10 @@ export const leaveGroup = async (req: express.Request, res: express.Response<IAp
   res.status(200).json(successResponse(null, 'Successfully left group'));
 };
 
-export const inviteToGroup = async (req: express.Request, res: express.Response<IApiResponse>) => {
+export const inviteToGroup = async (req: express.Request, res: express.Response<IApiResponse<null | { email: string, type: string, message: string }>>) => {
   const { email, role = 'member' } = req.body;
   const group = req.group;
 
-  // Check if user is already a member
   const existingMember = group?.members.find((member: IGroupMember) => 
     member.user.toString() === req.userId
   );
@@ -213,32 +217,27 @@ export const inviteToGroup = async (req: express.Request, res: express.Response<
     throw new AppError('You must be a member to invite others', 403);
   }
 
-  // Check if user has permission to invite
   if (!existingMember.permissions.canInviteMembers) {
     throw new AppError('You do not have permission to invite members', 403);
   }
 
-  // Find if user is registered
   const user = await User.findOne({ email, isActive: true });
   const inviteCode = nanoid(8);
 
-  // Check if user is already a member of the group
   if (user) {
     const isAlreadyMember = group?.members.find((member: IGroupMember) => 
       member.user.toString() === user._id.toString()
     );
     if (isAlreadyMember) {
-      throw new AppError(`המשתמש ${user.firstName} ${user.lastName} כבר חבר בקבוצה`, 400);
+      throw new AppError(`the user ${user.firstName} ${user.lastName} is already a member of the group`, 400);
     }
   }
 
-  // Check if user already has a pending invite
-  const existingInvite = group?.pendingInvites.find((invite: any) => 
-    invite.email === email || (user && invite.user?.toString() === user._id.toString())
+  const existingInvite = group?.pendingInvites.find((invite: IBasePendingInvite) => 
+    invite.email === email || (user && 'user' in invite && invite.user?.toString() === user._id.toString())
   );
 
   if (existingInvite) {
-    // check if the invite is pending and if the expired send new invite and update the existing invite
     if (existingInvite.status === 'pending' && existingInvite.invitedAt < new Date(Date.now() - 1000 * 60 * 60 * 24)) {
       await group?.updateOne({
         $set: {
@@ -249,15 +248,13 @@ export const inviteToGroup = async (req: express.Request, res: express.Response<
       return res.status(200).json(successResponse(null, 'New invite sent successfully'));
     } else {
       const errorMessage = user 
-        ? `המשתמש ${user.firstName} ${user.lastName} כבר קיבל הזמנה`
-        : `כתובת האימייל ${email} כבר קיבלה הזמנה`;
+        ? `the user ${user.firstName} ${user.lastName} has already received an invitation`
+        : `the email ${email} has already received an invitation`;
       throw new AppError(errorMessage, 400);
     }
   }
 
-  // Send invitation based on user registration status
   if (user) {
-    // User is registered - send in-app notification
     const inviteData = {
       user: user._id,
       code: inviteCode,
@@ -270,7 +267,6 @@ export const inviteToGroup = async (req: express.Request, res: express.Response<
       $push: { pendingInvites: inviteData }
     });
 
-    // Add invitation to user's pendingInvitations
     await User.findByIdAndUpdate(user._id, {
       $push: {
         pendingInvitations: {
@@ -290,10 +286,9 @@ export const inviteToGroup = async (req: express.Request, res: express.Response<
     return res.status(200).json(successResponse({ 
       email, 
       type: 'in-app',
-      message: `הזמנה נשלחה בהצלחה למשתמש ${user.firstName} ${user.lastName}`
+      message: `the invitation has been sent successfully to the user ${user.firstName} ${user.lastName}`
     }));
   } else {
-    // User is not registered - send email
     const inviteData = {
       email,
       code: inviteCode,
@@ -306,18 +301,17 @@ export const inviteToGroup = async (req: express.Request, res: express.Response<
       $push: { pendingInvites: inviteData }
     });
 
-    // Send email invitation
     await sendGroupInviteEmail(email, inviteCode, req.user?.firstName || 'A friend', req.user?.preferences?.language || 'he', true);
 
     return res.status(200).json(successResponse({ 
       email, 
       type: 'email',
-      message: `הזמנה נשלחה בהצלחה לאימייל ${email}`
+      message: `the invitation has been sent successfully to the email ${email}`
     }));
   }
 };
 
-export const removeGroupMember = async (req: express.Request, res: express.Response<IApiResponse>) => {
+export const removeGroupMember = async (req: express.Request, res: express.Response<IApiResponse<null>>) => {
   const { userId } = req.params;
   const group = req.group;
   const removerId = req.userId!;
@@ -328,19 +322,28 @@ export const removeGroupMember = async (req: express.Request, res: express.Respo
   return res.status(200).json(successResponse(null, 'Member removed successfully'));
 };
 
-export const updateMemberRole = async (req: express.Request, res: express.Response<IApiResponse>) => {
+export const updateMemberRole = async (req: express.Request, res: express.Response<IApiResponse<null>>) => {
   const { userId } = req.params;
   const { role } = req.body;
   const group = req.group;
   const updaterId = req.userId!;
 
-  await group?.updateMemberRole(userId!, role, updaterId);
+  if (!group) {
+    throw new AppError('Group not found', 404);
+  }
+
+  // Refresh group from DB to ensure we have the latest members
+  const freshGroup = await Group.findById(group._id);
+  if (!freshGroup) {
+    throw new AppError('Group not found', 404);
+  }
+
+  await freshGroup.updateMemberRole(userId!, role, updaterId);
   
-  // Update real-time notification for the users in the group with socket.io
   const io = getIO();
   if (io) {
-    emitToGroupExcept(io, group?._id.toString() || '', updaterId, 'memberRoleUpdated', {
-      groupId: group?._id.toString(),
+    emitToGroupExcept(io, freshGroup._id.toString(), updaterId, 'memberRoleUpdated', {
+      groupId: freshGroup._id.toString(),
       userId,
       role,
       updaterId
@@ -350,50 +353,45 @@ export const updateMemberRole = async (req: express.Request, res: express.Respon
   return res.status(200).json(successResponse(null, 'Member role updated successfully'));
 };
 
-export const transferOwnership = async (req: express.Request, res: express.Response<IApiResponse>) => {
+export const transferOwnership = async (req: express.Request, res: express.Response<IApiResponse<IGroup | null>>) => {
   try {
     const { newOwnerId } = req.body;
     const group = req.group;
     const currentOwnerId = req.userId!;
 
-    // Validate input
     if (!newOwnerId) {
-      res.status(400).json({ success: false, message: 'מזהה הבעלים החדש נדרש' });
+      res.status(400).json(errorResponse('new owner id is required', 400));
       return;
     }
 
-    // Check if current user is the owner
     const currentOwner = group?.members.find(
       (member: IGroupMember) => member.user.toString() === currentOwnerId && member.role === 'owner'
     );
 
     if (!currentOwner) {
-      res.status(403).json({ success: false, message: 'רק בעלי הקבוצה יכולים להעביר בעלות' });
+      res.status(403).json(errorResponse('only owners can transfer ownership', 403));
       return;
     }
 
-    // Check if new owner exists and is a member
     const newOwner = group?.members.find(
       (member: IGroupMember) => member.user.toString() === newOwnerId
     );
 
     if (!newOwner) {
-      res.status(404).json({ success: false, message: 'המשתמש לא נמצא בקבוצה' });
+      res.status(404).json(errorResponse('user not found in group', 404));
       return;
     }
 
     if (newOwnerId === currentOwnerId) {
-      res.status(400).json({ success: false, message: 'לא ניתן להעביר בעלות לעצמך' });
+      res.status(400).json(errorResponse('cannot transfer ownership to yourself', 400));
       return;
     }
 
-    // Transfer ownership
     await group?.transferOwnership(currentOwnerId, newOwnerId);
 
     const updatedGroup = await Group.findById(group?._id)
       .populate('members.user', 'firstName lastName email');
 
-    // Update real-time notification for the users in the group with socket.io
     const io = getIO();
     if (io) {
       emitToGroupExcept(io, group?._id.toString() || '', currentOwnerId, 'ownershipTransferred', {
@@ -411,7 +409,7 @@ export const transferOwnership = async (req: express.Request, res: express.Respo
   }
 };
 
-export const getGroupMembers = async (req: express.Request, res: express.Response<IApiResponse>) => {
+export const getGroupMembers = async (req: express.Request, res: express.Response<IApiResponse<IGroupMember[] | null>>) => {
   const group = await Group.findById(req.params.groupId)
     .populate('members.user', 'username firstName lastName avatar lastSeen preferences')
     .select('members');
@@ -423,9 +421,7 @@ export const getGroupMembers = async (req: express.Request, res: express.Respons
   res.status(200).json(successResponse(group.members, 'Members retrieved successfully'));
 };
 
-// Removed generateInviteCode function - no longer needed since we use individual invite codes per user
-
-export const getGroupStats = async (req: express.Request, res: express.Response<IApiResponse>) => {
+export const getGroupStats = async (req: express.Request, res: express.Response<IApiResponse<IGroupStatistics | null>>) => {
   const ShoppingList = (await import('../models/shoppingList')).default;
   const id = req.params.groupId
   if(!id){

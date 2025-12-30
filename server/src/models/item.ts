@@ -1,5 +1,14 @@
-import mongoose, { Schema, Model, FilterQuery } from 'mongoose';
-import { IItem, ItemDocument, ItemCategory, ItemUnit } from '../types';
+import mongoose, { Schema, Model, FilterQuery, PipelineStage } from 'mongoose';
+import { 
+  IItem, 
+  ItemDocument, 
+  ItemCategory, 
+  ItemUnit,
+  IFindByShoppingListOptions,
+  IFindByCategoryOptions,
+  IItemQueryOptions,
+  ICategoryStats
+} from '../types';
 
 type ItemModel = Model<IItem> & {
   findByShoppingList(
@@ -13,19 +22,13 @@ type ItemModel = Model<IItem> & {
     }
   ): Promise<ItemDocument[]>;
   getPopularItems(groupId?: string, limit?: number): Promise<ItemDocument[]>;
-  getCategoryStats(shoppingListId?: string): Promise<any[]>;
-  searchItems(searchTerm: string, options?: any): Promise<ItemDocument[]>;
-  findByProduct(productId: string, options?: any): Promise<ItemDocument[]>;
-  findManualItems(shoppingListId?: string, options?: any): Promise<ItemDocument[]>;
-  findProductBasedItems(shoppingListId?: string, options?: any): Promise<ItemDocument[]>;
+  getCategoryStats(shoppingListId?: string): Promise<ICategoryStats[]>;
+  searchItems(searchTerm: string, options?: IItemQueryOptions): Promise<ItemDocument[]>;
+  findByProduct(productId: string, options?: IItemQueryOptions): Promise<ItemDocument[]>;
+  findManualItems(shoppingListId?: string, options?: IItemQueryOptions): Promise<ItemDocument[]>;
+  findProductBasedItems(shoppingListId?: string, options?: IItemQueryOptions): Promise<ItemDocument[]>;
 };
 
-// Predefined categories and units (not currently used, kept for future reference)
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const _CATEGORIES: ItemCategory[] = [
-  'fruits_vegetables', 'meat_fish', 'dairy', 'bakery', 'pantry',
-  'frozen', 'beverages', 'snacks', 'household', 'personal_care', 'other'
-];
 
 const UNITS: ItemUnit[] = [
   'piece', 'kg', 'g', 'lb', 'oz', 'l', 'ml', 'cup', 'tbsp', 'tsp',
@@ -50,6 +53,11 @@ const itemSchema = new Schema<IItem, ItemModel>({
     required: [true, 'Quantity is required'],
     min: [0.01, 'Quantity must be greater than 0'],
     max: [10000, 'Quantity cannot exceed 10,000']
+  },
+  quantityToPurchase: {
+    type: Number,
+    default: 0,
+    min: [0, 'Quantity to purchase cannot be negative']
   },
   unit: {
     type: String,
@@ -98,7 +106,7 @@ const itemSchema = new Schema<IItem, ItemModel>({
   },
   status: {
     type: String,
-    enum: ['pending', 'purchased', 'not_available', 'cancelled'],
+    enum: ['pending', 'purchased', 'partially_purchased', 'not_available', 'cancelled'],
     default: 'pending'
   },
   addedBy: {
@@ -162,7 +170,7 @@ const itemSchema = new Schema<IItem, ItemModel>({
   toObject: { virtuals: true }
 });
 
-// Indexes for performance
+
 itemSchema.index({ shoppingList: 1, status: 1 });
 itemSchema.index({ addedBy: 1 });
 itemSchema.index({ purchasedBy: 1 });
@@ -171,96 +179,94 @@ itemSchema.index({ priority: 1, status: 1 });
 itemSchema.index({ barcode: 1 });
 itemSchema.index({ status: 1, createdAt: -1 });
 itemSchema.index({ name: 'text', description: 'text' });
-// New indexes for product relationship
+
 itemSchema.index({ product: 1 });
 itemSchema.index({ isManualEntry: 1 });
 
-// Virtual for total estimated cost
 itemSchema.virtual('totalEstimatedCost').get(function() {
   return this.estimatedPrice ? this.estimatedPrice * this.quantity : 0;
 });
 
-// Virtual for total actual cost
 itemSchema.virtual('totalActualCost').get(function() {
   return this.actualPrice ? this.actualPrice * this.quantity : 0;
 });
 
-// Virtual for cost difference
 itemSchema.virtual('costDifference').get(function() {
   if (!this.estimatedPrice || !this.actualPrice) return 0;
   return (this.actualPrice - this.estimatedPrice) * this.quantity;
 });
 
-// Virtual for is purchased (fully purchased)
 itemSchema.virtual('isPurchased').get(function() {
   const purchasedQty = this.purchasedQuantity || 0;
   return purchasedQty >= this.quantity && this.quantity > 0;
 });
 
-// Virtual for is partially purchased
 itemSchema.virtual('isPartiallyPurchased').get(function() {
   const purchasedQty = this.purchasedQuantity || 0;
   return purchasedQty > 0 && purchasedQty < this.quantity;
 });
 
-// Virtual for remaining quantity
 itemSchema.virtual('remainingQuantity').get(function() {
   const purchasedQty = this.purchasedQuantity || 0;
   return Math.max(0, this.quantity - purchasedQty);
 });
 
-// Virtual for display name (name + brand if available)
 itemSchema.virtual('displayName').get(function() {
   return this.brand ? `${this.name} (${this.brand})` : this.name;
 });
 
-// Virtual for quantity with unit
 itemSchema.virtual('quantityWithUnit').get(function() {
   return `${this.quantity} ${this.unit}${this.quantity > 1 && this.unit === 'piece' ? 's' : ''}`;
 });
 
-// Virtual for product-based item
 itemSchema.virtual('isProductBased').get(function() {
   return !this.isManualEntry && !!this.product;
 });
 
-// Virtual for has product reference
 itemSchema.virtual('hasProduct').get(function() {
   return !!this.product;
 });
 
-// Pre-save middleware
 itemSchema.pre('save', function(next) {
-  // Update status based on purchasedQuantity
-  if (this.isModified('purchasedQuantity') || this.isModified('quantity')) {
-    const purchasedQty = this.purchasedQuantity || 0;
+  if (this.isModified('purchasedQuantity') || this.isModified('quantity') || this.isModified('quantityToPurchase')) {
+    let purchasedQty = this.purchasedQuantity || 0;
+    
+    if (this.isModified('quantity') && !this.isModified('purchasedQuantity') && purchasedQty > this.quantity) {
+      purchasedQty = this.quantity;
+      this.purchasedQuantity = purchasedQty;
+    }
+    
     if (purchasedQty >= this.quantity && this.quantity > 0) {
       this.status = 'purchased';
       if (!this.purchasedAt) {
         this.purchasedAt = new Date();
+        this.quantityToPurchase = 0;
       }
-    } else if (purchasedQty > 0) {
-      // Partially purchased - keep status as 'pending' but mark as partially purchased
-      this.status = 'pending';
+    } else if (purchasedQty > 0 && purchasedQty < this.quantity) {
+      this.status = 'partially_purchased';
+      if (!this.purchasedAt) {
+        this.purchasedAt = new Date();
+        this.quantityToPurchase = this.quantity - purchasedQty;
+      }
     } else {
       this.status = 'pending';
-      this.purchasedBy = null;
-      this.purchasedAt = null;
+      if (purchasedQty === 0) {
+        this.purchasedBy = null;
+        this.purchasedAt = null;
+        this.quantityToPurchase = this.quantity;
+      }
     }
   }
   
-  // Set purchased info when status changes to purchased
-  if (this.isModified('status') && this.status === 'purchased' && !this.purchasedAt) {
+  if (this.isModified('status') && (this.status === 'purchased' || this.status === 'partially_purchased') && !this.purchasedAt) {
     this.purchasedAt = new Date();
   }
   
-  // Clear purchased info when status changes from purchased
-  if (this.isModified('status') && this.status !== 'purchased' && this.purchasedQuantity === 0) {
+  if (this.isModified('status') && this.status === 'pending' && this.purchasedQuantity === 0) {
     this.purchasedBy = null;
     this.purchasedAt = null;
   }
   
-  // Normalize unit to lowercase
   if (this.isModified('unit')) {
     this.unit = this.unit.toLowerCase() as ItemUnit;
   }
@@ -268,7 +274,6 @@ itemSchema.pre('save', function(next) {
   next();
 });
 
-// Instance method to mark as purchased (with optional purchasedQuantity and actualPrice)
 itemSchema.methods.markAsPurchased = async function(
   purchasedBy: string, 
   purchasedQuantity?: number, 
@@ -276,7 +281,6 @@ itemSchema.methods.markAsPurchased = async function(
 ) {
   const quantityToPurchase = purchasedQuantity !== undefined ? purchasedQuantity : this.quantity;
   
-  // Validate purchasedQuantity
   if (quantityToPurchase < 0 || quantityToPurchase > this.quantity) {
     throw new Error('Purchased quantity must be between 0 and total quantity');
   }
@@ -288,7 +292,7 @@ itemSchema.methods.markAsPurchased = async function(
     this.status = 'purchased';
     this.purchasedAt = new Date();
   } else if (quantityToPurchase > 0) {
-    this.status = 'pending';
+    this.status = 'partially_purchased';
     this.purchasedAt = new Date();
   } else {
     this.status = 'pending';
@@ -302,7 +306,6 @@ itemSchema.methods.markAsPurchased = async function(
   
   await this.save();
   
-  // Update shopping list metadata
   const ShoppingList = mongoose.model('ShoppingList');
   const shoppingList = await ShoppingList.findById(this.shoppingList);
   if (shoppingList) {
@@ -312,16 +315,15 @@ itemSchema.methods.markAsPurchased = async function(
   return this;
 };
 
-// Instance method to mark as not purchased (reset purchasedQuantity to 0)
 itemSchema.methods.markAsNotPurchased = async function() {
   this.purchasedQuantity = 0;
+  this.quantityToPurchase = this.quantity;
   this.status = 'pending';
   this.purchasedBy = null;
   this.purchasedAt = null;
   
   await this.save();
   
-  // Update shopping list metadata
   const ShoppingList = mongoose.model('ShoppingList');
   const shoppingList = await ShoppingList.findById(this.shoppingList);
   if (shoppingList) {
@@ -331,33 +333,32 @@ itemSchema.methods.markAsNotPurchased = async function() {
   return this;
 };
 
-// Instance method to mark as not available
 itemSchema.methods.markAsNotAvailable = async function() {
   this.status = 'not_available';
+  this.quantityToPurchase = this.quantity;
   await this.save();
   return this;
 };
 
-// Instance method to cancel
 itemSchema.methods.cancel = async function() {
   this.status = 'cancelled';
+  this.quantityToPurchase = this.quantity;
   await this.save();
   return this;
 };
 
-// Instance method to update quantity
 itemSchema.methods.updateQuantity = async function(newQuantity: number) {
   if (newQuantity <= 0) {
     throw new Error('Quantity must be greater than 0');
   }
   
   this.quantity = newQuantity;
+  this.quantityToPurchase = newQuantity;
   await this.save();
   return this;
 };
 
-// Static method to find by shopping list
-itemSchema.statics.findByShoppingList = function(shoppingListId: string, options: any = {}) {
+itemSchema.statics.findByShoppingList = function(shoppingListId: string, options: IFindByShoppingListOptions = {}) {
   const {
     status = null,
     category = null,
@@ -367,7 +368,7 @@ itemSchema.statics.findByShoppingList = function(shoppingListId: string, options
     populateProduct = false
   } = options;
   
-  const query: any = { shoppingList: shoppingListId };
+  const query: FilterQuery<IItem> = { shoppingList: shoppingListId };
   
   if (status) query.status = status;
   if (category) query.category = category;
@@ -388,8 +389,7 @@ itemSchema.statics.findByShoppingList = function(shoppingListId: string, options
   return queryBuilder.sort(sort);
 };
 
-// Static method to find by category
-itemSchema.statics.findByCategory = function(categoryId: string, options: any = {}) {
+itemSchema.statics.findByCategory = function(categoryId: string, options: IFindByCategoryOptions = {}) {
   const { limit = 20, sort = '-createdAt' } = options;
   
   return this.find({ category: new mongoose.Types.ObjectId(categoryId) })
@@ -399,7 +399,6 @@ itemSchema.statics.findByCategory = function(categoryId: string, options: any = 
     .limit(limit);
 };
 
-// Static method to find similar items
 itemSchema.statics.findSimilar = function(itemName: string, category?: ItemCategory) {
   const query: FilterQuery<IItem> = {
     name: { $regex: itemName, $options: 'i' }
@@ -414,9 +413,8 @@ itemSchema.statics.findSimilar = function(itemName: string, category?: ItemCateg
     .limit(5);
 };
 
-// Static method to get popular items
 itemSchema.statics.getPopularItems = function(groupId?: string, limit: number = 10) {
-  const pipeline: any[] = [
+  const pipeline: PipelineStage[] = [
     {
       $group: {
         _id: {
@@ -451,7 +449,6 @@ itemSchema.statics.getPopularItems = function(groupId?: string, limit: number = 
   return this.aggregate(pipeline);
 };
 
-// Static method to get category statistics
 itemSchema.statics.getCategoryStats = function(shoppingListId?: string) {
   const matchConditions: FilterQuery<IItem> = {};
   
@@ -487,8 +484,7 @@ itemSchema.statics.getCategoryStats = function(shoppingListId?: string) {
   ]);
 };
 
-// Static method to search items
-itemSchema.statics.searchItems = function(searchTerm: string, options: any = {}) {
+itemSchema.statics.searchItems = function(searchTerm: string, options: IItemQueryOptions = {}) {
   const { category, limit = 20, skip = 0 } = options;
   
   const query: FilterQuery<IItem> = {
@@ -505,8 +501,7 @@ itemSchema.statics.searchItems = function(searchTerm: string, options: any = {})
     .limit(limit);
 };
 
-// Static method to find items by product
-itemSchema.statics.findByProduct = function(productId: string, options: any = {}) {
+itemSchema.statics.findByProduct = function(productId: string, options: IItemQueryOptions = {}) {
   const { limit = 20, skip = 0 } = options;
   
   return this.find({ product: new mongoose.Types.ObjectId(productId) })
@@ -517,8 +512,7 @@ itemSchema.statics.findByProduct = function(productId: string, options: any = {}
     .limit(limit);
 };
 
-// Static method to find manual items
-itemSchema.statics.findManualItems = function(shoppingListId?: string, options: any = {}) {
+itemSchema.statics.findManualItems = function(shoppingListId?: string, options: IItemQueryOptions = {}) {
   const { limit = 20, skip = 0 } = options;
   
   const query: FilterQuery<IItem> = { isManualEntry: true };
@@ -536,8 +530,7 @@ itemSchema.statics.findManualItems = function(shoppingListId?: string, options: 
     .limit(limit);
 };
 
-// Static method to find product-based items
-itemSchema.statics.findProductBasedItems = function(shoppingListId?: string, options: any = {}) {
+itemSchema.statics.findProductBasedItems = function(shoppingListId?: string, options: IItemQueryOptions = {}) {
   const { limit = 20, skip = 0 } = options;
   
   const query: FilterQuery<IItem> = { 
@@ -559,7 +552,6 @@ itemSchema.statics.findProductBasedItems = function(shoppingListId?: string, opt
     .limit(limit);
 };
 
-// Ensure virtuals are included in JSON
 itemSchema.set('toJSON', { virtuals: true });
 itemSchema.set('toObject', { virtuals: true });
 

@@ -3,6 +3,12 @@ import { app } from '../../app';
 import { connectDB, disconnectDB } from '../../config/testDb';
 import { createUserAndAuth, createGroupWithList } from '../factories/userFactory';
 import Message from '../../models/message';
+import {
+  getMessageData,
+  getMessagesArray,
+  getResponseData
+} from '../utils/testHelpers';
+import { IMessage } from '@/types';
 
 let token: string;
 let groupId: string;
@@ -16,7 +22,7 @@ beforeAll(async () => {
   const { groupId: groupIdRes } = await createGroupWithList(token, userId);
 
   groupId = groupIdRes
-});
+}, 60000); // 60 second timeout for MongoDB and setup
 
 afterAll(async () => {
   await disconnectDB();
@@ -32,17 +38,18 @@ describe('Message API', () => {
       .send({ content: 'Hello world!', groupId });
 
     expect(res.status).toBe(201);
-    expect(res.body.success).toBe(true);
-    messageId = res.body.data._id;
+    const message = getMessageData(res);
+    messageId = message._id.toString();
   });
 
   it('GET /api/messages - fetch messages', async () => {
     const res = await request(app)
-      .get(`/api/messages?groupId=${groupId}`)
+      .get(`/api/messages/group/${groupId}`)
       .set('Authorization', `Bearer ${token}`);
 
     expect(res.status).toBe(200);
-    expect(Array.isArray(res.body.data.messages)).toBe(true);
+    const body = getResponseData<{ messages: IMessage[]; hasMore: boolean }>(res);
+    expect(Array.isArray(body.data?.messages)).toBe(true);
   });
 
   it('GET /api/messages/:id - get single message', async () => {
@@ -51,7 +58,8 @@ describe('Message API', () => {
       .set('Authorization', `Bearer ${token}`);
 
     expect(res.status).toBe(200);
-    expect(res.body.data._id).toBe(messageId);
+    const message = getMessageData(res);
+    expect(message._id.toString()).toBe(messageId);
   });
 
   it('PUT /api/messages/:id - update message', async () => {
@@ -61,7 +69,8 @@ describe('Message API', () => {
       .send({ content: 'Updated message', groupId });
 
     expect(res.status).toBe(200);
-    expect(res.body.data.content).toBe('Updated message');
+    const message = getMessageData(res);
+    expect(message.content).toBe('Updated message');
   });
 
   it('POST /api/messages/:id/read - mark message as read', async () => {
@@ -72,7 +81,7 @@ describe('Message API', () => {
     expect(res.status).toBe(200);
   });
 
-  it('DELETE /api/messages/:id - delete message', async () => {
+  it('DELETE /api/messages/:id - delete message (Only the sender can delete this message)', async () => {
     const res = await request(app)
       .delete(`/api/messages/${messageId}`)
       .set('Authorization', `Bearer ${token}`);

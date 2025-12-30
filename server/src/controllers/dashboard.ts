@@ -4,7 +4,7 @@ import ShoppingList  from '../models/shoppingList';
 import  Message  from '../models/message';
 import Item  from '../models/item';
 import User from '../models/user';
-import { errorResponse, successResponse } from '@/middleware/errorHandler';
+import { errorResponse, successResponse } from '@/middleware/handlers';
 
 interface DashboardStats {
   groups: number;
@@ -132,7 +132,6 @@ export const getDashboardData = async (req: Request, res: Response) => {
       item.purchasedAt <= prevMonthEnd
     ).length;
 
-    // Calculate additional stats
     const totalItems = items.length;
     const purchasedItems = items.filter(item => item.status === 'purchased').length;
     const remainingItems = totalItems - purchasedItems;
@@ -177,7 +176,7 @@ export const getDashboardData = async (req: Request, res: Response) => {
         .map(message => ({
           id: message._id.toString(),
           type: 'message' as const,
-          title: 'הודעה חדשה בקבוצה',
+          title: 'new message in group',
           description: message.content.substring(0, 50) + '...',
           timestamp: message.createdAt,
           groupName: groups.find(g => g._id.toString() === message.group.toString())?.name
@@ -190,7 +189,7 @@ export const getDashboardData = async (req: Request, res: Response) => {
         .map(item => ({
           id: item._id.toString(),
           type: 'item_purchased' as const,
-          title: 'פריט נרכש',
+          title: 'item purchased',
           description: `${item.name} נרכש בהצלחה`,
           timestamp: item.updatedAt || item.createdAt
         }))
@@ -199,24 +198,24 @@ export const getDashboardData = async (req: Request, res: Response) => {
     const achievements: Achievement[] = [
       {
         id: 'first_group',
-        title: 'קבוצה ראשונה נוצרה',
-        description: 'יצרת את קבוצת הקניות הראשונה שלך',
+        title: 'first group created',
+        description: 'you created the first shopping list',
         unlocked: groups.length > 0,
         progress: Math.min(groups.length, 1),
         maxProgress: 1
       },
       {
         id: 'shopping_master',
-        title: 'אמן הקניות',
-        description: 'השלמת 10 רשימות קניות',
+        title: 'shopping master',
+        description: 'you completed 10 shopping lists',
         unlocked: completedLists >= 10,
         progress: Math.min(completedLists, 10),
         maxProgress: 10
       },
       {
         id: 'group_player',
-        title: 'שחקן קבוצה',
-        description: 'הצטרפת ל-5 קבוצות שונות',
+        title: 'group player',
+        description: 'you joined 5 different groups',
         unlocked: groups.length >= 5,
         progress: Math.min(groups.length, 5),
         maxProgress: 5
@@ -227,7 +226,7 @@ export const getDashboardData = async (req: Request, res: Response) => {
       lastActive: user?.updatedAt ? user.updatedAt.toLocaleTimeString('he-IL', { 
         hour: '2-digit', 
         minute: '2-digit' 
-      }) : 'לא ידוע',
+      }) : 'unknown',
       online: true
     };
 
@@ -242,7 +241,6 @@ export const getDashboardData = async (req: Request, res: Response) => {
     res.status(200).json(successResponse(dashboardData, 'Dashboard data retrieved successfully'));
 
   } catch (error) {
-    console.error('Dashboard data error:', error);
     res.status(500).json(errorResponse('Internal server error'));
   }
 };

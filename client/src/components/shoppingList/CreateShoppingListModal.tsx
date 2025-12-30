@@ -3,12 +3,11 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { useTranslations } from 'next-intl';
-import { X, Calendar, User, Tag, AlertTriangle } from 'lucide-react';
-import { useGroup } from '@/hooks/useGroups';
+import { X, Calendar } from 'lucide-react';
 import { useModalScrollLock } from '@/hooks/useModalScrollLock';
-import { Button, Input, TextArea } from '../common';
+import { Button, Dropdown, Input, TextArea } from '../common';
+import { createListSchema } from '@/lib/schemas';
 
 type CreateListFormData = {
   name: string;
@@ -30,26 +29,12 @@ export default function CreateShoppingListModal({
   isOpen,
   onClose,
   onSubmit,
-  groupId,
   groupName
 }: CreateShoppingListModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const t = useTranslations('CreateShoppingListModal');
-
-  const { data: group } = useGroup(groupId);
-
-  const createListSchema = z.object({
-    name: z.string().min(2, t('nameMinLength')).max(100, t('nameMaxLength')),
-    description: z.string().max(500, t('descriptionMaxLength')).optional(),
-    priority: z.enum(['low', 'medium', 'high']).default('medium').optional(),
-    dueDate: z.string().optional(),
-    tags: z.array(z.string()).optional(),
-    // assignedTo: z.string().optional(),
-  });
-
-
+  const listSchema = createListSchema(t);
 
   const {
     register,
@@ -58,33 +43,16 @@ export default function CreateShoppingListModal({
     reset,
     watch
   } = useForm<CreateListFormData>({
-    resolver: zodResolver(createListSchema),
+    resolver: zodResolver(listSchema),
     defaultValues: {
       name: '',
       description: '',
       priority: 'medium',
       dueDate: '',
-      // assignedTo: '',
     }
   });
 
-  const handleAddTag = () => {
-    if (tagInput.trim() && !tags.includes(tagInput.trim())) {
-      setTags([...tags, tagInput.trim()]);
-      setTagInput('');
-    }
-  };
 
-  const handleRemoveTag = (tagToRemove: string) => {
-    setTags(tags.filter(tag => tag !== tagToRemove));
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      handleAddTag();
-    }
-  };
 
   const handleFormSubmit = async (data: CreateListFormData) => {
     setIsSubmitting(true);
@@ -95,8 +63,7 @@ export default function CreateShoppingListModal({
       });
       reset();
       setTags([]);
-      setTagInput('');
-    } catch (error) {
+    } catch {
       // Error handled by parent
     } finally {
       setIsSubmitting(false);
@@ -107,12 +74,10 @@ export default function CreateShoppingListModal({
     if (!isSubmitting) {
       reset();
       setTags([]);
-      setTagInput('');
       onClose();
     }
   };
 
-  // Prevent body scroll when modal is open
   useModalScrollLock(isOpen);
 
   if (!isOpen) return null;
@@ -144,7 +109,6 @@ export default function CreateShoppingListModal({
         )}
 
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
-          {/* Name */}
           <div>
             <Input
               {...register('name')}
@@ -155,7 +119,6 @@ export default function CreateShoppingListModal({
             />
           </div>
 
-          {/* Description */}
           <div>
             <TextArea
               {...register('description')}
@@ -166,102 +129,39 @@ export default function CreateShoppingListModal({
             />
           </div>
 
-          {/* Priority */}
           <div>
             <label className="block text-sm font-medium text-primary mb-2">
               {t('priority')}
             </label>
-            <select
-              {...register('priority')}
-              className="w-full px-3 py-2 border border-border rounded-lg bg-background text-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-            >
-              <option value="low">{t('priorityLow')}</option>
-              <option value="medium">{t('priorityMedium')}</option>
-              <option value="high">{t('priorityHigh')}</option>
-            </select>
+            <Dropdown
+              placeholder={t('priority')}
+              variant="default"
+              size="md"
+              fullWidth
+              error={errors.priority?.message}
+              options={[
+                { value: 'low', label: t('priorityLow') },
+                { value: 'medium', label: t('priorityMedium') },
+                { value: 'high', label: t('priorityHigh') },
+              ]}
+              value={watch('priority')}
+              onSelect={(value) => register('priority').onChange({ target: { value: value as 'low' | 'medium' | 'high' } })}
+            />
           </div>
 
-          {/* Due Date */}
           <div>
-            <label className="block text-sm font-medium text-primary mb-2">
-              {t('dueDate')}
-            </label>
-            <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary w-4 h-4" />
-              <input
-                {...register('dueDate')}
-                type="date"
-                className="w-full pl-10 pr-3 py-2 border border-border rounded-lg bg-background text-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-              />
-            </div>
+            <Input
+              {...register('dueDate')}
+              type="date"
+              error={errors.dueDate?.message}
+              label={t('dueDate')}
+            />
           </div>
 
-          {/* Tags */}
-          <div>
-            <label className="block text-sm font-medium text-primary mb-2">
-              {t('tags')}
-            </label>
-            <div className="space-y-2">
-              <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <Tag className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary w-4 h-4" />
-                  <input
-                    type="text"
-                    value={tagInput}
-                    onChange={(e) => setTagInput(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    placeholder={t('addTagPlaceholder')}
-                    className="w-full pl-10 pr-20 py-2 border border-border rounded-lg bg-background text-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={handleAddTag}
-                  className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
-                >
-                  {t('add')}
-                </button>
-              </div>
-              
-              {tags.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {tags.map((tag, index) => (
-                    <span
-                      key={index}
-                      className="inline-flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary rounded-lg text-sm"
-                    >
-                      {tag}
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveTag(tag)}
-                        className="text-primary hover:text-primary/70"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Actions */}
           <div className="flex gap-3 pt-4">
-            <button
-              type="button"
-              onClick={handleClose}
-              disabled={isSubmitting}
-              className="flex-1 px-4 py-2 text-text-muted hover:text-text-primary transition-colors rounded-lg hover:bg-white/50 border border-border/30 disabled:opacity-50"
-            >
-              {t('cancel')}
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSubmitting ? t('creating') : t('createList')}
-            </button>
+            <Button type="button" variant="outline" size="lg" fullWidth onClick={handleClose} disabled={isSubmitting}>{t('cancel')}</Button>
+            <Button type="submit" variant="primary" size="lg" disabled={isSubmitting} fullWidth>{isSubmitting ? t('creating') : t('createList')}</Button>
+
           </div>
         </form>
       </div>

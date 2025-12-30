@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { asyncHandler } from '../middleware/errorHandler';
+import { asyncHandler } from '../middleware/handlers';
 import {
   getAllProducts,
   getProductsByCategory,

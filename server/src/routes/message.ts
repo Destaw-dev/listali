@@ -33,7 +33,7 @@ import {
   validateExportQuery
 } from '../middleware/validation';
 
-import { asyncHandler } from '../middleware/errorHandler';
+import { asyncHandler } from '../middleware/handlers';
 
 const router = express.Router();
 

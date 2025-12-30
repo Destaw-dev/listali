@@ -30,7 +30,7 @@ export async function sendEmailVerification(to: string, token: string, username:
 
     const lang = language === 'en' ? translations.en : translations.he;
     
-    const frontendUrl = process.env.FRONTEND_URL || 'https://www.listali.co.il';
+    const frontendUrl = process.env.CLIENT_URL || 'https://www.listali.co.il';
     const verificationUrl = `${frontendUrl}/${language}/auth/verify-email?token=${token}&email=${encodeURIComponent(to)}`;
     
     return await resend.emails.send({
@@ -80,7 +80,7 @@ export async function sendGroupInviteEmail(
   isNewUser: boolean = false
 ) {
   const isHebrew = language === 'he';
-  const frontendUrl = process.env.FRONTEND_URL || 'https://www.listali.co.il';
+  const frontendUrl = process.env.CLIENT_URL || 'https://www.listali.co.il';
   
   const actionUrl = isNewUser 
     ? `${frontendUrl}/${language}/auth/register?inviteCode=${code}`

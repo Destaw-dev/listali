@@ -4,13 +4,13 @@ import mongoose from "mongoose";
 import {
   getPaginationParams,
   successResponse,
-} from "@/middleware/errorHandler";
-import { IApiResponse } from "@/types";
+  errorResponse,
+} from "@/middleware/handlers";
+import { IApiResponse, IProduct } from "@/types";
 
-// GET /api/products
 export const getAllProducts = async (
   req: Request,
-  res: Response<IApiResponse>
+  res: Response<IApiResponse<IProduct[] | null>>
 ) => {
   try {
     const { page, limit, skip } = getPaginationParams(req.query);
@@ -31,18 +31,17 @@ export const getAllProducts = async (
   } catch (err) {
     return res
       .status(500)
-      .json({ success: false, error: "שגיאה בטעינת מוצרים" });
+      .json(errorResponse("error loading products"));
   }
 };
-// GET /api/products
 export const getProductById = async (
   req: Request,
-  res: Response<IApiResponse>
+  res: Response<IApiResponse<IProduct | null>>
 ) => {
   try {
     const productId = req.params.productId as string;
     if (!productId) {
-      res.status(404).json({ success: false, error: "Id לא תקין" });
+      res.status(404).json(errorResponse("invalid id"));
       return;
     }
 
@@ -52,20 +51,19 @@ export const getProductById = async (
   } catch (err) {
     return res
       .status(500)
-      .json({ success: false, error: "שגיאה בטעינת מוצרים" });
+      .json(errorResponse("error loading product"));
   }
 };
 
-// GET /api/products/category/:categoryId
 export const getProductsByCategory = async (
   req: Request,
-  res: Response<IApiResponse>
+  res: Response<IApiResponse<IProduct[] | null>>
 ) => {
   try {
     const { page, limit, skip } = getPaginationParams(req.query);
     const categoryId = new mongoose.Types.ObjectId(req.params.categoryId);
     if (!categoryId) {
-      res.status(404).json({ success: false, error: "קטגוריה לא תקינה" });
+      res.status(404).json(errorResponse("invalid category"));
       return;
     }
 
@@ -86,14 +84,13 @@ export const getProductsByCategory = async (
   } catch (err) {
     return res
       .status(500)
-      .json({ success: false, error: "שגיאה בטעינת מוצרים לפי קטגוריה" });
+      .json(errorResponse("error loading products by category"));
   }
 };
 
-// GET /api/products/sub-category/:subCategoryId
 export const getProductsBySubCategory = async (
   req: Request,
-  res: Response<IApiResponse>
+  res: Response<IApiResponse<IProduct[] | null>>
 ) => {
   try {
     const { page, limit, skip } = getPaginationParams(req.query);
@@ -101,7 +98,7 @@ export const getProductsBySubCategory = async (
     const subCategoryId = new mongoose.Types.ObjectId(req.params.subCategoryId);
 
     if (!subCategoryId) {
-      res.status(404).json({ success: false, error: "תת-קטגוריה לא תקינה" });
+      res.status(404).json(errorResponse("invalid sub category"));
       return;
     }
 
@@ -122,14 +119,13 @@ export const getProductsBySubCategory = async (
   } catch (err) {
     return res
       .status(500)
-      .json({ success: false, error: "שגיאה בטעינת מוצרים לפי תת-קטגוריה" });
+      .json(errorResponse("error loading products by sub category"));
   }
 };
 
-// GET /api/products/kosher
 export const getBySearchByNameHebrew = async (
   req: Request,
-  res: Response<IApiResponse>
+  res: Response<IApiResponse<IProduct[] | null>>
 ) => {
   try {
     const { page, limit } = getPaginationParams(req.query);
@@ -139,7 +135,7 @@ export const getBySearchByNameHebrew = async (
     
 
     if (!searchTerm) {
-      res.status(404).json({ success: false, error: "שם לא תקין" });
+      res.status(404).json(errorResponse("invalid search term"));
       return
     }
 
@@ -154,18 +150,17 @@ export const getBySearchByNameHebrew = async (
       total,
       pages: Math.ceil(Number(total) / limit),
     };
-    return res.json(successResponse(products, "", pagination));
+    return res.json(successResponse(products, "products loaded successfully", pagination));
   } catch (err) {
     return res
       .status(500)
-      .json({ success: false, error: "שגיאה בטעינת מוצרים לפי חיפוש" });
+      .json(errorResponse("error loading products by search"));
   }
 };
 
-// GET /api/products/kosher
 export const getKosherProducts = async (
   req: Request,
-  res: Response<IApiResponse>
+  res: Response<IApiResponse<IProduct[] | null>>
 ) => {
   try {
     const { page, limit } = getPaginationParams(req.query);
@@ -181,14 +176,13 @@ export const getKosherProducts = async (
   } catch (err) {
     return res
       .status(500)
-      .json({ success: false, error: "שגיאה בטעינת מוצרים כשרים" });
+      .json(errorResponse("error loading kosher products"));
   }
 };
 
-// GET /api/products/organic
 export const getOrganicProducts = async (
   req: Request,
-  res: Response<IApiResponse>
+  res: Response<IApiResponse<IProduct[] | null>>
 ) => {
   try {
     const { page, limit } = getPaginationParams(req.query);
@@ -204,14 +198,13 @@ export const getOrganicProducts = async (
   } catch {
     return res
       .status(500)
-      .json({ success: false, error: "שגיאה בטעינת מוצרים אורגניים" });
+      .json(errorResponse("error loading organic products"));
   }
 };
 
-// GET /api/products/gluten-free
 export const getGlutenFreeProducts = async (
   req: Request,
-  res: Response<IApiResponse>
+  res: Response<IApiResponse<IProduct[] | null>>
 ) => {
   try {
     const { page, limit } = getPaginationParams(req.query);
@@ -227,61 +220,58 @@ export const getGlutenFreeProducts = async (
   } catch {
     return res
       .status(500)
-      .json({ success: false, error: "שגיאה בטעינת מוצרים ללא גלוטן" });
+      .json(errorResponse("error loading gluten free products"));
   }
 };
 
-// POST /api/products/:id/mark-kosher
 export const markAsKosher = async (
   req: Request,
-  res: Response<IApiResponse>
+  res: Response<IApiResponse<IProduct | null>>
 ) => {
   try {
     const product = await Product.findById(req.params.id);
     if (!product)
-      return res.status(404).json({ success: false, error: "מוצר לא נמצא" });
+      return res.status(404).json(errorResponse("product not found"));
 
     await product.markAsKosher();
-    return res.json(successResponse(product, "המוצר סומן ככשר"));
+    return res.json(successResponse(product, "product marked as kosher"));
   } catch {
-    return res.status(500).json({ success: false, error: "שגיאה בסימון ככשר" });
+    return res.status(500).json(errorResponse("error marking as kosher"));
   }
 };
 
-// POST /api/products/:id/mark-organic
 export const markAsOrganic = async (
   req: Request,
-  res: Response<IApiResponse>
+  res: Response<IApiResponse<IProduct | null>>
 ) => {
   try {
     const product = await Product.findById(req.params.id);
     if (!product)
-      return res.status(404).json({ success: false, error: "מוצר לא נמצא" });
+      return res.status(404).json(errorResponse("product not found"));
 
     await product.markAsOrganic();
-    return res.json(successResponse(product, "המוצר סומן כאורגני"));
+    return res.json(successResponse(product, "product marked as organic"));
   } catch {
     return res
       .status(500)
-      .json({ success: false, error: "שגיאה בסימון כאורגני" });
+      .json(errorResponse("error marking as organic"));
   }
 };
 
-// POST /api/products/:id/mark-gluten-free
 export const markAsGlutenFree = async (
   req: Request,
-  res: Response<IApiResponse>
+  res: Response<IApiResponse<IProduct | null>>
 ) => {
   try {
     const product = await Product.findById(req.params.id);
     if (!product)
-      return res.status(404).json({ success: false, error: "מוצר לא נמצא" });
+      return res.status(404).json(errorResponse("product not found"));
 
     await product.markAsGlutenFree();
-    return res.json(successResponse(product, "המוצר סומן כללא גלוטן"));
+    return res.json(successResponse(product, "product marked as gluten free"));
   } catch {
     return res
       .status(500)
-      .json({ success: false, error: "שגיאה בסימון ללא גלוטן" });
+      .json(errorResponse("error marking as gluten free"));
   }
 };

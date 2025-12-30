@@ -1,5 +1,5 @@
 {
-  "name": "smart-group-shopping-server",
+  "name": "listali-server",
   "version": "1.0.0",
   "description": "Backend server for Smart Group Shopping app",
   "main": "dist/server.js",

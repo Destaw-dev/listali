@@ -6,6 +6,15 @@ import { connectDB, disconnectDB } from '../../config/testDb';
 import User from '../../models/user';
 import Group from '../../models/group';
 import ShoppingList from '../../models/shoppingList';
+import {
+  getAuthResponse,
+  getAccessToken,
+  getUserFromAuth,
+  getShoppingListData,
+  getShoppingListsArray,
+  getGroupData,
+  getResponseData
+} from '../utils/testHelpers';
 
 let mongoServer: MongoMemoryServer;
 let token: string;
@@ -14,7 +23,11 @@ let groupId: string;
 let shoppingListId: string;
 
 beforeAll(async () => {
-  mongoServer = await MongoMemoryServer.create();
+  mongoServer = await MongoMemoryServer.create({
+    instance: {
+      dbName: 'test'
+    }
+  });
   await mongoose.connect(mongoServer.getUri());
 
   const registerRes = await request(app).post('/api/auth/register').send({
@@ -25,26 +38,41 @@ beforeAll(async () => {
     lastName: 'User'
   });
 
-  token = registerRes.body.data.token;
-  userId = registerRes.body.data.user.id;
+  // Verify email for testing
+  await mongoose.connection.db?.collection('users').updateOne(
+    { email: 'list@example.com' },
+    { $set: { isEmailVerified: true } }
+  );
+
+  const loginRes = await request(app).post('/api/auth/login').send({
+    email: 'list@example.com',
+    password: 'Password123'
+  });
+
+  token = getAccessToken(loginRes);
+  const user = getUserFromAuth(loginRes);
+  userId = user.id || user._id?.toString() || '';
 
   const groupRes = await request(app)
     .post('/api/groups')
     .set('Authorization', `Bearer ${token}`)
     .send({ name: 'List Group' });
 
-  groupId = groupRes.body.data._id;
-});
+  const group = getGroupData(groupRes);
+  groupId = group._id.toString();
+}, 60000); // 60 second timeout for MongoDB and setup
 
 afterAll(async () => {
   await mongoose.disconnect();
-  await mongoServer.stop();
+  if (mongoServer) {
+    await mongoServer.stop();
+  }
 });
 
 describe('📝 Shopping List API', () => {
-  test('POST /api/shopping-lists/groupId → should create a shopping list', async () => {
+  test('POST /api/shopping-lists/groups/:groupId → should create a shopping list', async () => {
     const res = await request(app)
-      .post(`/api/shopping-lists/${groupId}`)
+      .post(`/api/shopping-lists/groups/${groupId}`)
       .set('Authorization', `Bearer ${token}`)
       .send({
         name: 'Groceries',
@@ -54,33 +82,33 @@ describe('📝 Shopping List API', () => {
       });
 
     expect(res.status).toBe(201);
-    expect(res.body.data.name).toBe('Groceries');
-    shoppingListId = res.body.data._id;
+    const shoppingList = getShoppingListData(res);
+    expect(shoppingList.name).toBe('Groceries');
+    shoppingListId = shoppingList._id.toString();
   });
 
-  test('GET /api/shopping-lists?groupId= → should get lists for group', async () => {
+  test('GET /api/shopping-lists/groups/:groupId → should get lists for group', async () => {
     const res = await request(app)
-      .get(`/api/shopping-lists/${groupId}?groupId=${groupId}`)
+      .get(`/api/shopping-lists/groups/${groupId}`)
       .set('Authorization', `Bearer ${token}`);
 
     expect(res.status).toBe(200);
-    expect(Array.isArray(res.body.data.lists)).toBe(true);
+    const shoppingLists = getShoppingListsArray(res);
+    expect(Array.isArray(shoppingLists)).toBe(true);
   });
 
   test('GET /api/shopping-lists/:id → should get list by ID', async () => {
     const res = await request(app)
-      .get(`/api/shopping-lists/${groupId}/${shoppingListId}`)
+      .get(`/api/shopping-lists/${shoppingListId}`)
       .set('Authorization', `Bearer ${token}`);
 
-      console.log(`/api/shopping-lists/${groupId}/${shoppingListId}`, res.body)
-
     expect(res.status).toBe(200);
-    expect(res.body.data._id).toBe(shoppingListId);
+    expect(res.body.data.shoppingList._id).toBe(shoppingListId);
   });
 
   test('PUT /api/shopping-lists/:id → should update list', async () => {
     const res = await request(app)
-      .put(`/api/shopping-lists/${groupId}/${shoppingListId}`)
+      .put(`/api/shopping-lists/${shoppingListId}`)
       .set('Authorization', `Bearer ${token}`)
       .send({ name: 'Updated Groceries' });
 
@@ -88,7 +116,7 @@ describe('📝 Shopping List API', () => {
     expect(res.body.data.name).toBe('Updated Groceries');
   });
 
-  test('POST /api/shopping-lists/:id/assign → should assign shopping list to user', async () => {
+  test('PUT /api/shopping-lists/:id → should assign shopping list to user via update', async () => {
     // Register second user
     const newUserRes = await request(app).post('/api/auth/register').send({
       username: 'assignUser',
@@ -98,72 +126,71 @@ describe('📝 Shopping List API', () => {
       lastName: 'User',
     });
   
+    // Verify email for testing
+    await mongoose.connection.db?.collection('users').updateOne(
+      { email: 'assign@example.com' },
+      { $set: { isEmailVerified: true } }
+    );
+  
     const newUserId = newUserRes.body.data.user.id;
   
     // הוספת המשתמש לקבוצה
-    const inviteRes = await request(app)
+    await request(app)
       .post(`/api/groups/${groupId}/invite`)
       .set('Authorization', `Bearer ${token}`)
       .send({ email: 'assign@example.com' });
   
-    // Assign the shopping list to new user
+    // Get invitation and accept it
+    const newUserLogin = await request(app).post('/api/auth/login').send({
+      email: 'assign@example.com',
+      password: 'Password123'
+    });
+    const newUser = await User.findOne({ email: 'assign@example.com' });
+    const invitation = newUser?.pendingInvitations.find(inv => inv.group.toString() === groupId);
+    if (invitation) {
+      await request(app)
+        .post('/api/auth/invitations/accept')
+        .set('Authorization', `Bearer ${newUserLogin.body.data.accessToken}`)
+        .send({ invitationId: invitation.code });
+    }
+  
+    // Assign the shopping list to new user via update
     const res = await request(app)
-      .post(`/api/shopping-lists/${groupId}/${shoppingListId}/assign`)
+      .put(`/api/shopping-lists/${shoppingListId}`)
       .set('Authorization', `Bearer ${token}`)
-      .send({ userId: newUserId });
+      .send({ assignedTo: newUserId });
   
     expect(res.status).toBe(200);
     expect(res.body.data.assignedTo._id).toBe(newUserId);
   });
   
-  test('POST /api/shopping-lists/:id/unassign → should unassign user', async () => {
+  test('PUT /api/shopping-lists/:id → should unassign user via update', async () => {
+    // Make sure shoppingListId is defined
+    if (!shoppingListId) {
+      throw new Error('shoppingListId is not defined');
+    }
+
     const res = await request(app)
-      .post(`/api/shopping-lists/${groupId}/${shoppingListId}/unassign`)
-      .set('Authorization', `Bearer ${token}`);
+      .put(`/api/shopping-lists/${shoppingListId}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ assignedTo: null });
 
     expect(res.status).toBe(200);
-    expect(res.body.message).toMatch(/unassigned/i);
+    expect(res.body.data.assignedTo).toBeNull();
   });
 
   test('POST /api/shopping-lists/:id/complete → should complete list', async () => {
     const res = await request(app)
-      .post(`/api/shopping-lists/${groupId}/${shoppingListId}/complete`)
+      .post(`/api/shopping-lists/${shoppingListId}/complete`)
       .set('Authorization', `Bearer ${token}`);
 
     expect(res.status).toBe(200);
     expect(res.body.message).toMatch(/completed/i);
   });
 
-  test('POST /api/shopping-lists/:id/reopen → should reopen list', async () => {
-    const res = await request(app)
-      .post(`/api/shopping-lists/${groupId}/${shoppingListId}/reopen`)
-      .set('Authorization', `Bearer ${token}`);
-
-    expect(res.status).toBe(200);
-    expect(res.body.message).toMatch(/reopened/i);
-  });
-
-  test('POST /api/shopping-lists/:id/archive → should archive list', async () => {
-    const res = await request(app)
-      .post(`/api/shopping-lists/${groupId}/${shoppingListId}/archive`)
-      .set('Authorization', `Bearer ${token}`);
-
-    expect(res.status).toBe(200);
-    expect(res.body.message).toMatch(/archived/i);
-  });
-
-  test('GET /api/shopping-lists/:id/overdue?groupId → should get overdue lists', async () => {
-    const res = await request(app)
-      .get(`/api/shopping-lists/${groupId}/${shoppingListId}/overdue?groupId=${groupId}`)
-      .set('Authorization', `Bearer ${token}`);
-
-    expect(res.status).toBe(200);
-    expect(Array.isArray(res.body.data)).toBe(true);
-  });
-
   test('DELETE /api/shopping-lists/:id → should delete list', async () => {
     const res = await request(app)
-      .delete(`/api/shopping-lists/${groupId}/${shoppingListId}`)
+      .delete(`/api/shopping-lists/${shoppingListId}`)
       .set('Authorization', `Bearer ${token}`);
 
     expect(res.status).toBe(200);

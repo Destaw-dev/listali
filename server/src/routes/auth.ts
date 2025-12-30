@@ -1,6 +1,6 @@
 import express from 'express';
 import rateLimit from 'express-rate-limit';
-import { authenticateToken } from '../middleware/auth';
+import { authenticateToken, optionalAuth } from '../middleware/auth';
 import {
   register,
   login,
@@ -20,7 +20,7 @@ import {
   resendVerificationForLogin
 } from '../controllers/auth';
 import { loginValidation, passwordValidation, profileValidation, registerValidation, emailValidation } from '../middleware/validation';
-import { googleAuth, googleCallback, googleUrl } from '@/controllers/googleAuth';
+import { googleAuth, googleCallback, googleUrl } from '../controllers/googleAuth';
 
 const router = express.Router();
 
@@ -52,12 +52,12 @@ router.get('/google/url', googleUrl);
 router.get('/google/callback', googleCallback);
 router.post('/register', registerLimiter, registerValidation, register);
 router.post('/login', authLimiter, loginValidation, login);
-router.post('/logout', authenticateToken, logout);
+router.post('/logout', optionalAuth, logout); // Logout can work with just cookies/sessionId, accessToken is optional
 router.get('/me', authenticateToken, getMe);
 router.put('/profile', authenticateToken, profileValidation, updateProfile);
 router.put('/email', authenticateToken, emailValidation, updateEmail);
 router.put('/password', authenticateToken, passwordValidation, changePassword);
-router.post('/refresh', authenticateToken, refreshToken);
+router.post('/refresh', refreshToken);
 router.get('/check-username/:username', checkUsernameAvailability);
 router.get('/check-email/:email', checkEmailAvailability);
 

@@ -6,7 +6,7 @@ import { IApiResponse } from '../types';
  * Handles requests to routes that don't exist
  * Should be placed after all route definitions but before error handler
  */
-export const notFound = (req: Request, res: Response<IApiResponse>, _next: NextFunction): void => {
+export const notFound = (req: Request, res: Response<IApiResponse<null>>, _next: NextFunction): void => {
   // Set status to 404
   res.status(404);
   
@@ -25,7 +25,7 @@ export const notFound = (req: Request, res: Response<IApiResponse>, _next: NextF
  * Alternative not found handler with more detailed information
  * Useful for development environments
  */
-export const notFoundDetailed = (req: Request, res: Response<IApiResponse>, _next: NextFunction): void => {
+export const notFoundDetailed = (req: Request, res: Response<IApiResponse<{ requestedMethod: string; requestedUrl: string; availableRoutes: string[]; suggestion: string } | null>>, _next: NextFunction): void => {
   const availableRoutes = [
     'GET /health',
     'GET /api',
@@ -71,7 +71,7 @@ export const notFoundDetailed = (req: Request, res: Response<IApiResponse>, _nex
  * API-specific not found handler
  * Only responds to requests starting with /api
  */
-export const apiNotFound = (req: Request, res: Response<IApiResponse>, next: NextFunction): void => {
+export const apiNotFound = (req: Request, res: Response<IApiResponse<null>>, next: NextFunction): void => {
   // Only handle API routes
   if (req.originalUrl.startsWith('/api')) {
     res.status(404).json({

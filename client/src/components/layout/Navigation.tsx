@@ -62,11 +62,9 @@ export function Navigation() {
 
   return (
     <>
-      {/* Desktop Navigation - Top */}
       <nav className="hidden md:block bg-gradient-to-r from-white/95 via-white/90 to-white/95 dark:from-neutral-900/95 dark:via-neutral-800/90 dark:to-neutral-900/95 backdrop-blur-xl  shadow-lg">
         <div className="px-4">
           <div className="flex items-center justify-between py-4">
-            {/* Brand */}
             <div 
               className="flex items-center cursor-pointer" 
               onClick={() => router.push(`/${locale}/dashboard`)}
@@ -75,7 +73,6 @@ export function Navigation() {
             </div>
 
 
-            {/* Desktop Navigation Items */}
             <div className="flex items-center gap-4">
               {navItems.map((item) => {
                 const Icon = item.icon;
@@ -92,19 +89,9 @@ export function Navigation() {
               })}
             </div>
 
-            {/* Desktop User Menu */}
             <div className="flex items-center gap-3">
               <LanguageSwitcher />
               <div className="flex items-center gap-0.5">
-
-              {/* <div>
-                <p className="text-sm font-semibold text-primary">
-                  {user?.username || user?.firstName + ' ' + user?.lastName}
-                </p>
-                <p className="text-xs text-secondary truncate max-w-32">
-                  {user?.email}
-                </p>
-              </div> */}
               
               {user?.avatar ? (
                 <div>
@@ -146,11 +133,9 @@ export function Navigation() {
         </div>
       </nav>
 
-      {/* Mobile Navigation - Bottom */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-r from-white/95 via-white/90 to-white/95 dark:from-neutral-900/95 dark:via-neutral-800/90 dark:to-neutral-900/95 backdrop-blur-xl shadow-2xl">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between py-3">
-            {/* Mobile Navigation Items */}
             <div className="flex items-center gap-1">
               {navItems.map((item) => {
                 if (!item.showOnMobile) return null;
@@ -172,7 +157,6 @@ export function Navigation() {
               })}
             </div>
 
-            {/* Mobile User Menu */}
             <div className="flex items-center gap-2">
               {user?.avatar ? (
                 <Image

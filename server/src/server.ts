@@ -24,7 +24,7 @@ async function startServer() {
     });
 
     // Handle server errors
-    server.on('error', (error: any) => {
+    server.on('error', (error: Error & { code?: string }) => {
       console.error('🚨 Server error:', error);
       
       if (error.code === 'EADDRINUSE') {

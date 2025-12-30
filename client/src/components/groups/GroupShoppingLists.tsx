@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
@@ -28,6 +28,7 @@ import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import { MetricCard } from "@/components/common/MetricCard";
 import { FilterDropdownMenu, ActiveFilterBadges } from "@/components/groups/FilterDropdownMenuList";
 import { ShoppingListsDisplay } from "@/components/groups/ShoppingListsDisplay";
+import { IShoppingList, ICreateListFormData } from "@/types";
 
 
 export function GroupShoppingLists() {
@@ -51,7 +52,6 @@ export function GroupShoppingLists() {
     requireAuth: true,
   });
 
-  // Data Fetching
   const {
     data: group,
     isLoading: groupLoading,
@@ -65,7 +65,6 @@ export function GroupShoppingLists() {
   const createListMutation = useCreateShoppingList();
   const deleteListMutation = useDeleteShoppingList();
 
-  // --- Filtering Helpers ---
 
   const getActiveFiltersCount = () => {
     let count = 0;
@@ -75,7 +74,7 @@ export function GroupShoppingLists() {
   };
   const activeFiltersCount = getActiveFiltersCount();
 
-  const filteredLists = shoppingLists?.filter((list: any) => {
+  const filteredLists = shoppingLists?.filter((list: IShoppingList) => {
     const matchesSearch =
       list.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       list.description?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -87,15 +86,10 @@ export function GroupShoppingLists() {
     return matchesSearch && matchesStatus && matchesPriority;
   });
 
-  // --- Handlers ---
 
-  const handleCreateList = async (listData: any) => {
-    try {
+  const handleCreateList = async (listData: ICreateListFormData) => {
       await createListMutation.mutateAsync({ groupId, listData });
       setShowCreateModal(false);
-    } catch (error) {
-      // Error handled by mutation
-    }
   };
 
   const handleListClick = (listId: string) => {
@@ -104,11 +98,7 @@ export function GroupShoppingLists() {
 
   const handleDeleteList = async (listId: string) => {
     if (confirm(t("lists.deleteConfirm"))) {
-      try {
-        await deleteListMutation.mutateAsync({ listId, groupId });
-      } catch (error) {
-        // Error handled by mutation
-      }
+      await deleteListMutation.mutateAsync({ listId, groupId });
     }
   };
   
@@ -117,17 +107,16 @@ export function GroupShoppingLists() {
     setPriorityFilter("all");
   }
 
-  // Calculate stats
   const stats = {
     total: shoppingLists?.length || 0,
     active:
-      shoppingLists?.filter((list: any) => list.status === "active").length || 0,
+      shoppingLists?.filter((list: IShoppingList) => list.status === "active").length || 0,
     completed:
-      shoppingLists?.filter((list: any) => list.status === "completed").length || 0,
+      shoppingLists?.filter((list: IShoppingList) => list.status === "completed").length || 0,
     totalItems:
-      shoppingLists?.reduce((total: number, list: any) => total + (list.metadata?.itemsCount || 0), 0) || 0,
+      shoppingLists?.reduce((total: number, list: IShoppingList) => total + (list.metadata?.itemsCount || 0), 0) || 0,
     completedItems:
-      shoppingLists?.reduce((total: number, list: any) => total + (list.metadata?.completedItemsCount || 0), 0) || 0,
+      shoppingLists?.reduce((total: number, list: IShoppingList) => total + (list.metadata?.completedItemsCount || 0), 0) || 0,
   };
 
   if (groupLoading || listsLoading) {
@@ -163,7 +152,6 @@ export function GroupShoppingLists() {
   return (
     <div>
       <div className="max-w-7xl mx-auto space-y-3 pb-4">
-        {/* Search and View Controls */}
         <div className="flex flex-col sm:flex-row gap-2">
           <Input
             placeholder={t("lists.searchPlaceholder")}
@@ -190,7 +178,6 @@ export function GroupShoppingLists() {
           </div>
         </div>
 
-        {/* Filter Bar */}
         <div className="flex items-center gap-2 flex-wrap">
           {
             shoppingLists?.length > 0 && (
@@ -208,7 +195,6 @@ export function GroupShoppingLists() {
           }
           
 
-          {/* Display Active Filters */}
           {(statusFilter !== "all" || priorityFilter !== "all") && (
             <ActiveFilterBadges
                 t={t}
@@ -221,7 +207,6 @@ export function GroupShoppingLists() {
           )}
         </div>
 
-        {/* Lists Grid/List */}
         <ShoppingListsDisplay
             filteredLists={filteredLists}
             viewMode={viewMode}
@@ -231,6 +216,7 @@ export function GroupShoppingLists() {
             handleListClick={handleListClick}
             handleDeleteList={handleDeleteList}
             setShowCreateModal={setShowCreateModal}
+            activeFiltersCount={activeFiltersCount}
         />
       </div>
       
@@ -245,7 +231,6 @@ export function GroupShoppingLists() {
         t={t}
       />
 
-      {/* Create Modal */}
       {showCreateModal && (
         <CreateShoppingListModal
           isOpen={showCreateModal}

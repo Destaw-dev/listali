@@ -143,6 +143,7 @@ export interface IBaseItem {
   name: string;
   description?: string;
   quantity: number;
+  quantityToPurchase: number;
   unit: string;
   brand?: string;
   estimatedPrice?: number;
@@ -150,7 +151,7 @@ export interface IBaseItem {
   price?: number;
   image?: string;
   barcode?: string;
-  status: "pending" | "purchased" | "not_available" | "cancelled";
+  status: "pending" | "purchased" | "not_available" | "cancelled" | "partially_purchased";
   isPurchased: boolean;
   isPartiallyPurchased?: boolean;
   purchasedQuantity?: number;
@@ -249,6 +250,17 @@ export interface IBaseProduct {
 // SERVER-SPECIFIC USER EXTENSIONS
 // ============================================================================
 
+// Refresh session interface
+export interface IRefreshSession {
+  sessionId: string;
+  refreshTokenHash: string;
+  expiresAt: Date;
+  createdAt: Date;
+  lastUsedAt: Date;
+  userAgent?: string;
+  ip?: string;
+}
+
 // User with password and server methods (extends base user)
 export interface IUser extends IBaseUser, BaseDocument {
   password: string;
@@ -259,12 +271,24 @@ export interface IUser extends IBaseUser, BaseDocument {
     token: string;
     expiresAt: Date;
   };
+  refreshSessions: IRefreshSession[];
 }
 
 // User methods for server-side operations
 export interface IUserMethods {
   comparePassword(candidatePassword: string): Promise<boolean>;
-  getSignedJwtToken(): string;
+  pruneExpiredSessions(now?: Date): void;
+  enforceMaxSessions(max?: number): void;
+  addSession(session: {
+    sessionId: string;
+    refreshTokenHash: string;
+    expiresAt: Date;
+    userAgent?: string;
+    ip?: string;
+  }): void;
+  rotateSession(sessionId: string, newRefreshTokenHash: string, newExpiresAt: Date): void;
+  revokeSession(sessionId: string): void;
+  revokeAllSessions(): void;
 }
 
 // User document type for server
@@ -503,7 +527,7 @@ export type InviteRole = 'admin' | 'member';
 // ============================================================================
 
 // API response interface
-export interface IApiResponse<T = any> {
+export interface IApiResponse<T> {
   success: boolean;
   data?: T;
   message?: string;
@@ -523,6 +547,9 @@ export interface IApiResponse<T = any> {
     pages: number;
   };
 }
+
+// Type alias for API responses without data
+export type ApiResponse = IApiResponse<void>;
 
 // API error interface
 export interface IApiError {
@@ -572,9 +599,10 @@ export interface IRegisterRequest {
 
 // Authentication response interface
 export interface IAuthResponse {
-  user: Omit<IUser, "password">;
-  token: string;
-  refreshToken?: string;
+  user: Omit<IUser, "password" | "refreshSessions">;
+  accessToken: string;
+  refreshToken?: string; // Only for MOBILE mode
+  sessionId?: string; // Only for MOBILE mode
   groupJoined?: string; // Group ID if user joined a group during registration
   inviteError?: string; // Error message if invitation failed (but registration succeeded)
 }
@@ -589,7 +617,7 @@ export interface ISocketUser {
   username: string;
   socketId: string;
   groups: string[];
-  status: "shopping" | "online" | "away";
+  status: "shopping" | "online" | "away" | "offline";
   currentLocation?: {
     latitude: number;
     longitude: number;
@@ -609,7 +637,7 @@ export interface ISocketMessage {
   groupId: string;
   messageType: "text" | "image" | "system";
   timestamp: Date;
-  metadata?: Record<string, any>;
+  metadata?: IBaseMessage['metadata'];
 }
 
 // Socket item update interface
@@ -643,9 +671,21 @@ export interface ISocketUserStatus {
   location?: {
     latitude: number;
     longitude: number;
+    accuracy: number;
   };
   timestamp: Date;
 }
+
+// Socket notification interface
+export interface ISocketNotification {
+  type: string;
+  title?: string;
+  message?: string;
+  data?: Record<string, string | number | boolean | null>;
+  timestamp?: Date;
+}
+
+export type ISocketPayload = ISocketMessage | ISocketItemUpdate | ISocketListUpdate | ISocketUserStatus | ISocketNotification | Record<string, string | number | boolean | null | undefined | object | Date>;
 
 // ============================================================================
 // ADDITIONAL MODEL TYPES
@@ -691,3 +731,249 @@ export type PendingInviteDocument = IPendingInvite;
 export type PendingInvitationDocument = IPendingInvitation;
 export type KashrutDocument = IKashrut;
 export type AllergenDocument = IAllergen;
+
+// ============================================================================
+// POPULATED FIELD TYPES
+// ============================================================================
+
+// Types for populated user fields (when using populate with specific fields)
+export type PopulatedUser = Pick<IBaseUser, 'username' | 'firstName' | 'lastName' | 'avatar'> & { _id: Types.ObjectId };
+
+// Type for populated sender in messages
+export type PopulatedSender = Pick<IBaseUser, 'username' | 'firstName' | 'lastName' | 'avatar'> & { _id: Types.ObjectId };
+
+// Type for populated message (with populated sender)
+export type PopulatedMessage = Omit<IMessage, 'sender'> & {
+  sender: PopulatedSender;
+};
+
+// Type for populated message with populated group and sender
+export type PopulatedMessageWithGroup = Omit<IMessage, 'sender' | 'group'> & {
+  sender: PopulatedSender;
+  group: IGroup;
+};
+
+// Type for populated item with populated shopping list
+export type PopulatedItemWithShoppingList = Omit<IItem, 'shoppingList'> & {
+  shoppingList: PopulatedShoppingListWithGroup;
+};
+
+// Message statistics interface (from aggregation)
+export interface IMessageStatistic {
+  _id: string; // messageType
+  totalMessages: number;
+  dailyStats: Array<{
+    date: string;
+    count: number;
+    avgReadTime: number | null;
+  }>;
+}
+
+// Group statistics interface (from ShoppingList.getStatistics aggregation)
+export interface IGroupStatistic {
+  _id: string; // status
+  count: number;
+  totalEstimated: number;
+  totalActual: number;
+  avgCompletionTime: number | null;
+}
+
+// Array type for group statistics (getStatistics returns an array)
+export type IGroupStatistics = IGroupStatistic[];
+
+// Type for populated shopping list with group
+export type PopulatedShoppingListWithGroup = Omit<IShoppingList, 'group'> & {
+  group: IGroup;
+  _id: Types.ObjectId;
+};
+
+// Types for populated group fields (when using populate with specific fields)
+export type PopulatedGroup = Pick<IBaseGroup, 'name' | 'description' | 'avatar'> & { _id: Types.ObjectId };
+
+// Shopping list response data interface
+export interface IShoppingListResponseData {
+  shoppingList: {
+    _id: Types.ObjectId;
+    name: string;
+    description?: string | undefined;
+    status: IBaseShoppingList['status'];
+    priority: IBaseShoppingList['priority'];
+    tags: string[];
+    metadata: IBaseShoppingList['metadata'];
+    group: PopulatedGroup | Types.ObjectId;
+    createdBy: PopulatedUser | Types.ObjectId;
+    assignedTo?: PopulatedUser | Types.ObjectId | undefined;
+    createdAt: Date;
+    updatedAt: Date;
+  };
+  items?: Array<{
+    _id: Types.ObjectId;
+    name: string;
+    description?: string;
+    quantity: number;
+    purchasedQuantity?: number;
+    unit: string;
+    category: Types.ObjectId | { _id: Types.ObjectId; name: string };
+    brand?: string;
+    estimatedPrice?: number;
+    actualPrice?: number;
+    image?: string;
+    status: string;
+    priority: string;
+    notes?: string;
+    isPurchased: boolean;
+    purchasedBy?: Types.ObjectId | { _id: Types.ObjectId; username: string; firstName: string; lastName: string; avatar?: string };
+    purchasedAt?: Date;
+    addedBy: Types.ObjectId | { _id: Types.ObjectId; username: string; firstName: string; lastName: string; avatar?: string };
+    product?: Types.ObjectId | { _id: Types.ObjectId; name: string; image?: string; barcode?: string; brand?: string };
+    createdAt: Date;
+  }>;
+  stats?: {
+    totalItems: number;
+    purchasedItems: number;
+    remainingItems: number;
+    progress: number;
+  };
+  shoppingSession?: {
+    currentUserSession: IShoppingSession | null;
+    activeSessions: IShoppingSession[];
+    totalActiveSessions: number;
+  };
+}
+
+// ============================================================================
+// ITEM MODEL OPTIONS INTERFACES
+// ============================================================================
+
+// Options for findByShoppingList
+export interface IFindByShoppingListOptions {
+  status?: string;
+  category?: string;
+  priority?: string;
+  search?: string;
+  sort?: string;
+  populateProduct?: boolean;
+}
+
+// Options for findByCategory
+export interface IFindByCategoryOptions {
+  limit?: number;
+  sort?: string;
+}
+
+// Options for searchItems, findByProduct, findManualItems, findProductBasedItems
+export interface IItemQueryOptions {
+  category?: string;
+  limit?: number;
+  skip?: number;
+}
+
+// Category stats result from aggregation
+export interface ICategoryStats {
+  _id: Types.ObjectId;
+  totalItems: number;
+  purchasedItems: number;
+  totalEstimated: number;
+  totalActual: number;
+  avgPrice: number;
+  completionRate: number;
+}
+
+// ============================================================================
+// MESSAGE MODEL OPTIONS INTERFACES
+// ============================================================================
+
+// Options for findByGroup
+export interface IFindByGroupOptions {
+  page?: number;
+  limit?: number;
+  before?: string | Types.ObjectId; // Message ID to get messages before
+  after?: string | Types.ObjectId; // Message ID to get messages after
+  messageType?: IBaseMessage['messageType'];
+  search?: string;
+  includeDeleted?: boolean;
+}
+
+// Options for searchMessages
+export interface ISearchMessagesOptions {
+  limit?: number;
+  skip?: number;
+  messageType?: IBaseMessage['messageType'];
+}
+
+// ============================================================================
+// ERROR TYPES
+// ============================================================================
+
+// Mongoose duplicate key error
+export interface IMongooseDuplicateKeyError extends Error {
+  code: number;
+  keyValue: Record<string, string | number | boolean | null | object | Date>;
+  keyPattern?: Record<string, number>;
+}
+
+// Mongoose validation error
+export interface IMongooseValidationError extends Error {
+  name: 'ValidationError';
+  errors: Record<string, {
+    message: string;
+    name: string;
+    path: string;
+    value: unknown;
+  }>;
+}
+
+// Mongoose cast error
+export interface IMongooseCastError extends Error {
+  name: 'CastError';
+  path: string;
+  value: unknown;
+  kind?: string;
+  model?: string;
+}
+
+// Extended error type for error handlers
+export interface IExtendedError extends Error {
+  statusCode?: number;
+  status?: string;
+  isOperational?: boolean;
+  isEmailVerified?: boolean;
+  code?: number;
+  keyValue?: Record<string, string | number | boolean | null | object | Date>;
+  errors?: Record<string, { message: string }>;
+  path?: string;
+  value?: unknown;
+}
+
+// Validation error from express-validator
+export interface IValidationError {
+  path?: string;
+  param?: string;
+  msg: string;
+  value?: unknown;
+}
+
+// Pagination interface
+export interface IPagination {
+  page: number;
+  limit: number;
+  total: number;
+  pages: number;
+  hasNext?: boolean;
+  hasPrev?: boolean;
+}
+
+// ============================================================================
+// SHOPPING LIST MODEL OPTIONS INTERFACES
+// ============================================================================
+
+// Options for findByGroup
+export interface IFindByGroupShoppingListOptions {
+  status?: IShoppingList['status'];
+  assignedTo?: string | Types.ObjectId;
+  priority?: IShoppingList['priority'];
+  tags?: string[];
+  page?: number;
+  limit?: number;
+  sort?: string;
+}

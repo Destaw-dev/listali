@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api';
 import { useNotification } from '@/contexts/NotificationContext';
+import { useAuthStore } from '@/store/authStore';
+import { IShoppingList } from '@/types';
 
 export const shoppingListKeys = {
   all: ['shoppingLists'] as const,
@@ -10,25 +12,29 @@ export const shoppingListKeys = {
 };
 
 export const useGroupShoppingLists = (groupId: string) => {
+  const { authReady, accessToken } = useAuthStore();
+  
   return useQuery({
     queryKey: shoppingListKeys.list(groupId),
     queryFn: async() => {
       const response = await apiClient.getGroupShoppingLists(groupId)
       return response.data || [];
     },
-    enabled: !!groupId,
+    enabled: authReady && !!accessToken && !!groupId,
     refetchOnWindowFocus: false
   });
 };
 
 export const useShoppingList = (listId: string) => {
+  const { authReady, accessToken } = useAuthStore();
+  
   return useQuery({
     queryKey: shoppingListKeys.detail(listId),
     queryFn: async() => {
       const response = await apiClient.getShoppingList(listId)
       return response.data || {};
     },
-    enabled: !!listId,
+    enabled: authReady && !!accessToken && !!listId,
     refetchOnWindowFocus: false
   });
 };
@@ -44,10 +50,10 @@ export const useCreateShoppingList = () => {
     },
     onMutate: async ({ groupId, listData }) => {
       await queryClient.cancelQueries({ queryKey: shoppingListKeys.list(groupId) });
-      const prev = queryClient.getQueryData<any[]>(shoppingListKeys.list(groupId));
+      const prev = queryClient.getQueryData<IShoppingList[]>(shoppingListKeys.list(groupId));
 
       const tempId = `temp-${Date.now()}`;
-      queryClient.setQueryData(shoppingListKeys.list(groupId), (current: any[] = []) => ([
+      queryClient.setQueryData(shoppingListKeys.list(groupId), (current: IShoppingList[] = []) => ([
         { _id: tempId, name: listData.name, priority: listData.priority ?? 'medium', status: 'active', metadata: { itemsCount: 0, completedItemsCount: 0 } },
         ...current
       ]));
@@ -59,7 +65,7 @@ export const useCreateShoppingList = () => {
       handleApiError(err);
     },
     onSuccess: (data, { groupId }, ctx) => {
-      queryClient.setQueryData(shoppingListKeys.list(groupId), (current: any[] = []) =>
+      queryClient.setQueryData(shoppingListKeys.list(groupId), (current: IShoppingList[] = []) =>
         current.map(l => l._id === ctx?.tempId ? data.data : l)
       );
       showSuccess('shoppingLists.createSuccess');
@@ -76,8 +82,11 @@ export const useUpdateShoppingList = () => {
       apiClient.updateShoppingList(listId, listData),
     onMutate: async ({ listId, listData }) => {
       await queryClient.cancelQueries({ queryKey: shoppingListKeys.detail(listId) });
-      const prevDetail = queryClient.getQueryData<any>(shoppingListKeys.detail(listId));
-      queryClient.setQueryData(shoppingListKeys.detail(listId), (d: any) => ({ ...d, ...listData }));
+      const prevDetail = queryClient.getQueryData<IShoppingList>(shoppingListKeys.detail(listId));
+      queryClient.setQueryData(shoppingListKeys.detail(listId), (d: IShoppingList | undefined) => {
+        if (!d) return d;
+        return { ...d, ...listData };
+      });
       return { prevDetail, listId };
     },
     onError: (err, _vars, ctx) => {
@@ -85,7 +94,7 @@ export const useUpdateShoppingList = () => {
       handleApiError(err);
     },
     onSuccess: (data, { listId }) => {
-      queryClient.setQueryData(shoppingListKeys.list(data.data.group?._id), (lists: any[] | undefined) =>
+      queryClient.setQueryData(shoppingListKeys.list(data.data.group?._id), (lists: IShoppingList[] | undefined) =>
         lists?.map(l => l._id === listId ? data.data : l)
       );
       showSuccess('shoppingLists.updateSuccess');
@@ -98,11 +107,11 @@ export const useDeleteShoppingList = () => {
   const { showSuccess, handleApiError } = useNotification();
   
   return useMutation({
-    mutationFn: ({ listId, groupId }: { listId: string; groupId: string }) => apiClient.deleteShoppingList(listId),
+    mutationFn: ({ listId }: { listId: string; groupId: string }) => apiClient.deleteShoppingList(listId),
     onMutate: async ({ listId, groupId }) => {
       await queryClient.cancelQueries({ queryKey: shoppingListKeys.list(groupId) });
-      const prev = queryClient.getQueryData<any[]>(shoppingListKeys.list(groupId));
-      queryClient.setQueryData(shoppingListKeys.list(groupId), (current: any[] = []) =>
+      const prev = queryClient.getQueryData<IShoppingList[]>(shoppingListKeys.list(groupId));
+      queryClient.setQueryData(shoppingListKeys.list(groupId), (current: IShoppingList[] = []) =>
         current.filter(l => l._id !== listId)
       );
       return { prev, groupId };
@@ -111,7 +120,7 @@ export const useDeleteShoppingList = () => {
       if (ctx?.prev) queryClient.setQueryData(shoppingListKeys.list(ctx.groupId), ctx.prev);
       handleApiError(err);
     },
-    onSuccess: (_data, { groupId }) => {
+    onSuccess: () => {
       showSuccess('shoppingLists.deleteSuccess');
     }
   });
@@ -127,14 +136,17 @@ export const useAddItemToList = () => {
       apiClient.addItemToList(listId, itemData),
     onMutate: async ({ listId }) => {
       await queryClient.cancelQueries({ queryKey: shoppingListKeys.detail(listId) });
-      const prev = queryClient.getQueryData<any>(shoppingListKeys.detail(listId));
-      queryClient.setQueryData(shoppingListKeys.detail(listId), (d: any) => ({
-        ...d,
-        metadata: {
-          ...d?.metadata,
-          itemsCount: (d?.metadata?.itemsCount ?? 0) + 1
-        }
-      }));
+      const prev = queryClient.getQueryData<IShoppingList>(shoppingListKeys.detail(listId));
+      queryClient.setQueryData(shoppingListKeys.detail(listId), (d: IShoppingList | undefined) => {
+        if (!d) return d;
+        return {
+          ...d,
+          metadata: {
+            ...d.metadata,
+            itemsCount: (d.metadata?.itemsCount ?? 0) + 1
+          }
+        };
+      });
       return { prev, listId };
     },
     onError: (e, _v, ctx) => {
@@ -156,14 +168,17 @@ export const useRemoveItemFromList = () => {
       apiClient.removeItemFromList(listId, itemId),
     onMutate: async ({ listId }) => {
       await queryClient.cancelQueries({ queryKey: shoppingListKeys.detail(listId) });
-      const prev = queryClient.getQueryData<any>(shoppingListKeys.detail(listId));
-      queryClient.setQueryData(shoppingListKeys.detail(listId), (d: any) => ({
-        ...d,
-        metadata: {
-          ...d?.metadata,
-          itemsCount: Math.max(0, (d?.metadata?.itemsCount ?? 1) - 1)
-        }
-      }));
+      const prev = queryClient.getQueryData<IShoppingList>(shoppingListKeys.detail(listId));
+      queryClient.setQueryData(shoppingListKeys.detail(listId), (d: IShoppingList | undefined) => {
+        if (!d) return d;
+        return {
+          ...d,
+          metadata: {
+            ...d.metadata,
+            itemsCount: Math.max(0, (d.metadata?.itemsCount ?? 1) - 1)
+          }
+        };
+      });
       return { prev, listId };
     },
     onError: (e, _v, ctx) => {
@@ -188,7 +203,7 @@ export const useCompleteShoppingList = () => {
       queryClient.invalidateQueries({ queryKey: shoppingListKeys.detail(listId) });
       showSuccess('shoppingLists.completeSuccess');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       handleApiError(error);
     },
   });

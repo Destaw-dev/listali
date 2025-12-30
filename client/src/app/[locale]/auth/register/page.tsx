@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+import { AxiosError } from 'axios';
 import { Eye, EyeOff, Mail, Lock, User, UserCheck } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
@@ -16,8 +17,7 @@ import { GoogleAuthButton } from '@/components/auth/GoogleAuthButton';
 import { ArrowIcon } from '@/components/common/Arrow';
 import { Button, Input } from '@/components/common';
 import { mapInviteErrorToTranslationKey } from '@/lib/utils';
-
-
+import { createRegisterSchema } from '@/lib/schemas';
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -30,19 +30,8 @@ export default function RegisterPage() {
   const t = useTranslations('auth');
   const locale = params?.locale as string || 'he';
 
-  const registerSchema = z.object({
-    firstName: z.string().min(2, t('firstNameMinLength')),
-    lastName: z.string().min(2, t('lastNameMinLength')),
-    username: z.string().min(3, t('usernameMinLength')),
-    email: z.string().email(t('emailInvalid')),
-    password: z.string().min(6, t('passwordMinLength')),
-    confirmPassword: z.string(),
-  }).refine((data) => data.password === data.confirmPassword, {
-    message: t('passwordsDoNotMatch'),
-    path: ['confirmPassword'],
-  });
-
-type RegisterForm = z.infer<typeof registerSchema>;
+  const registerSchema = createRegisterSchema(t);
+  type RegisterForm = z.infer<typeof registerSchema>;
 
   const {
     register,
@@ -100,8 +89,12 @@ type RegisterForm = z.infer<typeof registerSchema>;
         router.push(`/${locale}/auth/verify-email?email=${encodeURIComponent(data.email)}`);
         return;
       }
-    } catch (error: any) {
-      handleApiError(error);
+    } catch (error) {
+      if (error instanceof Error || error instanceof AxiosError) {
+        handleApiError(error);
+      } else {
+        handleApiError(new Error('An unexpected error occurred'));
+      }
     } finally {
       setIsLoading(false);
     }
@@ -110,11 +103,9 @@ type RegisterForm = z.infer<typeof registerSchema>;
   const handleGoogleAuth = async () => {
     setIsLoading(true);
     try {
-      // Get inviteCode from current URL if it exists
       const searchParams = new URLSearchParams(window.location.search);
       const inviteCode = searchParams.get('inviteCode');
       
-      // Build callback URL with inviteCode if it exists
       const callbackUrlBase = `${window.location.origin}/${locale}/auth/callback`;
       const callbackUrl = inviteCode 
         ? `${callbackUrlBase}?inviteCode=${encodeURIComponent(inviteCode)}`
@@ -129,7 +120,11 @@ type RegisterForm = z.infer<typeof registerSchema>;
         throw new Error(data.message || 'Failed to get Google OAuth URL');
       }
     } catch (error) {
-      handleApiError(error);
+      if (error instanceof Error || error instanceof AxiosError) {
+        handleApiError(error);
+      } else {
+        handleApiError(new Error('Failed to get Google OAuth URL'));
+      }
     } finally {
       setIsLoading(false);
     }
@@ -158,7 +153,7 @@ type RegisterForm = z.infer<typeof registerSchema>;
               type="text"
               id="firstName"
               placeholder={t('firstNamePlaceholder')}
-              icon={<User className="w-4 h-4 text-muted" />}
+              icon={<User className="w-5 h-5 text-muted" />}
               label={t('firstName')}
               error={errors.firstName?.message}
             />
@@ -168,7 +163,7 @@ type RegisterForm = z.infer<typeof registerSchema>;
               type="text"
               id="lastName"
               placeholder={t('lastNamePlaceholder')}
-              icon={<User className="w-4 h-4 text-muted" />}
+              icon={<User className="w-5 h-5 text-muted" />}
               label={t('lastName')}
               error={errors.lastName?.message}
             />
@@ -178,7 +173,7 @@ type RegisterForm = z.infer<typeof registerSchema>;
               type="text"
               id="username"
               placeholder={t('usernamePlaceholder')}
-              icon={<UserCheck className="w-4 h-4 text-muted" />}
+              icon={<UserCheck className="w-5 h-5 text-muted" />}
               label={t('username')}
               error={errors.username?.message}
             />
@@ -188,7 +183,7 @@ type RegisterForm = z.infer<typeof registerSchema>;
               type="email"
               id="email"
               placeholder={t('emailPlaceholder')}
-              icon={<Mail className="w-4 h-4 text-muted" />}
+              icon={<Mail className="w-5 h-5 text-muted" />}
               label={t('email')}
               error={errors.email?.message}
             />  
@@ -198,17 +193,16 @@ type RegisterForm = z.infer<typeof registerSchema>;
               type={showPassword ? 'text' : 'password'}
               id="password"
               placeholder={t('passwordPlaceholder')}
-              icon={<Lock className="w-4 h-4 text-muted" />}
+              icon={<Lock className="w-5 h-5 text-muted" />}
               label={t('password')}
               error={errors.password?.message}
               iconTwo={
-                <button
-                  type="button"
+                <span
                   onClick={() => setShowPassword((prev) => !prev)}
                   className="text-muted hover:text-secondary transition-colors"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
+                </span>
               }
             />
 
@@ -217,17 +211,16 @@ type RegisterForm = z.infer<typeof registerSchema>;
               type={showConfirmPassword ? 'text' : 'password'}
               id="confirmPassword"
               placeholder={t('confirmPasswordPlaceholder')}
-              icon={<Lock className="w-4 h-4 text-muted" />}
+              icon={<Lock className="w-5 h-5 text-muted" />}
               label={t('confirmPassword')}
               error={errors.confirmPassword?.message}
               iconTwo={
-                <button
-                  type="button"
+                <span
                   onClick={() => setShowConfirmPassword((prev) => !prev)}
                   className="text-muted hover:text-secondary transition-colors"
                 >
-                  {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
+                  {showConfirmPassword ? <EyeOff className="w-5 h-5 text-muted hover:text-secondary transition-colors" /> : <Eye className="w-5 h-5 text-muted hover:text-secondary transition-colors" />}
+                </span>
               }
             />
 

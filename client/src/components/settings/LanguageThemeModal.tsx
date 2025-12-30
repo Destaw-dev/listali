@@ -69,7 +69,9 @@ export default function LanguageThemeModal({
       onClose();
     } catch (error) {
       console.error('Preferences update error:', error);
-      handleApiError(error);
+      if (error instanceof Error) {
+        handleApiError(error);
+      }
     } finally {
       setInternalIsLoading(false);
     }
@@ -81,7 +83,6 @@ export default function LanguageThemeModal({
     }
   };
 
-  // Prevent body scroll when modal is open
   useModalScrollLock(isOpen);
 
   if (!isOpen) return null;

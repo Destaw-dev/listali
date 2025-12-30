@@ -15,6 +15,7 @@ import { ChatComponent } from '@/components/chat/ChatComponent';
 import { Button } from '@/components/common/Button';
 import { ArrowIcon } from '@/components/common/Arrow';
 import CreateShoppingListModal from '@/components/shoppingList/CreateShoppingListModal';
+import { IShoppingList, IGroupMember, ICreateListFormData, getCreatedByDisplayName } from '@/types';
 
 type TabType = 'overview' | 'lists' | 'chat' | 'stats';
 
@@ -49,13 +50,9 @@ export default function GroupDetailsPage() {
     }
   }, [searchParams]);
   
-  const handleCreateList = async (listData: any) => {
-    try {
-      await createListMutation.mutateAsync({ groupId, listData });
-      setShowCreateListModal(false);
-    } catch (error) {
-      // Error handled by mutation
-    }
+  const handleCreateList = async (listData: ICreateListFormData) => {
+    await createListMutation.mutateAsync({ groupId, listData });
+    setShowCreateListModal(false);
   };
 
   const handleTabChange = (tab: TabType) => {
@@ -66,11 +63,8 @@ export default function GroupDetailsPage() {
   };
 
   const handleInviteToGroup = async ({ email, role }: { email: string; role: 'member' | 'admin' }) => {
-    try {
-      await inviteToGroupMutation.mutateAsync({ groupId, inviteData: { email, role } });
-      setShowInviteModal(false);
-    } catch (error) {
-    }
+    await inviteToGroupMutation.mutateAsync({ groupId, inviteData: { email, role } });
+    setShowInviteModal(false);
   };
 
   const navigateBack = () => {
@@ -81,7 +75,6 @@ export default function GroupDetailsPage() {
     router.push(`/${locale}/groups/${groupId}/settings`);
   };
 
-  // Redirect on 403 error - must be before any early returns
   useEffect(() => {
     if (error && (error as { response?: { status?: number } })?.response?.status === 403) {
       router.push(`/${locale}/groups`);
@@ -122,20 +115,22 @@ export default function GroupDetailsPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-500 mb-4">{t('errorLoadingGroup')}</p>
-          <button 
+          <Button 
             onClick={navigateBack}
-            className="px-4 py-2 bg-primary text-white rounded-lg"
+            variant="primary"
+            size="lg"
+            fullWidth
           >
             {t('backToGroups')}
-          </button>
+          </Button>
         </div>
       </div>
     );
   }
 
   const hasAdminPermissions = group?.members?.find(
-    (member: { user: string | { _id: string }; role: string }) => {
-      const memberUserId = typeof member.user === 'object' ? member.user._id : member.user;
+    (member: IGroupMember) => {
+      const memberUserId = typeof member.user === 'object' ? member.user.id : member.userId;
       return memberUserId === user?._id && (member.role === 'admin' || member.role === 'owner');
     }
   );
@@ -184,7 +179,7 @@ export default function GroupDetailsPage() {
               
               <div className="divide-y divide-border">
                 {
-                  group.shoppingLists?.map((list: any) => (
+                  group.shoppingLists?.map((list: IShoppingList) => (
                     <div key={list._id} className="p-4 hover:bg-surface transition-colors flex items-center justify-between group cursor-pointer" onClick={() => router.push(`/${locale}/groups/${groupId}/${list._id}`)}>
                     <div className="flex items-center gap-4">
                       <div className="h-10 w-10 rounded-lg bg-primaryT-100 flex items-center justify-center text-primaryT-600">
@@ -192,7 +187,7 @@ export default function GroupDetailsPage() {
                       </div>
                       <div>
                         <p className="font-medium text-text-primary">{list.name}</p>
-                        <p className="text-xs text-text-muted">{`נוצר ע״י ${list.createdBy?.username} •  ${t('items')} ${list.items?.length || 0}`}</p>
+                        <p className="text-xs text-text-muted">{`נוצר ע״י ${getCreatedByDisplayName(list.createdBy)} •  ${t('items')} ${list.items?.length || 0}`}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
@@ -223,8 +218,8 @@ export default function GroupDetailsPage() {
                 </Button>
               </div>
               <div className="p-2 space-y-2">
-                {group.members?.map((member: any) => (
-                  <MemberItem key={member.user._id} name={member.user.firstName + ' ' + member.user.lastName} role={member.role} email={member.user.email} initial={member.user.firstName[0]} color={member.role === 'owner' ? 'bg-blue-600' : 'bg-purple-600'} />
+                {group.members?.map((member: IGroupMember) => (
+                  <MemberItem key={member.user.id} name={member.user.firstName + ' ' + member.user.lastName} role={member.role} email={member.user.email} initial={member.user.firstName[0]} color={member.role === 'owner' ? 'bg-blue-600' : 'bg-purple-600'} />
                 ))}
               </div>
               <div className="px-4 py-3 text-center">
@@ -401,9 +396,6 @@ const MemberItem = ({ name, role, email, initial, color }: { name: string, role:
       <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${role === 'owner' ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-600'}`}>
         {role === 'owner' ? 'בעלים' : role === 'admin' ? 'מנהל' : 'חבר'}
       </span>
-      <button className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-gray-600 p-1">
-        <MoreVertical className="h-4 w-4" />
-      </button>
     </div>
   </div>
 );

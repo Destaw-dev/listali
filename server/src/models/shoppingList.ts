@@ -1,12 +1,18 @@
 import mongoose, { Schema, Model, FilterQuery } from 'mongoose';
-import { IGroupMember, IShoppingList } from '../types';
+import { 
+  IGroupMember, 
+  IShoppingList,
+  IFindByGroupShoppingListOptions,
+  ISearchMessagesOptions,
+  IGroupStatistics
+} from '../types';
 
 type ShoppingListModel = Model<IShoppingList>& {
-    findByGroup(groupId: string, options?: any): Promise<IShoppingList[]>;
+    findByGroup(groupId: string, options?: IFindByGroupShoppingListOptions): Promise<IShoppingList[]>;
     getUnreadMessages(userId: string, groupId?: string): Promise<IShoppingList[]>;
     markAllAsRead(userId: string, groupId: string): Promise<number>;
-    searchMessages(groupId: string, searchTerm: string, options: any): Promise<IShoppingList[]>;
-    getStatistics(groupId: string, timeRange?: { start: Date, end: Date }): Promise<IShoppingList[]>;
+    searchMessages(groupId: string, searchTerm: string, options: ISearchMessagesOptions): Promise<IShoppingList[]>;
+    getStatistics(groupId: string, timeRange?: { start: Date, end: Date }): Promise<IGroupStatistics>;
     findOverdue(groupId: string): Promise<IShoppingList[]>
   };
 
@@ -51,16 +57,6 @@ const shoppingListSchema = new Schema<IShoppingList, ShoppingListModel>({
     type: Schema.Types.ObjectId,
     ref: 'ShoppingSession'
   }],
-  // dueDate: {
-  //   type: Date,
-  //   default: null,
-  //   validate: {
-  //     validator: function(value: Date) {
-  //       return !value || value > new Date();
-  //     },
-  //     message: 'Due date must be in the future'
-  //   }
-  // },
   completedAt: {
     type: Date,
     default: null
@@ -104,7 +100,6 @@ const shoppingListSchema = new Schema<IShoppingList, ShoppingListModel>({
   toObject: { virtuals: true }
 });
 
-// Indexes for performance
 shoppingListSchema.index({ group: 1, status: 1 });
 shoppingListSchema.index({ createdBy: 1 });
 shoppingListSchema.index({ assignedTo: 1 });
@@ -113,18 +108,15 @@ shoppingListSchema.index({ dueDate: 1 });
 shoppingListSchema.index({ priority: 1, status: 1 });
 shoppingListSchema.index({ tags: 1 });
 
-// Virtual for completion percentage
 shoppingListSchema.virtual('completionPercentage').get(function() {
   if (this.metadata.itemsCount === 0) return 0;
   return Math.round((this.metadata.completedItemsCount / this.metadata.itemsCount) * 100);
 });
 
-// Virtual for is overdue
 shoppingListSchema.virtual('isOverdue').get(function() {
   return this.dueDate && this.dueDate < new Date() && this.status === 'active';
 });
 
-// Virtual for days until due
 shoppingListSchema.virtual('daysUntilDue').get(function() {
   if (!this.dueDate) return null;
   const diffTime = this.dueDate.getTime() - Date.now();
@@ -132,18 +124,14 @@ shoppingListSchema.virtual('daysUntilDue').get(function() {
   return diffDays;
 });
 
-// Virtual for estimated vs actual difference
 shoppingListSchema.virtual('budgetDifference').get(function() {
     if (this.metadata.actualTotal && this.metadata.estimatedTotal) {
-        // בטוח להשתמש כאן
         return this.metadata.actualTotal - this.metadata.estimatedTotal;
       }
       return;
 });
 
-// Pre-save middleware to update metadata
 shoppingListSchema.pre('save', async function(next) {
-  // Always recalculate metadata when saving
   if (this.items.length > 0) {
     const Item = mongoose.model('Item');
     const items = await Item.find({ _id: { $in: this.items } });
@@ -155,14 +143,12 @@ shoppingListSchema.pre('save', async function(next) {
       .filter(item => item.status === 'purchased')
       .reduce((sum, item) => sum + (item.actualPrice || 0) * item.quantity, 0);
   } else {
-    // Reset metadata if no items
     this.metadata.itemsCount = 0;
     this.metadata.completedItemsCount = 0;
     this.metadata.estimatedTotal = 0;
     this.metadata.actualTotal = 0;
   }
   
-  // Auto-complete if all items are purchased
   if (this.metadata.itemsCount > 0 && 
       this.metadata.completedItemsCount === this.metadata.itemsCount && 
       this.status === 'active') {
@@ -175,7 +161,6 @@ shoppingListSchema.pre('save', async function(next) {
     this.completedAt = null;
   }
   
-  // Clear completedAt if status changes from completed
   if (this.isModified('status') && this.status !== 'completed') {
     this.completedAt = null;
   }
@@ -183,7 +168,6 @@ shoppingListSchema.pre('save', async function(next) {
   next();
 });
 
-// Instance method to update metadata (for manual updates)
 shoppingListSchema.methods.updateMetadata = async function() {
   if (this.items.length > 0) {
     const Item = mongoose.model('Item');
@@ -206,58 +190,7 @@ shoppingListSchema.methods.updateMetadata = async function() {
   return this;
 };
 
-// const ShoppingSession = mongoose.model<IShoppingSession>('ShoppingSession');
 
-// shoppingListSchema.methods.addShoppingSession = async function addShoppingSession(
-//   sessionId: string | Types.ObjectId
-// ) {
-
-//   const session = await ShoppingSession
-//     .findById(sessionId)
-//     .select({ listId: 1 })
-//     .lean();
-
-//   if (!session) {
-//     throw new Error('Shopping session not found');
-//   }
-
-//   if (String(session.listId) !== String(this._id)) {
-//     throw new Error('Shopping session does not belong to this shopping list');
-//   }
-
-//   const alreadyExists = (this.shoppingSessions ?? []).some(
-//     (x: any) => String(x) === String(sessionId)
-//   );
-//   if (alreadyExists) {
-//     throw new Error('Shopping session already exists');
-//   }
-
-//   if (this.status !== 'active') {
-//     throw new Error('Can only add shopping session to active shopping list');
-//   }
-
-//   // ✅ אטומי וללא רייסים: הוסף רק אם לא קיים וכשהרשימה עדיין active
-//   const updated = await mongoose.model('ShoppingList').findOneAndUpdate(
-//     {
-//       _id: this._id,
-//       status: 'active',
-//       shoppingSessions: { $ne: sessionId }
-//     },
-//     { $addToSet: { shoppingSessions: sessionId } },
-//     { new: true }
-//   );
-
-//   if (!updated) {
-//     // אם לא עודכן, כנראה שמישהו הוסיף במקביל או שהסטטוס כבר אינו active
-//     // אפשר להחזיר כאן את הדוקומנט הנוכחי או לזרוק שגיאה רכה
-//     throw new Error('Failed to add shopping session (maybe already added or list not active)');
-//   }
-
-//   return updated;
-// };
-
-
-// Instance method to add item
 shoppingListSchema.methods.addItem = async function(itemId: string) {
   if (this.items.includes(itemId)) {
     throw new Error('Item is already in this shopping list');
@@ -283,7 +216,6 @@ shoppingListSchema.methods.addItem = async function(itemId: string) {
   return this;
 };
 
-// Instance method to remove item
 shoppingListSchema.methods.removeItem = async function(itemId: string) {
   const itemIndex = this.items.findIndex((id: string | mongoose.Types.ObjectId)=> id.toString() === itemId);
   
@@ -296,7 +228,6 @@ shoppingListSchema.methods.removeItem = async function(itemId: string) {
   return this;
 };
 
-// Instance method to complete list
 shoppingListSchema.methods.complete = async function() {
   if (this.status !== 'active') {
     throw new Error('Can only complete active lists');
@@ -308,14 +239,12 @@ shoppingListSchema.methods.complete = async function() {
   return this;
 };
 
-// Instance method to archive list
 shoppingListSchema.methods.archive = async function() {
   this.status = 'archived';
   await this.save();
   return this;
 };
 
-// Instance method to reopen list
 shoppingListSchema.methods.reopen = async function() {
   if (this.status !== 'completed') {
     throw new Error('Can only reopen completed lists');
@@ -327,9 +256,7 @@ shoppingListSchema.methods.reopen = async function() {
   return this;
 };
 
-// Instance method to assign to user
 shoppingListSchema.methods.assignTo = async function(userId: string) {
-  // Verify user is member of the group
   const Group = mongoose.model('Group');
   const group = await Group.findById(this.group);
   
@@ -342,15 +269,13 @@ shoppingListSchema.methods.assignTo = async function(userId: string) {
   return this;
 };
 
-// Instance method to unassign
 shoppingListSchema.methods.unassign = async function() {
   this.assignedTo = null;
   await this.save();
   return this;
 };
 
-// Static method to find by group
-shoppingListSchema.statics.findByGroup = function(groupId: string, options: any = {}) {
+shoppingListSchema.statics.findByGroup = function(groupId: string, options: IFindByGroupShoppingListOptions = {}) {
   const {
     status = null,
     assignedTo = null,
@@ -379,7 +304,6 @@ shoppingListSchema.statics.findByGroup = function(groupId: string, options: any 
     .limit(limit);
 };
 
-// Static method to find overdue lists
 shoppingListSchema.statics.findOverdue = function(groupId?: string) {
   const query: FilterQuery<IShoppingList> = {
     status: 'active',
@@ -394,7 +318,6 @@ shoppingListSchema.statics.findOverdue = function(groupId?: string) {
     .populate('group', 'name');
 };
 
-// Static method to get statistics
 shoppingListSchema.statics.getStatistics = async function(groupId: string, timeRange?: { start: Date, end: Date }) {
   const matchConditions: FilterQuery<IShoppingList> = { group: new mongoose.Types.ObjectId(groupId) };
   
@@ -429,7 +352,6 @@ shoppingListSchema.statics.getStatistics = async function(groupId: string, timeR
   return stats;
 };
 
-// Ensure virtuals are included in JSON
 shoppingListSchema.set('toJSON', { virtuals: true });
 shoppingListSchema.set('toObject', { virtuals: true });
 

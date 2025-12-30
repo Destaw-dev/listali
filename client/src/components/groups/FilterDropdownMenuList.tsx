@@ -5,7 +5,6 @@ import { Button } from "@/components/common/Button";
 import { Badge } from "@/components/common/Badge";
 import { Filter, X } from "lucide-react";
 
-// --- 2.1 FilterDropdownMenu (Handles complex filter logic and rendering) ---
 
 interface FilterDropdownMenuProps {
     t: ReturnType<typeof useTranslations>;
@@ -29,11 +28,9 @@ export function FilterDropdownMenu({
     activeFiltersCount,
 }: FilterDropdownMenuProps) {
   
-  // Temporary filter states (before applying)
   const [tempStatusFilter, setTempStatusFilter] = useState<string>(statusFilter);
   const [tempPriorityFilter, setTempPriorityFilter] = useState<string>(priorityFilter);
 
-  // Sync temporary state when dropdown opens
   useEffect(() => {
     if (isOpen) {
       setTempStatusFilter(statusFilter);
@@ -42,14 +39,12 @@ export function FilterDropdownMenu({
   }, [isOpen, statusFilter, priorityFilter]);
 
   const advancedFilterOptions: DropdownOption[] = [
-    // Status Group
     { label: t("lists.filters.status"), value: "_header-status", disabled: true },
     { label: t("lists.filters.allStatuses"), value: "status-all" },
     { label: t("lists.status.active"), value: "status-active" },
     { label: t("lists.status.completed"), value: "status-completed" },
     { label: t("lists.status.archived"), value: "status-archived" },
     { divider: true, label: "", value: "_divider-status" },
-    // Priority Group
     { label: t("lists.filters.priority"), value: "_header-priority", disabled: true },
     { label: t("lists.filters.allPriorities"), value: "priority-all" },
     { label: t("lists.high"), value: "priority-high" },
@@ -126,8 +121,6 @@ export function FilterDropdownMenu({
   );
 }
 
-// --- 2.2 ActiveFilterBadges (Displays and manages applied filter badges) ---
-
 interface ActiveFilterBadgesProps {
     t: ReturnType<typeof useTranslations>;
     statusFilter: string;
@@ -155,7 +148,6 @@ export function ActiveFilterBadges({
         "priority-low": t("lists.low"),
     };
     
-    // Helper to get the correct label for a filter key (e.g., 'active' -> 'Active')
     const getFilterLabel = (type: 'status' | 'priority', value: string) => {
         return filterOptions[`${type}-${value}`] || '';
     }

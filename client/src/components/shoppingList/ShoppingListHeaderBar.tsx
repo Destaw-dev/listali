@@ -6,9 +6,10 @@ import { Calendar, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { ArrowIcon } from "../common/Arrow";
+import { IShoppingList } from "@/types";
 
 interface ShoppingListHeaderBarProps {
-  shoppingList: any;
+  shoppingList: IShoppingList;
   groupId: string;
   locale: string;
   onAddItems: () => void;
@@ -33,13 +34,15 @@ export function ShoppingListHeaderBar({
     <header className="flex flex-col gap-6 rounded-3xl bg-card p-6 shadow-xl">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-start gap-4">
-          <button
+          <Button
             onClick={() => router.push(`/${locale}/groups/${groupId}?tab=lists`)}
-            className="flex h-11 w-11 items-center justify-center rounded-2xl bg-surface text-text-muted shadow-inner transition hover:scale-105 hover:text-primaryT-600"
+            variant='surface'
+            size='md'
+            rounded
             aria-label="Back to lists"
           >
             <ArrowIcon />
-          </button>
+          </Button>
 
           <div>
             <div className="flex items-center gap-2">

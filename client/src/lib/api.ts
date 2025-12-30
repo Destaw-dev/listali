@@ -1,11 +1,14 @@
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { IRegisterRequest } from '@/types';
+import { useAuthStore } from '@/store/authStore';
 
 export class ApiClient {
   private baseURL: string;
   private client: AxiosInstance;
+  private isRefreshing = false;
+  private refreshPromise: Promise<string> | null = null;
 
-  constructor(baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://192.168.1.204:5000' || 'http://localhost:5000') {
+  constructor(baseURL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5000') {
     this.baseURL = baseURL;
     this.client = axios.create({
       baseURL: `${this.baseURL}/api`,
@@ -19,13 +22,11 @@ export class ApiClient {
   }
 
   private setupInterceptors() {
-    // Request interceptor
     this.client.interceptors.request.use(
       (config: InternalAxiosRequestConfig) => {
-        // Add auth token if available
-        const token = this.getAuthToken();
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
+        const accessToken = useAuthStore.getState().accessToken;
+        if (accessToken) {
+          config.headers.Authorization = `Bearer ${accessToken}`;
         }
         return config;
       },
@@ -34,52 +35,160 @@ export class ApiClient {
       }
     );
 
-    // Response interceptor
     this.client.interceptors.response.use(
       (response: AxiosResponse) => {
         return response;
       },
       async (error: AxiosError) => {
-        if (error.response?.status === 401) {
-          // Handle token refresh or logout
-          this.handleAuthError();
+        const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+        
+        if (!originalRequest) {
+          return Promise.reject(error);
         }
+
+        const url = originalRequest.url || '';
+        // Do not attempt refresh for refresh/logout endpoints
+        if (url.includes('/auth/refresh') || url.includes('/auth/logout')) {
+          return Promise.reject(error);
+        }
+
+        // Only handle 401 errors
+        if (error.response?.status === 401 && !originalRequest._retry) {
+          originalRequest._retry = true;
+
+          const authStore = useAuthStore.getState();
+          
+          // If auth is not ready or still bootstrapping, wait for bootstrap
+          if (!authStore.authReady || authStore.isBootstrapping) {
+            // If bootstrap hasn't started, trigger it
+            if (!authStore.isBootstrapping) {
+              // Don't await - let it run in background, we'll wait for it below
+              authStore.bootstrapAuth().catch(() => {
+                // Ignore errors, bootstrap will set authReady=true anyway
+              });
+            }
+
+            // Wait for bootstrap to complete
+            const waitForBootstrap = () => {
+              return new Promise<void>((resolve) => {
+                const maxWait = 10000; // 10 seconds max
+                const startTime = Date.now();
+                const checkBootstrap = () => {
+                  const state = useAuthStore.getState();
+                  if (state.authReady && !state.isBootstrapping) {
+                    resolve();
+                  } else if (Date.now() - startTime > maxWait) {
+                    // Timeout - resolve anyway to avoid infinite wait
+                    resolve();
+                  } else {
+                    setTimeout(checkBootstrap, 100);
+                  }
+                };
+                checkBootstrap();
+              });
+            };
+
+            await waitForBootstrap();
+
+            // After bootstrap, if we have an access token, retry the request
+            const newState = useAuthStore.getState();
+            if (newState.accessToken) {
+              originalRequest.headers = originalRequest.headers || {};
+              originalRequest.headers.Authorization = `Bearer ${newState.accessToken}`;
+              return this.client(originalRequest);
+            }
+            
+            // No access token after bootstrap, reject
+            return Promise.reject(error);
+          }
+
+          // Auth is ready, attempt refresh
+          try {
+            const newAccessToken = await this.refreshAccessToken();
+            
+            if (originalRequest.headers) {
+              originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+            }
+            
+            return this.client(originalRequest);
+          } catch (refreshError) {
+            // Refresh failed after authReady=true, clear auth and redirect
+            await this.handleAuthError();
+            return Promise.reject(refreshError);
+          }
+        }
+        
         return Promise.reject(error);
       }
     );
   }
 
-  private getAuthToken(): string | null {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('token');
+  private async refreshAccessToken(): Promise<string> {
+    if (this.isRefreshing && this.refreshPromise) {
+      return this.refreshPromise;
     }
-    return null;
+
+    this.isRefreshing = true;
+    this.refreshPromise = (async () => {
+      try {
+        const response = await this.client.post('/auth/refresh');
+
+        if (response.data.success && response.data.data?.accessToken) {
+          const newAccessToken = response.data.data.accessToken;
+          useAuthStore.getState().setAccessToken(newAccessToken);
+          return newAccessToken;
+        }
+
+        throw new Error('Failed to refresh token');
+      } catch (error) {
+        if (axios.isAxiosError(error) && error.response?.status === 401) {
+          const authStore = useAuthStore.getState();
+          if (authStore.authReady) {
+            authStore.clearAuth();
+            if (typeof window !== 'undefined') {
+              const path = window.location.pathname;
+              const localeMatch = path.match(/^\/([a-z]{2})\//);
+              const locale = localeMatch ? localeMatch[1] : 'he';
+              if (!path.includes('/welcome') && !path.includes('/auth/login')) {
+                window.location.href = `/${locale}/welcome`;
+              }
+            }
+          }
+        }
+        throw error;
+      } finally {
+        this.isRefreshing = false;
+        this.refreshPromise = null;
+      }
+    })();
+
+    return this.refreshPromise;
   }
 
-  private setAuthToken(token: string) {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('token', token);
+  private async handleAuthError() {
+    const authStore = useAuthStore.getState();
+    
+    if (!authStore.authReady) {
+      return;
     }
+
+    authStore.clearAuth();
+
+    await this.client.post('/auth/logout');
+
+    setTimeout(() => {
+      if (typeof window !== 'undefined') {
+        const path = window.location.pathname;
+        const localeMatch = path.match(/^\/([a-z]{2})\//);
+        const locale = localeMatch ? localeMatch[1] : 'he';
+        
+        if (!path.includes('/welcome') && !path.includes('/auth/login')) {
+          window.location.href = `/${locale}/welcome`;
+        }
+      }
+    }, 100);
   }
 
-  private removeAuthToken() {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('token');
-    }
-  }
-
-  private handleAuthError() {
-    this.removeAuthToken();
-    if (typeof window !== 'undefined') {
-      // Get locale from URL path instead of useParams
-      const path = window.location.pathname;
-      const localeMatch = path.match(/^\/([a-z]{2})\//);
-      const locale = localeMatch ? localeMatch[1] : 'he';
-      window.location.href = `/${locale}/welcome`;
-    }
-  }
-
-  // Generic request methods
   async get(url: string, config?: AxiosRequestConfig) {
     return this.client.get(url, config);
   }
@@ -100,21 +209,27 @@ export class ApiClient {
     return this.client.delete(url, config);
   }
 
-  // Auth methods
   async login(email: string, password: string) {
     const response = await this.post('/auth/login', { email, password });
     if (response.data.success && response.data.data) {
-      this.setAuthToken(response.data.data.token);
+      const { accessToken, user } = response.data.data;
+      useAuthStore.getState().setAccessToken(accessToken);
+      if (user) {
+        useAuthStore.getState().setUser(user);
+      }
       return response.data.data;
     }
     throw new Error(response.data.message || 'Login failed');
   }
 
-
   async register(userData: IRegisterRequest) {
     const response = await this.post('/auth/register', userData);
     if (response.data.success && response.data.data) {
-      this.setAuthToken(response.data.data.token);
+      const { accessToken, user } = response.data.data;
+      useAuthStore.getState().setAccessToken(accessToken);
+      if (user) {
+        useAuthStore.getState().setUser(user);
+      }
       return response.data.data;
     }
     throw new Error(response.data.message || 'Registration failed');
@@ -124,17 +239,27 @@ export class ApiClient {
     try {
       await this.post('/auth/logout');
     } finally {
-      this.removeAuthToken();
-      // Also remove token from cookie - try multiple approaches
-      if (typeof window !== 'undefined') {
-        // Method 1: Set to empty with past date
-        document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-        // Method 2: Set to empty with max-age 0
-        document.cookie = 'token=; path=/; max-age=0';
-        // Method 3: Set to empty with different paths
-        document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
-        document.cookie = 'token=; path=/; max-age=0; SameSite=Lax';
+      useAuthStore.getState().setAccessToken(null);
+      useAuthStore.getState().clearUser();
+    }
+  }
+
+  async initAuthFromRefresh(): Promise<boolean> {
+    try {
+      const response = await this.client.post('/auth/refresh');
+
+      if (response.data.success && response.data.data?.accessToken) {
+        const accessToken = response.data.data.accessToken;
+        useAuthStore.getState().setAccessToken(accessToken);
+        return true;
       }
+      return false;
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 401) {
+        return false;
+      }
+      console.error('Error refreshing token:', error);
+      return false;
     }
   }
 
@@ -168,23 +293,23 @@ export class ApiClient {
   }
 
   async handleGoogleCallback() {
-    // Check if we have a token from Google OAuth callback
     const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('token');
+    const accessToken = urlParams.get('accessToken');
     const user = urlParams.get('user');
     
-    if (token) {
-      this.setAuthToken(token);
+    if (accessToken) {
+      useAuthStore.getState().setAccessToken(accessToken);
       if (user) {
         try {
-          return JSON.parse(decodeURIComponent(user));
+          const userData = JSON.parse(decodeURIComponent(user));
+          useAuthStore.getState().setUser(userData);
+          return userData;
         } catch (e) {
           console.error('Error parsing user data:', e);
         }
       }
     }
     
-    // If no token in URL, try to get current user
     try {
       return await this.getMe();
     } catch (error) {
@@ -198,7 +323,6 @@ export class ApiClient {
     return response.data;
   }
 
-  // Group methods
   async getGroups() {
     const response = await this.get('/groups');
     return response.data;
@@ -254,7 +378,6 @@ export class ApiClient {
     return response.data;
   }
 
-  // Invitation methods
   async getMyInvitations() {
     const response = await this.get('/auth/invitations');
     return response.data;
@@ -270,7 +393,6 @@ export class ApiClient {
     return response.data;
   }
 
-  // Shopping List API methods
   async getGroupShoppingLists(groupId: string) {
     const response = await this.get(`/shopping-lists/groups/${groupId}`);
     return response.data;
@@ -340,7 +462,6 @@ export class ApiClient {
     return response.data;
   }
 
-  // Item API methods
   async getItems(shoppingListId: string, options?: {
     status?: string;
     category?: string;
@@ -385,7 +506,7 @@ export class ApiClient {
     description?: string;
     quantity: number;
     unit: string;
-    category: string;
+    category?: string;
     brand?: string;
     estimatedPrice?: number;
     priority?: 'low' | 'medium' | 'high';
@@ -420,7 +541,7 @@ export class ApiClient {
     return response.data;
   }
 
-  async purchaseItem(itemId: string, options?: { purchasedQuantity?: number; actualPrice?: number }) {
+  async purchaseItem(itemId: string, options?: { quantityToPurchase?: number; purchasedQuantity?: number; actualPrice?: number }) {
     const response = await this.post(`/items/${itemId}/purchase`, options || {});
     return response.data;
   }
@@ -455,7 +576,6 @@ export class ApiClient {
     return response.data;
   }
 
-  // Shopping mode methods
   async startShopping(listId: string, location?: {
     latitude: number;
     longitude: number;
@@ -491,7 +611,6 @@ export class ApiClient {
     return response.data;
   }
 
-  // Product search methods
   async getAllProducts(page: number = 1, limit: number = 50) {
     const response = await this.get(`/products?page=${page}&limit=${limit}`);
     return response.data;
@@ -512,7 +631,6 @@ export class ApiClient {
     return response.data;
   }
 
-  // Settings methods
   async getUserProfile() {
     const response = await this.get('/auth/profile');
     return response.data;
@@ -567,5 +685,4 @@ export class ApiClient {
   }
 }
 
-// Create a singleton instance
 export const apiClient = new ApiClient();

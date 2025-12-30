@@ -1,6 +1,6 @@
-// components/common/ErrorBoundary.tsx
 "use client";
 import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { Button } from './Button';
 
 interface Props {
   children: ReactNode;
@@ -19,11 +19,8 @@ export class ErrorBoundary extends Component<Props, State> {
     this.state = { hasError: false };
   }
 
-  // Helper function to get translations
   private getTranslations() {
     try {
-      // This is a workaround since we can't use useTranslations in a class component
-      // We'll use the locale from the URL or default to English
       const locale = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : 'en';
       return locale === 'he' ? {
         title: 'משהו השתבש',
@@ -45,7 +42,6 @@ export class ErrorBoundary extends Component<Props, State> {
         componentStack: 'Component Stack'
       };
     } catch {
-      // Fallback to English
       return {
         title: 'Something went wrong',
         message: 'An unexpected error occurred. Please try refreshing the page or contact support.',
@@ -86,19 +82,9 @@ export class ErrorBoundary extends Component<Props, State> {
             </p>
             
             <div className="space-y-3">
-              <button
-                onClick={() => window.location.reload()}
-                className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                {t.refreshPage}
-              </button>
-              
-              <button
-                onClick={() => this.setState({ hasError: false, error: undefined, errorInfo: undefined })}
-                className="w-full bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
-              >
-                {t.tryAgain}
-              </button>
+
+              <Button variant='primary' fullWidth onClick={() => window.location.reload()}>{t.refreshPage}</Button>
+              <Button variant='ghost' fullWidth onClick={() => this.setState({ hasError: false, error: undefined, errorInfo: undefined })}>{t.tryAgain}</Button>
             </div>
 
             {process.env.NODE_ENV === 'development' && this.state.error && (

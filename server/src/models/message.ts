@@ -1,8 +1,16 @@
 import mongoose, { Schema, Model, FilterQuery } from "mongoose";
-import { IMessage, IReadStatus, MessageDocument } from "../types";
+import { 
+  IMessage, 
+  IReadStatus, 
+  MessageDocument,
+  IFindByGroupOptions,
+  ISearchMessagesOptions,
+  IBaseMessage,
+  IMessageStatistic
+} from "../types";
 
 type MessageModel = Model<MessageDocument> & {
-  findByGroup(groupId: string, options?: any): Promise<MessageDocument[]>;
+  findByGroup(groupId: string, options?: IFindByGroupOptions): Promise<MessageDocument[]>;
   getUnreadMessages(
     userId: string,
     groupId?: string
@@ -11,12 +19,12 @@ type MessageModel = Model<MessageDocument> & {
   searchMessages(
     groupId: string,
     searchTerm: string,
-    options: any
+    options: ISearchMessagesOptions
   ): Promise<MessageDocument[]>;
   getStatistics(
     groupId: string,
     timeRange?: { start: Date; end: Date }
-  ): Promise<MessageDocument[]>;
+  ): Promise<IMessageStatistic[]>;
   createListUpdateMessage(
     groupId: string,
     listId: string,
@@ -205,10 +213,9 @@ messageSchema.methods.editMessage = async function (
   return this;
 };
 
-// Instance method to delete message
 messageSchema.methods.deleteMessage = async function (deleterId: string) {
-  // Only sender can delete
-  if (this.sender.toString() !== deleterId) {
+
+  if (this.sender._id.toString() !== deleterId) {
     throw new Error("Only the sender can delete this message");
   }
 
@@ -218,21 +225,20 @@ messageSchema.methods.deleteMessage = async function (deleterId: string) {
   }
 
   this.isDeleted = true;
-  this.content = "הודעה זו נמחקה";
+  this.content = "this message has been deleted";
   await this.save();
 
   return this;
 };
 
-// Static method to find by group with pagination
 messageSchema.statics.findByGroup = function (
   groupId: string,
-  options: any = {}
+  options: IFindByGroupOptions = {}
 ) {
   const {
     limit = 50,
-    before = null, // Message ID to get messages before
-    after = null, // Message ID to get messages after
+    before = null,
+    after = null,
     messageType = null,
     search = null,
     includeDeleted = false,
@@ -252,16 +258,13 @@ messageSchema.statics.findByGroup = function (
     query.$text = { $search: search };
   }
 
-  // Cursor-based pagination
   if (before) {
     query._id = { $lt: before };
   } else if (after) {
     query._id = { $gt: after };
   }
 
-  // For chat, we want newest messages at the bottom, so we sort by createdAt descending
-  // and then reverse the order in the client to show newest at bottom
-  const sortOrder = -1; // Descending to get newest first from DB
+  const sortOrder = -1;
 
   return this.find(query)
     .populate("sender", "username firstName lastName avatar")
@@ -271,7 +274,6 @@ messageSchema.statics.findByGroup = function (
     .limit(limit);
 };
 
-// Static method to get unread messages for user
 messageSchema.statics.getUnreadMessages = function (
   userId: string,
   groupId?: string
@@ -279,7 +281,7 @@ messageSchema.statics.getUnreadMessages = function (
   const query: FilterQuery<IMessage> = {
     "readBy.user": { $ne: userId },
     isDeleted: false,
-    sender: { $ne: userId }, // Don't include own messages
+    sender: { $ne: userId },
   };
 
   if (groupId) {
@@ -292,12 +294,10 @@ messageSchema.statics.getUnreadMessages = function (
     .sort({ createdAt: -1 });
 };
 
-// Static method to mark all messages as read for user in group
 messageSchema.statics.markAllAsRead = async function (
   userId: string,
   groupId: string
 ) {
-  // Use bulk update instead of individual updates
   const result = await this.updateMany(
     {
       group: groupId,
@@ -318,7 +318,6 @@ messageSchema.statics.markAllAsRead = async function (
   return result.modifiedCount;
 };
 
-// Static method to get message statistics
 messageSchema.statics.getStatistics = function (
   groupId: string,
   timeRange?: { start: Date; end: Date }
@@ -367,11 +366,10 @@ messageSchema.statics.getStatistics = function (
   ]);
 };
 
-// Static method to search messages
 messageSchema.statics.searchMessages = function (
   groupId: string,
   searchTerm: string,
-  options: any = {}
+  options: ISearchMessagesOptions = {}
 ) {
   const { limit = 20, skip = 0, messageType = null } = options;
 
@@ -451,7 +449,7 @@ messageSchema.statics.getMostActiveUsers = function (
 messageSchema.statics.createSystemMessage = function (
   groupId: string,
   content: string,
-  metadata: any = {}
+  metadata: IBaseMessage['metadata'] = {}
 ) {
   return this.create({
     content,

@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect } from 'react';
-import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
@@ -19,7 +18,7 @@ export default function WelcomePage() {
     if (isInitialized && isAuthenticated) {
       router.push(`/${locale}/dashboard`);
     }
-  }, [isAuthenticated, isInitialized]);
+  }, [isAuthenticated, isInitialized, router, locale]);
 
   if (!isInitialized) {
     return (

@@ -1,6 +1,8 @@
 import React from 'react';
 import { Minus, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/common/Button';
+import { Input } from '@/components/common/Input';
 
 interface QuantityStepperProps {
   value: number;
@@ -15,7 +17,7 @@ interface QuantityStepperProps {
 export function QuantityStepper({
   value,
   onChange,
-  min = 0.1,
+  min = 1,
   max = 10000,
   step = 1,
   disabled = false,
@@ -41,23 +43,18 @@ export function QuantityStepper({
 
   return (
     <div className={cn('flex items-center gap-2', className)}>
-      <button
-        type="button"
+      <Button
+        type='button'
+        variant='outline'
+        size="md"
         onClick={handleDecrease}
         disabled={disabled || value <= min}
-        className={cn(
-          'flex items-center justify-center w-10 h-10 rounded-lg',
-          'border-2 border-primary text-primary',
-          'hover:bg-primary hover:text-white',
-          'transition-all duration-200',
-          'disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-primary',
-          'active:scale-95'
-        )}
+        className='w-10 h-10 rounded-lg'
       >
         <Minus className="w-4 h-4" />
-      </button>
+      </Button>
 
-      <input
+      <Input
         type="number"
         value={value}
         onChange={handleInputChange}
@@ -65,30 +62,19 @@ export function QuantityStepper({
         max={max}
         step={step}
         disabled={disabled}
-        className={cn(
-          'w-20 px-3 py-2 text-center',
-          'border-2 border-border rounded-lg',
-          'focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary',
-          'text-text-secondary font-medium',
-          'disabled:opacity-50 disabled:cursor-not-allowed'
-        )}
+        className='w-20 px-3 py-2 text-center'
       />
 
-      <button
-        type="button"
+      <Button
+        type='button'
+        variant='outline'
+        size="md"
         onClick={handleIncrease}
         disabled={disabled || value >= max}
-        className={cn(
-          'flex items-center justify-center w-10 h-10 rounded-lg',
-          'border-2 border-primary text-primary',
-          'hover:bg-primary hover:text-white',
-          'transition-all duration-200',
-          'disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-primary',
-          'active:scale-95'
-        )}
+        className='w-10 h-10 rounded-lg'
       >
         <Plus className="w-4 h-4" />
-      </button>
+      </Button>
     </div>
   );
 }

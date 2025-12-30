@@ -369,13 +369,15 @@ export default function SettingsPage() {
         </div>
       </div>
 
-            <EditProfileModal
-        isOpen={showEditProfileModal}
-        onClose={() => setShowEditProfileModal(false)}
-        user={user}
-        onSave={handleEditProfile}
-        isLoading={updateProfileMutation.isPending}
-      />
+            {user && (
+        <EditProfileModal
+          isOpen={showEditProfileModal}
+          onClose={() => setShowEditProfileModal(false)}
+          user={user}
+          onSave={handleEditProfile}
+          isLoading={updateProfileMutation.isPending}
+        />
+      )}
 
       <UpdateEmailModal
         isOpen={showUpdateEmailModal}

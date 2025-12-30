@@ -22,7 +22,7 @@ import shoppingRoutes from './routes/shopping';
 import settingsRoutes from './routes/settings';
 import dashboardRoutes from './routes/dashboard';
 
-import { errorHandler } from './middleware/errorHandler';
+import { errorHandler } from './middleware/handlers';
 import { notFound } from './middleware/notFound';
 import { authenticateToken } from './middleware/auth';
 
@@ -34,7 +34,7 @@ dotenv.config();
 
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_URL || "http://localhost:3000" || "http://localhost:3001",
+    origin: ['https://www.listali.co.il', 'http://localhost:3000'],
     methods: ["GET", "POST"],
     credentials: true
   }
@@ -60,10 +60,10 @@ app.use(helmet({
 }));
 
 app.use(cors({
-  origin: process.env.CLIENT_URL || "http://localhost:3000" || "http://localhost:3001",
+  origin: ['https://www.listali.co.il', 'http://localhost:3000'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'x-client', 'x-refresh-token', 'x-session-id'],
 }));
 
 app.use(limiter);
@@ -123,7 +123,7 @@ process.on('uncaughtException', (err: Error) => {
   });
 });
 
-process.on('unhandledRejection', (err: any) => {
+process.on('unhandledRejection', (err: Error) => {
   console.error('🚨 UNHANDLED REJECTION! Shutting down...');
   console.error('Error:', err);
   

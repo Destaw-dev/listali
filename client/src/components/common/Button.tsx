@@ -12,7 +12,7 @@ interface ButtonProps extends Omit<IButtonProps, 'variant'> {
   glow?: boolean;
   checked?: boolean; 
   checkIcon?: React.ReactNode; 
-  variant?: IButtonProps['variant'] | 'checkbox' | 'dashed'; 
+  variant?: IButtonProps['variant'] | 'checkbox' | 'dashed' | 'surface' | 'outlineError'; 
 }
 
 export function Button({ 
@@ -36,7 +36,7 @@ export function Button({
   const baseClasses = cn(
     'inline-flex items-center justify-center font-medium transition-all duration-200',
     'disabled:opacity-50 disabled:cursor-not-allowed',
-    'active:scale-95 transform',
+    'active:scale-95 transform cursor-pointer',
     fullWidth && 'w-full',
     rounded ? 'rounded-full' : 'rounded-md',
     shadow && 'shadow-sm hover:shadow-md',
@@ -59,7 +59,7 @@ export function Button({
     ),
     outlineBlue: cn(
       'border border-primary text-primary',
-      'hover:bg-primary-50 focus:ring-primary',
+      'hover:bg-primaryT-50 focus:ring-primary',
       'bg-transparent shadow-lg hover:shadow-xl'
     ),
     outline: cn(
@@ -74,7 +74,7 @@ export function Button({
     ),
     ghost: cn(
       'text-primary hover:bg-primary-50',
-      'focus:ring-primary bg-transparent',
+      'focus:ring-primary bg-transparent shadow-lg',
       'shadow-sm hover:shadow-md'
     ),
     destructive: cn(
@@ -89,10 +89,14 @@ export function Button({
       'bg-warning text-white hover:bg-warning/90',
       'focus:ring-warning shadow-lg hover:shadow-xl'
     ),
-    error: cn(
+    outlineError: cn(
       'border border-error text-error',
       'hover:bg-error/5 focus:ring-error',
       'bg-transparent shadow-lg hover:shadow-xl'
+    ),
+    error: cn(
+      'bg-error text-white hover:bg-error/90',
+      'focus:ring-error shadow-lg hover:shadow-xl'
     ),
     checkbox: cn(
       'flex items-center justify-center rounded-full border-2 transition-all',
@@ -100,6 +104,11 @@ export function Button({
       checked
         ? 'bg-emerald-500 border-emerald-500 text-white'
         : 'border-slate-200 bg-white hover:border-slate-300'
+    ),
+    white: cn(
+      'bg-surface text-primary hover:bg-gray-50',
+      'focus:ring-primary shadow-lg hover:shadow-xl',
+      'shadow-sm hover:shadow-md'
     ),
   };
   

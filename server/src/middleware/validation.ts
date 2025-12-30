@@ -103,7 +103,6 @@ export const emailValidation = [
     .withMessage('Please provide a valid email')
 ];
 
-// Validation rules for creating a shopping list
 export const createListValidation = [
     body('name')
       .trim()
@@ -151,7 +150,6 @@ export const createListValidation = [
       })
   ];
   
-  // Validation rules for retrieving shopping lists
   export const listQueryValidation = [
     query('groupId').isMongoId().withMessage('Valid group ID is required'),
     query('status').optional().isIn(['active', 'completed', 'archived']).withMessage('Invalid status'),
@@ -161,7 +159,6 @@ export const createListValidation = [
     query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100')
   ];
 
-  // validators/messageValidators.ts
 
 export const createMessageValidation = [
   body('content')
@@ -244,7 +241,6 @@ export const validateExportQuery = [
   query('endDate').optional().isISO8601().toDate().withMessage('End date must be a valid ISO date')
 ];
 
-// Available categories and units
 export const CATEGORIES: ItemCategory[] = [
   'fruits_vegetables', 'meat_fish', 'dairy', 'bakery', 'pantry',
   'frozen', 'beverages', 'snacks', 'household', 'personal_care', 'other'
@@ -255,7 +251,6 @@ export const UNITS: ItemUnit[] = [
   'package', 'box', 'bag', 'bottle', 'can'
 ];
 
-// Validation rules for item creation
 export const createItemValidation = [
   body('name')
     .trim()
@@ -311,7 +306,6 @@ export const createItemValidation = [
     .withMessage('Valid shopping list ID is required')
 ];
 
-// Validation rules for bulk item creation
 export const createBulkItemsValidation = [
   body('items')
     .isArray({ min: 1 })
@@ -368,7 +362,17 @@ export const createBulkItemsValidation = [
     .withMessage('Valid shopping list ID is required for each item'),
   body('items.*.product')
     .optional()
-    .isMongoId()
+    .custom((value) => {
+      // If value is not provided, null, empty string, or undefined, it's valid (for manual items)
+      if (!value || value === null || value === '' || value === undefined) {
+        return true;
+      }
+      // If value is provided, it must be a valid MongoId
+      if (typeof value === 'string' && /^[0-9a-fA-F]{24}$/.test(value)) {
+        return true;
+      }
+      return false;
+    })
     .withMessage('Product must be a valid product ID'),
   body('items.*.isManualEntry')
     .optional()
@@ -376,7 +380,6 @@ export const createBulkItemsValidation = [
     .withMessage('isManualEntry must be a boolean')
 ];
 
-// Validation rules for item updates
 export const updateItemValidation = [
   body('name')
     .optional()
@@ -398,8 +401,8 @@ export const updateItemValidation = [
     .withMessage(`Unit must be one of: ${UNITS.join(', ')}`),
   body('category')
     .optional()
-    .isIn(CATEGORIES)
-    .withMessage(`Category must be one of: ${CATEGORIES.join(', ')}`),
+    .isMongoId()
+    .withMessage('Category must be a valid MongoDB ObjectId'),
   body('brand')
     .optional()
     .trim()
@@ -433,52 +436,45 @@ export const updateItemValidation = [
     .withMessage('Each alternative cannot exceed 100 characters')
 ];
 
-// Validation for getting items
 export const getItemsValidation = [
   query('shoppingListId').isMongoId().withMessage('Valid shopping list ID is required'),
-  query('status').optional().isIn(['pending', 'purchased', 'not_available', 'cancelled']).withMessage('Invalid status'),
+  query('status').optional().isIn(['pending', 'purchased', 'partially_purchased', 'not_available', 'cancelled']).withMessage('Invalid status'),
   query('category').optional().isIn(CATEGORIES).withMessage('Invalid category'),
   query('priority').optional().isIn(['low', 'medium', 'high']).withMessage('Invalid priority'),
   query('search').optional().isString().withMessage('Search must be a string')
 ];
 
-// Validation for item ID parameter
 export const itemIdValidation = [
   param('id').isMongoId().withMessage('Invalid item ID')
 ];
 
-// Validation for purchase action
 export const purchaseItemValidation = [
   param('id').isMongoId().withMessage('Invalid item ID'),
+  body('quantityToPurchase').optional().isFloat({ min: 0, max: 10000 }).withMessage('Quantity to purchase must be between 0 and 10,000'),
   body('purchasedQuantity').optional().isFloat({ min: 0, max: 10000 }).withMessage('Purchased quantity must be between 0 and 10,000'),
   body('actualPrice').optional().isFloat({ min: 0, max: 10000 }).withMessage('Actual price must be between 0 and 10,000')
 ];
 
-// Validation for quantity update
 export const updateQuantityValidation = [
   param('id').isMongoId().withMessage('Invalid item ID'),
   body('quantity').isFloat({ min: 0.01, max: 10000 }).withMessage('Quantity must be between 0.01 and 10,000')
 ];
 
-// Validation for popular items
 export const popularItemsValidation = [
   query('groupId').optional().isMongoId().withMessage('Invalid group ID'),
   query('limit').optional().isInt({ min: 1, max: 50 }).withMessage('Limit must be between 1 and 50')
 ];
 
-// Validation for search
 export const searchItemsValidation = [
   query('q').notEmpty().withMessage('Search query is required'),
   query('category').optional().isIn(CATEGORIES).withMessage('Invalid category'),
   query('limit').optional().isInt({ min: 1, max: 50 }).withMessage('Limit must be between 1 and 50')
 ];
 
-// Validation for category stats
 export const categoryStatsValidation = [
   query('shoppingListId').optional().isMongoId().withMessage('Invalid shopping list ID')
 ];
 
-// Shopping List validation
 export const createShoppingListValidation = [
   body('name')
     .trim()
@@ -511,8 +507,13 @@ export const createShoppingListValidation = [
     .withMessage('Tag cannot exceed 30 characters'),
   body('assignedTo')
     .optional()
-    .isMongoId()
-    .withMessage('Assigned user must be a valid user ID')
+    .custom((value) => {
+      if (value === null || value === '') return true;
+      if (!value.match(/^[0-9a-fA-F]{24}$/)) {
+        throw new Error('Assigned user must be a valid user ID');
+      }
+      return true;
+    })
 ];
 
 export const updateShoppingListValidation = [
@@ -545,8 +546,13 @@ export const updateShoppingListValidation = [
     .withMessage('Tag cannot exceed 30 characters'),
   body('assignedTo')
     .optional()
-    .isMongoId()
-    .withMessage('Assigned user must be a valid user ID')
+    .custom((value) => {
+      if (value === null || value === '') return true;
+      if (!value.match(/^[0-9a-fA-F]{24}$/)) {
+        throw new Error('Assigned user must be a valid user ID');
+      }
+      return true;
+    })
 ];
 
 export const addItemValidation = [
@@ -565,7 +571,17 @@ export const addItemValidation = [
     .withMessage('Unit cannot exceed 20 characters'),
   body('product')
     .optional()
-    .isMongoId()
+    .custom((value) => {
+      // If value is not provided, null, empty string, or undefined, it's valid (for manual items)
+      if (!value || value === null || value === '' || value === undefined) {
+        return true;
+      }
+      // If value is provided, it must be a valid MongoId
+      if (typeof value === 'string' && /^[0-9a-fA-F]{24}$/.test(value)) {
+        return true;
+      }
+      return false;
+    })
     .withMessage('Product must be a valid product ID'),
   body('category')
     .optional()
@@ -598,7 +614,6 @@ export const validateItemId = param('itemId')
   .isMongoId()
   .withMessage('Invalid item ID');
 
-// Validation for getting shopping lists
 export const getShoppingListsValidation = [
   query('groupId').isMongoId().withMessage('Valid group ID is required'),
   query('status').optional().isIn(['active', 'completed', 'archived']).withMessage('Invalid status'),
@@ -608,23 +623,19 @@ export const getShoppingListsValidation = [
   query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100')
 ];
 
-// Validation for shopping list ID parameter
 export const shoppingListIdValidation = [
   param('shoppingListId').isMongoId().withMessage('Invalid shopping list ID')
 ];
 
-// Validation for assign user
 export const assignUserValidation = [
   param('shoppingListId').isMongoId().withMessage('Invalid shopping list ID'),
   body('userId').isMongoId().withMessage('Valid user ID is required')
 ];
 
-// Validation for overdue lists
 export const overdueListsValidation = [
   query('groupId').optional().isMongoId().withMessage('Invalid group ID')
 ];
 
-// middleware/validation/groupValidators.ts
 export const createGroupValidation = [
   body('name')
     .isString().withMessage('Group name must be a string')
@@ -639,7 +650,6 @@ export const createGroupValidation = [
     .isObject().withMessage('Settings must be an object'),
 ];
 
-// ולידציה לעדכון קבוצה
 export const updateGroupValidation = [
   body('name')
     .optional()
@@ -658,7 +668,6 @@ export const updateGroupValidation = [
     .isString().withMessage('Avatar must be a string'),
 ];
 
-// ולידציה להזמנת משתמש
 export const inviteToGroupValidation = [
   param('id')
     .isMongoId().withMessage('Invalid group ID'),
@@ -671,7 +680,6 @@ export const inviteToGroupValidation = [
     .isIn(['admin', 'member']).withMessage('Role must be admin or member'),
 ];
 
-// ולידציה לעדכון תפקיד של חבר בקבוצה
 export const updateMemberRoleValidation = [
   param('id')
     .isMongoId().withMessage('Invalid group ID'),
@@ -683,13 +691,11 @@ export const updateMemberRoleValidation = [
     .isIn(['admin', 'member']).withMessage('Role must be admin or member'),
 ];
 
-// ולידציה להצטרפות לקבוצה עם קוד הזמנה
 export const joinGroupValidation = [
   param('inviteCode')
     .isLength({ min: 8, max: 8 }).withMessage('Invite code must be exactly 8 characters'),
 ];
 
-// ולידציה להסרת חבר מהקבוצה
 export const removeMemberValidation = [
   param('id')
     .isMongoId().withMessage('Invalid group ID'),
@@ -698,19 +704,16 @@ export const removeMemberValidation = [
     .isMongoId().withMessage('Invalid user ID'),
 ];
 
-// ולידציה כללית לזיהוי קבוצה
 export const validateGroupId = [
   param('groupId')
     .isMongoId().withMessage('Invalid group ID ch'),
 ];
 
-// ולידציה כללית לזיהוי חבר
 export const validateMemberId = [
   param('userId')
     .isMongoId().withMessage('Invalid user ID'),
 ];
 
-// Settings validation
 export const preferencesValidation = [
   body('language')
     .optional()

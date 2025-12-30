@@ -1,10 +1,13 @@
 import { OAuth2Client } from 'google-auth-library';
 import { google } from 'googleapis';
 import axios from 'axios';
+import crypto from 'crypto';
 import User from '@/models/user';
 import { Response, Request } from 'express';
-import { errorResponse, successResponse } from '@/middleware/errorHandler';
+import { errorResponse, successResponse } from '@/middleware/handlers';
 import { IBasePendingInvite, IGroupMember } from '@/types';
+import { signAccessToken, signRefreshToken, hashToken } from '../utils/tokens';
+import { isMobileClient, setRefreshTokenCookies } from './auth';
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -49,15 +52,52 @@ const ticket = await client.verifyIdToken({
     await user.save();
   }
 
-  const token = user.getSignedJwtToken();
-  res.cookie('token', token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
-    expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-  });
+  const sessionId = crypto.randomUUID();
+  const refreshExpiresAt = new Date(Date.now() + (parseInt(process.env.JWT_REFRESH_EXPIRE_DAYS || '30') * 24 * 60 * 60 * 1000));
+  
+  user.enforceMaxSessions(5);
+  
+  const accessToken = signAccessToken(user._id.toString());
+  const refreshToken = signRefreshToken(user._id.toString(), sessionId);
+  const refreshTokenHash = hashToken(refreshToken);
+  
+  const sessionData: {
+    sessionId: string;
+    refreshTokenHash: string;
+    expiresAt: Date;
+    userAgent?: string;
+    ip?: string;
+  } = {
+    sessionId,
+    refreshTokenHash,
+    expiresAt: refreshExpiresAt,
+  };
+  const userAgentValue = req.headers['user-agent'];
+  if (userAgentValue) {
+    sessionData.userAgent = userAgentValue;
+  }
+  const ipValue = req.ip || req.socket.remoteAddress;
+  if (ipValue) {
+    sessionData.ip = ipValue;
+  }
+  user.addSession(sessionData);
+  
+  await user.save();
 
-  return res.status(200).json(successResponse({ user, token }, 'Login with Google successful'));
+  const isMobile = isMobileClient(req);
+  
+  if (!isMobile) {
+    setRefreshTokenCookies(res, refreshToken, sessionId);
+  }
+
+  const userResponse = user.toObject();
+  const { password: _password } = userResponse;
+
+  return res.status(200).json(successResponse({ 
+    user: userResponse, 
+    accessToken,
+    ...(isMobile && { refreshToken, sessionId })
+  }, 'Login with Google successful'));
 };
 
 export const googleCallback = async (req: Request, res: Response) => {
@@ -72,7 +112,6 @@ export const googleCallback = async (req: Request, res: Response) => {
     const client_secret = process.env.GOOGLE_CLIENT_SECRET!;
     const redirect_uri = process.env.GOOGLE_REDIRECT_URI!;
 
-    // 1. Exchange code for token
     const tokenResponse = await axios.post('https://oauth2.googleapis.com/token', null, {
       params: {
         code,
@@ -85,7 +124,6 @@ export const googleCallback = async (req: Request, res: Response) => {
 
     const { id_token } = tokenResponse.data;
 
-    // 2. Verify the ID token and get user info
     const ticket = await client.verifyIdToken({
       idToken: id_token,
       audience: client_id
@@ -117,7 +155,6 @@ export const googleCallback = async (req: Request, res: Response) => {
       await user.save();
     }
 
-    // Handle invite code if provided and user is new
     let groupJoined = null;
     let inviteError = null;
     if (isNewUser && state) {
@@ -187,14 +224,43 @@ export const googleCallback = async (req: Request, res: Response) => {
       }
     }
 
-    const token = user.getSignedJwtToken();
+    const sessionId = crypto.randomUUID();
+    const refreshExpiresAt = new Date(Date.now() + (parseInt(process.env.JWT_REFRESH_EXPIRE_DAYS || '30') * 24 * 60 * 60 * 1000));
     
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-    });
+    user.enforceMaxSessions(5);
+    
+    const accessToken = signAccessToken(user._id.toString());
+    const refreshToken = signRefreshToken(user._id.toString(), sessionId);
+    const refreshTokenHash = hashToken(refreshToken);
+    
+    const sessionData: {
+      sessionId: string;
+      refreshTokenHash: string;
+      expiresAt: Date;
+      userAgent?: string;
+      ip?: string;
+    } = {
+      sessionId,
+      refreshTokenHash,
+      expiresAt: refreshExpiresAt,
+    };
+    const userAgentValue = req.headers['user-agent'];
+    if (userAgentValue) {
+      sessionData.userAgent = userAgentValue;
+    }
+    const ipValue = req.ip || req.socket.remoteAddress;
+    if (ipValue) {
+      sessionData.ip = ipValue;
+    }
+    user.addSession(sessionData);
+    
+    await user.save();
+
+    const isMobile = isMobileClient(req);
+    
+    if (!isMobile) {
+      setRefreshTokenCookies(res, refreshToken, sessionId);
+    }
 
     const frontendCallback = state ? decodeURIComponent(state as string) : `${process.env.CLIENT_URL}/he/auth/callback`;
     
@@ -212,7 +278,7 @@ export const googleCallback = async (req: Request, res: Response) => {
     };
 
     const redirectUrl = new URL(frontendCallback);
-    redirectUrl.searchParams.set('token', token);
+    redirectUrl.searchParams.set('accessToken', accessToken);
     redirectUrl.searchParams.set('user', encodeURIComponent(JSON.stringify(userData)));
     redirectUrl.searchParams.set('google', 'true');
     if (groupJoined) {
@@ -241,7 +307,12 @@ export const googleUrl = async (req: Request, res: Response) => {
       process.env.GOOGLE_REDIRECT_URI
     );
 
-    const authUrlOptions: any = {
+    const authUrlOptions: {
+      access_type: 'offline';
+      prompt: 'consent';
+      scope: string[];
+      state?: string;
+    } = {
       access_type: 'offline',
       prompt: 'consent',
       scope: ['profile', 'email', 'openid']

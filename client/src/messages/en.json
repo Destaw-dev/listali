@@ -299,7 +299,50 @@
     "transferOwnershipSuccess": "Group ownership transferred successfully",
     "transferOwnershipError": "Error transferring group ownership",
     "leaveSuccess": "Left group successfully",
-    "leaveError": "Error leaving group"
+    "leaveError": "Error leaving group",
+    "settings": {
+      "unknownUser": "Unknown User",
+      "owner": "Owner",
+      "admin": "Admin",
+      "member": "Member",
+      "groupNameRequired": "Group name is required",
+      "deleteGroupConfirmation": "Are you sure you want to delete this group? This action cannot be undone.",
+      "removeMemberConfirmation": "Are you sure you want to remove {memberName} from the group?",
+      "failedToTransferOwnership": "Failed to transfer ownership",
+      "failedToInviteMember": "Failed to invite member",
+      "failedToLeaveGroup": "Failed to leave group",
+      "errorLoadingGroup": "Error loading group",
+      "backToGroups": "Back to Groups",
+      "noPermission": "No Permission",
+      "notAMember": "You are not a member of this group",
+      "backToGroup": "Back to Group",
+      "groupSettings": "Group Settings",
+      "defaultGroupAvatar": "G",
+      "edit": "Edit",
+      "groupNamePlaceholder": "Group name",
+      "groupName": "Group Name",
+      "groupDescription": "Group Description",
+      "saveChanges": "Save Changes",
+      "cancel": "Cancel",
+      "groupMembers": "Group Members",
+      "members": "members",
+      "inviteMembers": "Invite Members",
+      "you": "You",
+      "mainManager": "Main Manager",
+      "teamManager": "Team Manager",
+      "teamMember": "Team Member",
+      "makeAdmin": "Make Admin",
+      "makeMember": "Make Member",
+      "transferOwnership": "Transfer Ownership",
+      "removeFromGroup": "Remove from Group",
+      "leaveGroup": "Leave Group",
+      "dangerZone": "Danger Zone",
+      "leaveGroupConfirmation": "This action will remove you from the group",
+      "leavingGroup": "Leaving...",
+      "deleteGroup": "Delete Group",
+      "deletingGroup": "Deleting...",
+      "createdAt": "Created at "
+    }
   },
   "invitations": {
     "acceptSuccess": "Invitation accepted successfully",
@@ -551,6 +594,9 @@
     "confirm": "Confirm",
     "purchasedQuantityLabel": "{purchased}/{total} {unit}",
     "partiallyPurchasedQuantityLabel": "{purchased}/{total} {unit}",
+    "remainingQuantityLabel": "Remaining: {remaining} {unit}",
+    "alreadyPurchased": "Already purchased: {purchased}/{total} {unit}",
+    "remainingQuantity": "Remaining: {remaining} {unit}",
     "markPurchased": "Mark as purchased",
     "markPending": "Mark as pending",
     "viewDetails": "View details",
@@ -574,7 +620,12 @@
     "box": "Box",
     "bag": "Bag",
     "bottle": "Bottle",
-    "can": "Can"
+    "can": "Can",
+    "editItem": "Edit Item",
+    "update": "Update",
+    "updating": "Updating...",
+    "deleteConfirm": "Are you sure you want to delete this item?",
+    "catalogItemEditNote": "This is a product from the catalog. You can only edit quantity, priority, and notes."
   },
   "ShoppingListHeader": {
     "defaultDescription": "Shopping list",
@@ -631,7 +682,8 @@
     "continueToFillDetails": "Continue to Fill Details",
     "selectProductsFromCatalog": "Select products from the catalog on the left",
     "products": "Products",
-    "selectedItems": "Selected Items"
+    "selectedItems": "Selected Items",
+    "atLeastOneItem": "At least one item must be added"
   },
   "CreateShoppingListModal": {
     "nameMinLength": "List name must be at least 2 characters",
@@ -892,16 +944,6 @@
     "stats": "Stats",
     "activeLists": "Active Lists"
   },
-  "ProductSearchModal": {
-    "searchExistingProducts": "Search for existing products in the system",
-    "searchProducts": "Search Products",
-    "searchProductsPlaceholder": "Search products...",
-    "searchingProducts": "Searching products...",
-    "searchError": "Error searching products",
-    "foundProducts": "Found {count} products",
-    "noProductsFound": "No products found",
-    "selectProduct": "Select Product"
-  },
   "AddMultipleItemsModal": {
     "nameRequired": "Item name is required",
     "nameMaxLength": "Item name cannot exceed 100 characters",
@@ -1063,14 +1105,6 @@
     "accept": "Accept",
     "decline": "Decline"
   },
-  "DuplicateItemModal": {
-    "title": "Product already exists in list",
-    "existingQuantity": "Existing quantity",
-    "newQuantity": "New quantity",
-    "totalQuantity": "Total quantity will be",
-    "createNew": "Create new product",
-    "updateQuantity": "Update quantity"
-  },
   "AddItemsModalFilters": {
     "searchPlaceholder": "Search product...",
     "hideCategories": "Hide Categories",
@@ -1112,9 +1146,18 @@
     "adding": "Adding...",
     "addItems": "Add {count} item",
     "addItemsPlural": "Add {count} items",
-    "itemNumber": "Item {number}"
+    "itemNumber": "Item {number}",
+    "alreadyInList": "Already in list",
+    "existingQuantity": "Existing quantity: {quantity} {unit}",
+    "newQuantity": "New quantity: {quantity} {unit}",
+    "mergedQuantity": "Total after merge: {quantity} {unit}",
+    "merge": "Merge",
+    "editExisting": "Edit existing",
+    "remove": "Remove",
+    "hasUntreatedDuplicates": "There are existing items in the list. Please merge or remove them before adding"
   },
   "AddItemProductList": {
+    "alreadyInList": "Already in list",
     "noResults": "No Results Found",
     "noResultsDescription": "Try searching with a different word or add the product manually",
     "addManualItem": "Add Manual Item",

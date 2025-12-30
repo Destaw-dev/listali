@@ -7,19 +7,23 @@ import {
   usePurchaseItem,
   useUnpurchaseItem,
   useUpdateItem,
+  useDeleteItem,
 } from "@/hooks/useItems";
 import { CheckCircle, ShoppingBag } from "lucide-react";
 import { LoadingSpinner } from "../common/LoadingSpinner";
 import { CategorySection } from "./items/CategorySection";
 import { PurchaseQuantityModal } from "./items/PurchaseQuantityModal";
 import { ProductDetailsModal } from "./items/ProductDetailsModal";
+import { EditItemModal } from "./items/EditItemModal";
+import { ICategory, IItem } from "@/types";
 
 interface ShoppingListItemsProps {
-  items: any[];
+  items: IItem[];
   listId: string;
   groupId: string;
   loading: boolean;
-  onEditItem?: (item: any) => void;
+  canEdit?: boolean;
+  canDelete?: boolean;
 }
 
 export const ShoppingListItems = memo(function ShoppingListItems({
@@ -27,7 +31,8 @@ export const ShoppingListItems = memo(function ShoppingListItems({
   listId,
   groupId,
   loading,
-  onEditItem,
+  canEdit = false,
+  canDelete = false,
 }: ShoppingListItemsProps) {
   const tItems = useTranslations("ShoppingListItems");
   const tCommon = useTranslations("common");
@@ -35,22 +40,32 @@ export const ShoppingListItems = memo(function ShoppingListItems({
   const purchaseItemMutation = usePurchaseItem();
   const unpurchaseItemMutation = useUnpurchaseItem();
   const updateItemMutation = useUpdateItem();
+  const deleteItemMutation = useDeleteItem();
   const { data: categories = [] } = useAvailableCategories();
 
-  const [purchaseModalItem, setPurchaseModalItem] = useState<any | null>(null);
-  const [productPreview, setProductPreview] = useState<any | null>(null);
+  const [purchaseModalItem, setPurchaseModalItem] = useState<IItem | null>(null);
+  const [productPreview, setProductPreview] = useState<IItem | null>(null);
+  const [editModalItem, setEditModalItem] = useState<IItem | null>(null);
 
   const isItemLoading = useCallback(
     (itemId: string) =>
       (purchaseItemMutation.isPending &&
         itemId === purchaseItemMutation.variables?.itemId) ||
       (unpurchaseItemMutation.isPending &&
-        itemId === unpurchaseItemMutation.variables?.itemId),
+        itemId === unpurchaseItemMutation.variables?.itemId) ||
+      (updateItemMutation.isPending &&
+        itemId === updateItemMutation.variables?.itemId) ||
+      (deleteItemMutation.isPending &&
+        itemId === deleteItemMutation.variables?.itemId),
     [
       purchaseItemMutation.isPending,
       purchaseItemMutation.variables?.itemId,
       unpurchaseItemMutation.isPending,
       unpurchaseItemMutation.variables?.itemId,
+      updateItemMutation.isPending,
+      updateItemMutation.variables?.itemId,
+      deleteItemMutation.isPending,
+      deleteItemMutation.variables?.itemId,
     ]
   );
 
@@ -65,15 +80,15 @@ export const ShoppingListItems = memo(function ShoppingListItems({
   // );
 
   const handlePurchase = useCallback(
-   async (itemId: string, purchasedQuantity?: number) => {
+   async (itemId: string, quantityToPurchase?: number) => {
       
-      if (isItemLoading(itemId) || purchasedQuantity === undefined || purchasedQuantity <= 0) return;
+      if (isItemLoading(itemId) || quantityToPurchase === undefined || quantityToPurchase <= 0) return;
 
    await purchaseItemMutation.mutateAsync({
       itemId,
       shoppingListId: listId,
       groupId,
-      purchasedQuantity,
+      quantityToPurchase,
     });
     setPurchaseModalItem(null);
     },
@@ -94,35 +109,70 @@ export const ShoppingListItems = memo(function ShoppingListItems({
     [groupId, isItemLoading, listId, unpurchaseItemMutation]
   );
 
-  // const handleUpdateQuantity = useCallback(
-  //   (itemId: string, quantity: number) => {
-  //     if (quantity <= 0 || isQuantityUpdating(itemId)) return;
-  //     updateItemMutation.mutateAsync({
-  //       itemId,
-  //       itemData: { quantity },
-  //     });
-  //   },
-  //   [isQuantityUpdating, updateItemMutation]
-  // );
+  const handleEditItem = useCallback(
+    (item: IItem) => {
+      setEditModalItem(item);
+    },
+    []
+  );
+
+  const handleUpdateItem = useCallback(
+    async (itemData: {
+      name?: string;
+      quantity?: number;
+      unit?: string;
+      category?: string;
+      brand?: string;
+      priority?: 'low' | 'medium' | 'high';
+      notes?: string;
+    }) => {
+      if (!editModalItem?._id) return;
+      
+      await updateItemMutation.mutateAsync({
+        itemId: editModalItem._id,
+        itemData,
+      });
+      setEditModalItem(null);
+    },
+    [editModalItem, updateItemMutation]
+  );
+
+  const handleDeleteItem = useCallback(
+    async (itemId: string) => {
+      if (!confirm(tItems("deleteConfirm") || "האם אתה בטוח שברצונך למחוק את הפריט?")) {
+        return;
+      }
+      
+      await deleteItemMutation.mutateAsync({
+        itemId,
+        shoppingListId: listId,
+      });
+    },
+    [deleteItemMutation, listId, tItems]
+  );
 
   const groupedItems = useMemo(() => {
     const purchased: Record<
       string,
-      { categoryId: string; categoryName: string; items: any[] }
+      { categoryId: string; categoryName: string; items: IItem[] }
     > = {};
     const unpurchased: Record<
       string,
-      { categoryId: string; categoryName: string; items: any[] }
+      { categoryId: string; categoryName: string; items: IItem[] }
     > = {};
 
-    items.forEach((item: any) => {
-      const categoryId = item.category?._id || item.category || "no-category";
+    items.forEach((item) => {
+      const categoryId = typeof item.category === 'string' 
+        ? item.category 
+        : (item.category as { _id?: string } | undefined)?._id || "no-category";
       const categoryName =
-        item.category?.name ||
-        categories.find((c: any) => c._id === categoryId)?.name ||
+        (typeof item.category === 'object' && item.category !== null && 'name' in item.category
+          ? (item.category as { name?: string }).name
+          : undefined) ||
+        categories.find((c: ICategory) => c._id === categoryId)?.name ||
         tItems("noCategory");
       
-      const target = item.isPurchased ? purchased : unpurchased;
+      const target = (item.status === 'purchased' || item.isPurchased) ? purchased : unpurchased;
       
       if (!target[categoryId]) {
         target[categoryId] = {
@@ -138,7 +188,7 @@ export const ShoppingListItems = memo(function ShoppingListItems({
     const sortCategories = (
       map: Record<
         string,
-        { categoryId: string; categoryName: string; items: any[] }
+        { categoryId: string; categoryName: string; items: IItem[] }
       >
     ) =>
       Object.values(map).sort((a, b) =>
@@ -182,7 +232,7 @@ export const ShoppingListItems = memo(function ShoppingListItems({
           </div>
         </header>
 
-        <div className="">
+        <div>
           {groupedItems.unpurchased.length > 0 && (
             <CategorySection
               title={tItems("unpurchasedItems")}
@@ -191,7 +241,10 @@ export const ShoppingListItems = memo(function ShoppingListItems({
               onOpenPurchaseModal={(item) => setPurchaseModalItem(item)}
               onUnpurchase={handleUnpurchase}
               onPreview={(item) => setProductPreview(item)}
-              onEdit={onEditItem}
+              onEdit={handleEditItem}
+              onDelete={handleDeleteItem}
+              canEdit={canEdit}
+              canDelete={canDelete}
               isItemLoading={isItemLoading}
             />
           )}
@@ -204,7 +257,10 @@ export const ShoppingListItems = memo(function ShoppingListItems({
               onOpenPurchaseModal={(item) => setPurchaseModalItem(item)}
               onUnpurchase={handleUnpurchase}
               onPreview={(item) => setProductPreview(item)}
-              onEdit={onEditItem}
+              onEdit={handleEditItem}
+              onDelete={handleDeleteItem}
+              canEdit={canEdit}
+              canDelete={canDelete}
               isItemLoading={isItemLoading}
               defaultOpen={false}
               tone="purchased"
@@ -229,6 +285,13 @@ export const ShoppingListItems = memo(function ShoppingListItems({
         onClose={() => setProductPreview(null)}
         tItems={tItems}
         tCommon={tCommon}
+      />
+
+      <EditItemModal
+        item={editModalItem}
+        onClose={() => setEditModalItem(null)}
+        onSubmit={handleUpdateItem}
+        isLoading={updateItemMutation.isPending}
       />
       </>
     );

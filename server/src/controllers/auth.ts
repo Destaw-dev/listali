@@ -2,21 +2,71 @@ import { Request, Response } from 'express';
 import { validationResult } from 'express-validator';
 import crypto from 'crypto';
 import User from '../models/user';
-import { asyncHandler, AppError, validationErrorResponse, successResponse } from '../middleware/errorHandler';
-import { IApiResponse, IAuthRequest, IRegisterRequest, IAuthResponse, UserDocument, IBasePendingInvite, IGroupMember } from '../types';
+import { asyncHandler, AppError, validationErrorResponse, successResponse } from '../middleware/handlers';
+import { IApiResponse, IAuthRequest, IRegisterRequest, IAuthResponse, UserDocument, IBasePendingInvite, IGroupMember, IUser, IPendingInvitation } from '../types';
 import { sendEmailVerification } from '../utils/email';
+import { signAccessToken, signRefreshToken, hashToken, verifyRefreshToken } from '../utils/tokens';
 
-const setAuthCookie = (res: Response, token: string): void => {
-  const cookieOptions = {
-    expires: new Date(Date.now() + (parseInt(process.env.JWT_COOKIE_EXPIRE || '7') * 24 * 60 * 60 * 1000)),
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict' as const
-  };
-  res.cookie('token', token, cookieOptions);
+export const isMobileClient = (req: Request): boolean => {
+  return req.headers['x-client'] === 'mobile';
 };
 
-export const register = asyncHandler(async (req: Request, res: Response<IApiResponse<IAuthResponse>>) => {
+export const setRefreshTokenCookies = (res: Response, refreshToken: string, sessionId: string): void => {
+  const isProduction = process.env.NODE_ENV === 'production';
+  const cookieDomain = process.env.COOKIE_DOMAIN;
+  
+  const cookieOptions: {
+    httpOnly: boolean;
+    secure: boolean;
+    sameSite: 'none' | 'lax';
+    path: string;
+    expires: Date;
+    domain?: string;
+  } = {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax',
+    path: '/',
+    expires: new Date(Date.now() + (parseInt(process.env.JWT_REFRESH_EXPIRE_DAYS || '30') * 24 * 60 * 60 * 1000)),
+  };
+  
+  if (isProduction && cookieDomain) {
+    cookieOptions.domain = cookieDomain;
+  }
+
+  res.cookie('refreshToken', refreshToken, cookieOptions);
+
+  res.cookie('sessionId', sessionId, cookieOptions);
+};
+
+const clearRefreshTokenCookies = (res: Response): void => {
+  const isProduction = process.env.NODE_ENV === 'production';
+  const cookieDomain = process.env.COOKIE_DOMAIN;
+  
+  const cookieOptions: {
+    httpOnly: boolean;
+    secure: boolean;
+    sameSite: 'none' | 'lax';
+    path: string;
+    expires: Date;
+    domain?: string;
+  } = {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax',
+    path: '/',
+    expires: new Date(0),
+  };
+  
+  if (isProduction && cookieDomain) {
+    cookieOptions.domain = cookieDomain;
+  }
+
+  res.cookie('refreshToken', '', cookieOptions);
+  res.cookie('sessionId', '', cookieOptions);
+};
+
+export const register = asyncHandler(async (req: Request, res: Response<IApiResponse<IAuthResponse | void>>) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     res.status(400).json(validationErrorResponse(errors.array()));
@@ -24,8 +74,18 @@ export const register = asyncHandler(async (req: Request, res: Response<IApiResp
   }
   const { username, email, password, firstName, lastName, inviteCode }: IRegisterRequest & { inviteCode?: string } = req.body;
   
+  const existingEmail = await User.findOne({ email: email.toLowerCase() });
+  if (existingEmail) {
+    throw new AppError('Email is already registered', 400);
+  }
+  
+  const existingUsername = await User.findOne({ username });
+  if (existingUsername) {
+    throw new AppError('Username is already taken', 400);
+  }
+  
   const verificationToken = crypto.randomBytes(32).toString('hex');
-  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
   
   const user = await User.create({ 
     username, 
@@ -41,8 +101,6 @@ export const register = asyncHandler(async (req: Request, res: Response<IApiResp
 
   const newUser = await User.findById(user._id);
   const language = newUser?.preferences?.language || 'he';
-  
-
 
   let groupJoined = null;
   let inviteError = null;
@@ -58,7 +116,7 @@ export const register = asyncHandler(async (req: Request, res: Response<IApiResp
         const invite = group.pendingInvites.find((i: IBasePendingInvite) => i.code === inviteCode);
         if (invite) {
           const inviteAge = Date.now() - new Date(invite.invitedAt).getTime();
-          const inviteExpirationTime = 1000 * 60 * 60 * 24; // 24 hours in milliseconds
+          const inviteExpirationTime = 1000 * 60 * 60 * 24;
           if (inviteAge > inviteExpirationTime) {
             const hoursExpired = Math.round(inviteAge / (1000 * 60 * 60));
             console.error(`Invitation expired: invite code ${inviteCode} expired ${hoursExpired} hours ago`);
@@ -73,7 +131,7 @@ export const register = asyncHandler(async (req: Request, res: Response<IApiResp
                 if (!alreadyMember) {
                   await group.addMember(user._id.toString(), invite.role || 'member');
                   
-                  group.pendingInvites = group.pendingInvites.filter((i: IBasePendingInvite) => i.code !== inviteCode);
+                  group.pendingInvites = group.pendingInvites.filter((i: IBasePendingInvite) => i.code === inviteCode);
                   await group.save();
                   
                   await User.findByIdAndUpdate(user._id, { 
@@ -103,9 +161,46 @@ export const register = asyncHandler(async (req: Request, res: Response<IApiResp
     }
   }
   
-  const token = user.getSignedJwtToken();
-  setAuthCookie(res, token);
+  const sessionId = crypto.randomUUID();
+  const refreshExpiresAt = new Date(Date.now() + (parseInt(process.env.JWT_REFRESH_EXPIRE_DAYS || '30') * 24 * 60 * 60 * 1000));
+  
+  user.enforceMaxSessions(5);
+  
+  const accessToken = signAccessToken(user._id.toString());
+  const refreshToken = signRefreshToken(user._id.toString(), sessionId);
+  const refreshTokenHash = hashToken(refreshToken);
+  
+  const sessionData: {
+    sessionId: string;
+    refreshTokenHash: string;
+    expiresAt: Date;
+    userAgent?: string;
+    ip?: string;
+  } = {
+    sessionId,
+    refreshTokenHash,
+    expiresAt: refreshExpiresAt,
+  };
+  const userAgentValue = req.headers['user-agent'];
+  if (userAgentValue) {
+    sessionData.userAgent = userAgentValue;
+  }
+  const ipValue = req.ip || req.socket.remoteAddress;
+  if (ipValue) {
+    sessionData.ip = ipValue;
+  }
+  user.addSession(sessionData);
+  
+  await user.save();
+  
   const userResponse = user.toObject();
+  const { password: _password } = userResponse;
+  
+  const isMobile = isMobileClient(req);
+  
+  if (!isMobile) {
+    setRefreshTokenCookies(res, refreshToken, sessionId);
+  }
   
   let message = 'User registered successfully! Please check your email for verification link.';
   if (groupJoined) {
@@ -123,7 +218,8 @@ if (!user.isEmailVerified && !groupJoined) {
   
   const responseData: IAuthResponse = {
     user: userResponse,
-    token,
+    accessToken,
+    ...(isMobile && { refreshToken, sessionId }),
     ...(groupJoined && { groupJoined }),
     ...(inviteError && { inviteError })
   };
@@ -134,7 +230,7 @@ if (!user.isEmailVerified && !groupJoined) {
   ));
 });
 
-export const login = asyncHandler(async (req: Request, res: Response<IApiResponse<IAuthResponse>>) => {
+export const login = asyncHandler(async (req: Request, res: Response<IApiResponse<IAuthResponse | void>>) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     res.status(400).json(validationErrorResponse(errors.array()));
@@ -144,16 +240,67 @@ export const login = asyncHandler(async (req: Request, res: Response<IApiRespons
   try {
     const user = await User.findByCredentials(email, password) as UserDocument;
 
-    console.log('user', user);
     if (!user.isEmailVerified) {
       throw new AppError('Please verify your email address before logging in. Check your email for verification link.', 403, false);
     }
     
-    const token = user.getSignedJwtToken();
-    setAuthCookie(res, token);
+    const sessionId = crypto.randomUUID();
+    const refreshExpiresAt = new Date(Date.now() + (parseInt(process.env.JWT_REFRESH_EXPIRE_DAYS || '30') * 24 * 60 * 60 * 1000));
+    
+    user.enforceMaxSessions(5);
+    
+    const accessToken = signAccessToken(user._id.toString());
+    const refreshToken = signRefreshToken(user._id.toString(), sessionId);
+    const refreshTokenHash = hashToken(refreshToken);
+    
+    const sessionData: {
+      sessionId: string;
+      refreshTokenHash: string;
+      expiresAt: Date;
+      userAgent?: string;
+      ip?: string;
+    } = {
+      sessionId,
+      refreshTokenHash,
+      expiresAt: refreshExpiresAt,
+    };
+  const userAgentValue = req.headers['user-agent'];
+  if (userAgentValue) {
+    sessionData.userAgent = userAgentValue;
+  }
+  const ipValue = req.ip || req.socket.remoteAddress;
+  if (ipValue) {
+    sessionData.ip = ipValue;
+  }
+  user.addSession(sessionData);
+  
+  await user.save();
+  
     const userResponse = user.toObject();
-    delete userResponse.password;
-    res.status(200).json(successResponse<IAuthResponse>({ user: userResponse, token }, 'Login successful'));
+  const { password: _password } = userResponse;
+  
+  const isMobile = isMobileClient(req);
+  
+  if (!isMobile) {
+    setRefreshTokenCookies(res, refreshToken, sessionId);
+    
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('Login - Setting cookies:', {
+        hasRefreshToken: !!refreshToken,
+        hasSessionId: !!sessionId,
+        sessionIdLength: sessionId?.length || 0,
+        refreshTokenLength: refreshToken?.length || 0
+      });
+    }
+  }
+    
+    const responseData: IAuthResponse = {
+      user: userResponse,
+      accessToken,
+      ...(isMobile && { refreshToken, sessionId })
+    };
+    
+    res.status(200).json(successResponse<IAuthResponse>(responseData, 'Login successful'));
   } catch (error) {
     if (error instanceof AppError) {
       throw error;
@@ -162,15 +309,44 @@ export const login = asyncHandler(async (req: Request, res: Response<IApiRespons
   }
 });
 
-export const logout = asyncHandler(async (_req: Request, res: Response<IApiResponse>) => {
-  res.cookie('token', '', {
-    expires: new Date(Date.now() + 10 * 1000),
-    httpOnly: true
-  });
+export const logout = asyncHandler(async (req: Request, res: Response<IApiResponse<null>>) => {
+  const isMobile = isMobileClient(req);
+  let sessionId: string | undefined;
+
+  if (isMobile) {
+    sessionId = req.body.sessionId || req.headers['x-session-id'] as string;
+  } else {
+    sessionId = req.cookies.sessionId;
+  }
+
+  if (sessionId) {
+    try {
+      if (req.userId) {
+        const user = await User.findById(req.userId);
+        if (user) {
+          user.revokeSession(sessionId);
+          await user.save();
+        }
+      } else {
+        const user = await User.findOne({ 'refreshSessions.sessionId': sessionId });
+        if (user) {
+          user.revokeSession(sessionId);
+          await user.save();
+        }
+      }
+    } catch (error) {
+      console.error('Error revoking session:', error);
+    }
+  }
+
+  if (!isMobile) {
+    clearRefreshTokenCookies(res);
+  }
+
   res.status(200).json(successResponse(null, 'Logout successful'));
 });
 
-export const getMe = asyncHandler(async (req: Request, res: Response<IApiResponse>) => {
+export const getMe = asyncHandler(async (req: Request, res: Response<IApiResponse<IUser | null | void>>) => {
   const user = await User.findById(req.userId).populate('groups', 'name description avatar membersCount');
   if (!user) throw new AppError('User not found', 404);
   
@@ -181,32 +357,49 @@ export const getMe = asyncHandler(async (req: Request, res: Response<IApiRespons
   res.status(200).json(successResponse(user, 'User data retrieved'));
 });
 
-export const updateProfile = asyncHandler(async (req: Request, res: Response<IApiResponse>) => {
+export const updateProfile = asyncHandler(async (req: Request, res: Response<IApiResponse<IUser | null | void>>) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     res.status(400).json(validationErrorResponse(errors.array()));
     return;
   }
-  const allowedUpdates = ['firstName', 'lastName', 'username', 'preferences'];
+
+  const allowedUpdates: (keyof IUser)[] = ['firstName', 'lastName', 'username', 'email', 'avatar', 'preferences'];
   const updates = Object.keys(req.body);
-  const isValidOperation = updates.every(update => allowedUpdates.includes(update));
+  const isValidOperation = updates.every((update: string) => allowedUpdates.includes(update as keyof IUser));
   if (!isValidOperation) throw new AppError('Invalid updates', 400);
 
   const user = await User.findById(req.userId);
   if (!user) throw new AppError('User not found', 404);
 
-  updates.forEach(update => {
+  for (const update of updates) {
     if (update === 'preferences') {
       user.preferences = { ...user.preferences, ...req.body.preferences };
     } else {
-      (user as any)[update] = req.body[update];
+      switch (update) {
+        case 'firstName':
+          user.firstName = req.body.firstName;
+          break;
+        case 'lastName':
+          user.lastName = req.body.lastName;
+          break;
+        case 'username':
+          user.username = req.body.username;
+          break;
+        case 'email':
+          user.email = req.body.email;
+          break;
+        case 'avatar':
+          user.avatar = req.body.avatar;
+          break;
+      }
     }
-  });
+  }
   await user.save();
   res.status(200).json(successResponse(user, 'Profile updated successfully'));
 });
 
-export const updateEmail = asyncHandler(async (req: Request, res: Response<IApiResponse>) => {
+export const updateEmail = asyncHandler(async (req: Request, res: Response<IApiResponse<null | void>>) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     res.status(400).json(validationErrorResponse(errors.array()));
@@ -227,7 +420,7 @@ export const updateEmail = asyncHandler(async (req: Request, res: Response<IApiR
   }
 
   const verificationToken = crypto.randomBytes(32).toString('hex');
-  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
   user.email = email;
   user.isEmailVerified = false;
@@ -250,7 +443,7 @@ export const updateEmail = asyncHandler(async (req: Request, res: Response<IApiR
   }
 });
 
-export const changePassword = asyncHandler(async (req: Request, res: Response<IApiResponse>) => {
+export const changePassword = asyncHandler(async (req: Request, res: Response<IApiResponse<null | void>>) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     res.status(400).json(validationErrorResponse(errors.array()));
@@ -266,29 +459,125 @@ export const changePassword = asyncHandler(async (req: Request, res: Response<IA
   res.status(200).json(successResponse(null, 'Password updated successfully'));
 });
 
-export const refreshToken = asyncHandler(async (req: Request, res: Response<IApiResponse>) => {
-  const user = await User.findById(req.userId);
-  if (!user) throw new AppError('User not found', 404);
-  const token = user.getSignedJwtToken();
-  setAuthCookie(res, token);
-  res.status(200).json(successResponse({ token }, 'Token refreshed successfully'));
+export const refreshToken = asyncHandler(async (req: Request, res: Response<IApiResponse<{ accessToken: string; refreshToken?: string; sessionId?: string }>>) => {
+  const isMobile = isMobileClient(req);
+  let refreshToken: string | undefined;
+  let sessionId: string | undefined;
+
+  if (isMobile) {
+    refreshToken = req.body.refreshToken || req.headers['x-refresh-token'] as string;
+    sessionId = req.body.sessionId || req.headers['x-session-id'] as string;
+  } else {
+    refreshToken = req.cookies.refreshToken;
+    sessionId = req.cookies.sessionId;
+    
+    if (process.env.NODE_ENV !== 'production' && (!refreshToken || !sessionId)) {
+      console.log('Refresh endpoint - cookies received:', {
+        hasRefreshToken: !!refreshToken,
+        hasSessionId: !!sessionId,
+        allCookies: Object.keys(req.cookies),
+        cookieHeader: req.headers.cookie,
+        origin: req.headers.origin,
+        referer: req.headers.referer
+      });
+    }
+  }
+
+  if (!refreshToken || !sessionId) {
+    if (req.cookies.token) {
+      const isProduction = process.env.NODE_ENV === 'production';
+      const cookieDomain = process.env.COOKIE_DOMAIN;
+      const clearOptions: {
+        httpOnly: boolean;
+        secure: boolean;
+        sameSite: 'none' | 'lax';
+        path: string;
+        expires: Date;
+        domain?: string;
+      } = {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: isProduction ? 'none' : 'lax',
+        path: '/',
+        expires: new Date(0),
+      };
+      if (isProduction && cookieDomain) {
+        clearOptions.domain = cookieDomain;
+      }
+      res.cookie('token', '', clearOptions);
+    }
+    
+    throw new AppError('No valid refresh token found. Please log in again.', 401);
+  }
+
+  let decoded;
+  try {
+    decoded = verifyRefreshToken(refreshToken);
+  } catch (error) {
+    throw new AppError('Invalid or expired refresh token', 401);
+  }
+
+  if (decoded.sid !== sessionId) {
+    throw new AppError('Session ID mismatch', 401);
+  }
+
+  const user = await User.findById(decoded.sub);
+  if (!user || !user.isActive) {
+    throw new AppError('User not found or inactive', 401);
+  }
+
+  const session = user.refreshSessions.find(s => s.sessionId === sessionId);
+  if (!session) {
+    throw new AppError('Session not found', 401);
+  }
+
+  const providedTokenHash = hashToken(refreshToken);
+  if (session.refreshTokenHash !== providedTokenHash) {
+    throw new AppError('Invalid refresh token', 401);
+  }
+
+  if (session.expiresAt < new Date()) {
+    user.revokeSession(sessionId);
+    await user.save();
+    throw new AppError('Refresh token has expired', 401);
+  }
+
+  const newRefreshExpiresAt = new Date(Date.now() + (parseInt(process.env.JWT_REFRESH_EXPIRE_DAYS || '30') * 24 * 60 * 60 * 1000));
+  const newRefreshToken = signRefreshToken(user._id.toString(), sessionId);
+  const newRefreshTokenHash = hashToken(newRefreshToken);
+
+  user.rotateSession(sessionId, newRefreshTokenHash, newRefreshExpiresAt);
+  await user.save();
+
+  const accessToken = signAccessToken(user._id.toString());
+
+  if (!isMobile) {
+    setRefreshTokenCookies(res, newRefreshToken, sessionId);
+  }
+
+  const responseData: { accessToken: string; refreshToken?: string; sessionId?: string } = {
+    accessToken,
+    ...(isMobile && { refreshToken: newRefreshToken, sessionId })
+  };
+
+  res.status(200).json(successResponse(responseData, 'Token refreshed successfully'));
 });
 
-export const checkUsernameAvailability = asyncHandler(async (req: Request, res: Response<IApiResponse>) => {
+export const checkUsernameAvailability = asyncHandler(async (req: Request, res: Response<IApiResponse<{ available: boolean }>>) => {
   const { username } = req.params;
   if (!username || username.length < 3) throw new AppError('Username must be at least 3 characters', 400);
   const isAvailable = await User.isUsernameAvailable(username);
   res.status(200).json(successResponse({ available: isAvailable }, isAvailable ? 'Username is available' : 'Username is already taken'));
 });
 
-export const checkEmailAvailability = asyncHandler(async (req: Request, res: Response<IApiResponse>) => {
+export const checkEmailAvailability = asyncHandler(async (req: Request, res: Response<IApiResponse<{ available: boolean }>>) => {
   const { email } = req.params;
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new AppError('Invalid email format', 400);
   const isAvailable = await User.isEmailAvailable(email);
   res.status(200).json(successResponse({ available: isAvailable }, isAvailable ? 'Email is available' : 'Email is already registered'));
 });
 
-export const getMyInvitations = asyncHandler(async (req: Request, res: Response<IApiResponse>) => {
+export const getMyInvitations = asyncHandler(async (req: Request, res: Response<IApiResponse<IPendingInvitation[]>>) => {
   const user = await User.findById(req.userId)
     .populate({
       path: 'pendingInvitations.group',
@@ -305,7 +594,7 @@ export const getMyInvitations = asyncHandler(async (req: Request, res: Response<
   res.status(200).json(successResponse(pendingInvitations, 'Invitations retrieved successfully'));
 });
 
-export const acceptInvitation = asyncHandler(async (req: Request, res: Response<IApiResponse>) => {
+export const acceptInvitation = asyncHandler(async (req: Request, res: Response<IApiResponse<null>>) => {
   const { invitationId } = req.body;
   const userId = req.userId!;
 
@@ -348,7 +637,7 @@ export const acceptInvitation = asyncHandler(async (req: Request, res: Response<
   res.status(200).json(successResponse(null, 'Invitation accepted successfully'));
 });
 
-export const declineInvitation = asyncHandler(async (req: Request, res: Response<IApiResponse>) => {
+export const declineInvitation = asyncHandler(async (req: Request, res: Response<IApiResponse<null>>) => {
   const { code } = req.body;
   const userId = req.userId!;
 
@@ -386,7 +675,9 @@ export const declineInvitation = asyncHandler(async (req: Request, res: Response
   res.status(200).json(successResponse(null, 'Invitation declined successfully'));
 });
 
-export const verifyEmail = asyncHandler(async (req: Request, res: Response<IApiResponse>) => {
+export const verifyEmail = asyncHandler(async (req: Request, res: Response<IApiResponse<{
+  user: IUser
+}>>) => {
   const { token, email } = req.body;
   
   if (!token) {
@@ -426,21 +717,10 @@ export const verifyEmail = asyncHandler(async (req: Request, res: Response<IApiR
   
   const userResponse = user.toObject();
 
-  const publicUser = {
-    _id: userResponse._id,
-    username: userResponse.username,
-    email: userResponse.email,
-    firstName: userResponse.firstName,
-    lastName: userResponse.lastName,
-    avatar: userResponse.avatar,
-    isEmailVerified: userResponse.isEmailVerified,
-    groups: userResponse.groups,
-    preferences: userResponse.preferences
-  };
-  res.status(200).json(successResponse({ user: publicUser }, 'Email verified successfully'));
+  res.status(200).json(successResponse({ user: userResponse }, 'Email verified successfully'));
 });
 
-export const resendVerification = asyncHandler(async (req: Request, res: Response<IApiResponse>) => {
+export const resendVerification = asyncHandler(async (req: Request, res: Response<IApiResponse<null>>) => {
   const { email } = req.body;
   
   if (!email) {
@@ -457,7 +737,7 @@ export const resendVerification = asyncHandler(async (req: Request, res: Respons
   }
 
   const verificationToken = crypto.randomBytes(32).toString('hex');
-  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
   user.emailVerification = {
     token: verificationToken,
@@ -479,7 +759,7 @@ export const resendVerification = asyncHandler(async (req: Request, res: Respons
   }
 });
 
-export const resendVerificationForLogin = asyncHandler(async (req: Request, res: Response<IApiResponse>) => {
+export const resendVerificationForLogin = asyncHandler(async (req: Request, res: Response<IApiResponse<null>>) => {
   const { email } = req.body;
   
   if (!email) {
@@ -510,7 +790,7 @@ export const resendVerificationForLogin = asyncHandler(async (req: Request, res:
     }
   } else {
     const verificationToken = crypto.randomBytes(32).toString('hex');
-    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     user.emailVerification = {
       token: verificationToken,

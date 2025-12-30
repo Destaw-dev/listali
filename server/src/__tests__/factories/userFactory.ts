@@ -30,26 +30,54 @@ import User from '../../models/user';
 import Group from '../../models/group';
 import ShoppingList from '../../models/shoppingList';
 import { faker } from '@faker-js/faker';
+import mongoose from 'mongoose';
 
-// מחזיר: { userId, token }
+// מחזיר: { userId, token (accessToken) }
 export const createUserAndAuth = async () => {
+  // Generate unique email and username for each call
+  const uniqueId = faker.string.alphanumeric(8);
   const userData = {
-    firstName: 'test',
-    lastName: 'user',
-    username: 'testuser',
-    email: 'test@example.com',
+    firstName: faker.person.firstName(),
+    lastName: faker.person.lastName(),
+    username: `testuser_${uniqueId}`,
+    email: `test_${uniqueId}@example.com`,
     password: 'Password123'
   };
 
   const registerRes = await request(app).post('/api/auth/register').send(userData);
+  
+  if (registerRes.status !== 201) {
+    throw new Error(`Failed to register user: ${JSON.stringify(registerRes.body)}`);
+  }
+  
+  // Verify email for testing - use User model directly
+  const user = await User.findOne({ email: userData.email });
+  if (user) {
+    user.isEmailVerified = true;
+    await user.save();
+  } else {
+    // Fallback to direct DB update
+    await mongoose.connection.db?.collection('users').updateOne(
+      { email: userData.email },
+      { $set: { isEmailVerified: true } }
+    );
+  }
+  
   const res = await request(app).post('/api/auth/login').send({
     email: userData.email,
     password: userData.password
   });
   
-  const token = res.body.data.token;
-  const user = await User.findOne({ email: userData.email });
-  return { userId: user!._id.toString(), token };
+  if (res.status !== 200 || !res.body.data?.accessToken) {
+    throw new Error(`Failed to login user: ${JSON.stringify(res.body)}`);
+  }
+  
+  const token = res.body.data.accessToken;
+  const loggedInUser = await User.findOne({ email: userData.email });
+  if (!loggedInUser) {
+    throw new Error('User not found after registration');
+  }
+  return { userId: loggedInUser._id.toString(), token };
 };
 
 // מחזיר: { groupId, shoppingListId }
@@ -64,9 +92,13 @@ export const createGroupWithList = async (token: string, userId: string) => {
 
   // צור רשימת קניות
   const listRes = await request(app)
-    .post(`/api/shopping-lists/${groupId}`)
+    .post(`/api/shopping-lists/groups/${groupId}`)
     .set('Authorization', `Bearer ${token}`)
     .send({ name: 'רשימת טסטים', groupId });
+
+  if (!listRes.body.data || !listRes.body.data._id) {
+    throw new Error(`Failed to create shopping list: ${JSON.stringify(listRes.body)}`);
+  }
 
   const shoppingListId = listRes.body.data._id;
 

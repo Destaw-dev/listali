@@ -1,19 +1,27 @@
 import { Server, Socket } from 'socket.io';
-import jwt from 'jsonwebtoken';
-import mongoose from 'mongoose';
+import mongoose, { Types } from 'mongoose';
 import User from '../models/user';
-import { IGroup, ISocketUser, ISocketUserStatus } from '../types';
+import { IGroup, ISocketUser, ISocketUserStatus, ISocketNotification, ISocketPayload } from '../types';
+import { verifyAccessToken } from '../utils/tokens';
 
-// Global io instance for external access
 let globalIO: Server | null = null;
 
-// ---------------- In-memory connections ----------------
-const connectedUsers = new Map<string, ISocketUser>(); // socketId -> ISocketUser
-const userSockets = new Map<string, string>();         // userId   -> socketId
+const connectedUsers = new Map<string, ISocketUser>();
+const userSockets = new Map<string, string>();
+
+interface SocketUserData {
+  _id: Types.ObjectId;
+  username: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  isActive?: boolean;
+  groups: Array<{ _id: Types.ObjectId }>;
+}
 
 interface AuthenticatedSocket extends Socket {
   userId?: string;
-  user?: any;
+  user?: SocketUserData;
 }
 
 // For debug: log all connected users per connection/disconnection
@@ -29,9 +37,8 @@ function logConnectedUsers(_where: string) {
 }
 
 export const initializeSocket = (io: Server): void => {
-  // Store global reference
+
   globalIO = io;
-  // 1) Auth middleware
   io.use(async (socket: AuthenticatedSocket, next) => {
     try {
       const token =
@@ -40,9 +47,8 @@ export const initializeSocket = (io: Server): void => {
 
       if (!token) return next(new Error('Authentication error: No token provided'));
 
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as any;
+      const decoded = verifyAccessToken(token);
 
-      // Ensure Mongo connected
       if (mongoose.connection.readyState !== 1) {
         await new Promise((resolve) => {
           if (mongoose.connection.readyState === 1) resolve(true);
@@ -50,13 +56,25 @@ export const initializeSocket = (io: Server): void => {
         });
       }
 
-      const user = await User.findById(decoded.id)
+      const user = await User.findById(decoded.sub)
         .select('-password')
         .populate('groups', '_id');
       if (!user || !user.isActive) return next(new Error('Authentication error: User not found or inactive'));
 
       socket.userId = user._id.toString();
-      socket.user = user;
+      const userGroups = (user.groups || []) as Array<string | IGroup>;
+      const populatedGroups = userGroups
+        .filter((g): g is IGroup => typeof g === 'object' && g !== null && typeof g !== 'string' && '_id' in g)
+        .map((g: IGroup) => ({ _id: g._id }));
+      socket.user = {
+        _id: user._id,
+        username: user.username,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        isActive: user.isActive ? true : false,
+        groups: populatedGroups
+      };
 
       next();
     } catch (err) {
@@ -65,7 +83,6 @@ export const initializeSocket = (io: Server): void => {
     }
   });
 
-  // 2) Connection lifecycle
   io.on('connection', (socket: AuthenticatedSocket) => {
     const username = socket.user?.username || 'unknown';
 
@@ -76,28 +93,30 @@ export const initializeSocket = (io: Server): void => {
     socket.on('status:update', (data) => handleStatusUpdate(socket, io, data));
     socket.on('status_update', (data) => handleStatusUpdate(socket, io, data));
 
-    // Disconnect
     socket.on('disconnect', () => {
       handleUserDisconnect(socket, io).finally(() => logConnectedUsers('DISCONNECT'));
     });
 
-    // Errors
     socket.on('error', (error) => {
       console.error(`Socket error for user ${username}:`, error);
     });
   });
 };
 
-// ---------------- Handlers ----------------
 
 const handleUserConnect = async (socket: AuthenticatedSocket, _io: Server): Promise<void> => {
   try {
     const userId = socket.userId!;
     const user = socket.user;
+    
+    if (!user) {
+      console.error('User not found in socket');
+      return;
+    }
 
     await User.findByIdAndUpdate(userId, { lastSeen: new Date() });
 
-    const userGroups = user.groups.map((g: IGroup) => g._id.toString());
+    const userGroups = user.groups.map(g => g._id.toString());
 
     const socketUser: ISocketUser = {
       userId,
@@ -110,7 +129,6 @@ const handleUserConnect = async (socket: AuthenticatedSocket, _io: Server): Prom
     connectedUsers.set(socket.id, socketUser);
     userSockets.set(userId, socket.id);
 
-    // notify online to the groups
     userGroups.forEach((groupId: string) => {
       socket.to(`group:${groupId}`).emit('user:status_changed', {
         userId,
@@ -119,7 +137,6 @@ const handleUserConnect = async (socket: AuthenticatedSocket, _io: Server): Prom
       });
     });
 
-    // send list of currently-online users in same groups
     const onlineUsers = Array.from(connectedUsers.values())
       .filter(u => userGroups.some((gid: string) => u.groups.includes(gid)))
       .map(u => ({ userId: u.userId, username: u.username, status: u.status }));
@@ -157,7 +174,11 @@ const handleUserDisconnect = async (socket: AuthenticatedSocket, _io: Server): P
 const handleJoinGroups = (socket: AuthenticatedSocket): void => {
   try {
     const user = socket.user;
-    const userGroups = user.groups.map((g: IGroup) => g._id.toString());
+    if (!user) {
+      console.error('User not found in socket');
+      return;
+    }
+    const userGroups = user.groups.map(g => g._id.toString());
     userGroups.forEach((groupId: string) => socket.join(`group:${groupId}`));
   } catch (err) {
     console.error('Error joining groups:', err);
@@ -165,7 +186,7 @@ const handleJoinGroups = (socket: AuthenticatedSocket): void => {
 };
 
 
-const handleStatusUpdate = (socket: AuthenticatedSocket, io: Server, data: any): void => {
+const handleStatusUpdate = (socket: AuthenticatedSocket, io: Server, data: ISocketUserStatus): void => {
   try {
     const { status, location } = data;
     const userId = socket.userId!;
@@ -173,12 +194,14 @@ const handleStatusUpdate = (socket: AuthenticatedSocket, io: Server, data: any):
     if (!socketUser) return;
 
     socketUser.status = status;
-    if (location) socketUser.currentLocation = location;
+    if (location) {
+      socketUser.currentLocation = location;
+    }
 
     const statusUpdate: ISocketUserStatus = {
       userId,
       status,
-      location,
+      ...(location ? { location } : {}),
       timestamp: new Date()
     };
 
@@ -195,7 +218,7 @@ export const getGroupUsers = (groupId: string): ISocketUser[] =>
 
 export const getIO = (): Server | null => globalIO;
 
-export const sendNotificationToUser = (io: Server, userId: string, notification: any): void => {
+export const sendNotificationToUser = (io: Server, userId: string, notification: ISocketNotification): void => {
   const socketId = userSockets.get(userId);
   if (socketId) io.to(socketId).emit('notification', notification);
 };
@@ -205,7 +228,7 @@ export const emitToGroupExcept = (
   groupId: string,
   excludeUserId: string,
   event: string,
-  payload: any
+  payload: ISocketPayload
 ) => {
   const room = `group:${groupId}`;
   const sid = userSockets.get(excludeUserId);

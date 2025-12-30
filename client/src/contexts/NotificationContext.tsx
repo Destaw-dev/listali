@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import toast from 'react-hot-toast';
+import { AxiosError } from 'axios';
 
 export enum NotificationType {
   ERROR = 'error',
@@ -30,7 +31,7 @@ interface NotificationContextType {
   showSuccess: (message: string, options?: { [key: string]: string }) => void;
   showWarning: (message: string, options?: { [key: string]: string }) => void;
   showInfo: (message: string, options?: { [key: string]: string }) => void;
-  handleApiError: (error: any) => void;
+  handleApiError: (error: Error | AxiosError) => void;
   handleValidationError: (field: string, message: string) => void;
 }
 
@@ -79,14 +80,12 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     let message: string;
     
     if (typeof error === 'string') {
-      // Check if it's a translation key or plain text
       if (error.includes('.')) {
         message = t(error);
       } else {
         message = error;
       }
     } else {
-      // Try to get translated error message
       const errorKey = getErrorKey(error);
       message = t(`notifications.${errorKey}`, { defaultMessage: error.message });
     }
@@ -109,16 +108,16 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     showToast(translatedMessage, NotificationType.INFO);
   }, [t, showToast]);
 
-  const handleApiError = useCallback((error: any) => {
-    
-    if (!error.response) {
-      // Network error
-      showError('notifications.networkError', NotificationType.NETWORK);
-      return;
-    }
+  const handleApiError = useCallback((error: Error | AxiosError) => {
+    // Check if it's an AxiosError
+    if (error instanceof AxiosError) {
+      if (!error.response) {
+        showError('notifications.networkError', NotificationType.NETWORK);
+        return;
+      }
 
-    const status = error.response.status;
-    const errorData = error.response.data;
+      const status = error.response.status;
+      const errorData = error.response.data as { message?: string; errors?: Record<string, string> };
     
     switch (status) {
       case 400:
@@ -134,7 +133,6 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         showError('notifications.notFound', NotificationType.CLIENT);
         break;
       case 422:
-        // Validation error
         const validationMessage = errorData?.message || 'notifications.validationError';
         showError(validationMessage, NotificationType.VALIDATION);
         break;
@@ -144,6 +142,10 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       default:
         const message = errorData?.message || 'notifications.unknownError';
         showError(message, NotificationType.SERVER);
+      }
+    } else {
+      // Regular Error object
+      showError(error, NotificationType.CLIENT);
     }
   }, [showError]);
 
@@ -177,28 +179,26 @@ export function useNotification() {
   return context;
 }
 
-// Helper functions
 function getToastColor(type: NotificationType): string {
   switch (type) {
     case NotificationType.SUCCESS:
-      return '#10b981'; // green-500
+      return '#10b981';
     case NotificationType.ERROR:
-      return '#ef4444'; // red-500
+      return '#ef4444';
     case NotificationType.NETWORK:
     case NotificationType.SERVER:
     case NotificationType.CLIENT:
-      return '#ef4444'; // red-500
+      return '#ef4444';
     case NotificationType.WARNING:
-      return '#f59e0b'; // amber-500
+      return '#f59e0b';
     case NotificationType.INFO:
-      return '#3b82f6'; // blue-500
+      return '#3b82f6';
     default:
-      return '#6b7280'; // gray-500
+      return '#6b7280';
   }
 }
 
 function getErrorKey(error: Error): string {
-  // Map common error types to translation keys
   if (error.message.includes('Network Error')) return 'networkError';
   if (error.message.includes('timeout')) return 'timeoutError';
   if (error.message.includes('Unauthorized')) return 'unauthorized';

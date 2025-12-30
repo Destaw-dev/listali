@@ -5,7 +5,7 @@ import { Input } from "@/components/common/Input";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 import { useMemo } from "react";
-import { ChevronDown, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { Dropdown } from "../common/Dropdown";
 
 export type ShoppingStatusFilter = "all" | "unpurchased" | "purchased";
@@ -118,7 +118,6 @@ export function ShoppingListFilters({
             </Button>
           );
         })}
-        {/* change it to dropdown */}
         <Dropdown
           options={categories.map((item) => ({
             label: `${item.name} (${item.count})`,

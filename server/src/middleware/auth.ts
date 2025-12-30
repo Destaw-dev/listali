@@ -1,32 +1,19 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
+import { Document, Types } from 'mongoose';
 import User from '../models/user';
 import { IApiResponse, IGroup, IGroupMember } from '../types';
+import { verifyAccessToken } from '../utils/tokens';
 
-interface JwtPayload {
-  id: string;
-  username: string;
-  email: string;
-  iat: number;
-  exp: number;
-}
-
-// Authenticate token middleware
 export const authenticateToken = async (
   req: Request, 
-  res: Response<IApiResponse>, 
+  res: Response<IApiResponse<void>>, 
   next: NextFunction
 ): Promise<void> => {
   try {
     let token: string | undefined;
 
-    // Check for token in Authorization header
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
       token = req.headers.authorization.split(' ')[1];
-    }
-    // Check for token in cookies
-    else if (req.cookies.token) {
-      token = req.cookies.token;
     }
 
     if (!token) {
@@ -38,14 +25,9 @@ export const authenticateToken = async (
     }
 
     try {
-      // Verify token
-      const decoded = jwt.verify(
-        token, 
-        process.env.JWT_SECRET || 'fallback-secret'
-      ) as JwtPayload;
+      const decoded = verifyAccessToken(token);
 
-      // Get user from database
-      const user = await User.findById(decoded.id).select('-password');
+      const user = await User.findById(decoded.sub).select('-password');
       
       if (!user || !user.isActive) {
         res.status(401).json({
@@ -55,31 +37,30 @@ export const authenticateToken = async (
         return;
       }
 
-      // Update last seen
       user.lastSeen = new Date();
       await user.save();
 
-      // Attach user to request
       req.user = user;
       req.userId = user._id.toString();
 
       next();
     } catch (error) {
-      if (error instanceof jwt.TokenExpiredError) {
-        res.status(401).json({
-          success: false,
-          message: 'Token has expired'
-        });
-        return;
-      }
-      
-      if (error instanceof jwt.JsonWebTokenError) {
-        // Token is malformed or invalid, return 401 without logging
-        res.status(401).json({
-          success: false,
-          message: 'Invalid token'
-        });
-        return;
+      if (error instanceof Error) {
+        if (error.message.includes('expired')) {
+          res.status(401).json({
+            success: false,
+            message: 'Token has expired'
+          });
+          return;
+        }
+        
+        if (error.message.includes('Invalid')) {
+          res.status(401).json({
+            success: false,
+            message: 'Invalid token'
+          });
+          return;
+        }
       }
 
       throw error;
@@ -93,7 +74,6 @@ export const authenticateToken = async (
   }
 };
 
-// Optional authentication middleware (doesn't fail if no token)
 export const optionalAuth = async (
   req: Request, 
   res: Response, 
@@ -104,28 +84,22 @@ export const optionalAuth = async (
 
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
       token = req.headers.authorization.split(' ')[1];
-    } else if (req.cookies.token) {
-      token = req.cookies.token;
     }
 
     if (token) {
       try {
-        const decoded = jwt.verify(
-          token, 
-          process.env.JWT_SECRET || 'fallback-secret'
-        ) as JwtPayload;
+        const decoded = verifyAccessToken(token);
 
-        const user = await User.findById(decoded.id).select('-password');
+        const user = await User.findById(decoded.sub).select('-password');
         
         if (user && user.isActive) {
           req.user = user;
           req.userId = user._id.toString();
           
-          // Update last seen
           user.lastSeen = new Date();
           await user.save();
         }
-      } catch (error) {
+      } catch {
         // Token is invalid, but we continue without authentication
       }
     }
@@ -137,9 +111,8 @@ export const optionalAuth = async (
   }
 };
 
-// Check if user is group member middleware
 export const checkGroupMembership = (permission?: string) => {
-  return async (req: Request, res: Response<IApiResponse>, next: NextFunction): Promise<void> => {
+  return async (req: Request, res: Response<IApiResponse<void>>, next: NextFunction): Promise<void> => {
     try {
       const { groupId } = req.params;
       const userId = req.userId;
@@ -160,7 +133,6 @@ export const checkGroupMembership = (permission?: string) => {
         return;
       }
 
-      // Import Group model here to avoid circular dependency
       const Group = (await import('../models/group')).default;
       
       const group = await Group.findById(groupId);
@@ -174,7 +146,6 @@ export const checkGroupMembership = (permission?: string) => {
         return;
       }
 
-      // Check if user is a member
       const member = group.members.find(m => m.user.toString() === userId);
       
       if (!member) {
@@ -185,7 +156,6 @@ export const checkGroupMembership = (permission?: string) => {
         return;
       }
 
-      // Check specific permission if required
       if (permission && !group.hasPermission(userId, permission)) {
         res.status(403).json({
           success: false,
@@ -194,7 +164,6 @@ export const checkGroupMembership = (permission?: string) => {
         return;
       }
 
-      // Attach group and member info to request
       req.group = group;
       req.groupMember = member;
 
@@ -209,9 +178,8 @@ export const checkGroupMembership = (permission?: string) => {
   };
 };
 
-// Check if user owns the resource
 export const checkOwnership = (resourceType: 'group' | 'list' | 'item') => {
-  return async (req: Request, res: Response<IApiResponse>, next: NextFunction): Promise<void> => {
+  return async (req: Request, res: Response<IApiResponse<void>>, next: NextFunction): Promise<void> => {
     try {
       const userId = req.userId;
       
@@ -224,21 +192,27 @@ export const checkOwnership = (resourceType: 'group' | 'list' | 'item') => {
       }
 
       let resourceId: string | undefined;
-      let Model: any;
+      let resource: Document | null = null;
       
       switch (resourceType) {
-        case 'group':
+        case 'group': {
           resourceId = req.params.groupId || req.params.id;
-          Model = (await import('../models/group')).default;
+          const Group = (await import('../models/group')).default;
+          resource = await Group.findById(resourceId);
           break;
-        case 'list':
+        }
+        case 'list': {
           resourceId = req.params.listId || req.params.id;
-          Model = (await import('../models/shoppingList')).default;
+          const ShoppingList = (await import('../models/shoppingList')).default;
+          resource = await ShoppingList.findById(resourceId);
           break;
-        case 'item':
+        }
+        case 'item': {
           resourceId = req.params.itemId || req.params.id;
-          Model = (await import('../models/item')).default;
+          const Item = (await import('../models/item')).default;
+          resource = await Item.findById(resourceId);
           break;
+        }
         default:
           res.status(400).json({
             success: false,
@@ -246,8 +220,6 @@ export const checkOwnership = (resourceType: 'group' | 'list' | 'item') => {
           });
           return;
       }
-
-      const resource = await Model.findById(resourceId);
       
       if (!resource) {
         res.status(404).json({
@@ -257,12 +229,15 @@ export const checkOwnership = (resourceType: 'group' | 'list' | 'item') => {
         return;
       }
 
-      // Check ownership based on resource type
       let isOwner = false;
       if (resourceType === 'group') {
-        isOwner = resource.owner.toString() === userId;
+        const groupResource = resource as IGroup;
+        isOwner = groupResource.owner.toString() === userId;
       } else {
-        isOwner = resource.createdBy.toString() === userId;
+        if ('createdBy' in resource && resource.createdBy) {
+          const createdBy = resource.createdBy as Types.ObjectId;
+          isOwner = createdBy.toString() === userId;
+        }
       }
 
       if (!isOwner) {
@@ -284,10 +259,9 @@ export const checkOwnership = (resourceType: 'group' | 'list' | 'item') => {
   };
 };
 
-// Rate limiting for authentication endpoints
 export const authRateLimit = {
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // limit each IP to 5 requests per windowMs for auth endpoints
+  windowMs: 15 * 60 * 1000,
+  max: 5,
   message: {
     success: false,
     message: 'Too many authentication attempts, please try again later.'
@@ -296,8 +270,6 @@ export const authRateLimit = {
   legacyHeaders: false,
 };
 
-// Extend Express Request interface
-// Using declare global for Express namespace extension (required by Express types)
 /* eslint-disable @typescript-eslint/no-namespace */
 declare global {
   namespace Express {

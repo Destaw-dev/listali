@@ -1,28 +1,29 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api';
 import { useNotification } from '@/contexts/NotificationContext';
+import { useAuthStore } from '@/store/authStore';
 
-// Query Keys
 export const invitationKeys = {
   all: ['invitations'] as const,
   lists: () => [...invitationKeys.all, 'list'] as const,
   list: (filters: string) => [...invitationKeys.lists(), { filters }] as const,
 };
 
-// Invitations List Query
 export const useInvitations = () => {
+  const { authReady, accessToken } = useAuthStore();
+  
   return useQuery({
     queryKey: invitationKeys.lists(),
     queryFn: async () => {
       const response = await apiClient.getMyInvitations();
       return response.data || [];
     },
-    staleTime: 1 * 60 * 1000, // 1 minute
+    staleTime: 1 * 60 * 1000,
     retry: 1,
+    enabled: authReady && !!accessToken,
   });
 };
 
-// Accept Invitation Mutation
 export const useAcceptInvitation = () => {
   const queryClient = useQueryClient();
   const { showSuccess, handleApiError } = useNotification();
@@ -33,19 +34,16 @@ export const useAcceptInvitation = () => {
       return response.data;
     },
     onSuccess: () => {
-      // Invalidate and refetch invitations list
       queryClient.invalidateQueries({ queryKey: invitationKeys.lists() });
-      // Also invalidate groups since user joined a new group
       queryClient.invalidateQueries({ queryKey: ['groups'] });
       showSuccess('invitations.acceptSuccess');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       handleApiError(error);
     },
   });
 };
 
-// Decline Invitation Mutation
 export const useDeclineInvitation = () => {
   const queryClient = useQueryClient();
   const { showSuccess, handleApiError } = useNotification();
@@ -56,11 +54,10 @@ export const useDeclineInvitation = () => {
       return response.data;
     },
     onSuccess: () => {
-      // Invalidate and refetch invitations list
       queryClient.invalidateQueries({ queryKey: invitationKeys.lists() });
       showSuccess('invitations.declineSuccess');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       handleApiError(error);
     },
   });

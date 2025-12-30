@@ -11,33 +11,17 @@ import { useAuthStore } from "@/store/authStore";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useMemo } from "react";
-
-// 🛍️ Define a clear interface for the shopping session structure
-interface ShoppingSession {
-  _id: string;
-  status: "active" | "paused" | "completed";
-  startedAt: string;
-  // Add other necessary fields from your backend session object
-}
-
-interface ShoppingModeData {
-  currentUserSession: ShoppingSession | null;
-  activeSessions: ShoppingSession[];
-}
+import { IShoppingSessionData } from "@/types";
 
 interface ShoppingModeCardProps {
   listId: string;
   groupId: string;
-  // 💡 Use the defined types for better type safety
-  shoppingSession?: ShoppingModeData;
+  shoppingSession?: IShoppingSessionData;
   totalItems: number;
   purchasedItems: number;
 }
  
-/**
- * Custom hook to encapsulate session logic and query client access.
- * This reduces duplication and keeps the component clean.
- */
+
 const useShoppingSessionActions = (listId: string) => {
   const queryClient = useQueryClient();
   const startShoppingMutation = useStartShopping();
@@ -45,10 +29,8 @@ const useShoppingSessionActions = (listId: string) => {
   const pauseShoppingMutation = usePauseShopping();
   const resumeShoppingMutation = useResumeShopping();
 
-  // Helper to safely get the latest session data from the cache
-  const getLatestSession = (): ShoppingSession | null => {
-    // 💡 Use the specific type for query data
-    const unifiedData = queryClient.getQueryData<any>([
+  const getLatestSession = (): IShoppingSessionData['currentUserSession'] => {
+    const unifiedData = queryClient.getQueryData<{ shoppingSession?: IShoppingSessionData }>([
       "shopping-lists",
       "full-data",
       listId,
@@ -56,7 +38,6 @@ const useShoppingSessionActions = (listId: string) => {
     return unifiedData?.shoppingSession?.currentUserSession || null;
   };
 
-  // Generic handler for stop/pause/resume mutations
   const createSessionActionHandler = (
     mutation: typeof stopShoppingMutation | typeof pauseShoppingMutation | typeof resumeShoppingMutation,
     actionName: string
@@ -65,11 +46,9 @@ const useShoppingSessionActions = (listId: string) => {
       const latestSession = getLatestSession();
 
       if (!latestSession?._id) {
-        // Log a warning, but don't stop the flow (in case of race conditions, etc.)
         console.warn(
           `⚠️ handle${actionName}Shopping called without valid session - attempting to proceed gracefully.`
         );
-        // Maybe attempt a refetch here if this is a common issue
         return;
       }
       
@@ -78,10 +57,8 @@ const useShoppingSessionActions = (listId: string) => {
           sessionId: latestSession._id,
           listId,
         });
-        // 🚀 Remove the arbitrary setTimeout and rely on react-query's refetching
       } catch (error) {
         console.error(`❌ Failed to ${actionName.toLowerCase()} shopping:`, error);
-        // 💡 Consider adding a toast notification or error state update here
       }
     };
   };
@@ -91,7 +68,7 @@ const useShoppingSessionActions = (listId: string) => {
   const handleResumeShopping = createSessionActionHandler(resumeShoppingMutation, "Resume");
 
   const handleStartShopping = async (groupId: string) => {
-    const user = useAuthStore.getState().user; // Get user directly from store to avoid stale closure if hook called outside component
+    const user = useAuthStore.getState().user;
 
     if (!user?._id) {
       console.error("❌ No user ID available");
@@ -102,7 +79,6 @@ const useShoppingSessionActions = (listId: string) => {
       await startShoppingMutation.mutateAsync({ listId, groupId });
     } catch (error) {
       console.error("❌ Failed to start shopping:", error);
-      // 💡 Consider adding a toast notification or error state update here
     }
   };
 
@@ -133,12 +109,10 @@ export function ShoppingModeCard({
   purchasedItems,
 }: ShoppingModeCardProps) {
   const t = useTranslations("ShoppingListPage.shoppingMode");
-  // 🗑️ Removed useAuthStore and useQueryClient from the component body
 
   const currentSession = shoppingSession?.currentUserSession || null;
   const activeSessions = shoppingSession?.activeSessions || [];
   
-  // 🔄 Use the custom hook for logic
   const {
     handleStartShopping: start,
     handleStopShopping,
@@ -151,18 +125,13 @@ export function ShoppingModeCard({
     resumeShoppingMutation,
   } = useShoppingSessionActions(listId);
 
-  // 💡 Refactored handleStartShopping to pass groupId
   const handleStartShopping = () => start(groupId);
 
-  // 🗑️ Removed the redundant `isUpdating` state, relying on query mutation states.
-
   const remainingItems = useMemo(() => {
-    // 💡 No need for type checks if using TypeScript interfaces correctly, but the logic is sound.
     return Math.max(totalItems - purchasedItems, 0);
   }, [totalItems, purchasedItems]);
   
   if (!currentSession) {
-    // ... (Start Shopping View - unchanged structure)
     return (
       <section className="overflow-hidden rounded-3xl bg-gradient-to-r from-accentT-50 to-accentT-100 p-6 text-text-on-primary shadow-xl">
         <div className=" inset-0 bg-[radial-gradient(circle_at_top,_rgba(14,165,233,0.18),_transparent_55%)]" />
@@ -220,7 +189,6 @@ export function ShoppingModeCard({
           <p className="mt-1 text-xs text-text-muted">
             {t("startedAt")}:{" "}
             <span suppressHydrationWarning>
-              {/* 💡 Safely use currentSession.startedAt which is typed as a string */}
               {new Date(currentSession.startedAt).toLocaleTimeString("he-IL")}
             </span>
           </p>

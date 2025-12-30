@@ -22,7 +22,6 @@ export function Card({
   padding = 'md',
   rounded = 'lg',
   shadow = 'sm',
-  border = true,
   borderTopColor = '',
   onClick
 }: CardProps) {
@@ -81,7 +80,6 @@ export function Card({
     'hover:bg-card/95'
   ) : '';
 
-  // add border top with color border like className="p-0 border-b-0">
   const borderTopClasses = cn(
     'border-t',
     borderTopColor ? `${borderTopColor}` : ''
@@ -104,7 +102,6 @@ export function Card({
   );
 }
 
-// Card Header Component
 interface CardHeaderProps {
   children: React.ReactNode;
   className?: string;
@@ -134,7 +131,6 @@ export function CardHeader({
   );
 }
 
-// Card Body Component
 interface CardBodyProps {
   children: React.ReactNode;
   className?: string;
@@ -164,7 +160,6 @@ export function CardBody({
   );
 }
 
-// Card Footer Component
 interface CardFooterProps {
   children: React.ReactNode;
   className?: string;

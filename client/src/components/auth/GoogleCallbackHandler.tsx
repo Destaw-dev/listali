@@ -9,6 +9,7 @@ import { useNotification } from '@/contexts/NotificationContext';
 import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { mapInviteErrorToTranslationKey } from '@/lib/utils';
+import { Button } from '../common';
 
 export function GoogleCallbackHandler() {
   const [isProcessing, setIsProcessing] = useState(true);
@@ -50,17 +51,24 @@ export function GoogleCallbackHandler() {
               router.push(`/${locale}/dashboard`);
             }
           } else {
+            const loginError = new Error(t('googleLoginError'));
             setError(t('googleLoginError'));
-            handleApiError(error);
+            handleApiError(loginError);
             router.push(`/${locale}/welcome`);
           }
         } else {
           router.push(`/${locale}/welcome`);
         }
-        } catch (error: any) {
+        } catch (error) {
           console.error('Google callback error:', error);
-          setError(error.message || 'auth.googleLoginError');
-          handleApiError(error);
+          if (error instanceof Error) {
+            setError(error.message);
+            handleApiError(error);
+          } else {
+            const defaultError = new Error('auth.googleLoginError');
+            setError(defaultError.message);
+            handleApiError(defaultError);
+          }
           router.push(`/${locale}/welcome`);
         } finally {
         setIsProcessing(false);
@@ -68,7 +76,7 @@ export function GoogleCallbackHandler() {
     };
 
     handleGoogleCallback();
-  }, [setUser, router]);
+  }, [setUser, router, locale, t, showSuccess, showWarning, handleApiError]);
 
   if (error) {
     return (
@@ -76,12 +84,9 @@ export function GoogleCallbackHandler() {
         <div className="text-center">
           <h1 className="text-2xl font-bold text-error mb-4">{t('loginError')}</h1>
           <p className="text-secondary mb-6">{error}</p>
-          <button
-            onClick={() => router.push(`/${locale}/auth/login`)}
-            className="btn-primary"
-          >
+          <Button variant='primary' size='lg' fullWidth loading={isProcessing} onClick={() => router.push(`/${locale}/auth/login`)}>
             {t('backToLogin')}
-          </button>
+          </Button>
         </div>
       </div>
     );
