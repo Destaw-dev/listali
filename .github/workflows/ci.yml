@@ -70,10 +70,10 @@ jobs:
         run: npm ci
 
       - name: Type Check
-        run: npx tsc --noEmit || echo "No tsconfig found or tsc not installed"
+        run: npx tsc -p tsconfig.json --noEmit || echo "Typecheck skipped or no tsconfig found"
 
       - name: Lint
-        run: npx next lint --dir .
+        run: npm run lint -- --dir .
 
       - name: Build
         run: npm run build
@@ -109,8 +109,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Lint
-        run: npx eslint src --ext .ts
+      - name: Run ESLint
+        run: npm run lint
 
       - name: Build TypeScript
         run: npm run build
