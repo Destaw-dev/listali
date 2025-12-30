@@ -14,36 +14,38 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-detect-changes:
-  name: Detect changes
-  runs-on: ubuntu-latest
-  outputs:
-    client: ${{ steps.filter.outputs.client }}
-    server: ${{ steps.filter.outputs.server }}
-  steps:
-    - name: Checkout (full history)
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+  detect-changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      client: ${{ steps.filter.outputs.client }}
+      server: ${{ steps.filter.outputs.server }}
 
-    - name: Detect changed files (no GitHub API)
-      uses: dorny/paths-filter@v3
-      id: filter
-      with:
-        list-files: shell
-        base: ${{ github.event.pull_request.base.sha || github.event.before }}
-        ref:  ${{ github.sha }}
-        filters: |
-          client:
-            - 'client/**'
-            - '.github/workflows/**'
-            - 'package.json'
-            - 'package-lock.json'
-          server:
-            - 'server/**'
-            - '.github/workflows/**'
-            - 'package.json'
-            - 'package-lock.json'
+    steps:
+      - name: Checkout (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect changed files (git diff, no GitHub API)
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          list-files: shell
+          base: ${{ github.event.pull_request.base.sha || github.event.before }}
+          ref:  ${{ github.sha }}
+          filters: |
+            client:
+              - 'client/**'
+              - '.github/workflows/**'
+              - 'package.json'
+              - 'package-lock.json'
+            server:
+              - 'server/**'
+              - '.github/workflows/**'
+              - 'package.json'
+              - 'package-lock.json'
 
   client-ci:
     name: Client CI
@@ -64,7 +66,7 @@ detect-changes:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
+          cache: npm
           cache-dependency-path: client/package-lock.json
 
       - name: Cache Next.js build
@@ -87,8 +89,8 @@ detect-changes:
       - name: Build
         run: npm run build
         env:
-          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
           NODE_ENV: production
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
 
       - name: Test
         run: npm run test:run
@@ -125,7 +127,7 @@ detect-changes:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
+          cache: npm
           cache-dependency-path: server/package-lock.json
 
       - name: Install dependencies
