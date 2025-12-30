@@ -14,34 +14,36 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  detect-changes:
-    name: Detect changes
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    outputs:
-      client: ${{ steps.filter.outputs.client }}
-      server: ${{ steps.filter.outputs.server }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+detect-changes:
+  name: Detect changes
+  runs-on: ubuntu-latest
+  outputs:
+    client: ${{ steps.filter.outputs.client }}
+    server: ${{ steps.filter.outputs.server }}
+  steps:
+    - name: Checkout (full history)
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
-      - name: Paths filter
-        uses: dorny/paths-filter@v3
-        id: filter
-        with:
-          filters: |
-            client:
-              - 'client/**'
-              - '.github/workflows/**'
-              - 'package.json'
-              - 'package-lock.json'
-            server:
-              - 'server/**'
-              - '.github/workflows/**'
-              - 'package.json'
-              - 'package-lock.json'
+    - name: Detect changed files (no GitHub API)
+      uses: dorny/paths-filter@v3
+      id: filter
+      with:
+        list-files: shell
+        base: ${{ github.event.pull_request.base.sha || github.event.before }}
+        ref:  ${{ github.sha }}
+        filters: |
+          client:
+            - 'client/**'
+            - '.github/workflows/**'
+            - 'package.json'
+            - 'package-lock.json'
+          server:
+            - 'server/**'
+            - '.github/workflows/**'
+            - 'package.json'
+            - 'package-lock.json'
 
   client-ci:
     name: Client CI
