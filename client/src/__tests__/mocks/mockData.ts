@@ -157,6 +157,7 @@ export const mockGroup: IGroup = {
         email: 'test@example.com',
         firstName: 'Test',
         lastName: 'User',
+        lastSeen: new Date(),
       },
       permissions: {
         canCreateLists: true,

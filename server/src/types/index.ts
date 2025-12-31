@@ -611,6 +611,15 @@ export interface IAuthResponse {
 // SOCKET TYPES
 // ============================================================================
 
+// Simple user interface for socket events (without email for security)
+export interface IUserSimple {
+  id: string;
+  username: string;
+  firstName: string;
+  lastName: string;
+  avatar?: string;
+}
+
 // Socket user interface
 export interface ISocketUser {
   userId: string;
@@ -623,6 +632,19 @@ export interface ISocketUser {
     longitude: number;
     accuracy: number;
   } | undefined;
+}
+
+// Chat message interface for socket events
+export interface IChatMessage {
+  id: string;
+  content: string;
+  senderId: string;
+  senderName: string;
+  senderAvatar?: string;
+  timestamp: Date | string;
+  type: "text" | "image" | "system" | "item_update" | "list_update";
+  status: "sending" | "sent" | "delivered" | "read";
+  metadata?: IBaseMessage['metadata'];
 }
 
 // Socket message interface
@@ -643,19 +665,30 @@ export interface ISocketMessage {
 // Socket item update interface
 export interface ISocketItemUpdate {
   itemId: string;
-  action: "add" | "update" | "delete" | "purchase" | "unpurchase";
+  action: "add" | "update" | "delete" | "purchase" | "unpurchase" | "created";
   item: Partial<IItem>;
   updatedBy: {
     id: string;
     username: string;
   };
   timestamp: Date;
+  updates?: {
+    status?: string;
+    isPurchased?: boolean;
+    isPartiallyPurchased?: boolean;
+    purchasedQuantity?: number;
+    purchasedAt?: string | null;
+    purchasedBy?: string | null;
+  };
+  listName?: string;
+  listId?: string;
 }
 
 // Socket list update interface
 export interface ISocketListUpdate {
   listId: string;
-  action: "create" | "update" | "delete" | "complete" | "reopen";
+  groupId?: string;
+  action: "create" | "update" | "delete" | "complete" | "reopen" | "item_added" | "item_purchased";
   list: Partial<IShoppingList>;
   updatedBy: {
     id: string;
@@ -685,7 +718,95 @@ export interface ISocketNotification {
   timestamp?: Date;
 }
 
-export type ISocketPayload = ISocketMessage | ISocketItemUpdate | ISocketListUpdate | ISocketUserStatus | ISocketNotification | Record<string, string | number | boolean | null | undefined | object | Date>;
+// WebSocket events interface - unified for client and server
+export interface IWebSocketEvents {
+  'list:updated': {
+    listId: string;
+    groupId?: string;
+    action: string;
+    list: Partial<IShoppingList>;
+    updatedBy: { id: string; username: string };
+    timestamp: Date | string;
+  };
+  'item:updated': {
+    listId?: string;
+    itemId: string;
+    action: string;
+    item: Partial<IItem>;
+    updatedBy: { id: string; username: string };
+    timestamp: Date | string;
+    updates?: {
+      status: string;
+      isPurchased: boolean;
+      isPartiallyPurchased?: boolean;
+      purchasedQuantity?: number;
+      purchasedAt: string | null;
+      purchasedBy: string | null;
+    };
+    listName?: string;
+  };
+  'shopping:started': {
+    listId: string;
+    user: IUserSimple;
+    startedAt: Date | string;
+    sessionId: string;
+  };
+  'shopping:stopped': {
+    listId: string;
+    user: IUserSimple;
+    stoppedAt: Date | string;
+    sessionId: string;
+    itemsPurchased?: number;
+    totalItems?: number;
+    shoppingTime?: number;
+  };
+  'shopping:paused': {
+    listId: string;
+    user: IUserSimple;
+    pausedAt: Date | string;
+    sessionId: string;
+  };
+  'shopping:resumed': {
+    listId: string;
+    user: IUserSimple;
+    resumedAt: Date | string;
+    sessionId: string;
+  };
+  'shopping:location_updated': {
+    listId: string;
+    user: IUserSimple;
+    sessionId: string;
+    location: {
+      latitude: number;
+      longitude: number;
+      address?: string;
+      storeName?: string;
+    };
+  };
+  'chat:message': {
+    groupId: string;
+    message: IChatMessage;
+  };
+  'user:status_changed': {
+    userId: string;
+    status: "online" | "offline" | "shopping" | "away";
+    timestamp: Date | string;
+  };
+  'online_users': Array<{
+    userId: string;
+    username: string;
+    status: string;
+  }>;
+  'notification': {
+    type: string;
+    title?: string;
+    message?: string;
+    data?: Record<string, string | number | boolean | null>;
+    timestamp?: Date | string;
+  };
+}
+
+export type ISocketPayload = ISocketMessage | ISocketItemUpdate | ISocketListUpdate | ISocketUserStatus | ISocketNotification | IWebSocketEvents[keyof IWebSocketEvents] | Record<string, string | number | boolean | null | undefined | object | Date>;
 
 // ============================================================================
 // ADDITIONAL MODEL TYPES

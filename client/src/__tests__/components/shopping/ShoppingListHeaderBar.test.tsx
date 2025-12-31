@@ -51,7 +51,7 @@ describe('ShoppingListHeaderBar', () => {
   });
 
   it('should show priority badge when priority exists', () => {
-    const listWithPriority = { ...mockShoppingLists[0], priority: 'high' };
+    const listWithPriority = { ...mockShoppingLists[0], priority: 'high' as const };
     
     render(
       <ShoppingListHeaderBar

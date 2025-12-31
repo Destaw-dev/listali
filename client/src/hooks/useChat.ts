@@ -70,10 +70,6 @@ export const QK = {
 
 const uniq = <T,>(arr: T[]) => Array.from(new Set(arr));
 
-/**
- * Raw message data as it comes from the server before normalization.
- * This represents the various formats that messages can have when received from the API.
- */
 export interface RawMessageInput {
   _id?: string;
   id?: string;
@@ -497,21 +493,15 @@ export function useChatWebSocket(
         senderId: data.message.senderId,
         senderName: data.message.senderName,
         senderAvatar: data.message.senderAvatar,
-        messageType: (data.message.type === 'shopping_update' ? 'item_update' : (data.message.type === 'text' ? 'text' : 'system')) as MessageType,
-        type: data.message.type === 'shopping_update' ? 'item_update' : (data.message.type === 'text' ? 'text' : 'system'),
+        messageType: data.message.type as MessageType,
+        type: data.message.type,
         createdAt: data.message.timestamp,
         timestamp: data.message.timestamp,
       };
       handleNewMessage({ groupId: data.groupId, message: rawMessage });
     });
-    const offTyping = websocketService.on('chat:typing', (data: { groupId: string; user: { username: string } }) => {
-      if (data.groupId === groupId) {
-        // typing indicator externally
-      }
-    });
     return () => {
       offNewMessage();
-      offTyping();
     };
   }, [groupId, handleNewMessage]);
 }

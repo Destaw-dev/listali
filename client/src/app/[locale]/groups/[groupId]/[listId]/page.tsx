@@ -11,7 +11,6 @@ import { ShoppingListFilters, ShoppingStatusFilter } from '../../../../../compon
 import { ShoppingListItems } from '../../../../../components/shoppingList/ShoppingListItems';
 import AddItemsModal from '../../../../../components/shoppingList/AddItemsModal';
 import { useShoppingListData } from '../../../../../hooks/useShoppingListData';
-import { useShoppingListWebSocket } from '../../../../../hooks/useShoppingListWebSocket';
 import { useCreateMultipleItems } from '../../../../../hooks/useItems';
 import { useAvailableCategories } from '../../../../../hooks/useItems';
 import { useAuthRedirect } from '../../../../../hooks/useAuthRedirect';
@@ -46,7 +45,6 @@ export default function ShoppingListPage() {
   const { data: group } = useGroup(groupId);
   const { user } = useAuthStore();
 
-  useShoppingListWebSocket(listId, groupId);
 
   const [statusFilter, setStatusFilter] = useState<ShoppingStatusFilter>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');

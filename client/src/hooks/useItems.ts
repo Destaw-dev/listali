@@ -184,7 +184,6 @@ export const usePurchaseItem = () => {
         
         const updatedItems = (oldData.items?.map((item: IItem) => {
           if (item._id === itemId) {
-            // Use the updated item from response
             const updatedItem = data.data || item;
             const purchasedQty = updatedItem.purchasedQuantity || item.purchasedQuantity || 0;
             const isFullyPurchased = purchasedQty >= item.quantity;

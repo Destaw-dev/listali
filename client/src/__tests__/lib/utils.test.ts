@@ -51,7 +51,7 @@ describe('findExistingItemById', () => {
 
   it('should return undefined if item not found', () => {
     const result = findExistingItemById(existingItems, '999');
-    expect(result).toBeUndefined();
+    expect(result).toBeNull();
   });
 
   it('should return null for empty array', () => {

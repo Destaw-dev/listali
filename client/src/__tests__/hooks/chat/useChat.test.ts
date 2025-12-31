@@ -6,6 +6,7 @@ import { useMessages, useSendMessage } from '../../../hooks/useChat';
 import { apiClient } from '../../../lib/api';
 import { useAuthStore } from '../../../store/authStore';
 import { mockUser } from '../../mocks/mockData';
+import type { AxiosResponse } from 'axios';
 
 // Mock dependencies
 vi.mock('../../../lib/api');
@@ -67,7 +68,7 @@ describe('useChat Hooks', () => {
           success: true,
           data: mockMessages,
         },
-      } as ReturnType<typeof useAuthStore>);
+      } as AxiosResponse);
 
       const { result } = renderHook(() => useMessages('group1'), {
         wrapper: createWrapper(),
@@ -99,7 +100,7 @@ describe('useChat Hooks', () => {
           success: true,
           data: mockMessage,
         },
-      } as ReturnType<typeof useAuthStore>);
+      } as AxiosResponse);
 
       const { result } = renderHook(() => useSendMessage(), {
         wrapper: createWrapper(),

@@ -18,10 +18,15 @@ describe('useAuthRedirect Hook', () => {
     vi.clearAllMocks();
     vi.mocked(useRouter).mockReturnValue({
       push: mockPush,
-    } as ReturnType<typeof useAuthStore>);
+      back: vi.fn(),
+      forward: vi.fn(),
+      refresh: vi.fn(),
+      replace: vi.fn(),
+      prefetch: vi.fn(),
+    } as ReturnType<typeof useRouter>);
     vi.mocked(useParams).mockReturnValue({
       locale: 'he',
-    } as ReturnType<typeof useParams>);
+    });
   });
 
   it('should return auth state when initialized', () => {

@@ -6,6 +6,7 @@ import { useDashboard } from '../../../hooks/useDashboard';
 import { apiClient } from '../../../lib/api';
 import { useAuthStore } from '../../../store/authStore';
 import { mockDashboardData } from '../../mocks/mockData';
+import type { AxiosResponse } from 'axios';
 
 // Mock dependencies
 vi.mock('../../../lib/api');
@@ -39,7 +40,7 @@ describe('useDashboard Hook', () => {
       data: {
         data: mockDashboardData,
       },
-    } as ReturnType<typeof useAuthStore>);
+    } as AxiosResponse);
 
     const { result } = renderHook(() => useDashboard(), {
       wrapper: createWrapper(),

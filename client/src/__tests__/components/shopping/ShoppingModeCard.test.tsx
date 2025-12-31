@@ -29,17 +29,33 @@ vi.mock('../../../hooks/useShoppingModeQueries', () => ({
 const mockShoppingSession = {
   currentUserSession: {
     _id: 'session1',
-    status: 'active',
-    startedAt: new Date().toISOString(),
+    id: 'session1',
+    listId: 'list1',
+    userId: 'user1',
+    groupId: 'group1',
+    status: 'active' as const,
+    startedAt: new Date(),
     isActive: true,
+    itemsPurchased: 0,
+    totalItems: 10,
+    lastActivity: new Date(),
   },
   activeSessions: [
     {
       _id: 'session1',
-      status: 'active',
+      id: 'session1',
+      listId: 'list1',
       userId: 'user1',
+      groupId: 'group1',
+      status: 'active' as const,
+      startedAt: new Date(),
+      isActive: true,
+      itemsPurchased: 0,
+      totalItems: 10,
+      lastActivity: new Date(),
     },
   ],
+  totalActiveSessions: 1,
 };
 
 describe('ShoppingModeCard', () => {
@@ -52,7 +68,7 @@ describe('ShoppingModeCard', () => {
       <ShoppingModeCard
         listId="list1"
         groupId="group1"
-        shoppingSession={null}
+        shoppingSession={undefined}
         totalItems={10}
         purchasedItems={3}
       />
@@ -94,7 +110,7 @@ describe('ShoppingModeCard', () => {
       <ShoppingModeCard
         listId="list1"
         groupId="group1"
-        shoppingSession={null}
+        shoppingSession={undefined}
         totalItems={10}
         purchasedItems={3}
       />
@@ -108,7 +124,7 @@ describe('ShoppingModeCard', () => {
       <ShoppingModeCard
         listId="list1"
         groupId="group1"
-        shoppingSession={null}
+        shoppingSession={undefined}
         totalItems={10}
         purchasedItems={3}
       />

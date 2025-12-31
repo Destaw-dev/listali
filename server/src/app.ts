@@ -34,7 +34,7 @@ dotenv.config();
 
 const io = new Server(server, {
   cors: {
-    origin: [ process.env.CLIENT_URL || 'http://localhost:3000'],
+    origin: [ process.env.CLIENT_URL as string],
     methods: ["GET", "POST"],
     credentials: true
   }
@@ -60,7 +60,7 @@ app.use(helmet({
 }));
 
 app.use(cors({
-  origin: [ process.env.CLIENT_URL || 'http://localhost:3000'],
+  origin: [ process.env.CLIENT_URL as string],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'x-client', 'x-refresh-token', 'x-session-id'],

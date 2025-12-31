@@ -15,6 +15,7 @@ import { ChatComponent } from '../../../../components/chat/ChatComponent';
 import { ArrowIcon } from '../../../../components/common/Arrow';
 import CreateShoppingListModal from '../../../../components/shoppingList/CreateShoppingListModal';
 import { IShoppingList, IGroupMember, ICreateListFormData, getCreatedByDisplayName } from '../../../../types';
+import { useShoppingListWebSocket } from '../../../../hooks/useShoppingListWebSocket';
 
 type TabType = 'overview' | 'lists' | 'chat' | 'stats';
 
@@ -29,16 +30,17 @@ export default function GroupDetailsPage() {
   const locale = params?.locale as string || 'he';
   const groupId = params?.groupId as string;
   const { user } = useAuthStore();
-
+  
   const { isInitialized } = useAuthRedirect({
     redirectTo: `/${locale}/welcome`,
     requireAuth: true
   });
-
+  
   const { data: group, isLoading, error } = useGroup(groupId);
   const { data: shoppingLists } = useGroupShoppingLists(groupId);
   const createListMutation = useCreateShoppingList();
   const inviteToGroupMutation = useInviteToGroup();
+  useShoppingListWebSocket(groupId, shoppingLists?.map((list: IShoppingList) => list._id) || []);
   
   useGroupMemberRoleWebSocket(groupId);
 

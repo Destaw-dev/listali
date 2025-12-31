@@ -69,7 +69,6 @@ export default function LoginPage() {
     } catch (error) {
       if (error && typeof error === 'object' && 'response' in error) {
         const apiError = error as { response?: { data?: { isEmailVerified?: boolean } } };
-        console.log('error.isEmailVerified', apiError.response?.data?.isEmailVerified);
         if (apiError.response?.data?.isEmailVerified === false) {
           router.push(`/${locale}/auth/verify-email?email=${encodeURIComponent(data.email)}&status=emailNotVerified`);
           return;
@@ -91,9 +90,8 @@ export default function LoginPage() {
       const callbackUrl = `${window.location.origin}/${locale}/auth/callback`;
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/google/url?callback=${encodeURIComponent(callbackUrl)}`);
       const data = await response.json();
-      
-      if (data.success && data.url) {
-        window.location.href = data.url;
+      if (data.success && data.data.url) {
+        window.location.href = data.data.url;
       } else {
         throw new Error(data.message || 'Failed to get Google OAuth URL');
       }

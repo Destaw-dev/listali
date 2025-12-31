@@ -52,11 +52,9 @@ export interface IUserMethods {
 // User document type for server
 export type UserDocument = IUserWithPassword & IUserMethods;
 
-// Simplified user for WebSocket and client operations
 export interface IUserSimple {
   id: string;
   username: string;
-  email: string;
   firstName: string;
   lastName: string;
   avatar?: string;
@@ -92,7 +90,7 @@ export interface IGroupMember {
   groupId: string;
   role: "owner" | "admin" | "member";
   joinedAt: Date;
-  user: IUserSimple;
+  user: IUserSimple & { email: string; lastSeen: Date };
   permissions: {
     canCreateLists: boolean;
     canEditLists: boolean;
@@ -338,43 +336,24 @@ export interface IMessageDocument extends IMessage {
 // SOCKET TYPES
 // ============================================================================
 
-// WebSocket events interface - unified for client and server
+// WebSocket events interface - unified for client and server (matches server)
 export interface IWebSocketEvents {
   'list:updated': {
     listId: string;
     groupId?: string;
     action: string;
-    list: IShoppingList;
+    list: Partial<IShoppingList>;
     updatedBy: { id: string; username: string };
-    timestamp: string | Date;
+    timestamp: Date | string;
   };
-  'list_updated': {
-    listId: string;
-    groupId: string;
-    action: string;
-    list: IShoppingList;
-    updatedBy: { id: string; username: string };
-    timestamp: Date;
-  };
-  "list:item_added": {
-    listId: string;
-    item: IItem;
-    addedBy: IUserSimple;
-  };
-  "list:item_updated": {
-    listId: string;
-    itemId: string;
-    updates: Partial<IItem>;
-    updatedBy: IUserSimple;
-  };
-  "item_updated": {
-    listId: string;
+  'item:updated': {
+    listId?: string;
     itemId: string;
     action: string;
-    item: IItem;
-    updatedBy: IUserSimple;
-    timestamp: Date;
-    updates: {
+    item: Partial<IItem>;
+    updatedBy: { id: string; username: string };
+    timestamp: Date | string;
+    updates?: {
       status: string;
       isPurchased: boolean;
       isPartiallyPurchased?: boolean;
@@ -382,89 +361,80 @@ export interface IWebSocketEvents {
       purchasedAt: string | null;
       purchasedBy: string | null;
     };
-    listName: string;
+    listName?: string;
   };
-  "list:item_completed": {
-    listId: string;
-    itemId: string;
-    purchasedBy: IUserSimple;
-    purchasedAt: string;
-  };
-  "list:item_being_purchased": {
-    listId: string;
-    itemId: string;
-    beingPurchasedBy: IUserSimple;
-  };
-  "shopping:started": {
+  'shopping:started': {
     listId: string;
     user: IUserSimple;
-    startedAt: string;
+    startedAt: string | Date;
     sessionId: string;
   };
-  "shopping:stopped": {
+  'shopping:stopped': {
     listId: string;
     user: IUserSimple;
-    stoppedAt: string;
+    stoppedAt: string | Date;
     sessionId: string;
+    itemsPurchased?: number;
+    totalItems?: number;
+    shoppingTime?: number;
   };
-  "shopping:paused": {
+  'shopping:paused': {
     listId: string;
     user: IUserSimple;
-    pausedAt: string;
+    pausedAt: string | Date;
     sessionId: string;
   };
-  "shopping:resumed": {
+  'shopping:resumed': {
     listId: string;
     user: IUserSimple;
-    resumedAt: string;
+    resumedAt: string | Date;
     sessionId: string;
   };
-  "shopping:location_updated": {
+  'shopping:location_updated': {
     listId: string;
     user: IUserSimple;
     sessionId: string;
     location: {
       latitude: number;
       longitude: number;
-      accuracy?: number;
-      timestamp: string;
+      address?: string;
+      storeName?: string;
     };
   };
-  "chat:message": {
+  'chat:message': {
     groupId: string;
     message: IChatMessage;
   };
-  "chat:typing": {
-    groupId: string;
-    user: IUserSimple;
-    isTyping: boolean;
+  'user:status_changed': {
+    userId: string;
+    status: "online" | "offline" | "shopping" | "away";
+    timestamp: Date | string;
   };
-  "group:member_joined": {
-    groupId: string;
-    member: IUserSimple;
+  'online_users': Array<{
+    userId: string;
+    username: string;
+    status: string;
+  }>;
+  'notification': {
+    type: string;
+    title?: string;
+    message?: string;
+    data?: Record<string, string | number | boolean | null>;
+    timestamp?: Date | string;
   };
-  "group:member_left": {
-    groupId: string;
-    memberId: string;
-  };
-  "memberRoleUpdated": {
+  'memberRoleUpdated': {
     groupId: string;
     userId: string;
-    role: "admin" | "member";
+    role: "owner" | "admin" | "member";
+    timestamp: Date | string;
     updaterId: string;
   };
-  "ownershipTransferred": {
+  'ownershipTransferred': {
     groupId: string;
+    transferredBy: string;
     previousOwnerId: string;
     newOwnerId: string;
-    transferredBy: string;
-  };
-  "user:online": {
-    userId: string;
-    status: "online" | "offline";
-  };
-  "user:offline": {
-    userId: string;
+    timestamp: Date | string;
   };
 }
 
@@ -532,16 +502,23 @@ export interface ISocketUserStatus {
   timestamp: Date;
 }
 
-// Chat message interface
+// Chat message interface (matches server)
 export interface IChatMessage {
   id: string;
   content: string;
   senderId: string;
   senderName: string;
   senderAvatar?: string;
-  timestamp: string;
-  type: "text" | "system" | "shopping_update";
+  timestamp: string | Date;
+  type: "text" | "image" | "system" | "item_update" | "list_update";
   status: "sending" | "sent" | "delivered" | "read";
+  metadata?: {
+    itemId?: string;
+    listId?: string;
+    imageUrl?: string;
+    fileName?: string;
+    fileSize?: number;
+  };
 }
 
 // ============================================================================

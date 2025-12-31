@@ -7,7 +7,7 @@ import { useTranslations } from 'next-intl';
 import websocketService from '../services/websocket';
 import { IWebSocketEvents } from '../types';
 
-export function useShoppingListWebSocket(listId: string, groupId: string) {
+export function useShoppingListWebSocket(groupId: string, listIds: string[]) {
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuthStore();
@@ -44,7 +44,7 @@ export function useShoppingListWebSocket(listId: string, groupId: string) {
 
   useEffect(() => {
 
-    if (!listId || !groupId) {
+    if (!listIds.length || !groupId) {
       return;
     }
 
@@ -63,17 +63,17 @@ export function useShoppingListWebSocket(listId: string, groupId: string) {
       }
 
       const offStarted = safeWebSocketHandler('shopping:started', (e: IWebSocketEvents['shopping:started']) => {
-        if (e.listId !== listId) return;
+        if (!listIds.includes(e.listId)) return;
         
-          queryClient.invalidateQueries({ queryKey: ['shopping-lists', 'full-data', listId] });
+          queryClient.invalidateQueries({ queryKey: ['shopping-lists', 'full-data', e.listId] });
           if (e.user?.id !== user?._id) {
             showSuccess('shopping.started', { username: e.user?.username || t('user') });
           }
       });
 
       const offStopped = safeWebSocketHandler('shopping:stopped', (e: IWebSocketEvents['shopping:stopped']) => {
-        if (e.listId !== listId) return;
-          queryClient.invalidateQueries({ queryKey: ['shopping-lists', 'full-data', listId] });
+        if (!listIds.includes(e.listId)) return;
+          queryClient.invalidateQueries({ queryKey: ['shopping-lists', 'full-data', e.listId] });
           if (e.user?.id !== user?._id) {
             showInfo('shopping.stopped', { username: e.user?.username || t('user') });
           }
@@ -81,39 +81,39 @@ export function useShoppingListWebSocket(listId: string, groupId: string) {
       });
 
       const offPaused = safeWebSocketHandler('shopping:paused', (e: IWebSocketEvents['shopping:paused']) => {
-        if (e.listId !== listId) return;
+        if (!listIds.includes(e.listId)) return;
         
-          queryClient.invalidateQueries({ queryKey: ['shopping-lists', 'full-data', listId] });
+          queryClient.invalidateQueries({ queryKey: ['shopping-lists', 'full-data', e.listId] });
           if (e.user?.id !== user?._id) {
             showInfo('shopping.paused', { username: e.user?.username || t('user') });
           } 
       });
 
       const offResumed = safeWebSocketHandler('shopping:resumed', (e: IWebSocketEvents['shopping:resumed']) => {
-        if (e.listId !== listId) return;
+        if (!listIds.includes(e.listId)) return;
         
-          queryClient.invalidateQueries({ queryKey: ['shopping-lists', 'full-data', listId] });
-          if (e.user?.id !== user?._id) {
-            showInfo('shopping.resumed', { username: e.user?.username || t('user') });
-          } 
+        queryClient.invalidateQueries({ queryKey: ['shopping-lists', 'full-data', e.listId] });
+        if (e.user?.id !== user?._id) {
+          showInfo('shopping.resumed', { username: e.user?.username || t('user') });
+        } 
       });
-
+      
       const offLocationUpdated = safeWebSocketHandler('shopping:location_updated', (e: IWebSocketEvents['shopping:location_updated']) => {
-        if (e.listId !== listId) return;
+        if (!listIds.includes(e.listId)) return;
         
-          queryClient.invalidateQueries({ queryKey: ['shopping-lists', 'full-data', listId] });
+        queryClient.invalidateQueries({ queryKey: ['shopping-lists', 'full-data', e.listId] });
       });
-
-      const offItemUpdated = safeWebSocketHandler('item_updated', (e: IWebSocketEvents['item_updated']) => {
+      
+      const offItemUpdated = safeWebSocketHandler('item:updated', (e: IWebSocketEvents['item:updated']) => {
         const eventListId = e.listId || (typeof e.item?.shoppingList === 'string' 
           ? e.item.shoppingList 
           : (typeof e.item?.shoppingList === 'object' && e.item.shoppingList !== null && '_id' in e.item.shoppingList
             ? (e.item.shoppingList as { _id: string })._id
             : undefined));
-        if (eventListId !== listId) return;
+        if (!eventListId || !listIds.includes(eventListId)) return;
         
-          queryClient.invalidateQueries({ queryKey: ['shopping-lists', 'full-data', listId] });
-          
+          queryClient.invalidateQueries({ queryKey: ['shopping-lists', 'full-data', eventListId] });
+
           if (e.updatedBy?.id !== user?._id) {
             const itemName = e.item?.name || t('item');
             const listName = e.listName || '';
@@ -135,9 +135,9 @@ export function useShoppingListWebSocket(listId: string, groupId: string) {
       });
 
       const offListUpdated = safeWebSocketHandler('list:updated', (e: IWebSocketEvents['list:updated']) => {
-        if (e.listId !== listId) return;
+        if (!listIds.includes(e.listId)) return;
         
-          queryClient.invalidateQueries({ queryKey: ['shopping-lists', 'full-data', listId] });
+          queryClient.invalidateQueries({ queryKey: ['shopping-lists', 'full-data', e.listId] });
       });
 
       setIsConnected(true);
@@ -153,7 +153,7 @@ export function useShoppingListWebSocket(listId: string, groupId: string) {
     return () => {
         cleanupFunctions.forEach(cleanup => cleanup?.());
     };
-  }, [listId, groupId, user?._id, checkWebSocketConnection, safeWebSocketHandler, queryClient, showSuccess, showInfo, t]);
+  }, [listIds, groupId, user?._id, checkWebSocketConnection, safeWebSocketHandler, queryClient, showSuccess, showInfo, t]);
 
   const retryConnection = useCallback(() => {
     setError(null);

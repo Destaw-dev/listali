@@ -155,10 +155,8 @@ class WebSocketService {
       const isAuthError = error.message?.includes('Authentication') || error.message?.includes('token');
       
       if (isAuthError && accessToken && isAuthenticated) {
-        console.log("WebSocket auth error, attempting token refresh...");
         const newToken = await this.refreshAccessTokenForSocket();
         if (newToken && this.socket) {
-          // Socket.io-client supports auth property at runtime but it's not in the type definition
           (this.socket as Socket & { auth?: { token: string } }).auth = { token: newToken };
           this.socket.disconnect();
           this.socket.connect();

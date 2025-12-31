@@ -27,9 +27,6 @@ export function GoogleCallbackHandler() {
         const urlParams = new URLSearchParams(window.location.search);
         const hasGoogleParams = urlParams.has('token') || urlParams.has('user') || urlParams.has('google');
 
-        console.log('urlParams', urlParams);
-        console.log('hasGoogleParams', hasGoogleParams);
-        
         if (hasGoogleParams) {
           const user = await apiClient.handleGoogleCallback();
           

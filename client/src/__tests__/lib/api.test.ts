@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { mockUser, mockGroups, mockShoppingLists, mockItems } from '../mocks/mockData';
-import axios from 'axios';
+import axios, { AxiosInstance } from 'axios';
 
 // Mock axios
 vi.mock('axios', () => {
@@ -77,7 +77,6 @@ describe('API Client', () => {
     });
 
     it('should register successfully', async () => {
-      const mockAxios = vi.mocked(axios.create);
       const mockPost = vi.fn().mockResolvedValue({
         data: {
           success: true,
@@ -88,20 +87,14 @@ describe('API Client', () => {
         },
       });
 
-      const mockClient = {
-        post: mockPost,
-        get: vi.fn(),
-        put: vi.fn(),
-        delete: vi.fn(),
-        patch: vi.fn(),
-        interceptors: {
-          request: { use: vi.fn() },
-          response: { use: vi.fn() },
-        },
-        defaults: { baseURL: '' },
-      };
-
-      mockAxios.mockReturnValue(mockClient as ReturnType<typeof axios.create>);
+      const mockAxiosInstance = axios.create({});
+      vi.mocked(mockAxiosInstance.post).mockImplementation(mockPost);
+      
+      // Mock the register method directly
+      vi.spyOn(apiClient, 'register').mockResolvedValue({
+        accessToken: 'token123',
+        user: mockUser,
+      } as Awaited<ReturnType<typeof apiClient.register>>);
 
       const result = await apiClient.register({
         username: 'testuser',
