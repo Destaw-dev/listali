@@ -546,8 +546,8 @@ export class ApiClient {
     return response.data;
   }
 
-  async unpurchaseItem(itemId: string) {
-    const response = await this.post(`/items/${itemId}/unpurchase`);
+  async unpurchaseItem(itemId: string, options?: { quantityToUnpurchase?: number }) {
+    const response = await this.post(`/items/${itemId}/unpurchase`, options || {});
     return response.data;
   }
 

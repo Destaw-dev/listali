@@ -315,12 +315,14 @@ itemSchema.methods.markAsPurchased = async function(
   return this;
 };
 
-itemSchema.methods.markAsNotPurchased = async function() {
-  this.purchasedQuantity = 0;
-  this.quantityToPurchase = this.quantity;
-  this.status = 'pending';
-  this.purchasedBy = null;
-  this.purchasedAt = null;
+itemSchema.methods.markAsNotPurchased = async function(quantityToUnpurchase?: number) {
+  this.purchasedQuantity = quantityToUnpurchase !== undefined ? quantityToUnpurchase : 0;
+  this.quantityToPurchase = quantityToUnpurchase !== undefined ? quantityToUnpurchase : this.quantity;
+  this.status = quantityToUnpurchase !== undefined ? 'partially_purchased' : 'pending';
+  if (quantityToUnpurchase !== undefined) {
+    this.purchasedBy = null;
+    this.purchasedAt = null;
+  }
   
   await this.save();
   

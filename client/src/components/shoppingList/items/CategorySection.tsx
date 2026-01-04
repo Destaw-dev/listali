@@ -16,7 +16,7 @@ interface CategorySectionProps {
     items: IItem[];
   }>;
   onOpenPurchaseModal: (item: IItem) => void;
-  onUnpurchase: (itemId: string) => void;
+  onUnpurchase: (item: IItem) => void;
   onPreview: (item: IItem) => void;
   onEdit?: (item: IItem) => void;
   onDelete?: (itemId: string) => void;
@@ -102,7 +102,7 @@ export const CategorySection = memo(function CategorySection({
                     item={item}
                     isLoading={isItemLoading(item._id)}
                     onOpenPurchaseModal={onOpenPurchaseModal}
-                    onUnpurchase={onUnpurchase}
+                    onUnpurchase={(item) => onUnpurchase(item)}
                     onPreview={onPreview}
                     onEdit={onEdit}
                     onDelete={onDelete}

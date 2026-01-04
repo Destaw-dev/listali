@@ -29,7 +29,8 @@ import {
   updateQuantityValidation,
   popularItemsValidation,
   searchItemsValidation,
-  categoryStatsValidation
+  categoryStatsValidation,
+  unpurchaseItemValidation
 } from '../middleware/validation';
 import { asyncHandler } from '../middleware/handlers';
 
@@ -53,7 +54,7 @@ router.get('/:id', itemIdValidation, asyncHandler(getItemById));
 router.put('/:id', [...itemIdValidation, ...updateItemValidation], asyncHandler(updateItem));
 router.delete('/:id', itemIdValidation, asyncHandler(deleteItem));
 router.post('/:id/purchase', purchaseItemValidation, asyncHandler(purchaseItem));
-router.post('/:id/unpurchase', itemIdValidation, asyncHandler(unpurchaseItem));
+router.post('/:id/unpurchase', unpurchaseItemValidation, asyncHandler(unpurchaseItem));
 router.post('/:id/not-available', itemIdValidation, asyncHandler(notAvailableItem));
 router.put('/:id/quantity', updateQuantityValidation, asyncHandler(updateItemQuantity));
 

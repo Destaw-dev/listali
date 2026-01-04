@@ -591,6 +591,7 @@
     "unpurchasedItems": "Unpurchased Items",
     "purchasedItems": "Purchased Items",
     "selectQuantityTitle": "Select quantity to purchase",
+    "unpurchaseQuantityTitle": "Select quantity to unpurchase",
     "totalQuantity": "Total quantity",
     "confirm": "Confirm",
     "purchasedQuantityLabel": "{purchased}/{total} {unit}",

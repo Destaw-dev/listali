@@ -8,7 +8,7 @@ interface ShoppingItemCardProps {
   item: IItem;
   isLoading: boolean;
   onOpenPurchaseModal: (item: IItem) => void;
-  onUnpurchase: (itemId: string) => void;
+  onUnpurchase: (item: IItem) => void;
   onPreview: (item: IItem) => void;
   onEdit?: (item: IItem) => void;
   onDelete?: (itemId: string) => void;
@@ -50,7 +50,7 @@ export function ShoppingItemCard({
   const getQuantityDisplay = () => {
     if (isPartiallyPurchased) {
       return (
-        <div className="flex sm:items-end sm:flex-row flex-col sm:gap-1 text-[12px] text-text-muted justify-between">
+        <div className="flex sm:items-end sm:flex-row flex-col sm:gap-1 text-[12px] text-text-muted">
         <div className="flex flex-col gap-0.5">
           <span className="font-medium text-[12px] text-text-muted">
             {tItems("purchasedQuantityLabel", { 
@@ -76,7 +76,7 @@ export function ShoppingItemCard({
       );
     }
     return (
-    <div className="flex sm:items-center sm:flex-row flex-col sm:gap-1 text-[12px] text-text-muted justify-between">
+    <div className="flex sm:items-center sm:flex-row flex-col sm:gap-1 text-[12px] text-text-muted">
     <span className="font-medium">{item.quantity} {unitLabel}</span>
     {brand && <span className="truncate opacity-70">• {brand}</span>}
     <div className="hidden sm:block">
@@ -99,7 +99,7 @@ export function ShoppingItemCard({
       checked={item?.isPurchased}
       onClick={() => {
         if (item?.isPurchased ) {
-          onUnpurchase(item._id);
+          onUnpurchase(item);
         } else {
           onOpenPurchaseModal(item);
         }

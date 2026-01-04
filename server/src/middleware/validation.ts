@@ -555,6 +555,11 @@ export const updateShoppingListValidation = [
     })
 ];
 
+export const unpurchaseItemValidation = [
+  param('id').isMongoId().withMessage('Invalid item ID'),
+  body('quantityToUnpurchase').optional().isFloat({ min: 0, max: 10000 }).withMessage('Quantity to unpurchase must be between 0 and 10,000'),
+];
+
 export const addItemValidation = [
   body('name')
     .trim()

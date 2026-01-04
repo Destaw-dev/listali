@@ -591,6 +591,7 @@
     "unpurchasedItems": "פריטים שטרם נקנו",
     "purchasedItems": "פריטים שנקנו",
     "selectQuantityTitle": "בחר כמה יחידות לקנות",
+    "unpurchaseQuantityTitle": "בחר כמה יחידות לבטל קנייה",
     "totalQuantity": "כמות כוללת",
     "confirm": "אישור",
     "purchasedQuantityLabel": "{purchased}/{total} {unit}",

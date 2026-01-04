@@ -113,7 +113,7 @@ export default function AddItemsModal({
         setIsSubmitting(false);
       }
     },
-    [onSubmit, handleClose]
+    [onSubmit, handleClose, t]
   );
 
   useEffect(() => {

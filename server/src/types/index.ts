@@ -405,7 +405,7 @@ export interface IItem extends IBaseItem, BaseDocument {
   
   // Server methods
   markAsPurchased(userId: string, purchasedQuantity?: number, actualPrice?: number): Promise<void>;
-  markAsNotPurchased(): Promise<void>;
+  markAsNotPurchased(quantityToUnpurchase?: number): Promise<void>;
   markAsNotAvailable(): Promise<void>;
   updateQuantity(newQuantity: number): Promise<void>;
 }

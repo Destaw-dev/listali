@@ -16,6 +16,7 @@ import { PurchaseQuantityModal } from "./items/PurchaseQuantityModal";
 import { ProductDetailsModal } from "./items/ProductDetailsModal";
 import { EditItemModal } from "./items/EditItemModal";
 import { ICategory, IItem } from "../../types";
+import { UnpurchaseQuantityModal } from "./items/UnpurchaseQuantityModal";
 
 interface ShoppingListItemsProps {
   items: IItem[];
@@ -44,6 +45,7 @@ export const ShoppingListItems = memo(function ShoppingListItems({
   const { data: categories = [] } = useAvailableCategories();
 
   const [purchaseModalItem, setPurchaseModalItem] = useState<IItem | null>(null);
+  const [unpurchaseModalItem, setUnpurchaseModalItem] = useState<IItem | null>(null);
   const [productPreview, setProductPreview] = useState<IItem | null>(null);
   const [editModalItem, setEditModalItem] = useState<IItem | null>(null);
 
@@ -96,17 +98,18 @@ export const ShoppingListItems = memo(function ShoppingListItems({
   );
 
   const handleUnpurchase = useCallback(
-    async (itemId: string) => {
-      if (isItemLoading(itemId)) return;
+    async (item:IItem, quantityToUnpurchase?: number) => {
+      if (isItemLoading(item._id)) return;
 
    await unpurchaseItemMutation.mutateAsync({
-      itemId,
+      itemId: item._id,
       shoppingListId: listId,
       groupId,
+      quantityToUnpurchase,
     });
-    setPurchaseModalItem(null);
+    setUnpurchaseModalItem(null);
     },
-    [groupId, isItemLoading, listId, unpurchaseItemMutation]
+    [groupId, isItemLoading, listId, unpurchaseItemMutation, setUnpurchaseModalItem]
   );
 
   const handleEditItem = useCallback(
@@ -239,7 +242,7 @@ export const ShoppingListItems = memo(function ShoppingListItems({
               icon={<ShoppingBag className="h-5 w-5 text-primary-500" />}
               groups={groupedItems.unpurchased}
               onOpenPurchaseModal={(item) => setPurchaseModalItem(item)}
-              onUnpurchase={handleUnpurchase}
+              onUnpurchase={(item) => setUnpurchaseModalItem(item)}
               onPreview={(item) => setProductPreview(item)}
               onEdit={handleEditItem}
               onDelete={handleDeleteItem}
@@ -255,7 +258,7 @@ export const ShoppingListItems = memo(function ShoppingListItems({
               icon={<CheckCircle className="h-5 w-5 text-success-600" />}
               groups={groupedItems.purchased}
               onOpenPurchaseModal={(item) => setPurchaseModalItem(item)}
-              onUnpurchase={handleUnpurchase}
+              onUnpurchase={(item) => setUnpurchaseModalItem(item)}
               onPreview={(item) => setProductPreview(item)}
               onEdit={handleEditItem}
               onDelete={handleDeleteItem}
@@ -276,6 +279,18 @@ export const ShoppingListItems = memo(function ShoppingListItems({
         onConfirm={(quantity) => {
           if (purchaseModalItem?._id) {
             handlePurchase(purchaseModalItem._id, quantity);
+          }
+        }}
+        tItems={tItems}
+      />
+
+      <UnpurchaseQuantityModal
+        item={unpurchaseModalItem}
+        isLoading={unpurchaseItemMutation.isPending}
+        onClose={() => setUnpurchaseModalItem(null)}
+        onConfirm={(quantity) => {
+          if (unpurchaseModalItem?._id) {
+            handleUnpurchase(unpurchaseModalItem, quantity);
           }
         }}
         tItems={tItems}

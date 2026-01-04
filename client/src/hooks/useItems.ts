@@ -233,8 +233,8 @@ export const useUnpurchaseItem = () => {
   const { showSuccess, handleApiError } = useNotification();
   
   return useMutation({
-    mutationFn: ({ itemId }: { itemId: string; shoppingListId: string; groupId: string }) => 
-      apiClient.unpurchaseItem(itemId),
+    mutationFn: ({ itemId, quantityToUnpurchase }: { itemId: string; shoppingListId: string; groupId: string; quantityToUnpurchase?: number }) => 
+      apiClient.unpurchaseItem(itemId, { quantityToUnpurchase }),
     onSuccess: (data, { itemId, shoppingListId, groupId }) => {
       queryClient.setQueryData(['shopping-lists', 'full-data', shoppingListId], (oldData: ShoppingListFullData | undefined) => {
         if (!oldData) return oldData;

@@ -122,8 +122,7 @@ export function ShoppingListFilters({
           value={category}
           onSelect={(value) => onCategoryChange(value as string)}
           placeholder={t("filters.category")}
-          variant={'default'}
-          size="sm"
+          variant='default'
           className="min-w-[120px] whitespace-nowrap transition-all duration-200"
           triggerClassName="border-none shadow-sm hover:shadow-md focus:ring-0"
 

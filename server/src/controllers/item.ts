@@ -477,6 +477,11 @@ export const purchaseItem = async (req: express.Request, res: express.Response) 
 };
 
 export const unpurchaseItem = async (req: express.Request, res: express.Response) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json(validationErrorResponse(errors.array()));
+  }
+
   const item = await Item.findById(req.params.id)
     .populate<{ shoppingList: PopulatedShoppingListWithGroup }>({ path: 'shoppingList', populate: { path: 'group' } });
 
@@ -492,7 +497,7 @@ export const unpurchaseItem = async (req: express.Request, res: express.Response
     throw new AppError('Item is not purchased', 400);
   }
 
-  await item.markAsNotPurchased();
+  await item.markAsNotPurchased(req.body.quantityToUnpurchase);
 
   const user = await (await import('../models/user')).default.findById(userId);
   const listId = item.shoppingList._id.toString();
