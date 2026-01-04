@@ -108,7 +108,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-54px)] bg-card flex justify-center p-4 pt-5 text-text-primary">
+    <div className="min-h-[calc(100vh-54px)] bg-card flex justify-center items-center p-4 pt-5 text-text-primary">
       <div className="w-full max-w-md">
         <div className="text-center flex items-center justify-center">
           <IntlLink

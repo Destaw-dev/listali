@@ -11,9 +11,11 @@ interface QuantityStepperProps {
   step?: number;
   disabled?: boolean;
   className?: string;
+  label?: string;
 }
 
 export function QuantityStepper({
+  label,
   value,
   onChange,
   min = 1,
@@ -41,6 +43,8 @@ export function QuantityStepper({
   };
 
   return (
+    <div className="space-y-1">
+      {label && <label className="block text-sm font-medium text-text-primary">{label}</label>}
     <div className={cn('flex items-center gap-2', className)}>
       <Button
         type='button'
@@ -74,6 +78,7 @@ export function QuantityStepper({
       >
         <Plus className="w-4 h-4" />
       </Button>
+    </div>
     </div>
   );
 }

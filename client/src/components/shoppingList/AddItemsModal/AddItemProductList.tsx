@@ -1,9 +1,9 @@
 import React, { RefObject, useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Search, Image as ImageIcon, Check, Package, AlertCircle } from 'lucide-react';
-import { Button, LoadingSpinner, Badge } from '../common';
-import { findExistingItemById } from '../../lib/utils';
-import { IProduct, IItem } from '../../types';
+import { Button, LoadingSpinner, Badge } from '../../common';
+import { findExistingItemById } from '../../../lib/utils';
+import { IProduct, IItem } from '../../../types';
 
 interface Props {
   products: IProduct[];

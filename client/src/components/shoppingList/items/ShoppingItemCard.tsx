@@ -1,6 +1,6 @@
 import { useTranslations } from "next-intl";
 import { Edit, Info, Trash2, Package } from "lucide-react";
-import { cn } from "../../../lib/utils";
+import { cn, extractImageUrl } from "../../../lib/utils";
 import { Button, Badge } from "../../common";
 import { IItem } from "../../../types";
 
@@ -50,24 +50,42 @@ export function ShoppingItemCard({
   const getQuantityDisplay = () => {
     if (isPartiallyPurchased) {
       return (
+        <div className="flex sm:items-end sm:flex-row flex-col sm:gap-1 text-[12px] text-text-muted justify-between">
         <div className="flex flex-col gap-0.5">
-          <span className="font-medium text-[12px] text-muted">
+          <span className="font-medium text-[12px] text-text-muted">
             {tItems("purchasedQuantityLabel", { 
               purchased: purchasedQty, 
               total: item.quantity, 
               unit: unitLabel 
             }) || `${purchasedQty}/${item.quantity} ${unitLabel}`}
           </span>
-          <span className="text-[11px] text-muted">
+          <span className="text-[11px] text-text-muted">
             {tItems("remainingQuantityLabel", { 
               remaining: remainingQty, 
               unit: unitLabel 
             }) || `נותר: ${remainingQty} ${unitLabel}`}
           </span>
         </div>
+        {brand && <span className="truncate opacity-70">• {brand}</span>}
+        <div className="hidden sm:block">
+    {!item?.isPurchased  && item.priority && (
+        getPriorityBadge()
+        )}
+      </div>
+        </div>
       );
     }
-    return <span className="font-medium">{item.quantity} {unitLabel}</span>;
+    return (
+    <div className="flex sm:items-center sm:flex-row flex-col sm:gap-1 text-[12px] text-text-muted justify-between">
+    <span className="font-medium">{item.quantity} {unitLabel}</span>
+    {brand && <span className="truncate opacity-70">• {brand}</span>}
+    <div className="hidden sm:block">
+    {!item?.isPurchased &&  item.priority && (
+        getPriorityBadge()
+        )}
+      </div>
+      </div>
+    );
   };
 
   return (
@@ -90,8 +108,8 @@ export function ShoppingItemCard({
       />
 
       <div className="size-11 shrink-0 overflow-hidden rounded-lg bg-card ring-1 ring-border" onClick={() => onPreview(item)}>
-        {typeof item?.product === 'object' && item?.product !== null && 'image' in item.product && (item.product as { image?: string }).image ? (
-          <img src={(item.product as { image: string }).image} alt="" className="h-full w-full object-contain p-1" />
+        {typeof item?.product === 'object' && item.product.image ? (
+          <img src={extractImageUrl(item.product.image)} alt="" className="h-full w-full object-contain p-1" />
         ) : (
           <div className="grid h-full w-full place-items-center"><Package className="h-4 w-4 text-border" /></div>
         )}
@@ -107,17 +125,9 @@ export function ShoppingItemCard({
           </h3>
 
         </div>
-        <div className="flex items-center gap-1 text-[12px] text-text-muted">
-          {getQuantityDisplay()}
-          {brand && <span className="truncate opacity-70">• {brand}</span>}
-          <div className="hidden sm:block">
-        {!item?.isPurchased && !isPartiallyPurchased && item.priority && (
-            getPriorityBadge()
-        )}
-      </div>
-        </div>
+        {getQuantityDisplay()}
               <div className="block sm:hidden">
-        {!item?.isPurchased && !isPartiallyPurchased && item.priority && (
+        {!item?.isPurchased  && item.priority && (
             getPriorityBadge()
         )}
       </div>

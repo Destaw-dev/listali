@@ -109,14 +109,14 @@ export const ItemFormSingle = memo(({
         : 'bg-card'
     }`}>
       {isDuplicate && (
-        <div className="mb-2 p-2 bg-warning-100 dark:bg-warning-900/30 rounded-lg border border-warning-200 dark:border-warning-800">
+        <div className="mb-2 p-2 bg-warning-100 rounded-lg border border-warning-200">
           <div className="flex items-center gap-2 mb-2">
-            <AlertCircle className="w-4 h-4 text-warning-600 dark:text-warning-400" />
+            <AlertCircle className="w-4 h-4 text-warning-600" />
             <Badge variant="warning" size="sm" className="text-xs">
               {tForm('alreadyInList') || 'קיים ברשימה'}
             </Badge>
           </div>
-          <div className="text-xs text-warning-800 dark:text-warning-200 space-y-1">
+          <div className="text-xs text-warning-800 space-y-1">
             <p>
               {tForm('existingQuantity', { quantity: existingQuantity, unit: item?.unit || 'piece' }) || 
                `כמות קיימת: ${existingQuantity} ${item?.unit || 'piece'}`}
@@ -148,7 +148,7 @@ export const ItemFormSingle = memo(({
                 variant="outlineError"
                 size="xs"
                 onClick={onRemove}
-                icon={<Trash2 className="w-3 h-3" />}
+                icon={<Trash2 className="w-3 h-3 text-error-500" />}
               >
                 {tForm('remove') || 'הסר'}
               </Button>
@@ -198,11 +198,8 @@ export const ItemFormSingle = memo(({
           />
       )}
 
-      <div>
-        <label className="block text-xs sm:text-sm font-medium text-text-secondary mb-1.5 sm:mb-2">
-          {t('quantity')} *
-        </label>
         <QuantityStepper
+          label={t('quantity') + ' *'}
           value={quantity || 1}
           onChange={(value) => setValue(`items.${index}.quantity`, value)}
         />
@@ -211,7 +208,6 @@ export const ItemFormSingle = memo(({
             {errors.items[index]?.quantity?.message}
           </p>
         )}
-      </div>
 
       <div>
         <label className="block text-xs sm:text-sm font-medium text-text-secondary mb-1.5 sm:mb-2">

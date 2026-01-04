@@ -45,7 +45,7 @@ export function Badge({
   );
 
   const variantClasses = {
-    default: 'bg-neutral-100 text-neutral-800 focus:ring-neutral-500 hover:bg-neutral-200',
+    default: 'bg-neutral-300 text-neutral-800 focus:ring-neutral-500 hover:bg-neutral-200',
     primary: 'bg-background-500 text-text-primary focus:ring-primary-500 hover:bg-background-600',
     secondary: 'bg-secondary-500 text-text-primary focus:ring-secondary-500 hover:bg-secondary-600',
     accent: 'bg-accent-500 text-text-primary focus:ring-accent-500 hover:bg-accent-600',

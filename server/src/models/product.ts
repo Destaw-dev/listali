@@ -133,12 +133,7 @@ const ProductSchema = new Schema<IProduct>(
         height: Number,
         format: String,
         bytes: Number,
-      },
-      source: {
-        original: { type: String, trim: true },
-        small: { type: String, trim: true },
-        transparent: { type: String, trim: true },
-      },      
+      },     
       status: {
         type: String,
         enum: ["missing", "uploaded", "partial", "failed"],
@@ -185,7 +180,37 @@ const ProductSchema = new Schema<IProduct>(
   },
   {
     timestamps: true,
-    toJSON: { virtuals: true },
+    toJSON: { 
+      virtuals: true,
+      transform: function(_doc, ret) {
+        // Transform image object to include only primary and providers.url
+        if (ret.image) {
+          const image: any = {
+            primary: ret.image.primary
+          };
+          
+          if (ret.image.providers) {
+            image.providers = {};
+            
+            if (ret.image.providers.cloudinary && ret.image.providers.cloudinary.url) {
+              image.providers.cloudinary = {
+                url: ret.image.providers.cloudinary.url
+              };
+            }
+            
+            if (ret.image.providers.imagekit && ret.image.providers.imagekit.url) {
+              image.providers.imagekit = {
+                url: ret.image.providers.imagekit.url
+              };
+            }
+          }
+          
+          ret.image = image;
+        }
+        
+        return ret;
+      }
+    },
     toObject: { virtuals: true },
   }
 );

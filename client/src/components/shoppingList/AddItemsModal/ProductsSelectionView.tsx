@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 import { Package } from 'lucide-react';
-import { AddItemProductList } from '../AddItemProductList';
+import { AddItemProductList } from './AddItemProductList';
 import { FiltersSection } from './FiltersSection';
 import { useProductsSelection } from './hooks/useProductsSelection';
 import { IProduct, IItem } from '../../../types';

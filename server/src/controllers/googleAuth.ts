@@ -163,11 +163,6 @@ export const googleCallback = async (req: Request, res: Response) => {
         const callbackUrl = new URL(frontendCallback);
         const inviteCode = callbackUrl.searchParams.get('inviteCode');
 
-        console.log('inviteCode', inviteCode);
-        console.log('callbackUrl', callbackUrl);
-        console.log('state', state);
-        console.log('frontendCallback', frontendCallback);
-        console.log('decodeURIComponent(state as string)', decodeURIComponent(state as string));
         if (inviteCode) {
           const Group = (await import('../models/group')).default;
           const group = await Group.findOne({

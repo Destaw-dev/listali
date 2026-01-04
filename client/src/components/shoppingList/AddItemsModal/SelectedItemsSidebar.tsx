@@ -78,6 +78,13 @@ export const SelectedItemsSidebar = memo(({
               name: product.name,
             });
 
+        // Extract image URL: for manual products it's already a string, for regular products extract from object
+        const imageUrl = isManualProduct(product)
+          ? (typeof product.image === 'string' ? product.image : undefined)
+          : (product.image && typeof product.image === 'object' && 'primary' in product.image && 'providers' in product.image
+              ? ((product.image.providers as Record<string, { url?: string }>)[product.image.primary]?.url || undefined)
+              : undefined);
+
         return {
           name: product.name || "",
           quantity: 1,
@@ -88,7 +95,7 @@ export const SelectedItemsSidebar = memo(({
           brand: product.brand || "",
           description: "",
           product: isManualProduct(product) ? undefined : product._id,
-          image: product.image || "",
+          image: imageUrl,
           units: product.units || [],
           isManualEntry: isManualProduct(product),
         };
@@ -174,6 +181,7 @@ export const SelectedItemsSidebar = memo(({
               product: item?.product,
             }) : null;
 
+
             return (
               <ItemFormSingle
                 key={field.id}
@@ -190,7 +198,7 @@ export const SelectedItemsSidebar = memo(({
                   product: item?.product || (product ? (typeof product === 'string' ? product : product._id) : undefined),
                   image: item?.image,
                   units,
-                  isManual: 'isManual' in (item || {}) && (item as { isManual?: boolean }).isManual === true,
+                  isManual: item?.isManualEntry,
                 }}
                 register={register}
                 watch={watch}
@@ -223,7 +231,7 @@ export const SelectedItemsSidebar = memo(({
           <span className="text-xs sm:text-sm">{tForm('addAnotherItem')}</span>
         </Button>
         {hasUntreatedDuplicates && (
-            <p className="text-xs text-text-warning text-center mt-1">
+            <p className="text-xs text-warning-600 text-center mt-1">
               {tForm('hasUntreatedDuplicates') || 'יש מוצרים קיימים ברשימה. אנא מזג או הסר אותם לפני הוספה'}
             </p>
           )}
@@ -243,7 +251,7 @@ export const SelectedItemsSidebar = memo(({
             variant="primary"
             type="button"
             size="sm"
-            onClick={() => {handleSubmit(handleFormSubmit)(); console.log('fields', fields)}}
+            onClick={() => {handleSubmit(handleFormSubmit)()}}
             disabled={isSubmitting || fields.length === 0 || hasUntreatedDuplicates}
             icon={<Plus className="w-3 h-3 sm:w-4 sm:h-4" />}
             fullWidth

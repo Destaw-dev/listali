@@ -196,3 +196,11 @@ export function normalizeUnit(unit: string): string {
   }
   return unit;
 }
+
+export function extractImageUrl(image: string | { primary: string, providers: Record<string, { url: string }> } | undefined): string | undefined {
+  if (typeof image === 'string') return image;
+  if (typeof image === 'object' && image !== null && 'primary' in image && 'providers' in image) {
+    return image.providers[image.primary]?.url;
+  }
+  return undefined;
+}

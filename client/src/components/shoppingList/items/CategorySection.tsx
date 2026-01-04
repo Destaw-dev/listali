@@ -63,21 +63,21 @@ export const CategorySection = memo(function CategorySection({
         <div className="flex items-center gap-2">
           <div className={cn(
             "flex size-7 items-center justify-center rounded-lg shadow-sm",
-            tone === "purchased" ? "bg-slate-100" : "bg-background-50 text-text-primary-600"
+            tone === "purchased" ? "bg-neutral-100" : "bg-background-50 text-text-primary-600"
           )}>
             {icon}
           </div>
-          <div className="text-right">
-            <h3 className="text-[15px] font-bold text-slate-800">{title}</h3>
-            <span className="text-[11px] font-medium text-slate-400">
+          <div className="text-start">
+            <h3 className="text-[15px] font-bold text-text-secondary">{title}</h3>
+            <span className="text-[11px] font-medium text-text-muted">
               {totalItems} {tItems("items")}
             </span>
           </div>
         </div>
         {isOpen ? (
-          <ChevronUp className="h-4 w-4 text-slate-300" />
+          <ChevronUp className="h-4 w-4 text-text-secondary" />
         ) : (
-          <ChevronDown className="h-4 w-4 text-slate-300" />
+          <ChevronDown className="h-4 w-4 text-text-secondary" />
         )}
       </button>
 
@@ -85,17 +85,17 @@ export const CategorySection = memo(function CategorySection({
         <div className="mt-1">
           {groups.map((group) => (
             <div key={group.categoryId} className="mt-3 first:mt-1">
-              <div className="bg-slate-50/80 sticky top-0 z-10 flex items-center gap-1.5 px-3 py-1.5 backdrop-blur-md">
-                <ShoppingBag className="h-3.5 w-3.5 text-slate-400" />
-                <span className="text-[12px] font-bold tracking-tight text-slate-500 uppercase">
+              <div className="bg-surface sticky top-0 z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-sm">
+                <ShoppingBag className="h-3.5 w-3.5 text-neutral-400" />
+                <span className="text-[12px] font-bold tracking-tight text-neutral-500 uppercase">
                   {group.categoryName}
                 </span>
-                <span className="text-[10px] font-medium text-slate-300">
+                <span className="text-[10px] font-medium text-neutral-400">
                   ({group.items.length})
                 </span>
               </div>
 
-              <div className="divide-y divide-slate-100 border-y border-slate-100">
+              <div className="divide-y divide-neutral-100 border-y border-neutral-100">
                 {group.items.map((item) => (
                   <ShoppingItemCard
                     key={item._id}

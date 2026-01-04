@@ -81,7 +81,7 @@ export default function AddItemsModal({
       notes: "",
       brand: "",
       description: "",
-      image: "",
+      image: { providers: {}, primary: "" },
       isManual: true,
     };
     setSelectedProducts((prev) => [...prev, manualProduct]);
@@ -101,7 +101,6 @@ export default function AddItemsModal({
 
   const handleSubmit = useCallback(
     async (items: SingleItemFormData[]) => {
-      console.log('items', items);
       setIsSubmitting(true);
       try {
         const result = await onSubmit(items);
@@ -109,7 +108,7 @@ export default function AddItemsModal({
           handleClose();
         }
       } catch {
-        // Error handled by parent
+        console.error(t('errorAddingItems'));
       } finally {
         setIsSubmitting(false);
       }

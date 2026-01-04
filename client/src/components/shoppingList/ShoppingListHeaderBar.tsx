@@ -41,7 +41,7 @@ export function ShoppingListHeaderBar({
             rounded
             aria-label="Back to lists"
           >
-            <ArrowIcon />
+            <ArrowIcon className="text-text-primary"/>
           </Button>
 
           <div>

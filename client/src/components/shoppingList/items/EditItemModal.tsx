@@ -12,6 +12,7 @@ import { itemSchema } from "../../../lib/schemas";
 import { z } from "zod";
 
 import { IItem, ICategory } from "../../../types";
+import { QuantityStepper } from "../AddItemsModal/QuantityStepper";
 
 interface EditItemModalProps {
   item: IItem | null;
@@ -214,25 +215,26 @@ export const EditItemModal = memo(function EditItemModal({
                 />
 
               <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Input
-                      {...register("quantity", { valueAsNumber: true })}
-                      type="number"
-                      label={t("quantity")}
-                      min={isPartiallyPurchased ? purchasedQty : 1}
-                      step="1"
-                      error={errors.quantity?.message}
-                      disabled={isLoading}
-                      />
+                <div>
+
+                  <QuantityStepper
+                    value={currentQuantity}
+                    onChange={(value) => setValue("quantity", value)}
+                    min={isPartiallyPurchased ? purchasedQty : 1}
+                    max={1000}
+                    step={1}
+                    disabled={isLoading}
+                    label={t("quantity")}
+                  />
+                </div>
                     {isPartiallyPurchased && (
-                      <p className="text-xs text-slate-500 mt-1">
+                      <p className="text-xs text-text-muted mt-1">
                         {tItems("purchasedInfo", { 
                           purchased: purchasedQty, 
                           unit: unitLabel 
                         }) || `נקנה כבר: ${purchasedQty} ${unitLabel}`}
                       </p>
                     )}
-                  </div>
                   <Dropdown
                   label={t("unit")}
                     placeholder={t("unit")}

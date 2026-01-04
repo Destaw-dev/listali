@@ -208,7 +208,7 @@ export interface IItem extends BaseDocument {
   estimatedPrice?: number;
   actualPrice?: number;
   price?: number;
-  image?: string;
+  image?: string | { primary: string, providers: Record<string, { url: string }> };
   barcode?: string;
   status: "pending" | "purchased" | "not_available" | "cancelled";
   isPurchased: boolean;
@@ -225,7 +225,7 @@ export interface IItem extends BaseDocument {
   notes?: string;
   note?: string;
   alternatives?: string[];
-  product?: string;
+  product?: string | IProduct;
   productId?: string;
   isManualEntry?: boolean;
 }
@@ -256,8 +256,10 @@ export type ItemInput = {
   brand?: string;
   description?: string;
   product?: string;
-  image?: string;
+  // image?: { primary: string, providers: Record<string, { url: string }> };
+  image?: string ;
   units?: string[];
+  isManualEntry?: boolean;
 };
 
 // Create multiple items input (for API)
@@ -287,7 +289,7 @@ export interface IManualProduct {
   notes: string;
   brand: string;
   description: string;
-  image: string;
+  image?: { primary: string, providers: Record<string, { url: string }> };
   isManual: true;
   categoryId?: never; // Explicitly not present
 }
@@ -590,7 +592,6 @@ export interface IProduct extends BaseDocument {
       cloudinary: { url: string; publicId: string };
       imagekit: { url: string; fileId: string; path: string };
     };
-    meta: { width: number; height: number; format: string; bytes: number };
   };
   averagePrice?: number;
   price?: number;
@@ -832,7 +833,7 @@ export interface IAddShoppingItemData {
   notes?: string;
   estimatedPrice?: number;
   brand?: string;
-  image?: string;
+  image?: { primary: string, providers: Record<string, { url: string }> };
   barcode?: string;
 }
 
@@ -846,7 +847,7 @@ export interface IUpdateShoppingItemData {
   notes?: string;
   estimatedPrice?: number;
   brand?: string;
-  image?: string;
+  image?: { primary: string, providers: Record<string, { url: string }> };
   barcode?: string;
 }
 

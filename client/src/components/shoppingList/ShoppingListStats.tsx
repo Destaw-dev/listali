@@ -63,7 +63,7 @@ export function ShoppingListStats({
         </svg>
   
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-sm font-bold text-neutral-700">{progress}%</span>
+          <span className="text-sm font-bold text-text-primary">{progress}%</span>
         </div>
       </div>
     );

@@ -2,7 +2,7 @@
 
 import { memo, useEffect, useState } from "react";
 import { Minus, Plus } from "lucide-react";
-import { Button } from "../../common";
+import { Button, LoadingSpinner } from "../../common";
 import { useModalScrollLock } from "../../../hooks/useModalScrollLock";
 
 import { IItem } from "../../../types";
@@ -12,6 +12,7 @@ interface PurchaseQuantityModalProps {
   onClose: () => void;
   onConfirm: (quantity: number) => void;
   tItems: (key: string, values?: Record<string, string | number>) => string;
+  isLoading: boolean;
 }
 
 export const PurchaseQuantityModal = memo(function PurchaseQuantityModal({
@@ -19,23 +20,19 @@ export const PurchaseQuantityModal = memo(function PurchaseQuantityModal({
   onClose,
   onConfirm,
   tItems,
+  isLoading,
 }: PurchaseQuantityModalProps) {
   const [quantity, setQuantity] = useState(0);
 
   useEffect(() => {
     if (item) {
-      // If item is partially purchased, start from remaining quantity
       const purchasedQty = item.purchasedQuantity || 0;
       const totalQty = item.quantity ?? 0;
       const remainingQty = item.remainingQuantity ?? (totalQty - purchasedQty);
       
-      // Start from remaining quantity if partially purchased, otherwise start from 1
-      // This allows user to select partial purchase
       if (purchasedQty > 0 && purchasedQty < totalQty) {
-        // Partially purchased - start from remaining
         setQuantity(remainingQty);
       } else {
-        // Not purchased - start from 1 (user can increase)
         setQuantity(1);
       }
     }
@@ -50,7 +47,6 @@ export const PurchaseQuantityModal = memo(function PurchaseQuantityModal({
   const remainingQty = item.remainingQuantity ?? (totalQty - purchasedQty);
   const isPartiallyPurchased = purchasedQty > 0 && purchasedQty < totalQty;
   
-  // Max quantity is the remaining quantity if partially purchased
   const maxQuantity = isPartiallyPurchased ? remainingQty : totalQty;
 
   const handleIncrement = () => {
@@ -66,8 +62,6 @@ export const PurchaseQuantityModal = memo(function PurchaseQuantityModal({
   const handleConfirm = () => {
     if (quantity <= 0 || quantity > maxQuantity) return;
     
-    // Send the quantity to purchase (amount to add), not the total
-    // The backend will add it to the existing purchasedQuantity
     onConfirm(quantity);
   };
 
@@ -76,6 +70,11 @@ export const PurchaseQuantityModal = memo(function PurchaseQuantityModal({
       className="fixed inset-0 z-[60] flex items-center justify-center bg-black/25 backdrop-blur-sm p-4"
       onClick={onClose}
     >
+      {isLoading ? (
+        <div className="rounded-3xl bg-card p-12 text-center shadow-xl">
+          <LoadingSpinner />
+        </div>
+      ) : (
       <div
         className="w-full max-w-sm rounded-3xl bg-card p-6 shadow-2xl"
         onClick={(event) => event.stopPropagation()}
@@ -130,7 +129,7 @@ export const PurchaseQuantityModal = memo(function PurchaseQuantityModal({
         <div className="mt-8 flex gap-3">
           <Button
             variant="outline"
-            onClick={handleConfirm}        
+            onClick={onClose}        
             size="md"
             fullWidth={true}
             rounded={true}
@@ -142,7 +141,7 @@ export const PurchaseQuantityModal = memo(function PurchaseQuantityModal({
           <Button
             variant="primary"
             onClick={handleConfirm}
-            disabled={quantity <= 0 || quantity > maxQuantity}          
+            disabled={quantity <= 0 || quantity > maxQuantity || !item.product || isLoading}          
             size="md"
             fullWidth={true}
             rounded={true}
@@ -153,6 +152,7 @@ export const PurchaseQuantityModal = memo(function PurchaseQuantityModal({
           </Button>  
         </div>
       </div>
+      )}
     </div>
   );
 });

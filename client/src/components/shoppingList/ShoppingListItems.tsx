@@ -236,7 +236,7 @@ export const ShoppingListItems = memo(function ShoppingListItems({
           {groupedItems.unpurchased.length > 0 && (
             <CategorySection
               title={tItems("unpurchasedItems")}
-              icon={<ShoppingBag className="h-5 w-5 text-text-primary-500" />}
+              icon={<ShoppingBag className="h-5 w-5 text-primary-500" />}
               groups={groupedItems.unpurchased}
               onOpenPurchaseModal={(item) => setPurchaseModalItem(item)}
               onUnpurchase={handleUnpurchase}
@@ -271,6 +271,7 @@ export const ShoppingListItems = memo(function ShoppingListItems({
 
       <PurchaseQuantityModal
         item={purchaseModalItem}
+        isLoading={purchaseItemMutation.isPending}
         onClose={() => setPurchaseModalItem(null)}
         onConfirm={(quantity) => {
           if (purchaseModalItem?._id) {
