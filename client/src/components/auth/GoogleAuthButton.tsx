@@ -7,6 +7,7 @@ interface GoogleAuthButtonProps {
   type: 'login' | 'register';
   onGoogleAuth: () => void;
   isLoading?: boolean;
+  disabled?: boolean;
 }
 
 const googleIcon = (
@@ -30,7 +31,7 @@ const googleIcon = (
 </svg>
 );
 
-export function GoogleAuthButton({ type, onGoogleAuth, isLoading = false }: GoogleAuthButtonProps) {
+export function GoogleAuthButton({ type, onGoogleAuth, isLoading = false, disabled = false }: GoogleAuthButtonProps) {
   const t = useTranslations();
 
   return (
@@ -42,7 +43,7 @@ export function GoogleAuthButton({ type, onGoogleAuth, isLoading = false }: Goog
       type="button"
       icon={googleIcon}
       onClick={onGoogleAuth}
-      disabled={isLoading}
+      disabled={disabled || isLoading}
     >
       {isLoading ? (
         <span className="text-secondary">{t('auth.loading')}</span>

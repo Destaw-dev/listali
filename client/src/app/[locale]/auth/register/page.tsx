@@ -43,7 +43,7 @@ export default function RegisterPage() {
 
   if (!isInitialized) {
     return (
-      <div className="min-h-screen bg-surface flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-secondary">{t('loading')}</p>
@@ -131,17 +131,17 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-surface flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8 flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center p-4 text-text-primary bg-card">
+      <div className="w-full max-w-md bg-card">
+        <div className="text-center flex items-center justify-center">
           <IntlLink
             href='/welcome'
-            className="inline-flex items-center text-primary hover:text-primary-600 mb-6 transition-colors"
+            className="inline-flex items-center text-text-primary hover:text-primary-600 mb-6 transition-colors"
           >
             <ArrowIcon className="w-5 h-5 mx-2" />
           </IntlLink>
           <div>
-            <h1 className="text-3xl font-bold text-primary mb-3">{t('register')}</h1>
+            <h1 className="text-3xl font-bold text-text-primary mb-3">{t('register')}</h1>
             <p className="text-secondary text-lg">{t('createAccount')}</p>
           </div>
         </div>
@@ -251,7 +251,7 @@ export default function RegisterPage() {
           <div className="text-center mt-5">
             <p className="text-secondary">
               {t('hasAccount')}{' '}
-              <IntlLink href="/auth/login" className="text-primaryT-800 hover:text-primaryT-700 font-semibold transition-colors">
+              <IntlLink href="/auth/login" className="text-primary-800 hover:text-primary-700 font-semibold transition-colors">
                 {t('loginToAccount')}
               </IntlLink>
             </p>

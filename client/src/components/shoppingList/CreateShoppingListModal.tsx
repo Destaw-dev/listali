@@ -25,7 +25,7 @@ interface CreateShoppingListModalProps {
   groupName?: string;
 }
 
-export default function CreateShoppingListModal({
+export function CreateShoppingListModal({
   isOpen,
   onClose,
   onSubmit,
@@ -91,7 +91,7 @@ export default function CreateShoppingListModal({
               <Calendar className="w-5 h-5 " />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-primary">
+              <h2 className="text-xl font-bold text-text-primary">
                 {t('newShoppingList')}
               </h2>
               <p className="text-text-muted text-sm">{t('willBeCreatedForGroup')}: {groupName}</p>
@@ -130,7 +130,7 @@ export default function CreateShoppingListModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-primary mb-2">
+            <label className="block text-sm font-medium text-text-primary mb-2">
               {t('priority')}
             </label>
             <Dropdown
@@ -155,6 +155,7 @@ export default function CreateShoppingListModal({
               type="date"
               error={errors.dueDate?.message}
               label={t('dueDate')}
+              variant="outlined"
             />
           </div>
 

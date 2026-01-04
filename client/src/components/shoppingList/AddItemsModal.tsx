@@ -101,6 +101,7 @@ export default function AddItemsModal({
 
   const handleSubmit = useCallback(
     async (items: SingleItemFormData[]) => {
+      console.log('items', items);
       setIsSubmitting(true);
       try {
         const result = await onSubmit(items);
@@ -128,12 +129,12 @@ export default function AddItemsModal({
 
   return (
     <div className="fixed inset-0 backdrop-blur-sm z-50 flex items-center justify-center p-0 sm:p-4">
-      <div className="bg-surface shadow-xl rounded-none sm:rounded-2xl w-full sm:max-w-7xl h-full sm:max-h-[100vh] flex flex-col">
+      <div className="bg-background shadow-xl rounded-none sm:rounded-2xl w-full sm:max-w-7xl h-full sm:max-h-[100vh] flex flex-col">
         <div className="border-b border-border flex-shrink-0">
           <div className="flex items-center justify-between p-3 sm:p-4">
             <div className="flex items-center gap-2 sm:gap-3">
-              <div className="p-1.5 sm:p-2 bg-surface-hover rounded-lg">
-                <Package className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+              <div className="p-1.5 sm:p-2 bg-background-hover rounded-lg">
+                <Package className="w-4 h-4 sm:w-5 sm:h-5 text-text-primary" />
               </div>
               <div>
                 <h2 className="text-base sm:text-lg font-bold text-text-secondary">{t("addNewItem")}</h2>
@@ -149,13 +150,13 @@ export default function AddItemsModal({
               onClick={() => setMobileView('products')}
               className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
                 mobileView === 'products'
-                  ? 'border-b-2 border-primary text-primary'
+                  ? 'border-b-2 border-primary text-text-primary'
                   : 'text-text-muted hover:text-text-primary'
               }`}
             >
               {t('products')}
               {selectedProducts.length > 0 && (
-                <span className="ml-2 px-2 py-0.5 bg-primary/10 text-primary rounded-full text-xs">
+                <span className="ml-2 px-2 py-0.5 bg-background/10 text-text-primary rounded-full text-xs">
                   {selectedProducts.length}
                 </span>
               )}
@@ -164,7 +165,7 @@ export default function AddItemsModal({
               onClick={() => setMobileView('items')}
               className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
                 mobileView === 'items'
-                  ? 'border-b-2 border-primary text-primary'
+                  ? 'border-b-2 border-primary text-text-primary'
                   : 'text-text-muted hover:text-text-primary'
               }`}
             >

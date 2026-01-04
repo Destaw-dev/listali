@@ -107,7 +107,7 @@ export default function SettingsPage() {
 
   if (!isInitialized) {
     return (
-      <div className="min-h-screen bg-surface flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <Card variant="glass" className="bg-white/80 shadow-2xl max-w-md">
           <CardBody className="p-6 text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
@@ -207,10 +207,10 @@ export default function SettingsPage() {
           <div className="text-center mb-8 pt-4 ">
             <div className="flex items-center justify-center gap-3">
 
-            <div className="p-3 bg-gradient-to-br from-primaryT-400 to-primaryT-600 rounded-full w-fit mb-3 shadow-lg">
+            <div className="p-3 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full w-fit mb-3 shadow-lg">
               <Settings className="w-6 h-6" />
             </div>
-            <h1 className="text-3xl font-extrabold">
+            <h1 className="text-3xl font-extrabold text-text-primary">
               {t("settings")}
             </h1>
             </div>
@@ -223,14 +223,14 @@ export default function SettingsPage() {
             {settingsSections.map((section) => {
               const Icon = section.icon;
               const accentColor = 
-                section.color === 'primary' ? 'text-primaryT-500' : 
-                section.color === 'secondary' ? 'text-secondaryT-500' : 
+                section.color === 'primary' ? 'text-primary-500' : 
+                section.color === 'secondary' ? 'text-secondary-500' : 
                 'text-accent';
 
               return (
                 <Card
                   key={section.title}
-                  className="bg-surface shadow-lg border border-border" 
+                  className="bg-background shadow-lg border border-border" 
                 >
                   <CardBody className="p-0">
                     
@@ -250,7 +250,7 @@ export default function SettingsPage() {
                         const isLastItem = index === section.items.length - 1;
 
                         return (
-                          <div key={item.label} className="my-2">
+                          <div key={item.label} className="my-2 text-text-primary hover:text-text-secondary hover:bg-background-hover border-b border-border">
 
                           <Button
                             variant="ghost"
@@ -331,7 +331,7 @@ export default function SettingsPage() {
               <CardBody className="p-6">
                 <div className="flex items-start gap-4 mb-6 border-b pb-4 border-error-100">
                   <div className="p-3 bg-error-500 rounded-xl shadow-lg">
-                    <AlertTriangle className="w-6 h-6 text-white" />
+                    <AlertTriangle className="w-6 h-6 text-text-primary" />
                   </div>
                   <div>
                     <h2 className="text-xl font-bold text-error-600">

@@ -65,9 +65,9 @@ const sizeClasses = {
 };
 
 const variantClasses = {
-  default: "bg-card shadow-sm border border-border hover:bg-surface",
-  outlined: "bg-transparent border border-border hover:bg-surface",
-  ghost: "bg-transparent hover:bg-surface",
+  default: "bg-card shadow-sm border border-border hover:bg-background text-text-primary",
+  outlined: "bg-transparent border border-border hover:bg-background text-text-primary",
+  ghost: "bg-transparent hover:bg-background text-text-primary",
 };
 
 interface DropdownTriggerProps {
@@ -196,7 +196,7 @@ function DropdownMenu({
         "absolute z-50 min-w-full",
         alignClasses[align],
         positionClasses[position],
-        "bg-white rounded-lg shadow-xl border border-gray-100",
+        "bg-background rounded-lg shadow-xl border border-border text-text-primary",
         "overflow-hidden",
         menuClassName
       )}
@@ -215,7 +215,7 @@ function DropdownMenu({
               <div
                 key={`divider-${index}`}
                 role="separator"
-                className="h-px bg-gray-200 my-1"
+                className="h-px bg-border my-1"
               />
             );
           }
@@ -243,11 +243,11 @@ function DropdownMenu({
                 "w-full flex items-center justify-between gap-2 px-4 py-2", 
                 "transition-colors duration-150",
                 "focus:outline-none",
-                isFocused && !isDisabled && "bg-primaryT-100",
-                isSelected && !isDisabled && "bg-primaryT-200 font-medium",
+                isFocused && !isDisabled && "bg-background-100",
+                isSelected && !isDisabled && "bg-background-200 font-medium",
                 isDisabled
                   ? "opacity-50 cursor-not-allowed text-text-muted"
-                  : "hover:bg-primaryT-50 cursor-pointer",
+                  : "hover:bg-background-50 cursor-pointer",
                 optionClassName
               )}
             >
@@ -256,7 +256,7 @@ function DropdownMenu({
               )}
               <span className="flex-1 text-start">{option.label}</span>
               {isSelected && (
-                <span className="flex-shrink-0 text-primary" aria-hidden="true">
+                <span className="flex-shrink-0 text-text-primary" aria-hidden="true">
                   ✓
                 </span>
               )}
@@ -265,7 +265,7 @@ function DropdownMenu({
         })}
       </div>
       {footer && (
-        <div className="border-t border-gray-200 p-2 bg-gray-50">
+        <div className="border-t border-border p-2 bg-background">
           {footer}
         </div>
       )}

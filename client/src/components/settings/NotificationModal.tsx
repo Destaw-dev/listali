@@ -119,18 +119,18 @@ export default function NotificationModal({
 
   return (
     <div 
-      className="fixed inset-0 backdrop-blur-lg z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 backdrop-blur-lg z-50 flex items-center justify-center p-4 overflow-y-auto"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <Card className="bg-surface shadow-2xl max-w-lg w-full animate-in slide-in-from-bottom-4">
+      <Card className="bg-background shadow-2xl max-w-lg w-full animate-in slide-in-from-bottom-4">
         <CardBody className="p-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-gradient-to-br from-accent-400 to-accent-600 rounded-xl">
-                <Bell className="w-5 h-5 text-white" />
+                <Bell className="w-5 h-5 text-text-primary" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-primary">{t('notificationSettings')}</h2>
+                <h2 className="text-xl font-bold text-text-primary">{t('notificationSettings')}</h2>
                 <p className="text-text-muted text-sm">{t('controlYourNotifications')}</p>
               </div>
             </div>
@@ -152,10 +152,10 @@ export default function NotificationModal({
                 return (
                   <div
                     key={type.id}
-                    className={`p-4 rounded-xl border-2 transition-all duration-200 ${
+                    className={`p-4 rounded-xl border-1 transition-all duration-200 ${
                       isEnabled
-                        ? 'border-accent bg-accent/10'
-                        : 'border-border bg-white/50'
+                        ? 'border-border '
+                        : 'border-border bg-background-hover'
                     }`}
                   >
                     <div className="flex items-center justify-between">

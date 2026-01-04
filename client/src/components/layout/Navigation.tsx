@@ -62,16 +62,14 @@ export function Navigation() {
 
   return (
     <>
-      <nav className="hidden md:block bg-gradient-to-r from-white/95 via-white/90 to-white/95 dark:from-neutral-900/95 dark:via-neutral-800/90 dark:to-neutral-900/95 backdrop-blur-xl  shadow-lg">
-        <div className="px-4">
-          <div className="flex items-center justify-between py-4">
+      <nav className="hidden md:block bg-background shadow-md text-text-primary">
+          <div className="flex items-center justify-around p-4">
             <div 
               className="flex items-center cursor-pointer" 
               onClick={() => router.push(`/${locale}/dashboard`)}
             >
-              <h1 className="text-2xl font-bold text-primary">Listali</h1>
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-primary-500 to-primary-600 bg-clip-text text-transparent">Listali</h1>
             </div>
-
 
             <div className="flex items-center gap-4">
               {navItems.map((item) => {
@@ -130,12 +128,11 @@ export function Navigation() {
               </Button>
             </div>
           </div>
-        </div>
       </nav>
 
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-r from-white/95 via-white/90 to-white/95 dark:from-neutral-900/95 dark:via-neutral-800/90 dark:to-neutral-900/95 backdrop-blur-xl shadow-2xl">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background shadow-2xl">
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between py-3">
+          <div className="flex items-center justify-around py-3">
             <div className="flex items-center gap-1">
               {navItems.map((item) => {
                 if (!item.showOnMobile) return null;

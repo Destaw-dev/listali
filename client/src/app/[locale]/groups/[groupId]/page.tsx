@@ -13,7 +13,7 @@ import { useAuthStore } from '../../../../store/authStore';
 import { InviteModal } from '../../../../components/groups/InviteModal';
 import { ChatComponent } from '../../../../components/chat/ChatComponent';
 import { ArrowIcon } from '../../../../components/common/Arrow';
-import CreateShoppingListModal from '../../../../components/shoppingList/CreateShoppingListModal';
+import {CreateShoppingListModal} from '../../../../components/shoppingList/CreateShoppingListModal';
 import { IShoppingList, IGroupMember, ICreateListFormData, getCreatedByDisplayName } from '../../../../types';
 import { useShoppingListWebSocket } from '../../../../hooks/useShoppingListWebSocket';
 
@@ -84,7 +84,7 @@ export default function GroupDetailsPage() {
 
   if (!isInitialized) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-surface flex items-center justify-center">
         <LoadingSpinner />
       </div>
     );
@@ -92,7 +92,7 @@ export default function GroupDetailsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-surface flex items-center justify-center">
         <LoadingSpinner />
       </div>
     );
@@ -103,7 +103,7 @@ export default function GroupDetailsPage() {
     
     if (is403Error) {
       return (
-        <div className="min-h-screen flex items-center justify-center">
+        <div className="min-h-screen bg-surface flex items-center justify-center">
           <div className="text-center">
             <LoadingSpinner />
             <p className="text-secondary mt-4">{t('redirectingToGroups')}</p>
@@ -113,9 +113,9 @@ export default function GroupDetailsPage() {
     }
     
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-surface flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-500 mb-4">{t('errorLoadingGroup')}</p>
+          <p className="text-error-500 mb-4">{t('errorLoadingGroup')}</p>
           <Button 
             onClick={navigateBack}
             variant="primary"
@@ -181,9 +181,9 @@ export default function GroupDetailsPage() {
               <div className="divide-y divide-border">
                 {
                   group.shoppingLists?.map((list: IShoppingList) => (
-                    <div key={list._id} className="p-4 hover:bg-surface transition-colors flex items-center justify-between group cursor-pointer" onClick={() => router.push(`/${locale}/groups/${groupId}/${list._id}`)}>
+                    <div key={list._id} className="p-4 hover:bg-background transition-colors flex items-center justify-between group cursor-pointer" onClick={() => router.push(`/${locale}/groups/${groupId}/${list._id}`)}>
                     <div className="flex items-center gap-4">
-                      <div className="h-10 w-10 rounded-lg bg-primaryT-100 flex items-center justify-center text-primaryT-600">
+                      <div className="h-10 w-10 rounded-lg bg-background-100 flex items-center justify-center text-text-primary-600">
                         <ShoppingCart className="h-5 w-5" />
                       </div>
                       <div>
@@ -211,16 +211,16 @@ export default function GroupDetailsPage() {
 
           <div className="space-y-6">
             
-            <div className="bg-surface rounded-xl shadow-sm border border-gray-200">
-              <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center">
-                <h3 className="font-semibold">{t('groupMembers')} ({group.members?.length || 0})</h3>
+            <div className="bg-card border border-border rounded-xl shadow-sm">
+              <div className="px-5 py-4 border-b border-border flex justify-between items-center">
+                <h3 className="font-semibold text-text-primary">{t('groupMembers')} ({group.members?.length || 0})</h3>
                 <Button variant='ghost' size='sm' onClick={() => setShowInviteModal(true)}>
-                  <UserPlus className="h-4 w-4" />
+                  <UserPlus className="h-4 w-4 text-text-primary" />
                 </Button>
               </div>
               <div className="p-2 space-y-2">
                 {group.members?.map((member: IGroupMember) => (
-                  <MemberItem key={member.user.id} name={member.user.firstName + ' ' + member.user.lastName} role={member.role} email={member.user.email} initial={member.user.firstName[0]} color={member.role === 'owner' ? 'bg-blue-600' : 'bg-purple-600'} />
+                  <MemberItem key={member.user.id} name={member.user.firstName + ' ' + member.user.lastName} role={member.role} email={member.user.email} initial={member.user.firstName[0]} color={member.role === 'owner' ? 'bg-primary-600' : 'bg-secondary-600'} />
                 ))}
               </div>
               <div className="px-4 py-3 text-center">
@@ -256,7 +256,7 @@ export default function GroupDetailsPage() {
               <h3 className="text-lg font-semibold text-text-secondary mb-4">{t('groupStats')}</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-primaryT-700">{group.membersCount || 0}</div>
+                  <div className="text-2xl font-bold text-text-primary-700">{group.membersCount || 0}</div>
                   <div className="text-sm text-gray-500">{t('members')}</div>
                 </div>
                 <div className="text-center">
@@ -283,7 +283,6 @@ export default function GroupDetailsPage() {
 
   return (
     <div className="min-h-screen bg-surface">
-      <div className="">
         <div className="container mx-auto px-4 py-3 md:py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
@@ -291,7 +290,7 @@ export default function GroupDetailsPage() {
                 <ArrowIcon/>
               </Button>
               <div className="min-w-0 flex-1">
-                <h1 className="text-lg md:text-2xl font-bold text-primary truncate">{group.name}</h1>
+                <h1 className="text-lg md:text-2xl font-bold text-text-primary truncate">{group.name}</h1>
                 <p className="text-secondary text-xs md:text-sm truncate">{group.description}</p>
               </div>
             </div>
@@ -304,7 +303,6 @@ export default function GroupDetailsPage() {
             </div>
           </div>
         </div>
-      </div>
 
       <div className="shadow-sm">
         <div className="container mx-auto px-4">
@@ -315,14 +313,14 @@ export default function GroupDetailsPage() {
                 onClick={() => handleTabChange(tab.id)}
                 className={`flex items-center gap-2 py-4 px-2 border-b-2 transition-all duration-200 ${
                   activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-primary-500 text-primary-600'
+                    : 'border-transparent text-text-muted hover:text-text-primary hover:border-border'
                 }`}
               >
-                <tab.icon className="w-4 h-4" />
-                <span className="font-medium">{tab.label}</span>
+                <tab.icon className="w-4 h-4 text-text-primary" />
+                <span className="font-medium text-text-primary">{tab.label}</span>
                 {tab.count !== null && tab.count > 0 && (
-                  <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center">
+                  <span className="bg-error-500 text-text-primary text-xs rounded-full px-2 py-1 min-w-[20px] text-center">
                     {tab.count}
                   </span>
                 )}
@@ -337,19 +335,19 @@ export default function GroupDetailsPage() {
                 onClick={() => handleTabChange(tab.id)}
                 className={`flex flex-col items-center gap-1 py-3 px-3 border-b-2 transition-all duration-200 min-w-[80px] ${
                   activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-primary-500 text-primary-600'
+                    : 'border-transparent text-text-muted hover:text-text-primary hover:border-border'
                 }`}
               >
                 <div className="relative">
-                  <tab.icon className="w-5 h-5" />
+                  <tab.icon className="w-5 h-5 text-text-primary" />
                   {tab.count !== null && tab.count > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5 min-w-[16px] text-center">
+                    <span className="absolute -top-1 -right-1 bg-error-500 text-text-primary text-xs rounded-full px-1.5 py-0.5 min-w-[16px] text-center">
                       {tab.count}
                     </span>
                   )}
                 </div>
-                <span className="text-xs font-medium text-center leading-tight">
+                <span className="text-xs font-medium text-center leading-tight text-text-primary">
                   {tab.label}
                 </span>
               </button>
@@ -383,18 +381,18 @@ export default function GroupDetailsPage() {
 
 
 const MemberItem = ({ name, role, email, initial, color }: { name: string, role: 'owner' | 'admin' | 'member', email: string, initial: string, color: string }) => (
-  <div className="flex items-center justify-between p-3 bg-surface rounded-lg transition-colors group">
+  <div className="flex items-center justify-between p-3 bg-card border border-border rounded-lg transition-colors group">
     <div className="flex items-center gap-3">
       <div className={`h-9 w-9 rounded-full ${color}  flex items-center justify-center text-sm font-bold shadow-sm`}>
         {initial}
       </div>
       <div>
-        <p className="text-sm font-medium ">{name}</p>
-        <p className="text-xs text-secondary">{email}</p>
+        <p className="text-sm font-medium text-text-primary">{name}</p>
+        <p className="text-xs text-text-muted">{email}</p>
       </div>
     </div>
     <div className="flex items-center gap-2">
-      <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${role === 'owner' ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-600'}`}>
+      <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${role === 'owner' ? 'bg-primary-100 text-primary-700' : 'bg-secondary-100 text-secondary-600'}`}>
         {role === 'owner' ? 'בעלים' : role === 'admin' ? 'מנהל' : 'חבר'}
       </span>
     </div>

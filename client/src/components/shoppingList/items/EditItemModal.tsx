@@ -167,8 +167,8 @@ export const EditItemModal = memo(function EditItemModal({
 
         <form onSubmit={handleSubmit(onSubmitForm)} className="px-6 pb-6 pt-4 space-y-4">
           {isFromCatalog && (
-            <div className="mb-4 p-3 bg-primaryT-50 dark:bg-primaryT-900/20 rounded-lg border border-primaryT-100 ">
-              <p className="text-sm text-primary dark:text-primaryT-200">
+            <div className="mb-4 p-3 bg-background-50 dark:bg-background-900/20 rounded-lg border border-primary-100 ">
+              <p className="text-sm text-text-primary dark:text-primary-200">
                 {tItems("catalogItemEditNote") || "זהו מוצר מהקטלוג. ניתן לערוך רק כמות, עדיפות והערות."}
               </p>
             </div>

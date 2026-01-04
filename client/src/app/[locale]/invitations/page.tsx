@@ -65,7 +65,7 @@ export default function InvitationsPage() {
 
   if (!isInitialized) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-surface">
         <LoadingSpinner />
       </div>
     );
@@ -73,7 +73,7 @@ export default function InvitationsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-surface">
         <LoadingSpinner />
       </div>
     );
@@ -81,15 +81,16 @@ export default function InvitationsPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-surface">
         <div className="text-center">
-          <p className="text-red-500 mb-4">{t("errorLoadingInvitations")}</p>
-          <button
+          <p className="text-error-500 mb-4">{t("errorLoadingInvitations")}</p>
+          <Button
             onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-primary text-white rounded-lg"
+            variant="primary"
+            size="lg"
           >
             {t("tryAgain")}
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -97,31 +98,29 @@ export default function InvitationsPage() {
 
   return (
     <div className="min-h-screen bg-surface">
-      <div className="bg-surface">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div>
-                <h1 className="text-2xl font-bold text-primary">
+                <h1 className="text-2xl font-bold text-text-primary">
                   {t("invitations")}
                 </h1>
-                <p className="text-secondary text-sm">
+                <p className="text-secondary text-sm text-text-muted">
                   {t("manageInvitations")}
                 </p>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
       <div className="container mx-auto px-4 py-6 bg-card rounded-lg shadow-lg">
         {invitations.length === 0 ? (
           <div className="text-center py-12 ">
-            <UserPlus className="w-16 h-16 text-muted mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-primary mb-2">
+            <UserPlus className="w-16 h-16 mx-auto mb-4 text-text-muted" />
+            <h3 className="text-xl font-semibold text-text-primary mb-2">
               {t("noInvitations")}
             </h3>
-            <p className="text-secondary">{t("noNewInvitations")}</p>
+            <p className="text-secondary text-text-muted">{t("noNewInvitations")}</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -132,17 +131,17 @@ export default function InvitationsPage() {
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex items-start gap-4">
-                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold shrink-0">
+                    <div className="h-12 w-12 rounded-full bg-background/10 flex items-center justify-center text-text-primary font-bold shrink-0">
                       {invitation.group?.name?.charAt(0).toUpperCase()}
                     </div>
 
                     <div className="space-y-1">
-                      <h3 className="font-bold text-lg text-foreground leading-none">
+                      <h3 className="font-bold text-lg text-text-primary leading-none">
                         {invitation.group?.name}
                       </h3>
-                      <p className="text-muted-foreground text-sm">
+                      <p className="text-text-muted text-sm">
                         {t("invitedBy")}:{" "}
-                        <span className="font-medium text-foreground">
+                        <span className="font-medium text-text-primary">
                           {invitation.invitedBy?.firstName}{" "}
                           {invitation.invitedBy?.lastName}
                         </span>
@@ -152,8 +151,8 @@ export default function InvitationsPage() {
                         <span
                           className={`text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full ${
                             invitation.role === "admin"
-                              ? "bg-amber-100 text-amber-700 border border-amber-200"
-                              : "bg-blue-100 text-blue-700 border border-blue-200"
+                              ? "bg-warning-100 text-warning-700 border border-warning-200"
+                              : "bg-primary-100 text-primary-700 border border-primary-200"
                           }`}
                         >
                           {invitation.role === "admin"
@@ -161,7 +160,7 @@ export default function InvitationsPage() {
                             : t("member")}
                         </span>
 
-                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                        <span className="text-xs text-text-muted flex items-center gap-1">
                           <Calendar className="w-3 h-3" />
                           {new Date(invitation.invitedAt).toLocaleDateString(
                             "he-IL"

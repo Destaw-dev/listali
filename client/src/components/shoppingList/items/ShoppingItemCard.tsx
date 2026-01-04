@@ -100,7 +100,7 @@ export function ShoppingItemCard({
       <div className="flex min-w-0 flex-1 flex-col" onClick={() => onPreview(item)}>
         <div className="flex items-center gap-1.5">
           <h3 className={cn(
-            "truncate text-[15px] font-semibold text-primary",
+            "truncate text-[15px] font-semibold text-text-primary",
             item?.isPurchased && !isPartiallyPurchased && "line-through text-muted font-normal"
           )}>
             {item?.name}
@@ -132,11 +132,11 @@ export function ShoppingItemCard({
               variant="ghost"
               size="xs"
               onClick={() => onEdit?.(item)}
-              className="p-2 text-muted hover:text-primaryT-500 cursor-pointer"
+              className="p-2 text-muted hover:text-primary-500 cursor-pointer"
               aria-label="עריכה"
               disabled={isLoading}
             >
-              <Edit className="h-4 w-4 hover:text-primaryT-500" />
+              <Edit className="h-4 w-4 hover:text-primary-500" />
             </Button>
           )}
           {canDelete && (

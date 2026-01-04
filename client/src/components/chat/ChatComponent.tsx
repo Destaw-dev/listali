@@ -247,23 +247,30 @@ const { data: unreadInfo } = useUnreadInfo(groupId, {
     }).format(date);
   };
 
+  const isOnTheTopOfTheWindow = () => {
+    if (!messagesContainerRef.current) return false;
+    const container = messagesContainerRef.current;
+    const isAtTop = container.scrollTop === 0;
+    return isAtTop;
+  };
+
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex items-center bg-surface justify-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
-          <p className="text-gray-500">{t('loading')}</p>
+          <p className="text-text-muted">{t('loading')}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-full bg-card rounded-lg overflow-hidden shadow-sm">
+    <div className="flex flex-col h-full bg-surface rounded-lg overflow-hidden shadow-sm">
       <div className="flex items-center justify-between p-4 bg-card border-b border-border">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-primaryT-700 to-primaryT-700 rounded-full flex items-center justify-center">
-            <span className="text-white font-medium text-sm">
+          <div className="w-10 h-10 bg-gradient-to-br from-primary-700 to-primary-700 rounded-full flex items-center justify-center">
+            <span className="text-text-primary font-medium text-sm">
               {groupName.charAt(0).toUpperCase()}
             </span>
           </div>
@@ -293,12 +300,12 @@ const { data: unreadInfo } = useUnreadInfo(groupId, {
 
       <div 
         ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth"
+        className="flex-1 overflow-y-auto p-4 space-y-4"
         onScroll={handleScroll}
       >
         {messages.length === 0 ? (
           <div className="text-center text-text-muted py-12 animate-fade-in">
-            <div className="w-16 h-16 bg-surface-hover rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-background-hover rounded-full flex items-center justify-center mx-auto mb-4">
               <MessageCircle className="w-8 h-8 text-text-muted" />
             </div>
             <p className="text-lg font-medium mb-2">{t('noMessages')}</p>
@@ -317,8 +324,8 @@ const { data: unreadInfo } = useUnreadInfo(groupId, {
               <React.Fragment key={message._id}>
                 {showUnreadDivider && (
                   <div className="flex items-center justify-center my-6 animate-fade-in">
-                    <div className="flex items-center gap-2 px-4 py-2 bg-primaryT-50 text-primaryT-700 rounded-full text-xs font-medium border border-primaryT-100 shadow-sm">
-                      <div className="w-2 h-2 bg-primaryT-700 rounded-full animate-pulse"></div>
+                    <div className="flex items-center gap-2 px-4 py-2 bg-background-50 text-text-primary-700 rounded-full text-xs font-medium border border-primary-100 shadow-sm">
+                      <div className="w-2 h-2 bg-background-700 rounded-full animate-pulse"></div>
                       <span>{t('newMessages')}</span>
                     </div>
                   </div>
@@ -337,7 +344,7 @@ const { data: unreadInfo } = useUnreadInfo(groupId, {
                       {!isMyMessage && (
                         <div className="flex items-center gap-2 mb-1 animate-fade-in">
                           <div className="w-6 h-6 bg-gradient-to-br from-neutral-400 to-neutral-600 rounded-full flex items-center justify-center shadow-sm">
-                            <span className="text-white text-xs font-medium">
+                            <span className="text-text-primary text-xs font-medium">
                               {message.sender.firstName?.[0]}{message.sender.lastName?.[0]}
                             </span>
                           </div>
@@ -351,8 +358,8 @@ const { data: unreadInfo } = useUnreadInfo(groupId, {
                         <div
                           className={`px-4 py-2 rounded-2xl shadow-sm transition-all duration-200 hover:shadow-md ${
                             isMyMessage
-                              ? 'bg-gradient-to-r from-primaryT-700 to-primaryT-700 text-white hover:from-primaryT-700 hover:to-primaryT-700'
-                              : 'bg-accentT-300 hover:bg-accentT-600'
+                              ? 'bg-gradient-to-r from-primary-700 to-primary-700 text-text-primary hover:from-primary-700 hover:to-primary-700'
+                              : 'bg-accent-300 hover:bg-accent-600'
                           }`}
                         >
                           <p className="text-sm leading-relaxed">{message.content}</p>
@@ -365,7 +372,8 @@ const { data: unreadInfo } = useUnreadInfo(groupId, {
                                   setEditingMessage(message._id);
                                   setEditContent(message.content);
                                 },
-                                icon: <Edit3 className="w-3 h-3" />
+                                variant: 'default',
+                                icon: <Edit3 className="w-3 h-3 text-text-primary" />
                               },
                               {
                                 label: t('delete'),
@@ -373,9 +381,9 @@ const { data: unreadInfo } = useUnreadInfo(groupId, {
                                   deleteMessage(message._id);
                                 },
                                 variant: 'danger',
-                                icon: <Trash2 className="w-3 h-3" />
+                                icon: <Trash2 className="w-3 h-3 text-danger" />
                               }
-                            ]} align='start' position='top' />
+                            ]} align='start' position={isOnTheTopOfTheWindow() ? 'bottom' : 'top'} />
                           )}
                         </div>
                       </div>

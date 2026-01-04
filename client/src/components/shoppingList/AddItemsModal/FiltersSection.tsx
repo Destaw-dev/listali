@@ -311,7 +311,7 @@ export const FiltersSection = memo(({
         {activeFilters.map((filter) => (
           <span
             key={`${filter.type}-${filter.value}`}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary/10 text-primary rounded-full text-xs font-medium"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-background/10 text-text-primary rounded-full text-xs font-medium"
           >
             {filter.label}
             <Button variant="ghost" size="xs" onClick={() => onRemoveFilter(filter.type)} aria-label={t('removeFilter', { label: filter.label })}><X className="w-3 h-3" /></Button>

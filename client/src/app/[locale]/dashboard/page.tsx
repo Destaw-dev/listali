@@ -27,13 +27,13 @@ export default function DashboardPage() {
 
   if (!isInitialized) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primaryT-50 via-secondaryT-50 to-accentT-50  flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-primary-50 via-secondary-50 to-accent-50  flex items-center justify-center">
         <div className="text-center">
           <div className="relative">
             <div className="animate-spin rounded-full h-16 w-16 border-4 border-primary border-t-transparent mx-auto mb-6"></div>
             <div className="absolute inset-0 rounded-full border-4 border-secondary/30 animate-pulse"></div>
           </div>
-          <p className="text-lg font-medium text-primary animate-pulse">{t('loading')}</p>
+          <p className="text-lg font-medium text-text-primary animate-pulse">{t('loading')}</p>
         </div>
       </div>
     );
@@ -73,8 +73,8 @@ export default function DashboardPage() {
     //   icon: Users,
     //   action: () => router.push(`/${locale}/groups`),
     //   variant: 'primary' as const,
-    //   gradient: 'from-primaryT-500 to-primaryT-600',
-    //   bgGradient: 'from-primaryT-50 to-primaryT-100'
+    //   gradient: 'from-primary-500 to-primary-600',
+    //   bgGradient: 'from-primary-50 to-primary-100'
     // },
     {
       title: `צור/${t('joinGroup')}`,
@@ -82,8 +82,8 @@ export default function DashboardPage() {
       icon: Plus,
       action: () => router.push(`/${locale}/groups`),
       variant: 'secondary' as const,
-      gradient: 'from-secondaryT-500 to-secondaryT-600',
-      bgGradient: 'from-secondaryT-50 to-secondaryT-100'
+      gradient: 'from-secondary-500 to-secondary-600',
+      bgGradient: 'from-secondary-300 to-secondary-400'
     },
     {
       title: t('viewInvitations'),
@@ -91,8 +91,8 @@ export default function DashboardPage() {
       icon: Bell,
       action: () => router.push(`/${locale}/invitations`),
       variant: 'accent' as const,
-      gradient: 'from-accentT-500 to-accentT-600',
-      bgGradient: 'from-accentT-50 to-accentT-100'
+      gradient: 'from-accent-500 to-accent-600',
+      bgGradient: 'from-accent-300 to-accent-400'
     }
   ];
 
@@ -103,11 +103,11 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-surface overflow-hidden">
+    <div className="min-h-screen  bg-surface">
       <div className="container mx-auto px-4 py-8 relative z-10">
         <div className="max-w-7xl mx-auto space-y-8">
           
-          <Card variant="glass" className="bg-white/80 dark:bg-neutral-800/80 shadow-2xl">
+          <Card variant="glass" className="shadow-2xl bg-card">
             <CardBody className="p-1 sm:p-8">
               <div className="flex sm:items-center justify-between flex-col md:flex-row gap-3 ">
                 <div className="flex items-center sm:gap-6 flex-col sm:flex-row">
@@ -124,8 +124,8 @@ export default function DashboardPage() {
                     </div>
                   )}
                   <div>
-                    <div className="flex items-center gap-3 mb-3">
-                      <h1 className="text-4xl font-bold bg-gradient-to-br from-primaryT-600 to-secondaryT-600 bg-clip-text text-transparent">
+                    <div className="flex items-center gap-3 mb-3 bg-gradient-to-br from-primary-600 to-secondary-600 rounded-lg p-2">
+                      <h1 className="text-4xl font-bold  text-text-primary">
                         {t('welcome')} 🎉
                       </h1>
                     </div>
@@ -149,15 +149,15 @@ export default function DashboardPage() {
           </Card>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
-            <Card variant="glass" hover className="bg-white/70 dark:bg-neutral-800/70">
+            <Card hover className="bg-card">
               <CardBody className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-gradient-to-br from-primaryT-400 to-primaryT-600 rounded-2xl shadow-lg">
-                    <Users className="w-6 h-6 text-white" />
+                  <div className="p-3 bg-gradient-to-br from-primary-400 to-primary-600 rounded-2xl shadow-lg">
+                    <Users className="w-6 h-6 text-text-primary" />
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-medium text-text-muted">{t('totalGroups')}</p>
-                    <p className="text-2xl font-bold text-primary">{stats.groups}</p>
+                    <p className="text-2xl font-bold text-text-primary">{stats.groups}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -170,11 +170,11 @@ export default function DashboardPage() {
               </CardBody>
             </Card>
 
-            <Card variant="glass" hover className="bg-white/70 dark:bg-neutral-800/70">
+            <Card hover className="bg-card">
               <CardBody className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-gradient-to-br from-secondaryT-700 to-secondaryT-700 rounded-2xl shadow-lg">
-                    <ShoppingCart className="w-6 h-6 text-white" />
+                  <div className="p-3 bg-gradient-to-br from-secondary-700 to-secondary-700 rounded-2xl shadow-lg">
+                    <ShoppingCart className="w-6 h-6 text-text-primary" />
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-medium text-text-muted">{t('totalLists')}</p>
@@ -191,11 +191,11 @@ export default function DashboardPage() {
               </CardBody>
             </Card>
 
-            <Card variant="glass" hover className="bg-white/70 dark:bg-neutral-800/70">
+            <Card hover className="bg-card">
               <CardBody className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-gradient-to-br from-accentT-700 to-accentT-700 rounded-2xl shadow-lg">
-                    <Target className="w-6 h-6 text-white" />
+                  <div className="p-3 bg-gradient-to-br from-accent-700 to-accent-700 rounded-2xl shadow-lg">
+                    <Target className="w-6 h-6 text-text-primary" />
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-medium text-text-muted">{t('completedLists')}</p>
@@ -212,11 +212,11 @@ export default function DashboardPage() {
               </CardBody>
             </Card>
 
-            <Card variant="glass" hover className="bg-white/70 dark:bg-neutral-800/70">
+            <Card hover className="bg-card">
               <CardBody className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div className="p-3 bg-gradient-to-br from-warning-400 to-warning-600 rounded-2xl shadow-lg">
-                    <ShoppingCart className="w-6 h-6 text-white" />
+                    <ShoppingCart className="w-6 h-6 text-text-primary" />
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-medium text-text-muted">{t('purchasedItems')}</p>
@@ -233,11 +233,11 @@ export default function DashboardPage() {
               </CardBody>
             </Card>
 
-            <Card variant="glass" hover className="bg-white/70 dark:bg-neutral-800/70">
+            <Card hover className="bg-card">
               <CardBody className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div className="p-3 bg-gradient-to-br from-success-400 to-success-600 rounded-2xl shadow-lg">
-                    <Activity className="w-6 h-6 text-white" />
+                    <Activity className="w-6 h-6 text-text-primary" />
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-medium text-text-muted">{t('remainingItems')}</p>
@@ -251,20 +251,20 @@ export default function DashboardPage() {
               </CardBody>
             </Card>
 
-            <Card variant="glass" hover className="bg-white/70 dark:bg-neutral-800/70">
+            <Card hover>
               <CardBody className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-gradient-to-br from-purple-400 to-purple-600 rounded-2xl shadow-lg">
-                    <ShoppingCart className="w-6 h-6 text-white" />
+                  <div className="p-3 bg-gradient-to-br from-info-400 to-info-600 rounded-2xl shadow-lg">
+                    <ShoppingCart className="w-6 h-6 text-text-primary" />
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-medium text-text-muted">{t('totalItems')}</p>
-                    <p className="text-2xl font-bold text-purple-600">{stats.totalItems}</p>
+                    <p className="text-2xl font-bold text-info-600">{stats.totalItems}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-purple-600" />
-                  <span className="text-sm font-medium text-purple-600">{t('totalItemsLabel')}</span>
+                  <Sparkles className="w-4 h-4 text-info-600" />
+                  <span className="text-sm font-medium text-info-600">{t('totalItemsLabel')}</span>
                 </div>
               </CardBody>
             </Card>
@@ -272,14 +272,14 @@ export default function DashboardPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2">
-              <Card variant="glass" className="bg-white/80 shadow-2xl">
+              <Card variant="glass" className="bg-surface/80 shadow-2xl">
                 <CardHeader>
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-lg">
-                      <Sparkles className="w-5 h-5 text-white" />
+                      <Sparkles className="w-5 h-5 text-text-primary" />
                     </div>
                     <div>
-                      <h2 className="text-xl font-bold text-primary">{t('quickActions')}</h2>
+                      <h2 className="text-xl font-bold text-text-primary">{t('quickActions')}</h2>
                       <p className="text-text-muted">{t('quickActionsDesc')}</p>
                     </div>
                   </div>
@@ -298,9 +298,9 @@ export default function DashboardPage() {
                         >
                           <CardBody className="p-6 text-center">
                             <div className={`p-4 rounded-2xl mb-4 inline-block bg-gradient-to-br ${action.bgGradient} shadow-lg`}>
-                                <Icon className={`w-8 h-8 text-primaryT-400`} />
+                                <Icon className={`w-8 h-8 text-text-primary`} />
                             </div>
-                            <h3 className="text-lg font-semibold text-primary mb-2">
+                            <h3 className="text-lg font-semibold text-text-primary mb-2">
                               {action.title}
                             </h3>
                             <p className="text-sm text-text-muted mb-4">
@@ -324,14 +324,14 @@ export default function DashboardPage() {
             </div>
 
             <div>
-              <Card variant="glass" className="bg-white/80 shadow-2xl">
+              <Card variant="glass" className="bg-surface/80 shadow-2xl">
                 <CardHeader>
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-lg">
-                      <Award className="w-5 h-5 text-white" />
+                      <Award className="w-5 h-5 text-text-primary" />
                     </div>
                     <div>
-                      <h2 className="text-xl font-bold text-primary">{t('achievements')}</h2>
+                      <h2 className="text-xl font-bold text-text-primary">{t('achievements')}</h2>
                       <p className="text-text-muted">{t('achievementsDesc')}</p>
                     </div>
                   </div>
@@ -341,15 +341,15 @@ export default function DashboardPage() {
                     {achievements.map((achievement: IAchievement, index: number) => {
                       const Icon = achievementIcons[achievement.id as keyof typeof achievementIcons] || Award;
                       return (
-                        <div key={index} className="flex items-center gap-4 p-4 bg-gradient-to-r from-white/50 to-white/30 rounded-xl">
-                          <div className="p-2 bg-white/50 rounded-lg">
-                            <Icon className={`w-5 h-5 ${achievement.unlocked ? 'text-yellow-600' : 'text-gray-400'}`} />
+                        <div key={index} className="flex items-center gap-4 p-4 bg-gradient-to-r from-surface/50 to-surface/30 rounded-xl">
+                          <div className="p-2 bg-surface-50 rounded-lg">
+                            <Icon className={`w-5 h-5 ${achievement.unlocked ? 'text-warning-500' : 'text-text-muted'}`} />
                           </div>
                           <div className="flex-1">
-                            <p className="font-medium text-primary">{achievement.title}</p>
+                            <p className="font-medium text-text-primary">{achievement.title}</p>
                             <p className="text-sm text-text-muted">{achievement.description}</p>
                             <div className="mt-2">
-                              <div className="w-full bg-gray-200 rounded-full h-2">
+                              <div className="w-full bg-info-100 rounded-full h-2">
                                 <div 
                                   className="bg-gradient-to-r from-yellow-400 to-orange-400 h-2 rounded-full transition-all duration-300"
                                   style={{ width: `${(achievement.progress / achievement.maxProgress) * 100}%` }}
@@ -361,7 +361,7 @@ export default function DashboardPage() {
                             </div>
                           </div>
                           {achievement.unlocked && (
-                            <div className="w-3 h-3 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full"></div>
+                            <div className="w-3 h-3 bg-gradient-to-r from-warning-500 to-warning-600 rounded-full"></div>
                           )}
                         </div>
                       );
@@ -375,11 +375,11 @@ export default function DashboardPage() {
           <Card variant="glass" className="bg-white/80 shadow-2xl">
             <CardHeader>
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-gradient-to-r from-accentT-500 to-purple-500 rounded-lg">
-                  <Activity className="w-5 h-5 text-white" />
+                <div className="p-2 bg-gradient-to-r from-accent-500 to-purple-500 rounded-lg">
+                  <Activity className="w-5 h-5 text-text-primary" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-primary">{t('recentActivity')}</h2>
+                  <h2 className="text-xl font-bold text-text-primary">{t('recentActivity')}</h2>
                   <p className="text-text-muted">{t('recentActivityDesc')}</p>
                 </div>
               </div>
@@ -389,7 +389,7 @@ export default function DashboardPage() {
                 {stats.groups === 0 ? (
                   <div className="text-center py-8">
                     <div className="p-4 bg-gradient-to-br from-primary-100 to-primary-200 rounded-2xl mx-auto w-fit mb-4">
-                      <Users className="w-8 h-8 text-primary-600" />
+                      <Users className="w-8 h-8 text-text-primary-600" />
                     </div>
                     <p className="text-text-muted mb-4">{t('noGroups')}</p>
                     <Button 
@@ -405,10 +405,10 @@ export default function DashboardPage() {
                     {stats.pendingTasks > 0 && (
                       <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-warning-50/50 to-warning-100/30 rounded-xl">
                         <div className="p-2 bg-gradient-to-br from-warning-400 to-warning-600 rounded-lg shadow-lg">
-                          <Bell className="w-5 h-5 text-white" />
+                          <Bell className="w-5 h-5 text-text-primary" />
                         </div>
                         <div className="flex-1">
-                          <p className="font-medium text-primary">{t('pendingInvitations')}</p>
+                          <p className="font-medium text-text-primary">{t('pendingInvitations')}</p>
                           <p className="text-sm text-text-muted">{stats.pendingTasks} {t('invitations')}</p>
                         </div>
                         <div className="text-right">
@@ -426,10 +426,10 @@ export default function DashboardPage() {
                     {stats.lists > 0 && (
                       <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-success-50/50 to-success-100/30 rounded-xl">
                         <div className="p-2 bg-gradient-to-br from-success-400 to-success-600 rounded-lg shadow-lg">
-                          <ShoppingCart className="w-5 h-5 text-white" />
+                          <ShoppingCart className="w-5 h-5 text-text-primary" />
                         </div>
                         <div className="flex-1">
-                          <p className="font-medium text-primary">{t('totalLists')}</p>
+                          <p className="font-medium text-text-primary">{t('totalLists')}</p>
                           <p className="text-sm text-text-muted">{stats.lists} {t('lists')}</p>
                         </div>
                         <div className="text-right">
@@ -439,12 +439,12 @@ export default function DashboardPage() {
                     )}
                     
                     {stats.groups > 0 && (
-                      <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-secondaryT-50/50 to-secondaryT-100/30 rounded-xl">
-                        <div className="p-2 bg-gradient-to-br from-secondaryT-400 to-secondaryT-600 rounded-lg shadow-lg">
-                          <Users className="w-5 h-5 text-white" />
+                      <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-secondary-50/50 to-secondary-100/30 rounded-xl">
+                        <div className="p-2 bg-gradient-to-br from-secondary-400 to-secondary-600 rounded-lg shadow-lg">
+                          <Users className="w-5 h-5 text-text-primary" />
                         </div>
                         <div className="flex-1">
-                          <p className="font-medium text-primary">{t('totalGroups')}</p>
+                          <p className="font-medium text-text-primary">{t('totalGroups')}</p>
                           <p className="text-sm text-text-muted">{stats.groups} {t('groups')}</p>
                         </div>
                         <div className="text-right">

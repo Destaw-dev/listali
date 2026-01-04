@@ -53,7 +53,7 @@ export function ShoppingListHeaderBar({
                 <span
                   className={cn(
                     "rounded-full px-3 py-1 text-xs font-medium",
-                    "bg-primaryT-100 text-primaryT-700"
+                    "bg-primary-500 text-text-on-primary"
                   )}
                 >
                   {shoppingList.priority}
@@ -74,7 +74,7 @@ export function ShoppingListHeaderBar({
           <Button
             onClick={onAddItems}
             icon={<Plus className="h-5 w-5" />}
-            className="bg-gradient-to-r from-primaryT-500 to-secondaryT-500 px-5 py-2.5 text-text-on-primary shadow-xl transition hover:shadow-2xl"
+            className="bg-gradient-to-r from-primary-500 to-secondary-500 px-5 py-2.5 text-text-on-primary shadow-xl transition hover:shadow-2xl"
           >
             {t("addItem")}
           </Button>
@@ -86,7 +86,7 @@ export function ShoppingListHeaderBar({
           onClick={onAddItems}
           fullWidth
           icon={<Plus className="h-5 w-5" />}
-          className="bg-gradient-to-r from-primaryT-500 to-secondaryT-500 py-3 text-text-on-primary shadow-xl transition hover:shadow-2xl"
+          className="bg-gradient-to-r from-primary-500 to-secondary-500 py-3 text-text-on-primary shadow-xl transition hover:shadow-2xl"
         >
           {t("addItem")}
         </Button>

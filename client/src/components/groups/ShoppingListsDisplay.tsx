@@ -48,7 +48,7 @@ export function ShoppingListsDisplay({
       <Card className="shadow-lg">
         <CardBody className="p-8 text-center">
           <ShoppingCart className="w-12 h-12 text-muted mx-auto mb-4" />
-          <h3 className="text-lg font-bold text-primary mb-2">
+          <h3 className="text-lg font-bold text-text-primary mb-2">
             {searchTerm || activeFiltersCount > 0 ? t("lists.noResults") : t("lists.noLists")}
           </h3>
           <p className="text-text-muted mb-4">
@@ -81,8 +81,8 @@ export function ShoppingListsDisplay({
       ))}
       <Button variant="dashed" onClick={() => setShowCreateModal(true)}>
         <div className="flex items-center flex-col">
-        <div className="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center mb-3">
-          <Plus className="h-6 w-6 text-primaryT-500" />
+        <div className="h-12 w-12 rounded-full bg-card border border-border flex items-center justify-center mb-3">
+          <Plus className="h-6 w-6 text-text-primary" />
         </div>
         <span className="text-sm font-medium">{t("lists.createNew")}</span>
         </div>
@@ -110,13 +110,13 @@ function ShoppingListCard({
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "active":
-        return <Clock className="w-4 h-4 text-blue-500" />;
+        return <Clock className="w-4 h-4 text-primary-500" />;
       case "completed":
-        return <CheckCircle className="w-4 h-4 text-green-500" />;
+        return <CheckCircle className="w-4 h-4 text-success-500" />;
       case "archived":
-        return <Archive className="w-4 h-4 text-gray-500" />;
+        return <Archive className="w-4 h-4 text-text-muted" />;
       default:
-        return <AlertTriangle className="w-4 h-4 text-yellow-500" />;
+        return <AlertTriangle className="w-4 h-4 text-warning-500" />;
     }
   };
 
@@ -179,8 +179,8 @@ function ShoppingListCard({
             <span
               className={`flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full ${
                 list.status === "active"
-                  ? "bg-blue-50 text-blue-700"
-                  : "bg-emerald-50 text-emerald-700"
+                  ? "bg-primary-50 text-primary-700"
+                  : "bg-success-50 text-success-700"
               }`}
             >
               {getStatusIcon(list.status)}
@@ -204,7 +204,7 @@ function ShoppingListCard({
         </div>
 
         <h3
-          className={`font-bold text-gray-900 ${
+          className={`font-bold text-text-primary ${
             viewMode === "grid" ? "text-lg leading-tight" : "text-xl"
           }`}
         >
@@ -217,7 +217,7 @@ function ShoppingListCard({
           </p>
         )}
         <div
-          className={viewMode === "grid" ? "border-b border-gray-100 mb-3" : ""}
+          className={viewMode === "grid" ? "border-b border-border mb-3" : ""}
         />
 
         <div className="space-y-2 mb-3">
@@ -250,7 +250,7 @@ function ShoppingListCard({
                 {list.tags.slice(0, 2).map((tag: string, index: number) => (
                   <span
                     key={index}
-                    className="px-1 py-0.5 bg-gray-100 rounded text-xs"
+                    className="px-1 py-0.5 bg-info-50 border border-border rounded text-xs"
                   >
                     {tag}
                   </span>
@@ -273,7 +273,7 @@ function ShoppingListCard({
         </div>
 
         {list.metadata?.itemsCount > 0 && (
-          <div className="w-full bg-gray-200 rounded-full h-1.5">
+          <div className="w-full bg-info rounded-full h-1.5">
             <div
               className="bg-gradient-to-r from-primary to-secondary h-1.5 rounded-full transition-all"
               style={{ width: `${completionPercent}%` }}

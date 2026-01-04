@@ -86,7 +86,7 @@ const MemberActionsDropdown: React.FC<MemberActionsDropdownProps> = ({
       </Button>
 
       {isOpen && (
-        <div className="absolute left-0 top-full mt-2 bg-white rounded-lg shadow-xl border border-gray-100 z-20 min-w-[200px] overflow-hidden">
+        <div className="absolute left-0 top-full mt-2 bg-card border border-border rounded-lg shadow-sm z-20 min-w-[200px] overflow-hidden">
           <div className="p-1">{children}</div>
         </div>
       )}
@@ -347,7 +347,7 @@ export default function GroupSettingsPage({}) {
 
   if (!isInitialized || isGroupLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-surface flex items-center justify-center">
         <LoadingSpinner />
       </div>
     );
@@ -355,9 +355,9 @@ export default function GroupSettingsPage({}) {
 
   if (error || !group) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-surface flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-500 mb-4">{t('errorLoadingGroup')}</p>
+          <p className="text-error-500 mb-4">{t('errorLoadingGroup')}</p>
           <Button
             onClick={navigateBack}
             variant="primary"
@@ -373,10 +373,10 @@ export default function GroupSettingsPage({}) {
 
   if (!isMember) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-surface flex items-center justify-center">
         <div className="text-center">
-          <Settings className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-primary mb-2">{t('noPermission')}</h3>
+          <Settings className="w-16 h-16 text-error-500 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-text-primary mb-2">{t('noPermission')}</h3>
           <p className="text-secondary mb-6">{t('notAMember')}</p>
           <Button onClick={navigateBack} variant="primary" size="md">
             {t('backToGroup')}
@@ -388,8 +388,8 @@ export default function GroupSettingsPage({}) {
 
 
   return (
-    <div className="min-h-screen bg-surface pb-12" dir="rtl">
-      <div className="border-b border-gray-200">
+    <div className="min-h-screen bg-surface pb-12">
+      <div className="border-b border-border">
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center gap-3">
             <Button
@@ -400,19 +400,19 @@ export default function GroupSettingsPage({}) {
             >
               <ArrowIcon />
             </Button>
-            <h1 className="text-xl font-bold">{t('groupSettings')}</h1>
+            <h1 className="text-xl font-bold text-text-primary">{t('groupSettings')}</h1>
           </div>
         </div>
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
-        <div className="bg-surface rounded-2xl shadow-lg overflow-hidden">
-          <div className="h-16 bg-gradient-to-l from-primaryT-500 to-primaryT-600" />
+        <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+          <div className="h-16 bg-gradient-to-l from-primary-500 to-primary-600" />
 
           <div className="px-6 pb-6 relative">
             <div className="flex justify-between items-end -mt-10 mb-4">
-              <div className="w-16 h-16 rounded-xl bg-surface p-1 shadow-md">
-                <div className="w-full h-full bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 text-xl font-bold">
+              <div className="w-16 h-16 rounded-xl bg-card border border-border p-1 shadow-md">
+                <div className="w-full h-full bg-primary-100 rounded-lg flex items-center justify-center text-primary-600 text-xl font-bold">
                   {group.name?.[0] ?? t('defaultGroupAvatar')}
                 </div>
               </div>
@@ -469,14 +469,14 @@ export default function GroupSettingsPage({}) {
               </div>
             ) : (
               <div className="space-y-1">
-                <h1 className="text-2xl font-bold text-gray-900">
+                <h1 className="text-2xl font-bold text-text-primary">
                   {group.name}
                 </h1>
                 {group.description && (
-                  <p className="text-gray-600 mt-1">{group.description}</p>
+                  <p className="text-text-muted mt-1">{group.description}</p>
                 )}
 
-                <div className="flex items-center gap-2 pt-2 text-sm text-gray-500">
+                <div className="flex items-center gap-2 pt-2 text-sm text-text-muted">
                   <Calendar size={14} />
                   <span>
                     {t('createdAt')}{new Date(group.createdAt).toLocaleDateString("he-IL")}
@@ -487,11 +487,11 @@ export default function GroupSettingsPage({}) {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-100">
-          <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+        <div className="bg-card border border-border rounded-xl shadow-sm">
+          <div className="p-6 border-b border-border flex justify-between items-center">
             <div>
-              <h2 className="text-xl font-bold text-gray-900">{t('groupMembers')}</h2>
-              <p className="text-sm text-gray-500">
+              <h2 className="text-xl font-bold text-text-primary">{t('groupMembers')}</h2>
+              <p className="text-sm text-text-muted">
                 {group.members?.length ?? 0} {t('members')}
               </p>
             </div>
@@ -514,32 +514,32 @@ export default function GroupSettingsPage({}) {
               return (
                 <div
                   key={memberUserId}
-                  className="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                  className="p-4 flex items-center justify-between hover:bg-card-hover transition-colors"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-sm font-medium">
+                    <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 text-sm font-medium">
                       {memberName[0] ?? "👤"}
                     </div>
 
                     <div>
                       <div className="flex items-center gap-2">
-                        <p className="font-medium text-gray-900">
+                        <p className="font-medium text-text-primary">
                           {isCurrentUser ? t('you') : memberName}
                         </p>
                         <span
                           className={`text-xs px-2 py-0.5 rounded-full flex items-center gap-1 ${
                             currentRole === "owner"
-                              ? "bg-yellow-100 text-yellow-700"
+                              ? "bg-warning-100 text-warning-700"
                               : currentRole === "admin"
-                              ? "bg-blue-100 text-blue-700"
-                              : "bg-gray-100 text-gray-600"
+                              ? "bg-primary-100 text-primary-700"
+                              : "bg-card border border-border text-text-muted"
                           }`}
                         >
                           {getRoleIcon(currentRole)}
                           {getRoleText(currentRole)}
                         </span>
                       </div>
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-text-muted">
                         {currentRole === "owner"
                           ? t('mainManager')
                           : currentRole === "admin"
@@ -549,7 +549,7 @@ export default function GroupSettingsPage({}) {
                     </div>
                   </div>
 
-                  {(isCurrentUser || canManage) && (
+                  {((isCurrentUser && currentRole !== "owner") || canManage) && (
                     <MemberActionsDropdown
                       memberId={memberUserId}
                       currentOpenId={showMemberActions}
@@ -570,7 +570,7 @@ export default function GroupSettingsPage({}) {
                                 )
                               }
                               disabled={updateRoleMutation.isPending}
-                              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-50"
+                              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-primary-600 hover:bg-primary-50 rounded-lg transition-colors disabled:opacity-50"
                             >
                               <Shield className="w-4 h-4" />
                               {t('makeAdmin')}
@@ -587,7 +587,7 @@ export default function GroupSettingsPage({}) {
                                 )
                               }
                               disabled={updateRoleMutation.isPending}
-                              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors disabled:opacity-50"
+                              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-text-muted hover:bg-card-hover rounded-lg transition-colors disabled:opacity-50"
                             >
                               <User className="w-4 h-4" />
                               {t('makeMember')}
@@ -602,7 +602,7 @@ export default function GroupSettingsPage({}) {
                                   handleTransferOwnership(memberUserId)
                                 }
                                 disabled={transferOwnershipMutation.isPending}
-                                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-yellow-700 hover:bg-yellow-50 rounded-lg transition-colors disabled:opacity-50 border-t border-gray-100 mt-1 pt-2"
+                                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-warning-700 hover:bg-warning-50 rounded-lg transition-colors disabled:opacity-50 border-t border-border mt-1 pt-2"
                               >
                                 <Crown className="w-4 h-4" />
                                 {t('transferOwnership')}
@@ -617,7 +617,7 @@ export default function GroupSettingsPage({}) {
                               removeMemberMutation.isPending ||
                               isRemovingMember === memberUserId
                             }
-                            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 border-t border-gray-100 mt-1 pt-2"
+                            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-error-600 hover:bg-error-50 rounded-lg transition-colors disabled:opacity-50 border-t border-border mt-1 pt-2"
                           >
                             <UserMinus className="w-4 h-4" />
                             {t('removeFromGroup')}
@@ -629,7 +629,7 @@ export default function GroupSettingsPage({}) {
                         <button
                           onClick={handleLeaveGroup}
                           disabled={leaveGroupMutation.isPending}
-                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-error-600 hover:bg-error-50 rounded-lg transition-colors disabled:opacity-50"
                         >
                           <UserMinus className="w-4 h-4" />
                           {t('leaveGroup')}
@@ -643,28 +643,28 @@ export default function GroupSettingsPage({}) {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-lg border border-red-200 overflow-hidden">
-          <div className="bg-red-50/50 p-4 border-b border-red-100 flex items-center gap-2 text-red-800">
+        <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+          <div className="bg-error-50/50 p-4 border-b border-error-100 flex items-center gap-2 text-error-800">
             <Trash2 size={18} />
             <span className="font-bold text-sm">{t('dangerZone')}</span>
           </div>
 
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-border">
             {currentUserMembership &&
               currentUserMembership.role !== "owner" && (
-                <div className="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                <div className="p-4 flex items-center justify-between hover:bg-card-hover transition-colors">
                   <div>
-                    <h3 className="text-sm font-medium text-gray-700">
+                    <h3 className="text-sm font-medium text-text-primary">
                       {t('leaveGroup')}
                     </h3>
-                    <p className="text-xs text-gray-500 mt-0.5">
+                    <p className="text-xs text-text-muted mt-0.5">
                       {t('leaveGroupConfirmation')}
                     </p>
                   </div>
                   <button
                     onClick={handleLeaveGroup}
                     disabled={leaveGroupMutation.isPending}
-                    className="text-red-600 hover:text-red-700 hover:bg-red-50 px-4 py-2 rounded-lg text-sm font-medium transition-colors border border-transparent hover:border-red-100"
+                    className="text-error-600 hover:text-error-700 hover:bg-error-50 px-4 py-2 rounded-lg text-sm font-medium transition-colors border border-transparent hover:border-error-100"
                   >
                     {leaveGroupMutation.isPending ? t('leavingGroup') : t('leaveGroup')}
                   </button>
@@ -672,19 +672,19 @@ export default function GroupSettingsPage({}) {
               )}
 
             {canDeleteGroup && (
-              <div className="p-4 flex items-center justify-between hover:bg-red-50/30 transition-colors">
+              <div className="p-4 flex items-center justify-between hover:bg-error transition-colors">
                 <div>
-                  <h3 className="text-sm font-medium text-red-600">
+                  <h3 className="text-sm font-medium text-error-600">
                     {t('deleteGroup')}
                   </h3>
-                  <p className="text-xs text-red-400 mt-0.5">
+                  <p className="text-xs text-error-400 mt-0.5">
                     {t('deleteGroupConfirmation')}
                   </p>
                 </div>
                 <button
                   onClick={handleDeleteGroup}
                   disabled={deleteGroupMutation.isPending}
-                  className="bg-red-600 border border-red-600 text-white hover:bg-red-700 px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-md shadow-red-200"
+                  className="bg-error-600 border border-error-600 text-text-primary hover:bg-error-700 px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-md shadow-error-200"
                 >
                   {deleteGroupMutation.isPending ? t('deletingGroup') : t('deleteGroup')}
                 </button>

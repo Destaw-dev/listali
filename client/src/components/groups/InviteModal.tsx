@@ -61,16 +61,16 @@ export function InviteModal({ isOpen, onClose, onInvite, groupName }: InviteModa
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-white/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={(e) => e.target === e.currentTarget && handleClose()}>
+    <div className="fixed inset-0 bg-surface/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={(e) => e.target === e.currentTarget && handleClose()}>
       <div className="bg-card shadow-2xl rounded-xl max-w-md w-full max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom-4">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-3 border-b border-border">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-gradient-to-br from-accent-400 to-accent-600 rounded-xl">
-              <UserPlus className="w-5 h-5 text-white" />
+              <UserPlus className="w-5 h-5 text-text-primary" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-primary">{t('inviteFriends')}</h2>
+              <h2 className="text-xl font-bold text-text-primary">{t('inviteFriends')}</h2>
               <p className="text-text-muted text-sm">{t('inviteFriendsToGroup', { groupName })}</p>
             </div>
           </div>
@@ -89,11 +89,11 @@ export function InviteModal({ isOpen, onClose, onInvite, groupName }: InviteModa
               error={errors.email?.message}
               label={t('emailAddress') + ' *'}
               fullWidth
-              icon={<Mail className="w-5 h-5 text-muted" />}
+              icon={<Mail className="w-5 h-5 text-text-muted" />}
             />
 
           <div>
-            <label htmlFor="role" className="block text-sm font-medium text-primary mb-2">
+            <label htmlFor="role" className="block text-sm font-medium text-text-primary mb-2">
               {t('role')}
             </label>
 
@@ -110,40 +110,40 @@ export function InviteModal({ isOpen, onClose, onInvite, groupName }: InviteModa
           </div>
 
           {/* Role Info */}
-          <div className="bg-primaryT-50 border border-primaryT-100 rounded-lg p-4">
-            <h4 className="font-medium text-primary mb-2">{t('groupRoles')}:</h4>
-            <div className="space-y-2 text-sm text-secondary">
+          <div className="bg-background-50 border border-primary-100 rounded-lg p-4">
+            <h4 className="font-medium text-text-primary mb-2">{t('groupRoles')}:</h4>
+            <div className="space-y-2 text-sm text-text-secondary">
               <div className="flex items-start gap-2">
-                <span className="text-primary">•</span>
+                <span className="text-text-primary">•</span>
                 <span><strong>{t('member')}:</strong> {t('memberDescription')}</span>
               </div>
               <div className="flex items-start gap-2">
-                <span className="text-primary">•</span>
+                <span className="text-text-primary">•</span>
                 <span><strong>{t('admin')}:</strong> {t('adminDescription')}</span>
               </div>
             </div>
           </div>
 
           {/* Invite Method Info */}
-          <div className="bg-primaryT-50 border border-primaryT-100 rounded-lg p-4">
-            <h4 className="font-medium text-primary mb-2">{t('howInviteWillBeSent')}</h4>
+          <div className="bg-background-50 border border-primary-100 rounded-lg p-4">
+            <h4 className="font-medium text-text-primary mb-2">{t('howInviteWillBeSent')}</h4>
             <div className="space-y-3">
               <div className="flex items-start gap-3">
-                <div className="bg-primaryT-100 p-2 rounded-lg">
-                  <Bell className="w-4 h-4 text-primary" />
+                <div className="bg-background-100 p-2 rounded-lg">
+                  <Bell className="w-4 h-4 text-text-primary" />
                 </div>
                 <div>
-                  <p className="font-medium text-primary">{t('registeredUser')}</p>
-                  <p className="text-secondary">{t('inviteWillBeSentAsNotification')}</p>
+                  <p className="font-medium text-text-primary">{t('registeredUser')}</p>
+                  <p className="text-text-secondary">{t('inviteWillBeSentAsNotification')}</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <div className="bg-primaryT-100 p-2 rounded-lg">
-                  <Mail className="w-4 h-4 text-primary" />
+                <div className="bg-background-100 p-2 rounded-lg">
+                  <Mail className="w-4 h-4 text-text-primary" />
                 </div>
                 <div>
-                  <p className="font-medium text-primary">{t('unregisteredUser')}</p>
-                  <p className="text-secondary">{t('inviteWillBeSentAsEmail')}</p>
+                  <p className="font-medium text-text-primary">{t('unregisteredUser')}</p>
+                  <p className="text-text-secondary">{t('inviteWillBeSentAsEmail')}</p>
                 </div>
               </div>
             </div>

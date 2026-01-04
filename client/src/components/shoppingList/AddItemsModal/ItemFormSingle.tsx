@@ -19,7 +19,7 @@ type ItemsFormData = {
 
 interface ItemFormSingleProps {
   index: number;
-  item: ItemInput & { units?: string[]; isManual?: boolean; product?: IProduct | IManualProduct | string };
+  item: ItemInput & { units?: string[]; isManual?: boolean; product?: IProduct | IManualProduct | string; image?: string };
   register: UseFormRegister<ItemsFormData>;
   watch: UseFormWatch<ItemsFormData>;
   setValue: UseFormSetValue<ItemsFormData>;
@@ -222,6 +222,7 @@ export const ItemFormSingle = memo(({
           onChange={(value) => setValue(`items.${index}.unit`, value)}
           units={item?.units || getProductUnits(item?.product) || []}
           t={t}
+          disabled={!isManual}
         />
         {errors.items?.[index]?.unit && (
           <p className="text-error-500 text-xs mt-1">
@@ -255,6 +256,7 @@ export const ItemFormSingle = memo(({
           fullWidth
           size="md"
           variant="default"
+          disabled={!isManual}
           error={errors.items?.[index]?.category?.message}
         />
 

@@ -39,6 +39,11 @@ nameEn: {
   isActive: {
     type: Boolean,
     default: true
+  },
+  idFromApi: {
+    type: String,
+    trim: true,
+    unique: true,
   }
 }, {
   timestamps: true,

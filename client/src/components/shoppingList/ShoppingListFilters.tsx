@@ -95,18 +95,15 @@ export function ShoppingListFilters({
               onClick={handleStatusClick(value)}
               className={cn(
                 "min-w-[120px] whitespace-nowrap transition-all duration-200",
-                isActive
-                  ? "bg-gradient-to-r from-primaryT-500 to-secondaryT-500 text-text-on-primary"
-                  : "bg-surface text-text-secondary hover:bg-surface-hover"
               )}
             >
               <span>{label}</span>
               {typeof badge === "number" && (
                 <span
                   className={cn(
-                    "ml-2 rounded-full px-2 py-0.5 text-xs",
+                    "ms-2 rounded-full px-2 py-0.5 text-xs",
                     isActive
-                      ? "bg-primaryT-100 text-primaryT-700"
+                      ? "bg-background-100 text-text-primary-700"
                       : "bg-card text-text-muted"
                   )}
                 >
@@ -116,6 +113,7 @@ export function ShoppingListFilters({
             </Button>
           );
         })}
+        {categories.length > 0 && (
         <Dropdown
           options={categories.map((item) => ({
             label: `${item.name} (${item.count})`,
@@ -124,12 +122,13 @@ export function ShoppingListFilters({
           value={category}
           onSelect={(value) => onCategoryChange(value as string)}
           placeholder={t("filters.category")}
-          variant="outlined"
+          variant={'default'}
           size="sm"
           className="min-w-[120px] whitespace-nowrap transition-all duration-200"
           triggerClassName="border-none shadow-sm hover:shadow-md focus:ring-0"
 
         />
+        )}
       </div>
     </div>
   );

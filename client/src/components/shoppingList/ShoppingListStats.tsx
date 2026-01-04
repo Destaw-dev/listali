@@ -46,7 +46,7 @@ export function ShoppingListStats({
             cx={radius}
             cy={radius}
             strokeDasharray="4 4"   
-            className="text-gray-300"
+            className="text-neutral-300"
           />
   
           <circle
@@ -58,12 +58,12 @@ export function ShoppingListStats({
             cy={radius}
             strokeDasharray={circumference}
             strokeDashoffset={offset}
-            className="text-teal-500 transition-all duration-700"
+            className="text-accent-500 transition-all duration-700"
           />
         </svg>
   
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-sm font-bold text-gray-700">{progress}%</span>
+          <span className="text-sm font-bold text-neutral-700">{progress}%</span>
         </div>
       </div>
     );
@@ -82,21 +82,21 @@ export function ShoppingListStats({
       label: t("stats.remaining"),
       value: remainingItems,
       icon: ShoppingBag,
-      accent: "text-primaryT-600 bg-primaryT-50",
+      accent: "text-primary-600 bg-primary-50",
     },
     {
       id: "active",
       label: t("stats.activeShoppers"),
       value: activeShoppers,
       icon: Users,
-      accent: "text-secondaryT-600 bg-secondaryT-50",
+      accent: "text-secondary-600 bg-secondary-50",
     },
     {
       id: "progress",
       label: t("stats.progress"),
       value: <ProgressRing progress={progress} />,
       icon: Clock,
-      accent: "text-secondaryT-600 bg-secondaryT-50",
+      accent: "text-secondary-600 bg-secondary-50",
     }
   ] as const;
   

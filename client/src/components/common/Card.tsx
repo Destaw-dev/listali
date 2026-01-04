@@ -26,7 +26,7 @@ export function Card({
   onClick
 }: CardProps) {
   const baseClasses = cn(
-    'transition-all duration-200',
+    'transition-all duration-200 shadow-sm border border-border',
     'focus:outline-none focus:ring-2 focus:ring-primary-500',
     onClick && 'cursor-pointer',
     className

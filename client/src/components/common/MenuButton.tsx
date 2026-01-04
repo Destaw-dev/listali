@@ -10,13 +10,13 @@ export interface MenuOption {
   onClick: () => void;
   icon?: React.ReactNode;
   disabled?: boolean;
-  variant?: 'default' | 'danger';
+  variant?: 'default' | 'danger' | 'ghost' | 'outline' | 'surface' | 'primary';
 }
 
 interface MenuButtonProps {
   options: MenuOption[];
   size?: 'sm' | 'md' | 'lg';
-  variant?: 'ghost' | 'outline' | 'surface';
+  variant?: 'ghost' | 'outline' | 'surface' | 'primary';
   align?: 'start' | 'end' | 'center';
   position?: 'bottom' | 'top';
   className?: string;
@@ -79,6 +79,7 @@ export function MenuButton({
     setIsOpen(false);
   };
 
+
   const iconSizes = {
     sm: 'w-3 h-3',
     md: 'w-4 h-4',
@@ -131,12 +132,12 @@ export function MenuButton({
               disabled={option.disabled}
               className={cn(
                 'w-full flex items-center gap-2 px-3 py-2 text-sm',
-                'focus:outline-none focus:bg-surface-hover',
+                'focus:outline-none focus:bg-background-hover',
                 option.disabled
                   ? 'opacity-50 cursor-not-allowed text-muted'
                   : option.variant === 'danger'
                   ? 'text-error-600 hover:bg-error-50 cursor-pointer'
-                  : 'text-primaryT-700 hover:bg-primaryT-50 cursor-pointer'
+                  : 'text-primary-700 hover:bg-background-50 cursor-pointer'
               )}
             >
               {option.icon && (

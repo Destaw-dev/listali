@@ -77,7 +77,7 @@ export function GoogleCallbackHandler() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-surface flex items-center justify-center p-4">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-error mb-4">{t('loginError')}</h1>
           <p className="text-secondary mb-6">{error}</p>
@@ -90,7 +90,7 @@ export function GoogleCallbackHandler() {
   }
 
   return (
-    <div className="min-h-screen bg-surface flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="text-center">
         <LoadingSpinner message={t('processingGoogleLogin')} />
       </div>

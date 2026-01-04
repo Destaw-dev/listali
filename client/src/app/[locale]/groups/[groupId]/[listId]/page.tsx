@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useQueryClient } from '@tanstack/react-query';
-import { LoadingSpinner } from '../../../../../components/common';
+import { Button, LoadingSpinner } from '../../../../../components/common';
 import { ShoppingListHeaderBar } from '../../../../../components/shoppingList/ShoppingListHeaderBar';
 import { ShoppingListStats } from '../../../../../components/shoppingList/ShoppingListStats';
 import { ShoppingListFilters, ShoppingStatusFilter } from '../../../../../components/shoppingList/ShoppingListFilters';
@@ -44,6 +44,7 @@ export default function ShoppingListPage() {
 
   const { data: group } = useGroup(groupId);
   const { user } = useAuthStore();
+  const router = useRouter();
 
 
   const [statusFilter, setStatusFilter] = useState<ShoppingStatusFilter>('all');
@@ -172,20 +173,30 @@ export default function ShoppingListPage() {
 
   if (!isInitialized || isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-screen bg-surface items-center justify-center">
         <LoadingSpinner />
       </div>
     );
   }
 
+  const navigateBack = () => {
+    router.push(`/${locale}/groups/${groupId}`);
+  };
+
   if (error || !shoppingList) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-screen bg-surface items-center justify-center">
         <div className="text-center">
           <h2 className="text-xl font-semibold text-text-primary mb-2">
             {t('errorLoadingList')}
           </h2>
-          <p className="text-text-muted">{error?.message || 'Shopping list not found'}</p>
+          <p className="text-text-muted">{error?.message || t('errorLoadingList')}</p>
+          <Button
+            variant="primary"
+            onClick={() => navigateBack()}
+          >
+            {t('backToGroup')}
+          </Button>
         </div>
       </div>
     );

@@ -37,11 +37,11 @@ const ProductSchema = new Schema<IProduct>(
     },
     allergenTypeCode: {
       type: [Schema.Types.ObjectId],
-      ref: "AllergenTypeCode",
+      ref: "Allergen",
     },
     allergenTypeCodeMayContain: {
       type: [Schema.Types.ObjectId],
-      ref: "AllergenTypeCode",
+      ref: "Allergen",
     },
     nutritionalValues: {
       type: [
@@ -68,12 +68,10 @@ const ProductSchema = new Schema<IProduct>(
       type: String,
     },
     foodSymbolRed: {
-      type: [String],
-      enum: ["ללא סימון", 
-        "נתרן בכמות גבוהה", 
-        "סוכר בכמות גבוהה", 
-        "שומן רווי בכמות גבוהה", 
-        "סמל ירוק"]
+      type: [{
+        code: String,
+        description: String,
+      }],
     },
     forbiddenUnder18: {
       type: Boolean,
@@ -98,9 +96,8 @@ const ProductSchema = new Schema<IProduct>(
     barcode: {
       type: String,
       trim: true,
-      sparse: true,
-      match: [/^\d{8,13}$/, "ברקוד חייב להכיל 8-13 ספרות"],
-      unique: true
+      unique: true,
+      sparse: true
     },
     defaultUnit: {
       type: String,
@@ -119,15 +116,35 @@ const ProductSchema = new Schema<IProduct>(
       },
     },
     image: {
-      type: String,
-      trim: true,
-      validate: {
-        validator: function (v: string) {
-          return !v || /^https?:\/\/.+/.test(v);
+      primary: { type: String, enum: ["cloudinary", "imagekit"], default: "cloudinary" },
+      providers: {
+        cloudinary: {
+          url: { type: String, trim: true },
+          publicId: { type: String, trim: true },
         },
-        message: "כתובת התמונה חייבת להתחיל ב-http או https",
+        imagekit: {
+          url: { type: String, trim: true },
+          fileId: { type: String, trim: true },
+          path: { type: String, trim: true },
+        },
       },
-    },
+      meta: {
+        width: Number,
+        height: Number,
+        format: String,
+        bytes: Number,
+      },
+      source: {
+        original: { type: String, trim: true },
+        small: { type: String, trim: true },
+        transparent: { type: String, trim: true },
+      },      
+      status: {
+        type: String,
+        enum: ["missing", "uploaded", "partial", "failed"],
+        default: "missing",
+      },
+    },    
     averagePrice: {
       type: Number,
       min: [0, "מחיר לא יכול להיות שלילי"],
@@ -141,17 +158,6 @@ const ProductSchema = new Schema<IProduct>(
       trim: true,
       maxlength: [50, "שם הספק לא יכול להיות יותר מ-50 תווים"],
     },
-    supplier: {
-      type: String,
-      trim: true,
-      maxlength: [50, "שם הספק לא יכול להיות יותר מ-50 תווים"],
-      select: false
-    },
-    category: {
-      type: String,
-      trim: true,
-      maxlength: [50, "שם הספק לא יכול להיות יותר מ-50 תווים"],
-    },
     kosherType: {
       type: String,
       enum: ["חלבי", "פרווה", "בשרי", "לא כשר", "לא רלוונטי"],
@@ -159,13 +165,9 @@ const ProductSchema = new Schema<IProduct>(
     },
     kashruts: {
       type: [Schema.Types.ObjectId],
-      ref: "kashruts",
+      ref: "Kashrut",
     },
     kosher: {
-      type: Boolean,
-      default: false,
-    },
-    organic: {
       type: Boolean,
       default: false,
     },
@@ -176,6 +178,9 @@ const ProductSchema = new Schema<IProduct>(
     isActive: {
       type: Boolean,
       default: true,
+    },
+    idFromApi: {
+      type: String,
     },
   },
   {

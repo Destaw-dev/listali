@@ -148,15 +148,15 @@ export default function EditProfileModal({
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <Card
-        className="bg-surface shadow-2xl max-w-md w-full animate-in slide-in-from-bottom-4"
+        className="bg-background shadow-2xl max-w-md w-full animate-in slide-in-from-bottom-4"
       >
         <CardHeader className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-primaryT-500 rounded-full">
+            <div className="p-2 bg-background-500 rounded-full">
               <User className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-primary">
+              <h2 className="text-xl font-bold text-text-primary">
                 {t("editProfile")}
               </h2>
               <p className="text-text-muted text-sm">

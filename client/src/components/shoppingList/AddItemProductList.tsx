@@ -23,6 +23,12 @@ interface Props {
   existingItems?: IItem[];
 }
 
+const getImagePrimary = (image: { primary: string, providers: Record<string, { url: string }> }) => {
+  const primary = image.primary;
+  const url = image.providers[primary]?.url;
+  return url;
+};
+
 export function AddItemProductList({ products, onSelect, isLoading, hasNext, isFetchingNext, debouncedSearchQuery, listContainerRef, loadMoreRef, onAddManual, showAddManualButton, selectedProductIds = [], multiSelect = false, selectedCategoryId = null, existingItems = [] }: Props) {
   const t = useTranslations('AddItemProductList');
   const ITEM_HEIGHT = 88;
@@ -104,23 +110,23 @@ export function AddItemProductList({ products, onSelect, isLoading, hasNext, isF
               
               
               return (
-                <div key={product._id} className="relative bg-card shadow-sm rounded-lg">
+                <div key={product._id} className="relative bg-background shadow-sm rounded-lg">
                     <button
                       type="button"
                       onClick={() => onSelect(product)}
-                      className={`w-full p-3 sm:p-3 rounded-lg cursor-pointer transition-all duration-200 text-start relative shadow-sm ${
+                      className={`w-full p-3 sm:p-3 border border-border hover:border-primary-500 bg-card rounded-lg cursor-pointer transition-all duration-200 text-start relative shadow-sm text-text-primary ${
                         isSelected 
-                          ? 'border-2 border-primary-500 bg-primary-100 shadow-md hover:shadow-lg' 
+                          ? 'border-2 border-primary-500 bg-primary-50/30 shadow-md hover:shadow-lg' 
                           : existingItem
                           ? 'border border-warning-300 bg-warning-50/30 hover:bg-warning-50/50'
-                          : 'hover:bg-primary-50 hover:shadow-md'
+                          : 'hover:bg-background-50 hover:shadow-md'
                       }`}
                     >
                     <div className="flex items-center space-x-2 sm:space-x-3 space-x-reverse">
                       <div className="flex-shrink-0 relative">
                         {product.image ? (
                           <img
-                            src={product.image}
+                            src={getImagePrimary(product.image)}
                             alt={product.name}
                             loading="lazy"
                             className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-lg border border-border"
@@ -131,27 +137,29 @@ export function AddItemProductList({ products, onSelect, isLoading, hasNext, isF
                               if (placeholder) placeholder.classList.remove('hidden');
                             }}
                           />
-                        ) : null}
+                        ) : (
+                          <Package className='w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-lg border border-border'/>
+                        )}
                         {!product.image && (
                           <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 rounded-lg border border-border flex items-center justify-center">
                             <ImageIcon className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" />
                           </div>
                         )}
                         {isSelected && (
-                          <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-primary rounded-full flex items-center justify-center border-2 border-white shadow-lg">
-                            <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
+                          <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-background rounded-full flex items-center justify-center border-2 border-white shadow-lg">
+                            <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-text-primary" />
                           </div>
                         )}
                         {existingItem && !isSelected && (
                           <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-warning-500 rounded-full flex items-center justify-center border-2 border-white shadow-lg">
-                            <AlertCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
+                            <AlertCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-text-primary" />
                           </div>
                         )}
                       </div>
 
                       <div className="flex-1 text-start min-w-0 gap-10">
                         <div className="flex items-center gap-2">
-                          <h3 className="text-sm sm:text-base font-medium text-primary whitespace-normal break-words">{product.name}</h3>
+                          <h3 className="text-sm sm:text-base font-medium text-text-primary whitespace-normal break-words">{product.name}</h3>
                           {existingItem && (
                             <Badge variant="warning" size="sm" className="text-xs flex-shrink-0">
                               {t('alreadyInList') || 'קיים ברשימה'}

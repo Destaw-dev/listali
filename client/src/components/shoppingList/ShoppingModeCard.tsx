@@ -133,7 +133,7 @@ export function ShoppingModeCard({
   
   if (!currentSession) {
     return (
-      <section className="overflow-hidden rounded-3xl bg-gradient-to-r from-accentT-50 to-accentT-100 p-6 text-text-on-primary shadow-xl">
+      <section className="overflow-hidden rounded-3xl bg-gradient-to-r from-primary-500 to-primary-700 p-6 text-text-on-primary shadow-xl">
         <div className=" inset-0 bg-[radial-gradient(circle_at_top,_rgba(14,165,233,0.18),_transparent_55%)]" />
         <div className=" z-10 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
@@ -153,7 +153,7 @@ export function ShoppingModeCard({
               onClick={handleStartShopping}
               disabled={isLoading || remainingItems === 0}
               loading={startShoppingMutation.isPending}
-              className="bg-card text-primaryT-600 shadow-lg hover:bg-card"
+              className="bg-card text-text-primary-600 shadow-lg hover:bg-card"
             >
               {startShoppingMutation.isPending
                 ? t("starting")
@@ -197,7 +197,7 @@ export function ShoppingModeCard({
         <div className="flex flex-col gap-3 md:min-w-[320px]">
           {/* ... (Shopping Stats Grid - unchanged) */}
           <div className="grid grid-cols-3 gap-2 text-center text-sm text-text-secondary">
-            <div className="rounded-xl bg-surface py-3 shadow-inner">
+            <div className="rounded-xl bg-background py-3 shadow-inner">
               <div className="text-xs text-text-muted">
                 {t("totalItems")}
               </div>
@@ -205,7 +205,7 @@ export function ShoppingModeCard({
                 {totalItems}
               </div>
             </div>
-            <div className="rounded-xl bg-surface py-3 shadow-inner">
+            <div className="rounded-xl bg-background py-3 shadow-inner">
               <div className="text-xs text-text-muted">
                 {t("itemsPurchased")}
               </div>
@@ -213,7 +213,7 @@ export function ShoppingModeCard({
                 {purchasedItems}
               </div>
             </div>
-            <div className="rounded-xl bg-surface py-3 shadow-inner">
+            <div className="rounded-xl bg-background py-3 shadow-inner">
               <div className="text-xs text-text-muted">
                 {t("remaining")}
               </div>
@@ -279,7 +279,7 @@ export function ShoppingModeCard({
       </div>
 
       {activeSessions && activeSessions.length > 1 && (
-        <div className="mt-4 rounded-2xl bg-surface px-4 py-3 text-sm text-text-muted">
+        <div className="mt-4 rounded-2xl bg-background px-4 py-3 text-sm text-text-muted">
           {t("otherActive", { count: activeSessions.length - 1 })}
         </div>
       )}

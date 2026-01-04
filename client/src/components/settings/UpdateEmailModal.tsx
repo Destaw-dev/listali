@@ -81,14 +81,14 @@ export default function UpdateEmailModal({ isOpen, onClose, currentEmail }: Upda
 
   return (
     <div className="fixed inset-0 backdrop-blur-lg z-50 flex items-center justify-center p-4" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <Card className="bg-surface shadow-2xl max-w-md w-full animate-in slide-in-from-bottom-4">
+      <Card className="bg-background shadow-2xl max-w-md w-full animate-in slide-in-from-bottom-4">
         <CardHeader className="flex items-center justify-between p-6">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-gradient-to-br from-secondary-400 to-secondary-600 rounded-xl">
-              <Mail className="w-5 h-5 text-white" />
+              <Mail className="w-5 h-5 text-text-primary" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-primary">{t('updateEmail')}</h2>
+              <h2 className="text-xl font-bold text-text-primary">{t('updateEmail')}</h2>
               <p className="text-text-muted text-sm">{t('emailUpdateNote')}</p>
             </div>
           </div>

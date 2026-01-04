@@ -21,7 +21,7 @@ import {
 import { useGroup } from "../../hooks/useGroups";
 import { LoadingSpinner } from "../../components/common/LoadingSpinner";
 import { Card, CardBody, Input, Button } from "../../components/common";
-import CreateShoppingListModal from "../../components/shoppingList/CreateShoppingListModal";
+import { CreateShoppingListModal } from "../shoppingList/CreateShoppingListModal";
 import { useAuthRedirect } from "../../hooks/useAuthRedirect";
 import { MetricCard } from "../../components/common/MetricCard";
 import { FilterDropdownMenu, ActiveFilterBadges } from "../../components/groups/FilterDropdownMenuList";
@@ -128,9 +128,9 @@ export function GroupShoppingLists() {
   if (groupError || listsError) {
     return (
       <div className="min-h-screen bg-surface flex items-center justify-center p-4">
-        <Card variant="glass" className="bg-white/80 shadow-2xl max-w-md">
+        <Card variant="glass" className="bg-card border border-border shadow-2xl max-w-md">
           <CardBody className="p-6 text-center">
-            <h3 className="text-lg font-bold text-primary mb-2">
+            <h3 className="text-lg font-bold text-text-primary mb-2">
               {t("lists.loadError")}
             </h3>
             <Button
@@ -259,43 +259,43 @@ const MetricsBar = ({
   const metricsLabels = [
     {
       id: "activeLists",
-      icon: <Clock size={20} className="text-blue-600" />,
+      icon: <Clock size={20} className="text-primary-600" />,
       value: metrics.activeLists,
       label: t("lists.activeLists"),
-      bgColor: "bg-blue-50",
+      bgColor: "bg-primary-400",
     },
     {
       id: "totalLists",
-      icon: <ShoppingBag size={20} className="text-orange-600" />,
+      icon: <ShoppingBag size={20} className="text-warning-600" />,
       value: metrics.totalLists,
       label: t("lists.totalLists"),
-      bgColor: "bg-orange-50",
+      bgColor: "bg-warning-400",
     },
     {
       id: "addedItems",
-      icon: <Package size={20} className="text-fuchsia-600" />,
+      icon: <Package size={20} className="text-info-600" />,
       value: metrics.addedItems,
       label: t("lists.addedItems"),
-      bgColor: "bg-fuchsia-50",
+      bgColor: "bg-info-400",
     },
     {
       id: "members",
-      icon: <Users size={20} className="text-green-600" />,
+      icon: <Users size={20} className="text-accent-500" />,
       value: metrics.members,
       label: t("lists.members"),
-      bgColor: "bg-green-50",
+      bgColor: "bg-accent-400",
     },
     {
       id: "completedLists",
-      icon: <CheckCircle size={20} className="text-emerald-600" />,
+      icon: <CheckCircle size={20} className="text-success-600" />,
       value: metrics.completedLists,
       label: t("lists.completedLists"),
-      bgColor: "bg-emerald-50",
+      bgColor: "bg-success-400",
     },
 
   ] as const;
   return (
-  <div className="bg-surface rounded-2xl shadow-lg border border-gray-100 p-6 grid grid-cols-2 md:grid-cols-5 gap-4">
+  <div className="bg-card border border-border rounded-xl shadow-sm p-6 grid grid-cols-2 md:grid-cols-5 gap-4">
     {metricsLabels.map((metric) => (
       <MetricCard
         key={metric.id}

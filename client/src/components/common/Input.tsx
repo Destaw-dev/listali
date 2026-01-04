@@ -65,13 +65,13 @@ const iconSizeBy: Record<Size, string> = {
 };
 
 const variantBase: Record<Variant, string> = {
-  default: "bg-card shadow-sm",
+  default: "bg-background shadow-sm",
   outlined: "bg-transparent border border-border",
-  filled: "bg-surface",
+  filled: "bg-background",
 };
 
 const statusRing: Record<Status, string> = {
-  default: "focus:ring-primaryT-500",
+  default: "focus:ring-primary-500",
   success: "focus:ring-success-500",
   warning: "focus:ring-warning-500",
   error: "focus:ring-error",
@@ -130,7 +130,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     const iconTwoPosition = iconTwo && iconPosition === 'right' ? 'left' : 'right';
 
     const base = cn(
-      "w-full transition-all duration-200 placeholder:text-text-muted disabled:opacity-50 disabled:cursor-not-allowed",
+      "w-full transition-all duration-200 placeholder:text-text-muted disabled:opacity-50 disabled:cursor-not-allowed text-text-primary",
       "focus:outline-none",
       statusRing[finalStatus],
       variantBase[variant],
@@ -231,7 +231,7 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
 
     const base = cn(
       "w-full transition-all duration-200 placeholder:text-text-muted disabled:opacity-50 disabled:cursor-not-allowed",
-      "focus:outline-none",
+      "focus:outline-none text-text-primary",
       statusRing[finalStatus],
       variantBase[variant],
       sizePad[size],

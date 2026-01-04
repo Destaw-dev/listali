@@ -107,7 +107,7 @@ export const PurchaseQuantityModal = memo(function PurchaseQuantityModal({
             type="button"
             onClick={handleDecrement}
             disabled={quantity <= 0}
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-surface text-text-primary transition hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-background text-text-primary transition hover:bg-background-hover disabled:cursor-not-allowed disabled:opacity-40"
           >
             <Minus className="h-4 w-4" />
           </button>
@@ -121,7 +121,7 @@ export const PurchaseQuantityModal = memo(function PurchaseQuantityModal({
             type="button"
             onClick={handleIncrement}
             disabled={quantity >= maxQuantity}
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-surface text-text-primary transition hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-background text-text-primary transition hover:bg-background-hover disabled:cursor-not-allowed disabled:opacity-40"
           >
             <Plus className="h-4 w-4" />
           </button>

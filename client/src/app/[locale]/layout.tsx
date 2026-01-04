@@ -107,7 +107,7 @@ export default async function LocaleLayout({
                 {children}
               </div>
               
-              <footer className="text-center py-4 bg-white/50 dark:bg-neutral-800/50 backdrop-blur-sm">
+              <footer className="text-center py-4 bg-background shadow-md text-text-primary">
                 <p className="text-xs text-muted px-4">
                   © 2025 Listali. {locale === 'he' ? 'כל הזכויות שמורות.' : 'All rights reserved.'}
                 </p>

@@ -61,10 +61,6 @@ export default function GroupsPage() {
     router.push(`/${locale}/groups/${groupId}`);
   };
 
-  const navigateToInvitations = () => {
-    router.push(`/${locale}/invitations`);
-  };
-
   const filteredGroups = groups.filter(
     (group: IGroup) =>
       group.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -81,7 +77,7 @@ export default function GroupsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-surface">
         <LoadingSpinner />
       </div>
     );
@@ -89,10 +85,10 @@ export default function GroupsPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-surface">
         <Card variant="glass" className="bg-white/80 shadow-2xl max-w-md">
           <CardBody className="p-6 text-center">
-            <h3 className="text-lg font-bold text-primary mb-2">
+            <h3 className="text-lg font-bold text-text-primary mb-2">
               {t("errorLoadingGroups")}
             </h3>
             <Button
@@ -118,7 +114,7 @@ export default function GroupsPage() {
                 <Users className="w-5 h-5" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-primary">
+                <h1 className="text-xl font-bold text-text-primary">
                   {t("myGroups")}
                 </h1>
                 <p className="text-xs text-text-muted">
@@ -140,14 +136,6 @@ export default function GroupsPage() {
                 icon={<UserPlus className="w-4 h-4" />}
               >
                 {t("joinGroup")}
-              </Button>
-              <Button
-                variant="accent"
-                size="sm"
-                onClick={navigateToInvitations}
-                icon={<UserPlus className="w-4 h-4" />}
-              >
-                {t("invitations")}
               </Button>
             </div>
           </div>
@@ -185,7 +173,7 @@ export default function GroupsPage() {
             <Card  className="shadow-2xl">
               <CardBody className="p-8 text-center">
                 <Users className="w-12 h-12 text-muted mx-auto mb-4" />
-                <h3 className="text-lg font-bold text-primary mb-2">
+                <h3 className="text-lg font-bold text-text-primary mb-2">
                   {searchTerm ? t("noResults") : t("noGroups")}
                 </h3>
                 <p className="text-text-muted mb-4">
@@ -228,7 +216,7 @@ export default function GroupsPage() {
                   shadow="md"
                   border={false}
                   onClick={() => navigateToGroup(group._id)}
-                  className="overflow-hidden group cursor-pointer bg-card"
+                  className="cursor-pointer"
                 >
 
                   <CardBody padding="lg" className="pb-3">
@@ -238,11 +226,6 @@ export default function GroupsPage() {
                           <h3 className="text-base md:text-lg font-bold line-clamp-1">
                             {group.name}
                           </h3>
-                          {/* {group.role === "owner" && (
-                            <Badge variant="success" size="sm">
-                              {t("owner")}
-                            </Badge>
-                          )} */}
                         </div>
 
                         {group.description && (
@@ -264,19 +247,19 @@ export default function GroupsPage() {
                         .map((member: IGroupMember, i: number) => (
                           <div
                             key={i}
-                            className="h-6 w-6 rounded-full ring-2 ring-accentT-50 bg-card flex items-center justify-center text-[10px] text-text-muted font-medium"
+                            className="h-6 w-6 rounded-full ring-2 ring-accent-50 bg-primary-500 flex items-center justify-center text-[10px] text-text-muted font-medium"
                           >
                             {member.user.firstName?.[0]}
                             {member.user.lastName?.[0]}
                           </div>
                         ))}
 
-                      <div className="h-6 w-6 rounded-full ring-2 ring-accentT-50 bg-card flex items-center justify-center text-[10px] text-text-muted font-medium">
+                      <div className="h-6 w-6 rounded-full ring-2 ring-accent-50 bg-primary-500 flex items-center justify-center text-[10px] text-text-muted font-medium">
                         +{group.members?.length || 0}
                       </div>
                     </div>
 
-                    <div className="flex items-center text-[11px] md:text-xs font-medium text-text-on-primary bg-primary px-2 py-1 rounded-full">
+                    <div className="flex items-center text-[11px] md:text-xs font-medium text-text-on-primary bg-primary-500 px-2 py-1 rounded-full">
                       {group.shoppingLists?.length || 0} {t("lists")}
                     </div>
                   </CardFooter>
@@ -288,10 +271,10 @@ export default function GroupsPage() {
                 size='xl'
                 onClick={() => setShowCreateModal(true)}
               >
-                <div className="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center mb-3">
-                  <Plus className="h-6 w-6 text-muted" />
+                <div className="h-12 w-12 rounded-full bg-primary-500 flex items-center justify-center mb-3">
+                  <Plus className="h-6 w-6 text-text-primary" />
                 </div>
-                <span className="text-sm font-medium text-muted">{t("createGroup")}</span>
+                <span className="text-sm font-medium text-text-primary">{t("createGroup")}</span>
               </Button>
             </div>
           )}

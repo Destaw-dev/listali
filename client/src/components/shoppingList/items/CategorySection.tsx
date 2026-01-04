@@ -63,7 +63,7 @@ export const CategorySection = memo(function CategorySection({
         <div className="flex items-center gap-2">
           <div className={cn(
             "flex size-7 items-center justify-center rounded-lg shadow-sm",
-            tone === "purchased" ? "bg-slate-100" : "bg-primaryT-50 text-primaryT-600"
+            tone === "purchased" ? "bg-slate-100" : "bg-background-50 text-text-primary-600"
           )}>
             {icon}
           </div>

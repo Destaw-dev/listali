@@ -322,6 +322,7 @@
       "groupNamePlaceholder": "שם הקבוצה",
       "groupName": "שם הקבוצה",
       "groupDescription": "תיאור הקבוצה",
+      "groupDescriptionPlaceholder": "תיאור קצר על הקבוצה...",
       "saveChanges": "שמור שינויים",
       "cancel": "ביטול",
       "groupMembers": "חברי הקבוצה",
@@ -1209,6 +1210,7 @@
       "progress": "התקדמות"
     },
     "noResults": "אין פריטים שעונים על הסינון",
+    "backToGroup": "חזור לקבוצה",
     "shoppingMode": {
       "title": "מצב קניות",
       "startMessage": "התחל לקנות כדי לעקוב אחר ההתקדמות שלך",

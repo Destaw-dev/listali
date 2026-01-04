@@ -62,10 +62,10 @@ export function JoinGroupModal({ isOpen, onClose, onJoinGroup }: JoinGroupModalP
         <div className="flex items-center justify-between p-6">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-gradient-to-br from-secondary-400 to-secondary-600 rounded-xl">
-              <UserPlus className="w-5 h-5 text-white" />
+              <UserPlus className="w-5 h-5 text-text-primary" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-primary">{t('joinGroup')}</h2>
+              <h2 className="text-xl font-bold text-text-primary">{t('joinGroup')}</h2>
               <p className="text-text-muted text-sm">{t('joinGroupDescription')}</p>
             </div>
           </div>
@@ -84,9 +84,9 @@ export function JoinGroupModal({ isOpen, onClose, onJoinGroup }: JoinGroupModalP
               autoComplete="off"
             />
 
-          <div className="bg-primary/5 border border-primary/10 rounded-lg p-4">
-            <h4 className="font-medium text-primary mb-2">{t('howToJoinGroup')}</h4>
-            <ul className="text-sm text-secondary space-y-1">
+          <div className="bg-background/5 border border-primary/10 rounded-lg p-4">
+            <h4 className="font-medium text-text-primary mb-2">{t('howToJoinGroup')}</h4>
+            <ul className="text-sm text-text-secondary space-y-1">
               <li>• {t('getInviteCodeFromManager')}</li>
               <li>• {t('codeCanComeFromEmail')}</li>
               <li>• {t('enterCodeInFieldAbove')}</li>
@@ -95,10 +95,10 @@ export function JoinGroupModal({ isOpen, onClose, onJoinGroup }: JoinGroupModalP
             </ul>
           </div>
 
-          <div className="bg-surface border border-border rounded-lg p-4">
-            <h4 className="font-medium text-primary mb-2">{t('exampleInviteCode')}:</h4>
+          <div className="bg-background border border-border rounded-lg p-4">
+            <h4 className="font-medium text-text-primary mb-2">{t('exampleInviteCode')}:</h4>
             <div className="flex items-center justify-between bg-card border border-border rounded-lg p-3">
-              <span className="font-mono text-lg tracking-wider text-primary">ABC12345</span>
+              <span className="font-mono text-lg tracking-wider text-text-primary">ABC12345</span>
             </div>
           </div>
 

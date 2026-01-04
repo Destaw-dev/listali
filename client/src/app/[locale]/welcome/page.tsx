@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthStore } from '../../../store/authStore';
 import { ShoppingCart, Users, Zap } from 'lucide-react';
-import { Link as IntlLink } from '../../../i18n/navigation';
+import { Button } from '../../../components/common/Button';
 
 export default function WelcomePage() {
   const t = useTranslations();
@@ -22,7 +22,7 @@ export default function WelcomePage() {
 
   if (!isInitialized) {
     return (
-      <div className="min-h-screen bg-surface flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-secondary">{t('auth.loading')}</p>
@@ -36,13 +36,13 @@ export default function WelcomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-surface">
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-primary rounded-full mb-6">
-            <ShoppingCart className="w-10 h-10 text-white" />
+    <div className="min-h-screen bg-card text-text-primary">
+      <div className="container mx-auto px-4 py-5">
+        <div className="text-center mb-12 shadow-md rounded-lg bg-surface justify-center gap-4 py-5">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-primary rounded-full">
+            <ShoppingCart className="w-10 h-10 text-text-primary" />
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-primary mb-6">
+          <h1 className="text-4xl md:text-5xl font-bold  bg-gradient-to-r from-primary-500 to-primary-700 rounded-full p-2 text-transparent bg-clip-text">
             {t('welcome.title')}
           </h1>
           <p className="text-lg md:text-xl text-secondary max-w-3xl mx-auto leading-relaxed">
@@ -51,11 +51,11 @@ export default function WelcomePage() {
         </div>
 
         <div className="grid md:grid-cols-3 gap-8 mb-5">
-          <div className="text-center mobile-card">
+          <div className="text-center bg-surface shadow-md rounded-lg py-4">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-success rounded-xl mb-6">
-              <Users className="w-8 h-8 text-white" />
+              <Users className="w-8 h-8 text-text-primary" />
             </div>
-            <h3 className="text-xl font-semibold text-primary mb-4">
+            <h3 className="text-xl font-semibold text-text-primary mb-4">
               {t('welcome.features.groups.title')}
             </h3>
             <p className="text-secondary leading-relaxed">
@@ -63,11 +63,11 @@ export default function WelcomePage() {
             </p>
           </div>
 
-          <div className="text-center mobile-card">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-xl mb-6">
-              <ShoppingCart className="w-8 h-8 text-white" />
+          <div className="text-center bg-surface shadow-md rounded-lg py-4">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-500 rounded-xl mb-6">
+              <ShoppingCart className="w-8 h-8 text-text-primary" />
             </div>
-            <h3 className="text-xl font-semibold text-primary mb-4">
+            <h3 className="text-xl font-semibold text-text-primary mb-4">
               {t('welcome.features.lists.title')}
             </h3>
             <p className="text-secondary leading-relaxed">
@@ -75,11 +75,11 @@ export default function WelcomePage() {
             </p>
           </div>
 
-          <div className="text-center mobile-card">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-secondary rounded-xl mb-6">
-              <Zap className="w-8 h-8 text-white" />
+          <div className="text-center bg-surface shadow-md rounded-lg py-4">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-warning-500 rounded-xl mb-6">
+              <Zap className="w-8 h-8 text-text-primary" />
             </div>
-            <h3 className="text-xl font-semibold text-primary mb-4">
+            <h3 className="text-xl font-semibold text-text-primary mb-4">
               {t('welcome.features.realtime.title')}
             </h3>
             <p className="text-secondary leading-relaxed">
@@ -89,21 +89,23 @@ export default function WelcomePage() {
         </div>
 
         <div className="text-center space-y-1">
-          <IntlLink
-            href="/auth/login"
-            className="btn-primary inline-flex items-center justify-center w-full md:w-auto px-12 py-4 text-lg font-semibold"
+
+          <Button
+            variant="primary"
+            onClick={() => router.push(`/${locale}/auth/login`)}
+            size="lg"
           >
             {t('welcome.loginButton')}
-          </IntlLink>
+          </Button>
+          <div className="text-text-muted text-lg">{t('welcome.or')}</div>
           
-          <div className="text-muted text-lg">{t('welcome.or')}</div>
-          
-          <IntlLink
-            href="/auth/register"
-            className="btn-outline inline-flex items-center justify-center w-full md:w-auto px-12 py-4 text-lg font-semibold"
+          <Button
+            variant="outlineBlue"
+            onClick={() => router.push(`/${locale}/auth/register`)}
+            size="lg"
           >
             {t('welcome.registerButton')}
-          </IntlLink>
+          </Button>
         </div>
       </div>
     </div>

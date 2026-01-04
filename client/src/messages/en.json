@@ -322,6 +322,7 @@
       "groupNamePlaceholder": "Group name",
       "groupName": "Group Name",
       "groupDescription": "Group Description",
+      "groupDescriptionPlaceholder": "Brief description of the group...",
       "saveChanges": "Save Changes",
       "cancel": "Cancel",
       "groupMembers": "Group Members",
@@ -1206,7 +1207,8 @@
       "activeShoppers": "Active shoppers",
       "progress": "Progress"
     },
-    "noResults": "No items match your filters"
+    "noResults": "No items match your filters",
+    "backToGroup": "Back to Group"
     ,
     "shoppingMode": {
       "title": "Shopping Mode",

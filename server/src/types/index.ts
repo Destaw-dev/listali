@@ -195,6 +195,7 @@ export interface IBaseCategory {
   sortOrder: number;
   isActive: boolean;
   description?: string;
+  idFromApi: string;
 }
 
 // Base subcategory interface (consistent with shared types)
@@ -206,6 +207,7 @@ export interface IBaseSubCategory {
   isActive: boolean;
   description?: string;
   category?: IBaseCategory;
+  idFromApi: string;
 }
 
 // Base nutritional value interface (consistent with shared types)
@@ -221,25 +223,34 @@ export interface IBaseNutritionalValue {
 // Base product interface (consistent with shared types)
 export interface IBaseProduct {
   name: string;
+  idFromApi?: number;
   barcode?: string;
   defaultUnit: string;
   units: string[];
-  image?: string;
+  image?: {
+    primary: string;
+    providers: {
+      cloudinary: { url: string; publicId: string };
+      imagekit: { url: string; fileId: string; path: string };
+    };
+    meta: { width: number; height: number; format: string; bytes: number };
+  };
   averagePrice?: number;
   price?: number;
   tags: string[];
   isActive: boolean;
-  supplier?: string;
   kosher?: boolean;
   kosherType?: string;
-  organic?: boolean;
   glutenFree?: boolean;
   brand?: string;
   category?: IBaseCategory;
   subCategory?: IBaseSubCategory;
   alcoholPercentageInProduct?: string;
   countryOfOrigin?: string;
-  foodSymbolRed?: string[];
+  foodSymbolRed?: {
+    code: string;
+    description: string;
+  }[];
   forbiddenUnder18?: boolean;
   hazardPrecautionaryStatement?: string;
   ingredientSequence?: string;
@@ -475,10 +486,10 @@ export interface IProduct extends IBaseProduct, BaseDocument {
 // Product unit enum
 export enum ProductUnit {
   UNITS = 'יחידות',
-  KG = 'ק״ג',
+  KG = 'ק"ג',
   GRAM = 'גרם',
   LITER = 'ליטר',
-  ML = 'מ״ל',
+  ML = 'מ"ל',
   PACKAGE = 'אריזה',
   WEIGHT = 'במשקל',
   BUNCH = 'צרור',

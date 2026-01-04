@@ -94,7 +94,7 @@ export const SelectedItemsSidebar = memo(({
         };
       });
 
-      reset({ items });
+      reset({ items: items as ItemInput[] });
     } else {
       reset({ items: [] });
     }
@@ -127,10 +127,10 @@ export const SelectedItemsSidebar = memo(({
   }, [watchedItems, existingItems]);
 
   return (
-    <div className="h-full flex flex-col bg-surface border-border">
+    <div className="h-full flex flex-col bg-background border-border">
       <div className="p-3 sm:p-4 border-b border-border flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0" />
+          <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 text-text-primary flex-shrink-0" />
           <h3 className="text-sm sm:text-lg font-bold text-text-secondary truncate">
             {fields.length === 1 
               ? tModal('selectedProducts', { count: 1 })
@@ -190,7 +190,7 @@ export const SelectedItemsSidebar = memo(({
                   product: item?.product || (product ? (typeof product === 'string' ? product : product._id) : undefined),
                   image: item?.image,
                   units,
-                  isManual: 'isManual' in (item || {}) && (item as { isManual?: boolean }).isManual === true
+                  isManual: 'isManual' in (item || {}) && (item as { isManual?: boolean }).isManual === true,
                 }}
                 register={register}
                 watch={watch}
@@ -223,7 +223,7 @@ export const SelectedItemsSidebar = memo(({
           <span className="text-xs sm:text-sm">{tForm('addAnotherItem')}</span>
         </Button>
         {hasUntreatedDuplicates && (
-            <p className="text-xs text-warning-600 dark:text-warning-400 text-center mt-1">
+            <p className="text-xs text-text-warning text-center mt-1">
               {tForm('hasUntreatedDuplicates') || 'יש מוצרים קיימים ברשימה. אנא מזג או הסר אותם לפני הוספה'}
             </p>
           )}
@@ -236,7 +236,6 @@ export const SelectedItemsSidebar = memo(({
             onClick={onClose}
             disabled={isSubmitting}
             fullWidth
-            className="sm:size-lg"
           >
             <span className="text-xs sm:text-base">{tForm('cancel')}</span>
           </Button>
@@ -244,11 +243,10 @@ export const SelectedItemsSidebar = memo(({
             variant="primary"
             type="button"
             size="sm"
-            onClick={handleSubmit(handleFormSubmit)}
+            onClick={() => {handleSubmit(handleFormSubmit)(); console.log('fields', fields)}}
             disabled={isSubmitting || fields.length === 0 || hasUntreatedDuplicates}
             icon={<Plus className="w-3 h-3 sm:w-4 sm:h-4" />}
             fullWidth
-            className="sm:size-lg"
           >
             <span className="text-xs sm:text-base">
               {isSubmitting

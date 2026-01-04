@@ -97,13 +97,13 @@ export const ProductsSelectionView = memo(({
       </div>
 
     {selectedProductsCount === 0 && !searchQuery && (
-      <div className="mb-3 sm:mb-4 p-3 sm:p-4 bg-surface-hover border border-border rounded-lg">
+      <div className="mb-3 sm:mb-4 p-3 sm:p-4 bg-background-hover border border-border rounded-lg">
         <div className="flex items-start gap-2 sm:gap-3">
-          <div className="p-1 bg-surface-hover rounded flex-shrink-0">
-            <Package className="w-4 h-4 text-primary" />
+          <div className="p-1 bg-background-hover rounded flex-shrink-0">
+            <Package className="w-4 h-4 text-text-primary" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs sm:text-sm text-secondary font-medium mb-1">{t('howItWorks')}</p>
+            <p className="text-xs sm:text-sm text-text-secondary font-medium mb-1">{t('howItWorks')}</p>
             <ul className="text-xs text-text-muted space-y-1 mr-2 sm:mr-4">
               <li>• {t('howItWorksStep1')}</li>
               <li>• {t('howItWorksStep2')}</li>

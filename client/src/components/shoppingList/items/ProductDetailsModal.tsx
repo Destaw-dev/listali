@@ -78,11 +78,11 @@ export const ProductDetailsModal = memo(function ProductDetailsModal({
         <div className="px-6 pb-6 pt-4">
           <div className="flex flex-col gap-4 sm:flex-row">
             <div className="sm:w-40 w-full">
-              <div className="aspect-square overflow-hidden rounded-2xl shadow-sm bg-surface">
+              <div className="aspect-square overflow-hidden rounded-2xl shadow-sm bg-background">
                 {productImage ? (
                   <>
                     {!imgLoaded && (
-                      <div className="animate-pulse bg-surface" />
+                      <div className="animate-pulse bg-background" />
                     )}
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img

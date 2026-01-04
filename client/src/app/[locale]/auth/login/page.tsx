@@ -20,6 +20,7 @@ import { createLoginSchema } from '../../../../lib/schemas';
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const router = useRouter();
   const params = useParams();
   const { setUser, isAuthenticated, isInitialized } = useAuthStore();
@@ -46,7 +47,7 @@ export default function LoginPage() {
 
   if (!isInitialized) {
     return (
-      <div className="min-h-screen bg-surface flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-secondary">{t('auth.loading')}</p>
@@ -85,7 +86,7 @@ export default function LoginPage() {
   };
 
   const handleGoogleAuth = async () => {
-    setIsLoading(true);
+    setIsGoogleLoading(true);
     try {
       const callbackUrl = `${window.location.origin}/${locale}/auth/callback`;
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/google/url?callback=${encodeURIComponent(callbackUrl)}`);
@@ -102,23 +103,23 @@ export default function LoginPage() {
         handleApiError(new Error('Failed to get Google OAuth URL'));
       }
     } finally {
-      setIsLoading(false);
+      setIsGoogleLoading(false);
     }
   };
 
   return (
-    <div className="min-h-[calc(100vh-54px)] bg-surface flex justify-center p-4 pt-5">
+    <div className="min-h-[calc(100vh-54px)] bg-card flex justify-center p-4 pt-5 text-text-primary">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8 flex items-center justify-center">
+        <div className="text-center flex items-center justify-center">
           <IntlLink
             href={`/welcome`}
-            className="inline-flex items-center text-primary hover:text-primary-600 mb-6 transition-colors"
+            className="inline-flex items-center text-text-primary hover:text-text-secondary mb-6 transition-colors"
           >
             <ArrowIcon className="w-5 h-5 mx-2" />
           </IntlLink>
           <div>
-            <h1 className="text-3xl font-bold text-primary mb-3">{t('auth.login')}</h1>
-            <p className="text-secondary text-lg">{t('auth.loginToAccount')}</p>
+            <h1 className="text-3xl font-bold text-text-primary mb-3">{t('auth.login')}</h1>
+            <p className="text-text-secondary text-lg">{t('auth.loginToAccount')}</p>
           </div>
         </div>
 
@@ -145,7 +146,7 @@ export default function LoginPage() {
                   iconTwo={
                   <span
                     onClick={() => setShowPassword(!showPassword)}
-                    className="text-muted hover:text-secondary transition-colors"
+                    className="text-text-muted hover:text-text-secondary transition-colors"
                   >
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </span>
@@ -153,7 +154,7 @@ export default function LoginPage() {
             <Button
               variant="primary"
               size="lg"
-              disabled={isLoading}
+              disabled={isLoading || isGoogleLoading}
               fullWidth
               loading={isLoading}
               type="submit"
@@ -171,13 +172,14 @@ export default function LoginPage() {
           <GoogleAuthButton 
             type="login" 
             onGoogleAuth={handleGoogleAuth}
-            isLoading={isLoading}
+            disabled={isGoogleLoading || isLoading}
+            isLoading={isGoogleLoading}
           />
 
           <div className="text-center mt-5">
-            <p className='text-secondary'>
+            <p className='text-text-secondary'>
               {t('auth.noAccount')}{' '}
-              <IntlLink href="/auth/register" className="text-primaryT-600 hover:text-primary-700 font-semibold transition-colors">
+              <IntlLink href="/auth/register" className="text-text-primary-600 hover:text-text-primary-700 font-semibold transition-colors">
                 {t('auth.createAccount')}
               </IntlLink>
             </p>
