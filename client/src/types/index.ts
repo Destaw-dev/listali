@@ -586,12 +586,9 @@ export interface IProduct extends BaseDocument {
   barcode?: string;
   defaultUnit: string;
   units: string[];
-  image?: {
-    primary: string;
-    providers: {
-      cloudinary: { url: string; publicId: string };
-      imagekit: { url: string; fileId: string; path: string };
-    };
+  image?: string | {
+    primary?: string;
+    providers?: Record<string, { url: string }>;
   };
   averagePrice?: number;
   price?: number;

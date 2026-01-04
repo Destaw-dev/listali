@@ -2,7 +2,7 @@ import React, { RefObject, useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Search, Image as ImageIcon, Check, Package, AlertCircle } from 'lucide-react';
 import { Button, LoadingSpinner, Badge } from '../../common';
-import { findExistingItemById } from '../../../lib/utils';
+import { extractImageUrl, findExistingItemById } from '../../../lib/utils';
 import { IProduct, IItem } from '../../../types';
 
 interface Props {
@@ -23,11 +23,6 @@ interface Props {
   existingItems?: IItem[];
 }
 
-const getImagePrimary = (image: { primary: string, providers: Record<string, { url: string }> }) => {
-  const primary = image.primary;
-  const url = image.providers[primary]?.url;
-  return url;
-};
 
 export function AddItemProductList({ products, onSelect, isLoading, hasNext, isFetchingNext, debouncedSearchQuery, listContainerRef, loadMoreRef, onAddManual, showAddManualButton, selectedProductIds = [], multiSelect = false, selectedCategoryId = null, existingItems = [] }: Props) {
   const t = useTranslations('AddItemProductList');
@@ -126,7 +121,7 @@ export function AddItemProductList({ products, onSelect, isLoading, hasNext, isF
                       <div className="flex-shrink-0 relative">
                         {product.image ? (
                           <img
-                            src={getImagePrimary(product.image)}
+                            src={extractImageUrl(product.image)}
                             alt={product.name}
                             loading="lazy"
                             className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-lg border border-border"

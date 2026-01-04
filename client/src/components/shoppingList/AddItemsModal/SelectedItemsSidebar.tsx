@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl';
 import { Trash2, ShoppingCart, Plus } from 'lucide-react';
 import { Button } from '../../common';
 import { ItemFormSingle } from './ItemFormSingle';
-import { getProductUnit, findExistingItem, findExistingItemById } from '../../../lib/utils';
+import { getProductUnit, findExistingItem, findExistingItemById, extractImageUrl } from '../../../lib/utils';
 import { itemsSchema } from '../../../lib/schemas';
 import { IProduct, IManualProduct, ICategory, ItemInput, IItem, isManualProduct } from '../../../types';
 
@@ -79,11 +79,7 @@ export const SelectedItemsSidebar = memo(({
             });
 
         // Extract image URL: for manual products it's already a string, for regular products extract from object
-        const imageUrl = isManualProduct(product)
-          ? (typeof product.image === 'string' ? product.image : undefined)
-          : (product.image && typeof product.image === 'object' && 'primary' in product.image && 'providers' in product.image
-              ? ((product.image.providers as Record<string, { url?: string }>)[product.image.primary]?.url || undefined)
-              : undefined);
+        const imageUrl = extractImageUrl(product.image);
 
         return {
           name: product.name || "",
@@ -196,7 +192,7 @@ export const SelectedItemsSidebar = memo(({
                   brand: item?.brand,
                   description: item?.description,
                   product: item?.product || (product ? (typeof product === 'string' ? product : product._id) : undefined),
-                  image: item?.image,
+                  image: extractImageUrl(item?.image),
                   units,
                   isManual: item?.isManualEntry,
                 }}

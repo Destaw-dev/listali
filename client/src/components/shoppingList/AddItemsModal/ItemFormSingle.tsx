@@ -11,7 +11,7 @@ import type {
   FieldErrors,
 } from 'react-hook-form';
 import type { ICategory, IItem, ItemInput, IProduct, IManualProduct } from '../../../types';
-import { getProductUnits, hasIsManualProduct } from '../../../lib/utils';
+import { extractImageUrl, getProductUnits, hasIsManualProduct } from '../../../lib/utils';
 
 type ItemsFormData = {
   items: ItemInput[];
@@ -160,7 +160,7 @@ export const ItemFormSingle = memo(({
         <div className="flex items-center gap-2 flex-1 min-w-0">
           {item?.image && (
             <img
-              src={item.image}
+              src={extractImageUrl(item.image)}
               alt={item.name}
               className="w-8 h-8 sm:w-10 sm:h-10 object-cover rounded-lg flex-shrink-0"
               onError={(e) => {

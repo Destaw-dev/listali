@@ -5,6 +5,7 @@ import { Package, X } from "lucide-react";
 import { Button } from "../../common";
 import { useModalScrollLock } from "../../../hooks/useModalScrollLock";
 import { IItem } from "../../../types";
+import { extractImageUrl } from "@/lib/utils";
 
 interface ProductDetailsModalProps {
   item: IItem | null;
@@ -28,7 +29,7 @@ export const ProductDetailsModal = memo(function ProductDetailsModal({
   const product = item.product;
   const productName = typeof product === 'object' && product !== null && 'name' in product ? (product as { name?: string }).name : undefined;
   const productBrand = typeof product === 'object' && product !== null && 'brand' in product ? (product as { brand?: string }).brand : undefined;
-  const productImage = typeof product === 'object' && product !== null && 'image' in product ? (product as { image?: string }).image : undefined;
+  const productImage = typeof product === 'object' && product !== null && 'image' in product ? (product as { image?: string }).image ? extractImageUrl((product as { image?: string }).image) : undefined : undefined;
   const productDescription = typeof product === 'object' && product !== null && 'description' in product ? (product as { description?: string }).description : undefined;
   const title = productName || item.name || "";
   const brand = productBrand || item.brand || "";
