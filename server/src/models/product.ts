@@ -184,7 +184,7 @@ const ProductSchema = new Schema<IProduct>(
       virtuals: true,
       transform: function(_doc, ret) {
         // Transform image object to include only primary and providers.url
-        if (ret.image) {
+        if (ret.image && typeof ret.image === 'object') {
           const image: any = {
             primary: ret.image.primary
           };
