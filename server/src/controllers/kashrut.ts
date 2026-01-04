@@ -5,7 +5,7 @@ import { errorResponse, successResponse } from '../middleware/handlers';
 
 export const getAllKashrut = async (_: Request, res: Response<IApiResponse<IKashrut[] | null>>) => {
   try {
-    const results = await KashrutModel.find().sort({ KashrutId: 1 }).lean();
+    const results = await KashrutModel.find().sort({ idFromApi: 1 }).lean();
     res.status(200).json(successResponse(results as IKashrut[], 'Kashrut list retrieved successfully'));
   } catch (err) {
     const error = err instanceof Error ? err : new Error(String(err));

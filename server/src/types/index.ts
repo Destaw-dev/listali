@@ -825,10 +825,10 @@ export type ISocketPayload = ISocketMessage | ISocketItemUpdate | ISocketListUpd
 
 // Kashrut interface
 export interface IKashrut extends Document {
-  KashrutId: number;
   name: string;
   is_leading: number;
   media_url?: string;
+  idFromApi: string;
 }
 
 // Allergen interface
