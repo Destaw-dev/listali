@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import CreateShoppingListModal from '../../../components/shoppingList/CreateShoppingListModal';
+import { CreateShoppingListModal } from '../../../components/shoppingList/CreateShoppingListModal';
 import { renderWithProviders } from '../../../test/test-utils';
 
 // Mock dependencies

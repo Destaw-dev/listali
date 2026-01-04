@@ -6,13 +6,14 @@ import { X, Globe, Palette, Check } from 'lucide-react';
 import { Card, CardBody, Button } from '../common';
 import { useNotification } from '../../contexts/NotificationContext';
 import { useModalScrollLock } from '../../hooks/useModalScrollLock';
+import { Theme } from '@/types';
 
 interface LanguageThemeModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentLocale: string;
-  currentTheme: string;
-  onSave: (data: { language: string; theme: string }) => Promise<void>;
+  currentTheme: Theme;
+  onSave: (data: { language: string; theme: Theme }) => Promise<void>;
   isLoading?: boolean;
 }
 
@@ -156,7 +157,7 @@ export default function LanguageThemeModal({
                     type="button"
                     fullWidth={true}
                     size='lg'
-                    onClick={() => setSelectedTheme(theme.id)}
+                    onClick={() => setSelectedTheme(theme.id as Theme)}
                     variant={selectedTheme === theme.id ? 'primary' : 'ghost'}
                     className='text-start p-0 block'
                   >

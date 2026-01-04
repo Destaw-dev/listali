@@ -85,7 +85,7 @@ describe('ShoppingItemCard', () => {
     const purchaseButton = buttons[0]; // First button is the purchase checkbox
     await user.click(purchaseButton);
     
-    expect(mockOnUnpurchase).toHaveBeenCalledWith(purchasedItem._id);
+    expect(mockOnUnpurchase).toHaveBeenCalledWith(purchasedItem);
   });
 
   it('should call onPreview when clicking on item', async () => {

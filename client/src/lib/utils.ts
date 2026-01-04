@@ -197,10 +197,26 @@ export function normalizeUnit(unit: string): string {
   return unit;
 }
 
-export function extractImageUrl(image: string | { primary: string, providers: Record<string, { url: string }> } | undefined): string | undefined {
+export function extractImageUrl(
+  image: string | 
+  { primary?: string; providers?: Record<string, { url?: string }> } |
+  { primary: string; providers: { cloudinary?: { url: string }; imagekit?: { url: string } } } |
+  undefined
+): string | undefined {
   if (typeof image === 'string') return image;
-  if (typeof image === 'object' && image !== null && 'primary' in image && 'providers' in image) {
-    return image.providers[image.primary]?.url;
+  if (!image || typeof image !== 'object') return undefined;
+  
+  // Type guard: check if it has the image object structure
+  if ('primary' in image && 'providers' in image) {
+    const primary = image.primary;
+    const providers = image.providers;
+    
+    if (primary && providers && typeof providers === 'object') {
+      // Handle both Record type and specific structure (cloudinary/imagekit)
+      const providersRecord = providers as Record<string, { url?: string }>;
+      return providersRecord[primary]?.url;
+    }
   }
+  
   return undefined;
 }

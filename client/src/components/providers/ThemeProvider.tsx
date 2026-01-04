@@ -24,8 +24,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     if (isInitialized) return;
 
     if (isAuthenticated && user?.preferences) {
-      const serverTheme: Theme = user.preferences.darkMode ? 'dark' : 'light';
-      if (serverTheme !== theme) setTheme(serverTheme);
+      const serverTheme: Theme = user.preferences.theme;
+      if (serverTheme !== theme) setTheme(serverTheme as Theme);
     }
 
     setIsInitialized(true);

@@ -35,7 +35,7 @@ export const updateUserPreferences = async (req: Request, res: Response) => {
     user.preferences.language = language;
   }
   if (theme) {
-    user.preferences.darkMode = theme === 'dark';
+    user.preferences.theme = theme;
   }
 
   await user.save();

@@ -387,7 +387,7 @@ export default function SettingsPage() {
         isOpen={showLanguageThemeModal}
         onClose={() => setShowLanguageThemeModal(false)}
         currentLocale={userPreferences?.language || locale}
-        currentTheme={userPreferences?.darkMode ? 'dark' : theme}
+        currentTheme={userPreferences?.theme || theme}
         onSave={handleLanguageTheme}
         isLoading={updatePreferencesMutation.isPending}
       />

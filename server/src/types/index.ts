@@ -61,7 +61,7 @@ export interface IBaseUser {
     newMessageNotifications: boolean;
     shoppingListUpdates: boolean;
     groupInvitations: boolean;
-    darkMode: boolean;
+    theme: 'light' | 'dark' | 'system';
     language: string;
   };
   groups: string[];

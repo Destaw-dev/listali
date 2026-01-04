@@ -77,7 +77,7 @@ const userSchema = new Schema<IUser, UserModel, IUserMethods>({
     newMessageNotifications: { type: Boolean, default: true },
     shoppingListUpdates: { type: Boolean, default: true },
     groupInvitations: { type: Boolean, default: true },
-    darkMode: { type: Boolean, default: false },
+    theme: { type: String, default: 'light', enum: ['light', 'dark', 'system'] },
     language: { type: String, default: 'he', enum: ['he', 'en', 'ar'] }
   },
   groups: [{

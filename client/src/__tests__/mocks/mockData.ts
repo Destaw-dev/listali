@@ -16,7 +16,7 @@ export const mockUser: IUser = {
     newMessageNotifications: true,
     shoppingListUpdates: true,
     groupInvitations: true,
-    darkMode: false,
+    theme: 'light',
     language: 'he',
   },
   groups: ['group1'],
@@ -69,7 +69,20 @@ export const mockProduct: IProduct = {
   subCategoryId: 'subcat1',
   defaultUnit: 'ליטר',
   units: ['ליטר', 'מ״ל'],
-  image: 'https://example.com/milk.jpg',
+  image: {
+    primary: 'cloudinary',
+    providers: {
+      cloudinary: {
+        url: 'https://example.com/milk.jpg',
+        publicId: 'milk',
+      },
+      imagekit: {
+        url: 'https://example.com/milk.jpg',
+        fileId: 'milk',
+        path: '/milk.jpg',
+      },
+    },
+  },
   averagePrice: 5.90,
   tags: ['חלב', 'דיאט'],
   isActive: true,

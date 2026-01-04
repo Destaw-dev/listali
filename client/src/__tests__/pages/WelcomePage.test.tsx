@@ -69,8 +69,12 @@ describe('WelcomePage', () => {
     } as ReturnType<typeof useAuthStore>);
 
     renderWithProviders(<WelcomePage />);
-    const links = screen.getAllByRole('link');
-    expect(links.length).toBeGreaterThan(0);
+    // WelcomePage uses Buttons with onClick, not Links
+    const buttons = screen.getAllByRole('button');
+    const loginButton = buttons.find(btn => btn.textContent?.includes('loginButton') || btn.textContent?.includes('התחבר'));
+    const registerButton = buttons.find(btn => btn.textContent?.includes('registerButton') || btn.textContent?.includes('הרשם'));
+    
+    expect(loginButton || registerButton).toBeDefined();
   });
 });
 

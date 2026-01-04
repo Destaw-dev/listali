@@ -31,7 +31,7 @@ export interface IUser extends BaseDocument {
     newMessageNotifications: boolean;
     shoppingListUpdates: boolean;
     groupInvitations: boolean;
-    darkMode: boolean;
+    theme: 'light' | 'dark' | 'system';
     language: string;
   };
   groups: string[];
@@ -586,9 +586,12 @@ export interface IProduct extends BaseDocument {
   barcode?: string;
   defaultUnit: string;
   units: string[];
-  image?: string | {
-    primary?: string;
-    providers?: Record<string, { url: string }>;
+  image?: {
+    primary: string;
+    providers: {
+      cloudinary: { url: string; publicId: string };
+      imagekit: { url: string; fileId: string; path: string };
+    };
   };
   averagePrice?: number;
   price?: number;
