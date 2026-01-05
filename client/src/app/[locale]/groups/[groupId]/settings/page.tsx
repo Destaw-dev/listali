@@ -16,6 +16,8 @@ import {
   MoreVertical,
   UserMinus,
   Calendar,
+  Mail,
+  XCircle,
 } from "lucide-react";
 import { LoadingSpinner, Button, Input, TextArea } from "../../../../../components/common";
 import {
@@ -26,6 +28,7 @@ import {
   useUpdateMemberRole,
   useTransferOwnership,
   useInviteToGroup,
+  useCancelGroupInvitation,
   useLeaveGroup,
   useGroupMemberRoleWebSocket,
 } from "../../../../../hooks/useGroups";
@@ -47,12 +50,23 @@ interface GroupMember {
   role: MemberRole;
 }
 
+interface PendingInvite {
+  _id?: string;
+  user?: GroupUserObject | string;
+  email?: string;
+  code: string;
+  role: 'admin' | 'member';
+  type: 'in-app' | 'email';
+  invitedAt: string | Date;
+}
+
 interface Group {
   _id: string;
   name: string;
   description?: string | null;
   createdAt: string;
   members?: GroupMember[];
+  pendingInvites?: PendingInvite[];
 }
 
 
@@ -133,6 +147,7 @@ export default function GroupSettingsPage({}) {
   const updateRoleMutation = useUpdateMemberRole();
   const transferOwnershipMutation = useTransferOwnership();
   const inviteToGroupMutation = useInviteToGroup();
+  const cancelInvitationMutation = useCancelGroupInvitation();
   const leaveGroupMutation = useLeaveGroup();
 
   useGroupMemberRoleWebSocket(groupId);
@@ -333,6 +348,37 @@ export default function GroupSettingsPage({}) {
     } catch (err) {
       console.error(t('failedToInviteMember'), err);
     }
+  };
+
+  const handleCancelInvitation = async (inviteCode: string) => {
+    const confirmed = window.confirm(t('cancelInvitationConfirm'));
+    if (!confirmed) return;
+
+    try {
+      await cancelInvitationMutation.mutateAsync({ groupId, inviteCode });
+    } catch (err) {
+      console.error(t('failedToCancelInvitation'), err);
+    }
+  };
+
+  const getInviteDisplayName = (invite: PendingInvite): string => {
+    if (invite.user) {
+      if (typeof invite.user === 'object') {
+        const fn = invite.user.firstName ?? '';
+        const ln = invite.user.lastName ?? '';
+        const full = `${fn} ${ln}`.trim();
+        return full || t('unknownUser');
+      }
+      return t('unknownUser');
+    }
+    return invite.email || t('unknownEmail');
+  };
+
+  const getInviteDisplayIcon = (invite: PendingInvite) => {
+    if (invite.user) {
+      return <User className="w-4 h-4" />;
+    }
+    return <Mail className="w-4 h-4" />;
   };
 
   const handleLeaveGroup = async () => {
@@ -642,6 +688,84 @@ export default function GroupSettingsPage({}) {
             })}
           </div>
         </div>
+
+        {hasAdminPermissions && (
+          <div className="bg-card border border-border rounded-xl shadow-sm">
+            <div className="p-6 border-b border-border flex justify-between items-center">
+              <div>
+                <h2 className="text-xl font-bold text-text-primary">{t('sentInvitations')}</h2>
+                <p className="text-sm text-text-muted">
+                  {group.pendingInvites?.length || 0} {t('pendingInvitations')}
+                </p>
+              </div>
+            </div>
+
+            {!group.pendingInvites || group.pendingInvites.length === 0 ? (
+              <div className="p-8 text-center">
+                <UserPlus className="w-12 h-12 text-text-muted mx-auto mb-3 opacity-50" />
+                <p className="text-text-muted">{t('noInvitationsSent')}</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-100">
+                {group.pendingInvites.map((invite, index) => {
+                  const displayName = getInviteDisplayName(invite);
+                  const inviteIcon = getInviteDisplayIcon(invite);
+                  
+                  return (
+                    <div
+                      key={invite.code || index}
+                      className="p-4 flex items-center justify-between hover:bg-card-hover transition-colors"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-600">
+                          {inviteIcon}
+                        </div>
+
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium text-text-primary">
+                              {displayName}
+                            </p>
+                            <span
+                              className={`text-xs px-2 py-0.5 rounded-full ${
+                                invite.role === "admin"
+                                  ? "bg-warning-100 text-warning-700"
+                                  : "bg-primary-100 text-primary-700"
+                              }`}
+                            >
+                              {invite.role === "admin" ? t('admin') : t('member')}
+                            </span>
+                            <span
+                              className={`text-xs px-2 py-0.5 rounded-full bg-card border border-border text-text-muted ${
+                                invite.type === "in-app" ? "border-primary-200" : "border-border"
+                              }`}
+                            >
+                              {invite.type === "in-app" ? t('invitationTypeInApp') : t('invitationTypeEmail')}
+                            </span>
+                          </div>
+                          <span className="text-xs text-text-muted flex items-center gap-1 mt-1">
+                            <Calendar size={12} />
+                            {t('invitationDate')}: {new Date(invite.invitedAt).toLocaleDateString("he-IL")}
+                          </span>
+                        </div>
+                      </div>
+
+                      <Button
+                        variant='outlineError'
+                        size="sm"
+                        onClick={() => handleCancelInvitation(invite.code)}
+                        disabled={cancelInvitationMutation.isPending}
+                        icon={<XCircle className="w-4 h-4 text-error-600" />}
+                      >
+                        {t('cancelInvitation')}
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
           <div className="bg-error-50/50 p-4 border-b border-error-100 flex items-center gap-2 text-error-800">

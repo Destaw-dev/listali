@@ -150,6 +150,25 @@ export const useInviteToGroup = () => {
   });
 };
 
+export const useCancelGroupInvitation = () => {
+  const queryClient = useQueryClient();
+  const { showSuccess, handleApiError } = useNotification();
+
+  return useMutation({
+    mutationFn: async ({ groupId, inviteCode }: { groupId: string; inviteCode: string }) => {
+      const response = await apiClient.cancelGroupInvitation(groupId, inviteCode);
+      return response.data;
+    },
+    onSuccess: (_, { groupId }) => {
+      queryClient.invalidateQueries({ queryKey: groupKeys.detail(groupId) });
+      showSuccess('groups.settings.invitationCancelled');
+    },
+    onError: (error: Error) => {
+      handleApiError(error);
+    },
+  });
+};
+
 export const useRemoveGroupMember = () => {
   const queryClient = useQueryClient();
   const { showSuccess, handleApiError } = useNotification();

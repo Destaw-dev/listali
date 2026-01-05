@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, CardBody } from "../common";
+import { Card, CardBody, CardHeader } from "../common";
 import {
   Calendar,
   CheckCircle,
@@ -11,6 +11,7 @@ import {
   Archive,
   AlertTriangle,
   Plus,
+  Trash,
 } from "lucide-react";
 import { Button, Badge } from "../common";
 import { useTranslations } from "next-intl";
@@ -102,11 +103,12 @@ interface ShoppingListCardProps {
 
 function ShoppingListCard({
   list,
-  viewMode,
   group,
   t,
+  handleDeleteList,
   handleListClick,
 }: ShoppingListCardProps) {
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "active":
@@ -170,12 +172,11 @@ function ShoppingListCard({
     <Card
       hover
       padding="none"
-      onClick={() => handleListClick(list._id)}
-      className="cursor-pointer shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
+      className="shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
     >
-      <CardBody padding="md">
-        <div className="flex items-start justify-between mb-1">
-          <div className="flex items-center gap-2">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center flex-col gap-2">
             <span
               className={`flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full ${
                 list.status === "active"
@@ -186,8 +187,8 @@ function ShoppingListCard({
               {getStatusIcon(list.status)}
               {getStatusText(list.status)}
             </span>
+          
           </div>
-
           <div className="flex items-center gap-2">
             <Badge
               variant={
@@ -200,27 +201,21 @@ function ShoppingListCard({
             >
               {getPriorityText(list.priority)}
             </Badge>
+          <Button variant="ghost" size="sm" onClick={() => handleDeleteList(list._id)}>
+            <Trash className="w-4 h-4 text-error-500" />
+          </Button>
           </div>
         </div>
-
-        <h3
-          className={`font-bold text-text-primary ${
-            viewMode === "grid" ? "text-lg leading-tight" : "text-xl"
-          }`}
-        >
-          {list.name}
-        </h3>
-
+        <h3 className="font-bold text-text-primary text-lg leading-tight">{list.name}</h3>
         {list.description && (
           <p className="text-text-muted text-xs line-clamp-2 mb-3">
             {list.description}
           </p>
         )}
-        <div
-          className={viewMode === "grid" ? "border-b border-border mb-3" : ""}
-        />
-
-        <div className="space-y-2 mb-3">
+      </CardHeader>
+      <CardBody padding="md" className="cursor-pointer" >
+        <div className="cursor-pointer" onClick={() => handleListClick(list._id)}>
+        <div className="space-y-2 mb-3" >
           <div className="flex items-center gap-2 text-xs text-text-muted">
             <User className="w-3 h-3 flex-shrink-0" />
             <span className="truncate">
@@ -280,6 +275,7 @@ function ShoppingListCard({
             />
           </div>
         )}
+        </div>
       </CardBody>
     </Card>
   );

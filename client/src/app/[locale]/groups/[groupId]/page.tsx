@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
-import { Plus, Settings, ShoppingCart, MessageCircle, BarChart3, MoreVertical, ChartArea, UserPlus } from 'lucide-react';
+import { Plus, Settings, ShoppingCart, MessageCircle, BarChart3, ChartArea, UserPlus } from 'lucide-react';
 import { GroupShoppingLists } from '../../../../components/groups/GroupShoppingLists';
 import { LoadingSpinner, Button } from '../../../../components/common';
 import { useGroup, useInviteToGroup, useGroupMemberRoleWebSocket } from '../../../../hooks/useGroups';
@@ -180,7 +180,7 @@ export default function GroupDetailsPage() {
               
               <div className="divide-y divide-border">
                 {
-                  group.shoppingLists?.map((list: IShoppingList) => (
+                  shoppingLists?.map((list: IShoppingList) => (
                     <div key={list._id} className="p-4 hover:bg-background transition-colors flex items-center justify-between group cursor-pointer" onClick={() => router.push(`/${locale}/groups/${groupId}/${list._id}`)}>
                     <div className="flex items-center gap-4">
                       <div className="h-10 w-10 rounded-lg bg-background-100 flex items-center justify-center text-text-primary-600">
@@ -193,7 +193,6 @@ export default function GroupDetailsPage() {
                     </div>
                     <div className="flex items-center gap-3">
                        <span className="text-xs font-medium bg-success-100 text-success-700 px-2 py-1 rounded-full">{list.status === 'active' ? t('active') : list.status === 'completed' ? t('completed') : t('archived')}</span>
-                       <MoreVertical className="h-4 w-4 text-text-muted" />
                     </div>
                  </div>
                   ))
@@ -257,19 +256,19 @@ export default function GroupDetailsPage() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-text-primary-700">{group.membersCount || 0}</div>
-                  <div className="text-sm text-gray-500">{t('members')}</div>
+                  <div className="text-sm text-text-muted">{t('members')}</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">{group?.shoppingLists.length || 0}</div>
-                  <div className="text-sm text-gray-500">{t('lists')}</div>
+                  <div className="text-2xl font-bold text-success-600">{group?.shoppingLists.length || 0}</div>
+                  <div className="text-sm text-text-muted">{t('lists')}</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-purple-600">0</div>
-                  <div className="text-sm text-gray-500">{t('messagesToday')}</div>
+                  <div className="text-2xl font-bold text-secondary-600">0</div>
+                  <div className="text-sm text-text-muted">{t('messagesToday')}</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-orange-600">0</div>
-                  <div className="text-sm text-gray-500">{t('purchasedItemsStats')}</div>
+                  <div className="text-2xl font-bold text-warning-600">0</div>
+                  <div className="text-sm text-text-muted">{t('purchasedItemsStats')}</div>
                 </div>
               </div>
             </div>

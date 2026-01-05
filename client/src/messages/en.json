@@ -342,7 +342,22 @@
       "leavingGroup": "Leaving...",
       "deleteGroup": "Delete Group",
       "deletingGroup": "Deleting...",
-      "createdAt": "Created at "
+      "createdAt": "Created at ",
+      "sentInvitations": "Sent Invitations",
+      "manageInvitations": "Manage Invitations",
+      "pendingInvitations": "pending invitations",
+      "noInvitationsSent": "No invitations sent",
+      "invitationEmail": "Email",
+      "invitationUser": "User",
+      "invitationType": "Type",
+      "invitationDate": "Invitation Date",
+      "cancelInvitation": "Cancel Invitation",
+      "cancelInvitationConfirm": "Are you sure you want to cancel this invitation?",
+      "invitationCancelled": "Invitation cancelled successfully",
+      "invitationTypeInApp": "In-App",
+      "invitationTypeEmail": "Email",
+      "unknownEmail": "Unknown Email",
+      "failedToCancelInvitation": "Failed to cancel invitation"
     }
   },
   "invitations": {
@@ -355,6 +370,12 @@
     "invalidCode": "Invalid invitation code. Please check the invitation link or request a new one.",
     "invalidCodeOrCancelled": "Invalid invitation code. The group may not exist or the invitation may have been cancelled.",
     "processingFailed": "Failed to process the invitation. Please contact the group admin for assistance."
+  },
+  "DeleteListModal": {
+    "deleteList": "Delete Shopping List",
+    "deleteListDescription": "Are you sure you want to delete this shopping list? This action cannot be undone.",
+    "cancel": "Cancel",
+    "delete": "Delete"
   },
   "lists": {
     "title": "Shopping Lists",
@@ -1233,6 +1254,98 @@
       "finish": "Finish",
       "remaining": "Remaining",
       "stopping": "Stopping..."
+    }
+  },
+  "footer": {
+    "rights": "All rights reserved.",
+    "about": "About",
+    "terms": "Terms of Service"
+  },
+  "about": {
+    "title": "About",
+    "subtitle": "About Listali",
+    "description": "Listali is a smart system for managing collaborative shopping lists. We enable families and groups to manage their shopping together efficiently and conveniently.",
+    "mission": {
+      "title": "Our Mission",
+      "description": "To make collaborative shopping management simple, efficient, and enjoyable. We believe that every family and group needs better tools to coordinate shopping and manage shared lists."
+    },
+    "features": {
+      "title": "Key Features",
+      "groups": {
+        "title": "Group Management",
+        "description": "Create groups with family and friends, invite new members, and manage access permissions."
+      },
+      "lists": {
+        "title": "Smart Lists",
+        "description": "Create and edit shopping lists with recommended products, prices, and shopping tracking."
+      },
+      "realtime": {
+        "title": "Real-time Updates",
+        "description": "Get instant updates on changes to shopping lists and active shopping sessions by group members."
+      },
+      "privacy": {
+        "title": "Privacy & Security",
+        "description": "Your data is protected and encrypted. We are committed to protecting user privacy."
+      }
+    },
+    "version": {
+      "title": "Version",
+      "number": "Version 1.0.0",
+      "lastUpdated": "Last Updated",
+      "date": "January 2026"
+    },
+    "contact": {
+      "title": "Contact Us",
+      "description": "Have questions or suggestions? We'd love to hear from you!",
+      "email": "Contact: support@listali.com"
+    }
+  },
+  "terms": {
+    "title": "Terms of Service",
+    "subtitle": "Listali Terms of Service",
+    "description": "The following terms of service define the rules and guidelines for using the Listali platform.",
+    "lastUpdated": "Last Updated",
+    "lastUpdatedDate": "January 2026",
+    "introduction": "Welcome to Listali. By accessing and using our platform, you agree to the following terms of service. If you do not agree to these terms, please do not use our service.",
+    "sections": {
+      "acceptance": {
+        "title": "Acceptance of Terms",
+        "content": "By creating an account or using our service, you acknowledge that you have read, understood, and agree to be bound by these terms of service. If you do not agree to any of these terms, you may not use the service."
+      },
+      "use": {
+        "title": "Use of Service",
+        "content": "You may use our service only for lawful purposes. You agree not to use the service:",
+        "rules": {
+          "1": "In any way that violates any local, national, or international law or regulation",
+          "2": "To transmit or send harmful, viral, or malicious content",
+          "3": "To attempt unauthorized access to systems or other accounts",
+          "4": "For any purpose that infringes upon the intellectual property rights of others"
+        }
+      },
+      "accounts": {
+        "title": "User Accounts",
+        "content": "You are responsible for maintaining the confidentiality of your account information and password. You agree to be responsible for all activities that occur under your account. You agree to notify us immediately of any unauthorized use of your account."
+      },
+      "privacy": {
+        "title": "Privacy",
+        "content": "Your use of our service is subject to our Privacy Policy, which explains how we collect, use, and protect your personal information. By using the service, you agree to the collection and use of information in accordance with our Privacy Policy."
+      },
+      "intellectual": {
+        "title": "Intellectual Property",
+        "content": "All content, features, and functionality of the service, including but not limited to text, graphics, logos, images, and software code, are the property of Listali or its content providers and are protected by copyright and other intellectual property laws."
+      },
+      "liability": {
+        "title": "Limitation of Liability",
+        "content": "The service is provided 'as is' without any express or implied warranties. We do not guarantee that the service will be uninterrupted, secure, or error-free. We will not be liable for any direct, indirect, incidental, or consequential damages arising from the use or inability to use the service."
+      },
+      "changes": {
+        "title": "Changes to Terms",
+        "content": "We reserve the right to update or modify these terms of service at any time. Changes will take effect immediately upon posting on the website. Continued use of the service after changes constitutes acceptance of the updated terms."
+      },
+      "contact": {
+        "title": "Contact",
+        "content": "If you have any questions about these terms of service, please contact us at: support@listali.com"
+      }
     }
   }
 } 

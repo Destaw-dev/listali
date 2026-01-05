@@ -235,7 +235,7 @@ export const useUnpurchaseItem = () => {
   return useMutation({
     mutationFn: ({ itemId, quantityToUnpurchase }: { itemId: string; shoppingListId: string; groupId: string; quantityToUnpurchase?: number }) => 
       apiClient.unpurchaseItem(itemId, { quantityToUnpurchase }),
-    onSuccess: (data, { itemId, shoppingListId, groupId }) => {
+    onSuccess: (data, { itemId, shoppingListId, groupId, quantityToUnpurchase }) => {
       queryClient.setQueryData(['shopping-lists', 'full-data', shoppingListId], (oldData: ShoppingListFullData | undefined) => {
         if (!oldData) return oldData;
         
@@ -243,11 +243,11 @@ export const useUnpurchaseItem = () => {
           if (item._id === itemId) {
             return {
               ...item,
-              status: 'pending',
+              status: (Math.max(0, (item.purchasedQuantity || 0) - (quantityToUnpurchase || 0)) === 0 ? 'pending' : 'partially_purchased') as IItem['status'],
               isPurchased: false,
-              isPartiallyPurchased: false,
-              purchasedQuantity: 0,
-              remainingQuantity: item.quantity,
+              isPartiallyPurchased: (Math.max(0, (item.purchasedQuantity || 0) - (quantityToUnpurchase || 0)) > 0 ? true : false),
+              purchasedQuantity: Math.max(0, (item.purchasedQuantity || 0) - (quantityToUnpurchase || 0)),
+              remainingQuantity: Math.max(0, item.quantity - (item.purchasedQuantity || 0) + (quantityToUnpurchase || 0)),
             };
           }
           return item;

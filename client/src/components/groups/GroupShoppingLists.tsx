@@ -27,6 +27,7 @@ import { MetricCard } from "../../components/common/MetricCard";
 import { FilterDropdownMenu, ActiveFilterBadges } from "../../components/groups/FilterDropdownMenuList";
 import { ShoppingListsDisplay } from "../../components/groups/ShoppingListsDisplay";
 import { IShoppingList, ICreateListFormData } from "../../types";
+import { DeleteListModal } from "./DeleteListModal";
 
 
 export function GroupShoppingLists() {
@@ -44,7 +45,8 @@ export function GroupShoppingLists() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
-
+  const [showDeleteListModal, setShowDeleteListModal] = useState(false);
+  const [deletingListId, setDeletingListId] = useState<string | null>(null);
   useAuthRedirect({
     redirectTo: `/${locale}/welcome`,
     requireAuth: true,
@@ -95,11 +97,18 @@ export function GroupShoppingLists() {
   };
 
   const handleDeleteList = async (listId: string) => {
-    if (confirm(t("lists.deleteConfirm"))) {
-      await deleteListMutation.mutateAsync({ listId, groupId });
+    setDeletingListId(listId);
+    setShowDeleteListModal(true);
+  };
+
+  const handleConfirmDeleteList = async () => {
+    if (deletingListId) {
+      await deleteListMutation.mutateAsync({ listId: deletingListId, groupId });
+      setDeletingListId(null);
+      setShowDeleteListModal(false);
     }
   };
-  
+
   const handleClearFilters = () => {
     setStatusFilter("all");
     setPriorityFilter("all");
@@ -217,7 +226,14 @@ export function GroupShoppingLists() {
             activeFiltersCount={activeFiltersCount}
         />
       </div>
-      
+      {showDeleteListModal && (
+        <DeleteListModal
+          isOpen={showDeleteListModal}
+          onClose={() => setShowDeleteListModal(false)}
+          onDelete={handleConfirmDeleteList}
+          isDeleting={deleteListMutation.isPending}
+        />
+      )}
       <MetricsBar
         metrics={{
           addedItems: stats.totalItems,
@@ -228,6 +244,7 @@ export function GroupShoppingLists() {
         }}
         t={t}
       />
+
 
       {showCreateModal && (
         <CreateShoppingListModal

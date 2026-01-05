@@ -701,6 +701,13 @@ export const joinGroupValidation = [
     .isLength({ min: 8, max: 8 }).withMessage('Invite code must be exactly 8 characters'),
 ];
 
+export const cancelGroupInvitationValidation = [
+  param('groupId')
+    .isMongoId().withMessage('Invalid group ID'),
+  param('inviteCode')
+    .isMongoId().withMessage('Invalid invite code'),
+];
+
 export const removeMemberValidation = [
   param('id')
     .isMongoId().withMessage('Invalid group ID'),

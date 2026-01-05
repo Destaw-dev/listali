@@ -13,7 +13,8 @@ import {
   getGroupStats,
   getGroupById,
   getUserGroups,
-  transferOwnership
+  transferOwnership,
+  cancelGroupInvitation
 } from '../controllers/group';
 import {
   createGroupValidation,
@@ -21,6 +22,7 @@ import {
   inviteToGroupValidation,
   updateMemberRoleValidation,
   // joinGroupValidation,
+  cancelGroupInvitationValidation,
   validateGroupId,
   validateMemberId
 } from '../middleware/validation';
@@ -41,6 +43,7 @@ router.delete('/:groupId', validateGroupId, checkOwnership('group'), asyncHandle
 // router.post('/join/:inviteCode', joinGroupValidation, asyncHandler(joinGroup));
 router.post('/:groupId/leave', validateGroupId, checkGroupMembership(), asyncHandler(leaveGroup));
 router.post('/:groupId/invite', validateGroupId, inviteToGroupValidation, checkGroupMembership('canInviteMembers'), asyncHandler(inviteToGroup));
+router.delete('/:groupId/invitations/:inviteCode', cancelGroupInvitationValidation, checkGroupMembership('canInviteMembers'), asyncHandler(cancelGroupInvitation));
 router.delete('/:groupId/members/:userId', validateGroupId, validateMemberId, checkGroupMembership('canManageMembers'), asyncHandler(removeGroupMember));
 router.put('/:groupId/members/:userId/role', validateGroupId, validateMemberId, updateMemberRoleValidation, checkGroupMembership('canManageMembers'), asyncHandler(updateMemberRole));
 router.post('/:groupId/transfer-ownership', validateGroupId, checkGroupMembership('canManageMembers'), asyncHandler(transferOwnership));

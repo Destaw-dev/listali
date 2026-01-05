@@ -358,6 +358,11 @@ export class ApiClient {
     return response.data;
   }
 
+  async cancelGroupInvitation(groupId: string, inviteCode: string) {
+    const response = await this.delete(`/groups/${groupId}/invitations/${inviteCode}`);
+    return response.data;
+  }
+
   async removeGroupMember(groupId: string, memberId: string) {
     const response = await this.delete(`/groups/${groupId}/members/${memberId}`);
     return response.data;

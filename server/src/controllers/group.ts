@@ -56,6 +56,10 @@ export const getGroupById = async (req: express.Request, res: express.Response<I
     .populate('members.user', 'username firstName lastName avatar lastSeen email')
     .populate('owner', 'username firstName lastName avatar')
     .populate({
+      path: 'pendingInvites.user',
+      select: 'username firstName lastName avatar email'
+    })
+    .populate({
       path: 'shoppingLists',
       select: 'name status priority createdAt metadata createdBy',
       options: { sort: { createdAt: -1 }, limit: 10 },
@@ -309,6 +313,44 @@ export const inviteToGroup = async (req: express.Request, res: express.Response<
       message: `the invitation has been sent successfully to the email ${email}`
     }));
   }
+};
+
+export const cancelGroupInvitation = async (req: express.Request, res: express.Response<IApiResponse<null>>) => {
+  const { inviteCode } = req.params;
+  const group = req.group;
+  const userId = req.userId!;
+
+  if (!inviteCode) {
+    throw new AppError('Invite code is required', 400);
+  }
+
+  // Check permissions - only owner and admin can cancel invitations
+  const member = group?.members.find((m: IGroupMember) => m.user.toString() === userId);
+  if (!member || (member.role !== 'owner' && member.role !== 'admin')) {
+    throw new AppError('You do not have permission to cancel invitations', 403);
+  }
+
+  // Find the invitation
+  const invite = group?.pendingInvites.find((inv: IBasePendingInvite) => inv.code === inviteCode);
+  if (!invite) {
+    throw new AppError('Invitation not found', 404);
+  }
+
+  // Remove from group's pendingInvites
+  await group?.updateOne({
+    $pull: { pendingInvites: { code: inviteCode } }
+  });
+
+  // If it's an in-app invitation, remove from user's pendingInvitations
+  if (invite.type === 'in-app' && invite.user) {
+    await User.findByIdAndUpdate(invite.user, {
+      $pull: {
+        pendingInvitations: { code: inviteCode }
+      }
+    });
+  }
+
+  res.status(200).json(successResponse(null, 'Invitation cancelled successfully'));
 };
 
 export const removeGroupMember = async (req: express.Request, res: express.Response<IApiResponse<null>>) => {

@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { Navigation } from '../../components/layout/Navigation';
+import { Footer } from '../../components/layout/Footer';
 import { Providers } from '../../components/providers/Providers';
 import '../globals.css';
 import { locales } from '../../i18n/config';
@@ -22,7 +23,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   
   if (locale === 'he') {
     return {
-      title: 'רשימות קניות - ניהול רשימות קניות משותפות',
+      title: 'Listali - רשימות קניות - ניהול רשימות קניות משותפות',
       description: 'אפליקציה לניהול רשימות קניות משותפות עם המשפחה והחברים. צור רשימות קניות, שתף עם המשפחה ועקוב אחרי הקניות שלך',
       keywords: ['רשימות קניות', 'משותף', 'קניות', 'משפחה', 'רשימה', 'גרופרי', 'מזון', 'בית'],
       openGraph: {
@@ -37,6 +38,9 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
         title: 'רשימות קניות - ניהול רשימות קניות משותפות',
         description: 'אפליקציה לניהול רשימות קניות משותפות עם המשפחה והחברים',
       },
+      icons: {
+        icon: '/icon-dark.svg',
+      },
       alternates: {
         canonical: '/he',
         languages: {
@@ -49,11 +53,11 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   
   // English metadata
   return {
-    title: 'Shopping Lists - Collaborative Shopping Management',
+    title: 'Listali - Shopping Lists - Collaborative Shopping Management',
     description: 'Application for managing collaborative shopping lists with family and friends. Create shopping lists, share with family and track your shopping',
     keywords: ['shopping lists', 'collaborative', 'family', 'groceries', 'shopping', 'food', 'home'],
     openGraph: {
-      title: 'Shopping Lists - Collaborative Shopping Management',
+      title: 'Listali - Shopping Lists - Collaborative Shopping Management',
       description: 'Application for managing collaborative shopping lists with family and friends',
       type: 'website',
       locale: 'en_US',
@@ -61,8 +65,11 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     },
     twitter: {
       card: 'summary_large_image',
-      title: 'Shopping Lists - Collaborative Shopping Management',
+      title: 'Listali - Shopping Lists - Collaborative Shopping Management',
       description: 'Application for managing collaborative shopping lists with family and friends',
+    },
+    icons: {
+      icon: '/icon-dark.svg',
     },
     alternates: {
       canonical: '/en',
@@ -107,11 +114,7 @@ export default async function LocaleLayout({
                 {children}
               </div>
               
-              <footer className="text-center py-4 bg-background shadow-md text-text-primary">
-                <p className="text-xs text-muted px-4">
-                  © 2025 Listali. {locale === 'he' ? 'כל הזכויות שמורות.' : 'All rights reserved.'}
-                </p>
-              </footer>
+              <Footer />
             </div>
           </Providers>
         </NextIntlClientProvider>

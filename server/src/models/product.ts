@@ -271,7 +271,6 @@ ProductSchema.statics.getKosherProducts = function (
   const query = { kosher: true, isActive: true };
 
   return Promise.all([this.find(query)
-    .populate("categoryId subCategoryId")
     .sort({ name: 1 })
     .skip(skip).lean()
     .limit(limit), this.countDocuments(query)])
@@ -284,7 +283,6 @@ ProductSchema.statics.getOrganicProducts = function (
   const skip = (page - 1) * limit;
   const query = { organic: true, isActive: true };
   return Promise.all([this.find(query)
-    .populate("categoryId subCategoryId")
     .sort({ name: 1 })
     .skip(skip).lean()
     .limit(limit), this.countDocuments(query)])
@@ -297,7 +295,6 @@ ProductSchema.statics.getGlutenFreeProducts = function (
   const skip = (page - 1) * limit;
   const query = { glutenFree: true, isActive: true };
   return Promise.all([this.find(query)
-    .populate("categoryId subCategoryId")
     .sort({ name: 1 })
     .skip(skip).lean()
     .limit(limit), this.countDocuments(query)])
@@ -318,8 +315,7 @@ ProductSchema.statics.searchByNameHebrew = function (
     })
       .skip((page - 1) * limit)
       .limit(limit)
-      .lean()
-      .populate("categoryId subCategoryId"),
+      .lean(),
 
     this.countDocuments({
       $or: [
@@ -344,7 +340,6 @@ ProductSchema.statics.getByPriceRange = function (
     isActive: true,
   };
   return Promise.all([this.find(query)
-    .populate("categoryId subCategoryId")
     .sort({ averagePrice: 1 })
     .skip(skip).lean()
     .limit(limit), this.countDocuments(query)])
