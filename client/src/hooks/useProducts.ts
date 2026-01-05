@@ -95,3 +95,11 @@ export const useInfiniteSearchProducts = (query: string, limit: number = 20) => 
     staleTime: 5 * 60 * 1000,
   });
 };
+
+export const useProductByBarcode = (barcode: string) => {
+  return useQuery({
+    queryKey: [...productKeys.all, 'barcode', barcode],
+    queryFn: () => apiClient.getProductByBarcode(barcode),
+    enabled: !!barcode,
+  });
+};

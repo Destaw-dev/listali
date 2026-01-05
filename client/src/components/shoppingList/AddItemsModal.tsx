@@ -35,7 +35,7 @@ interface AddItemsModalProps {
   onClose: () => void;
   onSubmit: (items: SingleItemFormData[]) => Promise<boolean | void>;
   listId: string;
-  existingItems?: IItem[]; // Items that already exist in the shopping list
+  existingItems?: IItem[];
   onMergeDuplicate?: (existingItemId: string, newQuantity: number) => Promise<void>;
 }
 
@@ -176,6 +176,7 @@ export default function AddItemsModal({
         <div className="flex-1 flex flex-col sm:flex-row overflow-hidden">
           <div className={`${mobileView === 'products' ? 'flex' : 'hidden'} sm:flex flex-1 sm:flex-[0.6] flex-col overflow-hidden `}>
             <div className="flex-1 overflow-y-auto p-3 sm:p-4">
+
               <ProductsSelectionView
                 onProductSelect={handleProductSelect}
                 onAddManual={addManualItem}

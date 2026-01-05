@@ -626,6 +626,11 @@ export class ApiClient {
     return response.data;
   }
 
+  async getProductByBarcode(barcode: string) {
+    const response = await this.get(`/products/barcode/${barcode}`);
+    return response.data;
+  }
+
   async getProductById(productId: string) {
     const response = await this.get(`/products/product/${productId}`);
     return response.data;

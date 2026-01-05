@@ -710,7 +710,21 @@
     "selectProductsFromCatalog": "בחר מוצרים מהקטלוג בצד שמאל",
     "products": "מוצרים",
     "selectedItems": "פריטים נבחרים",
-    "atLeastOneItem": "יש להוסיף לפחות פריט אחד"
+    "atLeastOneItem": "יש להוסיף לפחות פריט אחד",
+    "productNotFound": "מוצר לא נמצא",
+    "scanBarcode": "סרוק ברקוד"
+  },
+  "BarcodeScannerModal": {
+    "title": "סרוק ברקוד",
+    "scanBarcode": "סרוק ברקוד",
+    "notAllowedError": "יש לאשר גישה למצלמה בהגדרות הדפדפן",
+    "errorAccessingCamera": "שגיאה בגישה למצלמה",
+    "pointToCenterOfBarcode": "כוון את הברקוד למרכז המלבן",
+    "connectingToCamera": "מתחבר למצלמה...",
+    "scanningBarcode": "מחפש ברקוד...",
+    "detectedBarcode": "זוהה! מעבד...",
+    "cancel": "ביטול",
+    "retryScan": "סרוק שוב"
   },
   "CreateShoppingListModal": {
     "nameMinLength": "שם הרשימה חייב להיות לפחות 2 תווים",

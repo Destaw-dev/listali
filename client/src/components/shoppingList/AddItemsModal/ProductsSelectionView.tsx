@@ -1,9 +1,14 @@
-import React, { memo } from 'react';
+import React, { memo, useCallback, useState } from 'react';
 import { Package } from 'lucide-react';
 import { AddItemProductList } from './AddItemProductList';
 import { FiltersSection } from './FiltersSection';
 import { useProductsSelection } from './hooks/useProductsSelection';
 import { IProduct, IItem } from '../../../types';
+import { BarcodeScannerModal } from '@/components/barcode/BarcodeScannerModal';
+import { Button } from '@/components/common/Button';
+import { apiClient } from '@/lib/api';
+import { useNotification } from '@/contexts/NotificationContext';
+import { BarcodeFormat } from '@zxing/library';
 
 interface ProductsSelectionViewProps {
   onProductSelect: (product: IProduct) => void;
@@ -62,10 +67,60 @@ export const ProductsSelectionView = memo(({
     setShowAllCategories,
     setAdvancedOpen,
   } = useProductsSelection();
+  const  {showInfo} = useNotification();
+
+
+  const [openScanModal, setOpenScanModal] = useState(false);
+  const handleCloseScanModal = useCallback(() => {
+
+    setOpenScanModal(false);
+  }, []);
+  const handleOnDetected = useCallback(async (barcode: string) => {
+    if (barcode.length === 0) return;
+    const productFiltered = productsToShow.find((product) => product.barcode === barcode);
+    if (productFiltered) {
+      onProductSelect(productFiltered);
+    } else {
+      try {
+        const response = await apiClient.getProductByBarcode(barcode);
+        const product = response.data;
+        if (product) {
+          onProductSelect(product);
+        } else {
+          showInfo('AddItemModal.productNotFound');
+        }
+      } catch (error) {
+        console.error('Error fetching product by barcode:', error);
+        showInfo('AddItemModal.productNotFound');
+      }
+    }
+    setOpenScanModal(false);
+  }, [productsToShow, onProductSelect, showInfo]);
+  const handleOpenScanModal = useCallback(() => {
+    setOpenScanModal(true);
+  }, []);
 
   return (
   <>
       <div className="mb-4">
+        <Button
+          onClick={handleOpenScanModal}
+          variant="primary"
+          size="md"
+          rounded={true}
+          shadow={true}
+          glow={true}
+          fullWidth={true}
+        >
+          {t('scanBarcode')}
+        </Button>
+        <BarcodeScannerModal
+          open={openScanModal}
+          onClose={handleCloseScanModal}
+          onDetected={handleOnDetected}
+          title={t('scanBarcode')}
+          formats={[BarcodeFormat.UPC_A, BarcodeFormat.UPC_E, BarcodeFormat.EAN_8, BarcodeFormat.EAN_13, BarcodeFormat.CODE_39, BarcodeFormat.CODE_128, BarcodeFormat.ITF, BarcodeFormat.CODABAR, BarcodeFormat.QR_CODE, BarcodeFormat.DATA_MATRIX]}
+        />
         <FiltersSection
           searchQuery={searchQuery}
           onSearchChange={handleSearchChange}

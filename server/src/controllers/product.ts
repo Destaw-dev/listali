@@ -123,6 +123,26 @@ export const getProductsBySubCategory = async (
   }
 };
 
+export const getProductByBarcode = async (
+  req: Request,
+  res: Response<IApiResponse<IProduct | null>>
+) => {
+  try {
+    const barcode = req.params.barcode as string;
+    if (!barcode) {
+      res.status(404).json(errorResponse("invalid barcode"));
+      return;
+    }
+
+    const product = await Product.findOne({ barcode });
+    return res.status(200).json(successResponse(product));
+  } catch (err) {
+    return res
+      .status(500)
+      .json(errorResponse("error loading product by barcode"));
+  }
+};
+
 export const getBySearchByNameHebrew = async (
   req: Request,
   res: Response<IApiResponse<IProduct[] | null>>

@@ -706,7 +706,20 @@
     "selectProductsFromCatalog": "Select products from the catalog on the left",
     "products": "Products",
     "selectedItems": "Selected Items",
-    "atLeastOneItem": "At least one item must be added"
+    "atLeastOneItem": "At least one item must be added",
+    "productNotFound": "Product not found",
+    "scanBarcode": "Scan Barcode"
+  },
+  "BarcodeScannerModal": {
+    "title": "Scan Barcode",
+    "scanBarcode": "Scan Barcode",
+    "notAllowedError": "Please allow access to the camera in your browser settings",
+    "errorAccessingCamera": "Error accessing camera",
+    "connectingToCamera": "Connecting to camera...",
+    "scanningBarcode": "Scanning barcode...",
+    "detectedBarcode": "Detected! Processing...",
+    "cancel": "Cancel",
+    "retryScan": "Retry Scan"
   },
   "CreateShoppingListModal": {
     "nameMinLength": "List name must be at least 2 characters",
