@@ -122,11 +122,10 @@ export function BarcodeScannerModal({
 
       controlsRef.current = controls;
       setState('scanning');
-    } catch (e: any) {
-      console.error("Scanner start error:", e);
+    } catch (e) {
       setState('error');
       setErrorMsg(
-        e.name === 'NotAllowedError' 
+        e instanceof Error && e.name === 'NotAllowedError' 
           ? t('notAllowedError') 
           : t('errorAccessingCamera')
       );
