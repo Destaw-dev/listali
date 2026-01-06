@@ -1,4 +1,4 @@
-import { IManualProduct, IProduct } from '@/types';
+import { IManualProduct, IProduct } from '../types';
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -28,9 +28,6 @@ export function getProductUnit(product: {
   return 'piece';
 }
 
-/**
- * Safely extracts units from a product that can be a string, object, or undefined
- */
 export function getProductUnits(product: string | { units?: string[] } | undefined): string[] {
   if (!product) return [];
   if (typeof product === 'string') return [];
@@ -40,12 +37,7 @@ export function getProductUnits(product: string | { units?: string[] } | undefin
   return [];
 }
 
-/**
- * Find an existing item by product ID.
- * @param existingItems - Array of items (can be partial items in some contexts)
- * @param newItemId - The product ID to search for
- * @returns The found item or null
- */
+
 export function findExistingItemById<T extends { product?: string | { _id?: string }; productId?: string }>(
   existingItems: T[],
   newItemId: string,
@@ -54,7 +46,6 @@ export function findExistingItemById<T extends { product?: string | { _id?: stri
     return null;
   }
   const result = existingItems.find((item) => {
-    // product can be string (product ID) or object with _id
     const productId = typeof item.product === 'string' 
       ? item.product 
       : (item.product as { _id?: string } | undefined)?._id;
@@ -63,12 +54,6 @@ export function findExistingItemById<T extends { product?: string | { _id?: stri
   return result || null;
 }
 
-/**
- * Find an existing item by matching name, unit, category, or product.
- * @param existingItems - Array of items (can be partial items in some contexts)
- * @param newItem - The item data to search for
- * @returns The found item or null
- */
 export function findExistingItem<T extends { 
   _id?: string;
   name?: string;
@@ -92,7 +77,6 @@ export function findExistingItem<T extends {
 
   if (newItem.product) {
     const existing = existingItems.find((item) => {
-      // product can be string (product ID) or object with _id
       const itemProductId = typeof item.product === 'string' 
         ? item.product 
         : (item.product as { _id?: string } | undefined)?._id || item.productId;
@@ -106,7 +90,6 @@ export function findExistingItem<T extends {
   }
 
   const existing = existingItems.find((item) => {
-    // category can be string or object with _id
     const itemCategoryId = typeof item.category === 'string' 
       ? item.category 
       : (item.category as { _id?: string } | undefined)?._id;
@@ -206,13 +189,11 @@ export function extractImageUrl(
   if (typeof image === 'string') return image;
   if (!image || typeof image !== 'object') return undefined;
   
-  // Type guard: check if it has the image object structure
   if ('primary' in image && 'providers' in image) {
     const primary = image.primary;
     const providers = image.providers;
     
     if (primary && providers && typeof providers === 'object') {
-      // Handle both Record type and specific structure (cloudinary/imagekit)
       const providersRecord = providers as Record<string, { url?: string }>;
       return providersRecord[primary]?.url;
     }

@@ -5,7 +5,6 @@ import EditProfileModal from '../../../components/settings/EditProfileModal';
 import { renderWithProviders } from '../../../test/test-utils';
 import { mockUser } from '../../mocks/mockData';
 
-// Mock dependencies
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
 }));

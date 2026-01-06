@@ -4,7 +4,6 @@ import userEvent from '@testing-library/user-event';
 import { CreateGroupModal } from '../../../components/groups/CreateGroupModal';
 import { renderWithProviders } from '../../../test/test-utils';
 
-// Mock dependencies
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
 }));
@@ -54,7 +53,6 @@ describe('CreateGroupModal', () => {
       />
     );
     
-    // Use placeholder or role instead of label
     const inputs = screen.getAllByRole('textbox');
     expect(inputs.length).toBeGreaterThan(0);
   });
@@ -92,9 +90,7 @@ describe('CreateGroupModal', () => {
     const submitButton = screen.getByRole('button', { name: /create|submit/i });
     await user.click(submitButton);
     
-    // Form should prevent submission or show errors
     await waitFor(() => {
-      // Either validation errors appear or form doesn't submit
       const errors = screen.queryAllByText(/required|invalid/i);
       const wasCalled = mockOnCreateGroup.mock.calls.length > 0;
       expect(errors.length > 0 || !wasCalled).toBe(true);
@@ -111,7 +107,6 @@ describe('CreateGroupModal', () => {
       />
     );
     
-    // Use getByPlaceholderText or getAllByRole to find inputs
     const inputs = screen.getAllByRole('textbox');
     const nameInput = inputs.find(inp => {
       const htmlInput = inp as HTMLInputElement;
@@ -151,7 +146,6 @@ describe('CreateGroupModal', () => {
       expect(mockOnCreateGroup).toHaveBeenCalled();
     }, { timeout: 3000 });
     
-    // Form should be reset or modal closed
     await waitFor(() => {
       expect(nameInput.value === '' || mockOnClose).toBeTruthy();
     });
@@ -178,10 +172,7 @@ describe('CreateGroupModal', () => {
       expect(mockOnCreateGroup).toHaveBeenCalled();
     }, { timeout: 3000 });
     
-    // Modal should close after successful submission (onClose is called in the component after reset)
-    // Note: The component calls onClose after reset, but it might be async
     await waitFor(() => {
-      // Either onClose was called or the form was reset (which happens before onClose)
       expect(mockOnClose.mock.calls.length > 0 || nameInput.value === '').toBeTruthy();
     }, { timeout: 2000 });
   });

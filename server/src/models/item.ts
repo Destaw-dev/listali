@@ -154,7 +154,6 @@ const itemSchema = new Schema<IItem, ItemModel>({
     trim: true,
     maxlength: [100, 'Alternative cannot exceed 100 characters']
   }],
-  // Product relationship fields
   product: {
     type: Schema.Types.ObjectId,
     ref: 'Product',

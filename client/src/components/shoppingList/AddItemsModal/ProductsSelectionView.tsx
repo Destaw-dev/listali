@@ -4,10 +4,10 @@ import { AddItemProductList } from './AddItemProductList';
 import { FiltersSection } from './FiltersSection';
 import { useProductsSelection } from './hooks/useProductsSelection';
 import { IProduct, IItem } from '../../../types';
-import { BarcodeScannerModal } from '@/components/barcode/BarcodeScannerModal';
-import { Button } from '@/components/common/Button';
-import { apiClient } from '@/lib/api';
-import { useNotification } from '@/contexts/NotificationContext';
+import { BarcodeScannerModal } from '../../barcode/BarcodeScannerModal';
+import { Button } from '../../common/Button';
+import { apiClient } from '../../../lib/api';
+import { useNotification } from '../../../contexts/NotificationContext';
 import { BarcodeFormat } from '@zxing/library';
 
 interface ProductsSelectionViewProps {

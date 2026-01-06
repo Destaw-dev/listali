@@ -24,7 +24,6 @@ const mockInvitations = [
   },
 ];
 
-// Mock dependencies
 vi.mock('../../../lib/api', () => ({
   apiClient: {
     getMyInvitations: vi.fn(),

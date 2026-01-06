@@ -4,7 +4,6 @@ import { afterEach, beforeAll, afterAll, vi } from 'vitest';
 import React from 'react';
 import { server } from '../__tests__/mocks/server';
 
-// Setup MSW server
 beforeAll(() => {
   server.listen({ onUnhandledRequest: 'error' });
 });
@@ -18,7 +17,6 @@ afterAll(() => {
   server.close();
 });
 
-// Mock next/navigation
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
     push: vi.fn(),
@@ -32,13 +30,11 @@ vi.mock('next/navigation', () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 
-// Mock next-intl
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
   useLocale: () => 'en',
 }));
 
-// Mock framer-motion
 vi.mock('framer-motion', () => ({
   motion: {
     div: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement>) => React.createElement('div', props, children),
@@ -47,7 +43,6 @@ vi.mock('framer-motion', () => ({
   AnimatePresence: ({ children }: React.PropsWithChildren) => children,
 }));
 
-// Mock react-hot-toast
 vi.mock('react-hot-toast', () => ({
   default: {
     success: vi.fn(),
@@ -63,7 +58,6 @@ vi.mock('react-hot-toast', () => ({
   },
 }));
 
-// Mock socket.io-client
 vi.mock('socket.io-client', () => ({
   io: vi.fn(() => ({
     on: vi.fn(),
@@ -74,7 +68,6 @@ vi.mock('socket.io-client', () => ({
   })),
 }));
 
-// Mock NotificationContext
 vi.mock('../contexts/NotificationContext', () => ({
   NotificationProvider: ({ children }: React.PropsWithChildren) => children,
   useNotification: () => ({
@@ -99,6 +92,5 @@ vi.mock('../contexts/NotificationContext', () => ({
   },
 }));
 
-// Mock scrollIntoView for jsdom
 Element.prototype.scrollIntoView = vi.fn();
 

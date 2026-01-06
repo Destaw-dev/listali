@@ -485,7 +485,6 @@ export function useChatWebSocket(
   useEffect(() => {
     websocketService.connect();
     const offNewMessage = websocketService.on('chat:message', (data: { groupId: string; message: IChatMessage }) => {
-      // Convert IChatMessage to RawMessageInput format
       const rawMessage: RawMessageInput = {
         id: data.message.id,
         _id: data.message.id,

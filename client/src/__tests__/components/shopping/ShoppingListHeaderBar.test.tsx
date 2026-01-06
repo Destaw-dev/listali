@@ -4,7 +4,6 @@ import userEvent from '@testing-library/user-event';
 import { ShoppingListHeaderBar } from '../../../components/shoppingList/ShoppingListHeaderBar';
 import { mockShoppingLists } from '../../mocks/mockData';
 
-// Mock dependencies
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
     push: vi.fn(),
@@ -76,7 +75,6 @@ describe('ShoppingListHeaderBar', () => {
       />
     );
     
-    // There might be multiple add buttons (desktop and mobile)
     const addButtons = screen.getAllByRole('button', { name: /addItem|add/i });
     if (addButtons.length > 0) {
       await user.click(addButtons[0]);
@@ -94,7 +92,6 @@ describe('ShoppingListHeaderBar', () => {
       />
     );
     
-    // Date should be displayed (might be in text or icon)
     const svgElements = document.querySelectorAll('svg');
     const hasDate = svgElements.length > 0 || screen.getByText(mockShoppingLists[0].name);
     expect(hasDate).toBeTruthy();

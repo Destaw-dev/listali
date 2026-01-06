@@ -240,7 +240,6 @@ export const emitToGroupExcept = (
     io.to(room).emit(event, payload);
   }
   
-  // Debug: check room size
   const roomSockets = io.sockets.adapter.rooms.get(room);
 
   if (roomSockets) {

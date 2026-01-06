@@ -10,7 +10,6 @@ interface CategoryGroup {
   items: IItem[];
 }
 
-// Mock dependencies
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
 }));
@@ -129,7 +128,6 @@ describe('ShoppingListItems', () => {
       />
     );
     
-    // Should show items count in header - might appear multiple times
     const countTexts = screen.queryAllByText(new RegExp(mockItems.length.toString()));
     expect(countTexts.length > 0 || screen.getByText(mockItems[0].name)).toBeTruthy();
   });
@@ -146,7 +144,6 @@ describe('ShoppingListItems', () => {
       />
     );
     
-    // Items should be grouped and displayed
     expect(screen.getByText(mockItems[0].name)).toBeInTheDocument();
   });
 
@@ -164,7 +161,6 @@ describe('ShoppingListItems', () => {
       />
     );
     
-    // Should show unpurchased items
     expect(screen.getByText(/unpurchasedItems/i)).toBeInTheDocument();
   });
 
@@ -183,7 +179,6 @@ describe('ShoppingListItems', () => {
         />
       );
       
-      // Should show purchased items
       expect(screen.getByText(/purchasedItems/i)).toBeInTheDocument();
     }
   });

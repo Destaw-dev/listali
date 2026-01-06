@@ -1,8 +1,6 @@
-// routes/groupRoutes.ts
 import express from 'express';
 import { 
   createGroup,  
-  // joinGroup, 
   inviteToGroup,
   updateGroup,
   deleteGroup,
@@ -21,7 +19,6 @@ import {
   updateGroupValidation,
   inviteToGroupValidation,
   updateMemberRoleValidation,
-  // joinGroupValidation,
   cancelGroupInvitationValidation,
   validateGroupId,
   validateMemberId
@@ -31,16 +28,13 @@ import { asyncHandler } from '../middleware/handlers';
 
 const router = express.Router();
 
-// Apply authentication middleware to all routes
 router.use(authenticateToken);
 
-// Group routes
 router.get('/', asyncHandler(getUserGroups));
 router.post('/', createGroupValidation, asyncHandler(createGroup));
 router.get('/:groupId', validateGroupId, checkGroupMembership(), asyncHandler(getGroupById));
 router.put('/:groupId', validateGroupId, updateGroupValidation, checkGroupMembership('canManageMembers'), asyncHandler(updateGroup));
 router.delete('/:groupId', validateGroupId, checkOwnership('group'), asyncHandler(deleteGroup));
-// router.post('/join/:inviteCode', joinGroupValidation, asyncHandler(joinGroup));
 router.post('/:groupId/leave', validateGroupId, checkGroupMembership(), asyncHandler(leaveGroup));
 router.post('/:groupId/invite', validateGroupId, inviteToGroupValidation, checkGroupMembership('canInviteMembers'), asyncHandler(inviteToGroup));
 router.delete('/:groupId/invitations/:inviteCode', cancelGroupInvitationValidation, checkGroupMembership('canInviteMembers'), asyncHandler(cancelGroupInvitation));

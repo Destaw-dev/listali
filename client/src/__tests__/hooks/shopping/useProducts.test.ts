@@ -12,7 +12,6 @@ import {
 import { apiClient } from '../../../lib/api';
 import { mockProducts } from '../../mocks/mockData';
 
-// Mock dependencies
 vi.mock('../../../lib/api');
 
 const createWrapper = () => {

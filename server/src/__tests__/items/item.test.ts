@@ -1,6 +1,3 @@
-/**
- * Integration tests for all /api/items endpoints
- */
 import request from 'supertest';
 import { app } from '../../app';
 import { connectDB, disconnectDB } from '../../config/testDb';
@@ -29,7 +26,7 @@ beforeAll(async () => {
   groupId = groupRes.groupId;
   shoppingListId = groupRes.shoppingListId;
   await Item.syncIndexes();
-}, 30000); // 30 second timeout for MongoDB and setup
+}, 30000);
 
 afterAll(async () => {
   await disconnectDB();
@@ -162,7 +159,6 @@ afterAll(async () => {
   });
 
   it('GET /api/items/categories - get available categories', async () => {
-    // Use the category API endpoint instead
     const res = await request(app)
       .get('/api/categories/active')
       .set('Authorization', `Bearer ${token}`);
@@ -249,7 +245,6 @@ describe('Item API - Sad Flow', () => {
   });
 
   it('should return 400 for invalid updates', async () => {
-    // Create a new item for this test
     const createRes = await request(app)
       .post('/api/items')
       .set('Authorization', `Bearer ${token}`)
@@ -275,7 +270,6 @@ describe('Item API - Sad Flow', () => {
   });
 
   it('should return 400 if item already purchased', async () => {
-    // Create a new item for this test
     const createRes = await request(app)
       .post('/api/items')
       .set('Authorization', `Bearer ${token}`)
@@ -306,7 +300,6 @@ describe('Item API - Sad Flow', () => {
   });
 
   it('should not allow unauthorized delete', async () => {
-    // Create a new item for this test
     const createRes = await request(app)
       .post('/api/items')
       .set('Authorization', `Bearer ${token}`)
@@ -321,7 +314,7 @@ describe('Item API - Sad Flow', () => {
     const testItem = getItemData(createRes);
     const testItemId = testItem._id.toString();
 
-    const newUser = await createUserAndAuth(); // other user
+    const newUser = await createUserAndAuth();
     const res = await request(app)
       .delete(`/api/items/${testItemId}`)
       .set('Authorization', `Bearer ${newUser.token}`);
@@ -330,7 +323,6 @@ describe('Item API - Sad Flow', () => {
   });
 
   it('should return 400 if trying to unpurchase an unpurchased item', async () => {
-    // Create item via API to ensure proper category handling
     const createRes = await request(app)
       .post('/api/items')
       .set('Authorization', `Bearer ${token}`)
@@ -366,7 +358,6 @@ describe('Item API - Sad Flow', () => {
   });
 
   it('should return 403 if no permission to edit', async () => {
-    // Create a new item for this test
     const createRes = await request(app)
       .post('/api/items')
       .set('Authorization', `Bearer ${token}`)

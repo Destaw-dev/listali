@@ -16,10 +16,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // כדי לא להוסיף transition על טעינה ראשונה
+
   const didInitialApply = useRef(false);
 
-  // 1) קבע theme מהשרת (אם קיים) פעם אחת
   useEffect(() => {
     if (isInitialized) return;
 
@@ -31,23 +30,19 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     setIsInitialized(true);
   }, [isAuthenticated, user?.preferences, theme, setTheme, isInitialized]);
 
-  // 2) החל theme הכי מוקדם (לפני paint) כדי למנוע flicker
   useLayoutEffect(() => {
     if (!isInitialized) return;
 
     const root = document.documentElement;
 
-    // apply
     const finalTheme = resolveTheme(theme);
     root.setAttribute('data-theme', finalTheme);
 
-    // רק אחרי שהחלת בפעם הראשונה — אפשר להפעיל smooth transitions בהחלפות עתידיות
     if (!didInitialApply.current) {
       didInitialApply.current = true;
       return;
     }
 
-    // הוספת class קצרה למעבר חלק רק בהחלפה (לא תמיד)
     root.classList.add('theme-transition');
     const t = window.setTimeout(() => {
       root.classList.remove('theme-transition');
@@ -56,7 +51,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     return () => window.clearTimeout(t);
   }, [theme, isInitialized]);
 
-  // 3) האזן לשינוי system theme רק אם theme === system
   useEffect(() => {
     if (!isInitialized) return;
 

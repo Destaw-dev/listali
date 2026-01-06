@@ -4,7 +4,6 @@ import { Navigation } from '../../../components/layout/Navigation';
 import { useAuthStore } from '../../../store/authStore';
 import { mockUser } from '../../mocks/mockData';
 
-// Mock dependencies
 vi.mock('../../../store/authStore');
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
@@ -60,7 +59,6 @@ describe('Navigation Component', () => {
     } as ReturnType<typeof useAuthStore>);
 
     render(<Navigation />);
-    // Navigation items should be present
     expect(screen.getByText('Listali')).toBeInTheDocument();
   });
 
@@ -71,13 +69,11 @@ describe('Navigation Component', () => {
     } as ReturnType<typeof useAuthStore>);
 
     render(<Navigation />);
-    // Avatar might be rendered with different alt text or as background image
     const images = screen.queryAllByRole('img');
     const avatar = images.find(img => 
       img.getAttribute('alt')?.includes(mockUser.username) || 
       img.getAttribute('src')?.includes('avatar')
     );
-    // If no img found, check if user info is displayed
     expect(avatar || screen.getByText('Listali')).toBeTruthy();
   });
 
@@ -88,10 +84,8 @@ describe('Navigation Component', () => {
       isAuthenticated: true,
     } as ReturnType<typeof useAuthStore>);
 
-    // Mock confirm to return true
     window.confirm = vi.fn(() => true);
 
-    // Re-mock useSettings with the mockMutate
     vi.doMock('../../../hooks/useSettings', () => ({
       useLogout: () => ({
         mutate: mockMutate,
@@ -100,8 +94,6 @@ describe('Navigation Component', () => {
 
     render(<Navigation />);
     
-    // Find and click logout button - navigation might not have visible logout button in test
-    // This test verifies the component renders without errors
     expect(screen.getByText('Listali')).toBeInTheDocument();
   });
 });

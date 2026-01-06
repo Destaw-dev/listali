@@ -41,7 +41,6 @@ const mockMessages = [
   },
 ];
 
-// Mock dependencies
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
 }));
@@ -176,7 +175,6 @@ describe('ChatComponent', () => {
       <ChatComponent groupId="group1" groupName="Test Group" />
     );
     
-    // Should show connected status
     const statusText = screen.queryByText(/connected|disconnected/i);
     expect(statusText || screen.getByText('Test Group')).toBeTruthy();
   });

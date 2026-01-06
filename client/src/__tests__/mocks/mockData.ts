@@ -1,6 +1,5 @@
 import { IUser, IGroup, IItem, IProduct, ICategory, IShoppingList, IChatMessage } from '../../types';
 
-// Mock Users
 export const mockUser: IUser = {
   _id: 'user1',
   username: 'testuser',
@@ -36,7 +35,6 @@ export const mockUsers: IUser[] = [
   },
 ];
 
-// Mock Categories
 export const mockCategory: ICategory = {
   _id: 'cat1',
   name: 'פירות וירקות',
@@ -61,7 +59,6 @@ export const mockCategories: ICategory[] = [
   },
 ];
 
-// Mock Products
 export const mockProduct: IProduct = {
   _id: 'prod1',
   name: 'חלב 3%',
@@ -107,7 +104,6 @@ export const mockProducts: IProduct[] = [
   },
 ];
 
-// Mock Items
 export const mockItem: IItem = {
   _id: 'item1',
   id: 'item1',
@@ -151,7 +147,6 @@ export const mockItems: IItem[] = [
   },
 ];
 
-// Mock Groups
 export const mockGroup: IGroup = {
   _id: 'group1',
   name: 'משפחה',
@@ -198,7 +193,6 @@ export const mockGroup: IGroup = {
 
 export const mockGroups: IGroup[] = [mockGroup];
 
-// Mock Shopping Lists
 export const mockShoppingList: IShoppingList = {
   _id: 'list1',
   name: 'קניות שבועיות',
@@ -223,7 +217,6 @@ export const mockShoppingList: IShoppingList = {
 
 export const mockShoppingLists: IShoppingList[] = [mockShoppingList];
 
-// Mock Chat Messages
 export const mockChatMessage: IChatMessage = {
   id: 'msg1',
   content: 'היי, מה שלומכם?',
@@ -246,7 +239,6 @@ export const mockChatMessages: IChatMessage[] = [
   },
 ];
 
-// Mock API Responses
 export const mockApiResponse = <T>(data: T) => ({
   success: true,
   data,
@@ -262,7 +254,6 @@ export const mockApiError = (message: string, statusCode = 400) => ({
   },
 });
 
-// Mock Dashboard Data
 export const mockDashboardData = {
   stats: {
     groups: 3,

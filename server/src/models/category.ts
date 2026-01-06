@@ -53,11 +53,9 @@ nameEn: {
   toObject: { virtuals: true }
 });
 
-// Indexes
 CategorySchema.index({ sortOrder: 1 });
 CategorySchema.index({ isActive: 1, sortOrder: 1 });
 
-// Instance Methods
 CategorySchema.methods.deactivate = function() {
   this.isActive = false;
   return this.save();
@@ -68,7 +66,6 @@ CategorySchema.methods.activate = function() {
   return this.save();
 };
 
-// Static Methods
 CategorySchema.statics.getActive = function() {
   return this.find({ isActive: true }).sort({ sortOrder: 1 });
 };

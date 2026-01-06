@@ -8,7 +8,6 @@ import { apiClient } from '../../../lib/api';
 import { useAuthStore } from '../../../store/authStore';
 import { mockShoppingLists, mockItems } from '../../mocks/mockData';
 
-// Mock dependencies
 vi.mock('../../../lib/api');
 vi.mock('../../../store/authStore');
 
@@ -90,7 +89,6 @@ describe('useShoppingListData Hook', () => {
     });
 
     await waitFor(() => {
-      // Error should be set or data should be null
       expect(result.current.error || result.current.shoppingList === null).toBeTruthy();
     }, { timeout: 3000 });
   });

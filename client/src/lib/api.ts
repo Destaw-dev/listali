@@ -47,38 +47,30 @@ export class ApiClient {
         }
 
         const url = originalRequest.url || '';
-        // Do not attempt refresh for refresh/logout endpoints
         if (url.includes('/auth/refresh') || url.includes('/auth/logout')) {
           return Promise.reject(error);
         }
 
-        // Only handle 401 errors
         if (error.response?.status === 401 && !originalRequest._retry) {
           originalRequest._retry = true;
 
           const authStore = useAuthStore.getState();
           
-          // If auth is not ready or still bootstrapping, wait for bootstrap
           if (!authStore.authReady || authStore.isBootstrapping) {
-            // If bootstrap hasn't started, trigger it
             if (!authStore.isBootstrapping) {
-              // Don't await - let it run in background, we'll wait for it below
               authStore.bootstrapAuth().catch(() => {
-                // Ignore errors, bootstrap will set authReady=true anyway
               });
             }
 
-            // Wait for bootstrap to complete
             const waitForBootstrap = () => {
               return new Promise<void>((resolve) => {
-                const maxWait = 10000; // 10 seconds max
+                const maxWait = 10000;
                 const startTime = Date.now();
                 const checkBootstrap = () => {
                   const state = useAuthStore.getState();
                   if (state.authReady && !state.isBootstrapping) {
                     resolve();
                   } else if (Date.now() - startTime > maxWait) {
-                    // Timeout - resolve anyway to avoid infinite wait
                     resolve();
                   } else {
                     setTimeout(checkBootstrap, 100);
@@ -90,7 +82,6 @@ export class ApiClient {
 
             await waitForBootstrap();
 
-            // After bootstrap, if we have an access token, retry the request
             const newState = useAuthStore.getState();
             if (newState.accessToken) {
               originalRequest.headers = originalRequest.headers || {};
@@ -98,11 +89,9 @@ export class ApiClient {
               return this.client(originalRequest);
             }
             
-            // No access token after bootstrap, reject
             return Promise.reject(error);
           }
 
-          // Auth is ready, attempt refresh
           try {
             const newAccessToken = await this.refreshAccessToken();
             
@@ -112,7 +101,6 @@ export class ApiClient {
             
             return this.client(originalRequest);
           } catch (refreshError) {
-            // Refresh failed after authReady=true, clear auth and redirect
             await this.handleAuthError();
             return Promise.reject(refreshError);
           }

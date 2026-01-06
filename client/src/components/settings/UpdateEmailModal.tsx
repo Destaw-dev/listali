@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { z } from 'zod';
 import { X, Mail } from 'lucide-react';
-import { Button, Card, CardHeader, CardBody, Input } from '../common';
+import { Button, Input, Modal } from '../common';
 import { useUpdateEmail } from '../../hooks/useSettings';
 import { useModalScrollLock } from '../../hooks/useModalScrollLock';
 import { createEmailSchema } from '../../lib/schemas';
@@ -80,30 +80,16 @@ export default function UpdateEmailModal({ isOpen, onClose, currentEmail }: Upda
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 backdrop-blur-lg z-50 flex items-center justify-center p-4" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <Card className="bg-background shadow-2xl max-w-md w-full animate-in slide-in-from-bottom-4">
-        <CardHeader className="flex items-center justify-between p-6">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-br from-secondary-400 to-secondary-600 rounded-xl">
-              <Mail className="w-5 h-5 text-text-primary" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-text-primary">{t('updateEmail')}</h2>
-              <p className="text-text-muted text-sm">{t('emailUpdateNote')}</p>
-            </div>
-          </div>
-          <Button
-            variant="ghost"
-            onClick={onClose}
-            type="button"
-            disabled={isLoading}
-          >
-            <X className="w-5 h-5" />
-          </Button>
-        </CardHeader>
-        
-        <CardBody className="p-6">
-          <form onSubmit={handleSubmit} className="space-y-4">
+    <Modal
+      title={t("updateEmail")}
+      onClose={onClose}
+      iconHeader={<div className=" p-2 bg-secondary-500 rounded-full">
+        <Mail className="w-5 h-5 text-text-primary" />
+      </div>}
+      subtitle={t("emailUpdateNote")}
+      size="md"
+    >
+                <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-medium text-text-primary">
                 {t('currentEmail')}
@@ -135,23 +121,22 @@ export default function UpdateEmailModal({ isOpen, onClose, currentEmail }: Upda
                 variant="ghost"
                 onClick={onClose}
                 disabled={isLoading}
-                className="flex-1"
+                fullWidth
               >
                 {t('cancel')}
               </Button>
               <Button
                 type="submit"
-                variant="primary"
+                variant="secondary"
                 disabled={isLoading || !formData.email || !!errors.email}
-                className="flex-1"
+                fullWidth
                 loading={isLoading}
               >
                 {isLoading ? t('updating') : t('update')}
               </Button>
             </div>
           </form>
-        </CardBody>
-      </Card>
-    </div>
-  );
+    </Modal>
+      )
+
 }

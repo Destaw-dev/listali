@@ -324,24 +324,20 @@ export const cancelGroupInvitation = async (req: express.Request, res: express.R
     throw new AppError('Invite code is required', 400);
   }
 
-  // Check permissions - only owner and admin can cancel invitations
   const member = group?.members.find((m: IGroupMember) => m.user.toString() === userId);
   if (!member || (member.role !== 'owner' && member.role !== 'admin')) {
     throw new AppError('You do not have permission to cancel invitations', 403);
   }
 
-  // Find the invitation
   const invite = group?.pendingInvites.find((inv: IBasePendingInvite) => inv.code === inviteCode);
   if (!invite) {
     throw new AppError('Invitation not found', 404);
   }
 
-  // Remove from group's pendingInvites
   await group?.updateOne({
     $pull: { pendingInvites: { code: inviteCode } }
   });
 
-  // If it's an in-app invitation, remove from user's pendingInvitations
   if (invite.type === 'in-app' && invite.user) {
     await User.findByIdAndUpdate(invite.user, {
       $pull: {
@@ -374,7 +370,6 @@ export const updateMemberRole = async (req: express.Request, res: express.Respon
     throw new AppError('Group not found', 404);
   }
 
-  // Refresh group from DB to ensure we have the latest members
   const freshGroup = await Group.findById(group._id);
   if (!freshGroup) {
     throw new AppError('Group not found', 404);

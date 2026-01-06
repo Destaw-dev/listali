@@ -364,7 +364,6 @@ export const purchaseItem = async (req: express.Request, res: express.Response) 
     throw new AppError('Access denied', 403);
   }
   
-  // If item is already fully purchased, don't allow purchasing more
   if (item.status === 'purchased') {
     throw new AppError('Item is already purchased', 400);
   }

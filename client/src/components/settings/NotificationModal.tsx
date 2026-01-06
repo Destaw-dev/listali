@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { X, Bell, Smartphone, Mail } from 'lucide-react';
-import { Card, CardBody, Button } from '../common';
+import { Button, Modal } from '../common';
 import { useNotification } from '../../contexts/NotificationContext';
 import { Toggle } from '../common/Toggle';
 import { useModalScrollLock } from '../../hooks/useModalScrollLock';
@@ -107,43 +107,21 @@ export default function NotificationModal({
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      onClose();
-    }
-  };
-
   useModalScrollLock(isOpen);
 
   if (!isOpen) return null;
 
   return (
-    <div 
-      className="fixed inset-0 backdrop-blur-lg z-50 flex items-center justify-center p-4 overflow-y-auto"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
+    <Modal
+      title={t("notificationSettings")}
+      onClose={onClose}
+      iconHeader={<div className=" p-2 bg-accent-500 rounded-full">
+        <Bell className="w-5 h-5 text-text-primary" />
+      </div>}
+      subtitle={t("controlYourNotifications")}
+      size="md"
     >
-      <Card className="bg-background shadow-2xl max-w-lg w-full animate-in slide-in-from-bottom-4">
-        <CardBody className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-gradient-to-br from-accent-400 to-accent-600 rounded-xl">
-                <Bell className="w-5 h-5 text-text-primary" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-text-primary">{t('notificationSettings')}</h2>
-                <p className="text-text-muted text-sm">{t('controlYourNotifications')}</p>
-              </div>
-            </div>
-            <Button
-              variant="ghost"
-              onClick={onClose}
-              type="button"
-            >
-              <X className="w-5 h-5" />
-            </Button>  
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4" onKeyDown={handleKeyDown}>
+       <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-3">
               {notificationTypes.map((type) => {
                 const Icon = type.icon;
@@ -185,8 +163,7 @@ export default function NotificationModal({
                 onClick={onClose}
                 type="button"
                 disabled={isLoading}
-                loading={isLoading}
-                className="flex-1"
+                fullWidth
               >
                 {t('cancel')}
               </Button>
@@ -195,14 +172,13 @@ export default function NotificationModal({
                 type="submit"
                 disabled={isLoading}
                 loading={isLoading}
-                className="flex-1"
+                fullWidth
               >
                 {isLoading ? t('saving') : t('save')}
               </Button>
             </div>
           </form>
-        </CardBody>
-      </Card>
-    </div>
-  );
+      
+    </Modal>
+  )
 }

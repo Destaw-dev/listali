@@ -11,10 +11,8 @@ import {
 
 const router = express.Router();
 
-// Apply authentication middleware to all routes
 router.use(authenticateToken);
 
-// Settings routes
 router.get('/preferences', asyncHandler(getUserPreferences));
 router.put('/preferences', preferencesValidation, asyncHandler(updateUserPreferences));
 router.get('/notifications', asyncHandler(getUserNotificationSettings));

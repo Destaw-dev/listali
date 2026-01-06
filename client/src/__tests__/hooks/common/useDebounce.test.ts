@@ -27,21 +27,17 @@ describe('useDebounce', () => {
 
     expect(result.current).toBe('initial');
 
-    // Change value
     act(() => {
       rerender({ value: 'updated', delay: 300 });
     });
     
-    // Value should not change immediately
     expect(result.current).toBe('initial');
 
-    // Fast-forward time by 299ms (just before delay)
     act(() => {
       vi.advanceTimersByTime(299);
     });
     expect(result.current).toBe('initial');
 
-    // Fast-forward time by 1ms more (total 300ms)
     act(() => {
       vi.advanceTimersByTime(1);
     });
@@ -56,7 +52,6 @@ describe('useDebounce', () => {
       }
     );
 
-    // Rapid changes
     act(() => {
       rerender({ value: 'second', delay: 300 });
     });
@@ -78,10 +73,8 @@ describe('useDebounce', () => {
       vi.advanceTimersByTime(100);
     });
 
-    // Should still be initial value
     expect(result.current).toBe('first');
 
-    // After full delay, should be last value
     act(() => {
       vi.advanceTimersByTime(200);
     });

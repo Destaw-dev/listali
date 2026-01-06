@@ -183,7 +183,6 @@ const ProductSchema = new Schema<IProduct>(
     toJSON: { 
       virtuals: true,
       transform: function(_doc, ret) {
-        // Transform image object to include only primary and providers.url
         if (ret.image && typeof ret.image === 'object') {
           const image: any = {
             primary: ret.image.primary
@@ -215,7 +214,6 @@ const ProductSchema = new Schema<IProduct>(
   }
 );
 
-// Indexes for Israeli market specifics
 ProductSchema.index({ name: "text", tags: "text" });
 ProductSchema.index({ categoryId: 1, subCategoryId: 1 });
 ProductSchema.index({ kosher: 1 });
@@ -223,22 +221,6 @@ ProductSchema.index({ organic: 1 });
 ProductSchema.index({ glutenFree: 1 });
 ProductSchema.index({ isActive: 1, averagePrice: 1 });
 
-// Virtual Fields
-// ProductSchema.virtual("category", {
-//   ref: "Category",
-//   localField: "categoryId",
-//   foreignField: "_id",
-//   justOne: true,
-// });
-
-// ProductSchema.virtual("subCategory", {
-//   ref: "SubCategory",
-//   localField: "subCategoryId",
-//   foreignField: "_id",
-//   justOne: true,
-// });
-
-// Instance Methods
 ProductSchema.methods.markAsKosher = function () {
   this.kosher = true;
   if (!this.tags.includes("כשר")) {

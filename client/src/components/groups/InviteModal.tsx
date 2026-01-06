@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { X, UserPlus, Mail, Bell } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Button, Dropdown, Input } from '../common';
+import { Button, Dropdown, Input, Modal } from '../common';
 import { useModalScrollLock } from '../../hooks/useModalScrollLock';
 import { createInviteSchema } from '../../lib/schemas';
 
@@ -61,27 +61,11 @@ export function InviteModal({ isOpen, onClose, onInvite, groupName }: InviteModa
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-surface/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={(e) => e.target === e.currentTarget && handleClose()}>
-      <div className="bg-card shadow-2xl rounded-xl max-w-md w-full max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom-4">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-3 border-b border-border">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-br from-accent-400 to-accent-600 rounded-xl">
-              <UserPlus className="w-5 h-5 text-text-primary" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-text-primary">{t('inviteFriends')}</h2>
-              <p className="text-text-muted text-sm">{t('inviteFriendsToGroup', { groupName })}</p>
-            </div>
-          </div>
-          <Button variant='ghost' size='sm' onClick={handleClose} rounded>
-            <X className="w-5 h-5" />
-          </Button>
-        </div>
-
-        {/* Form */}
-        <form onSubmit={handleSubmit(onSubmit)} className="px-6 py-3 space-y-4">
-            <Input
+    <Modal title={t('inviteFriends')} onClose={handleClose} iconHeader={ <div className="p-2 bg-gradient-to-br from-accent-400 to-accent-600 rounded-xl">
+      <UserPlus className="w-5 h-5 text-text-primary" />
+    </div>} subtitle={t('inviteFriendsToGroup', { groupName })} size="md">
+       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+           <Input
               {...register('email')}
               type="email"
               id="email"
@@ -154,12 +138,12 @@ export function InviteModal({ isOpen, onClose, onInvite, groupName }: InviteModa
             <Button variant='outline' size='lg' onClick={handleClose} disabled={isLoading} fullWidth>
               {t('cancel')}
             </Button>
-            <Button type='submit' variant='primary' size='lg' loading={isLoading} disabled={isLoading} fullWidth>
+            <Button type='submit' variant='accent' size='lg' loading={isLoading} disabled={isLoading} fullWidth>
               {isLoading ? t('sendingInvite') : t('sendInvite')}
             </Button>
           </div>
         </form>
-      </div>
-    </div>
-  );
+    </Modal>
+  )
+
 } 

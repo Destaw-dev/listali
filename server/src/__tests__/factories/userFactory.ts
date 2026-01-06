@@ -1,29 +1,3 @@
-// // tests/factories/userFactory.ts
-// import request from 'supertest';
-// import { faker } from '@faker-js/faker';
-// import { app } from '../../app';
-
-// export const createTestUser = async () => {
-//   const userData = {
-//     username: faker.internet.userName(),
-//     email: faker.internet.email(),
-//     password: 'Test1234',
-//     firstName: faker.name.firstName(),
-//     lastName: faker.name.lastName()
-//   };
-
-//   const res = await request(app)
-//     .post('/api/auth/register')
-//     .send(userData)
-//     .expect(201);
-
-//   return {
-//     token: res.body.data.token,
-//     user: res.body.data.user,
-//     userData
-//   };
-// };
-
 import request from 'supertest';
 import { app } from '../../app';
 import User from '../../models/user';
@@ -46,13 +20,11 @@ export const createUserAndAuth = async () => {
     throw new Error(`Failed to register user: ${JSON.stringify(registerRes.body)}`);
   }
   
-  // Verify email for testing - use User model directly
   const user = await User.findOne({ email: userData.email });
   if (user) {
     user.isEmailVerified = true;
     await user.save();
   } else {
-    // Fallback to direct DB update
     await mongoose.connection.db?.collection('users').updateOne(
       { email: userData.email },
       { $set: { isEmailVerified: true } }

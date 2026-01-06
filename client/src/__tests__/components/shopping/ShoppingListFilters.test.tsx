@@ -3,7 +3,6 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ShoppingListFilters, ShoppingListCategoryStat } from '../../../components/shoppingList/ShoppingListFilters';
 
-// Mock dependencies
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
 }));
@@ -132,7 +131,6 @@ describe('ShoppingListFilters', () => {
       />
     );
     
-    // Category dropdown should be rendered
     const dropdowns = screen.queryAllByRole('button');
     expect(dropdowns.length).toBeGreaterThan(0);
   });
@@ -153,7 +151,6 @@ describe('ShoppingListFilters', () => {
       />
     );
     
-    // Active filter should be highlighted
     const buttons = screen.getAllByRole('button');
     expect(buttons.length).toBeGreaterThan(0);
   });

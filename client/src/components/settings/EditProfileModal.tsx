@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { X, User } from "lucide-react";
-import { Card, CardBody, CardHeader, Button, Input } from "../common";
+import { Button, Input, Modal } from "../common";
 import { z } from "zod";
 import { NotificationType, useNotification } from "../../contexts/NotificationContext";
 import { useModalScrollLock } from "../../hooks/useModalScrollLock";
@@ -72,8 +72,7 @@ export default function EditProfileModal({
         );
         
         if (fieldError) {
-          const errorMessage = t(fieldError.message);
-          setErrors((prev) => ({ ...prev, [field]: errorMessage }));
+          setErrors((prev) => ({ ...prev, [field]: fieldError.message }));
         }
       }
       return false;
@@ -97,8 +96,10 @@ export default function EditProfileModal({
         errors.forEach((err: z.ZodIssue) => {
           if (err.path && err.path.length > 0) {
             const field = err.path[0] as string;
-            const messageKey = err.message.startsWith('Invalid input') ? 'validationError' : err.message;
-            newErrors[field] = t(messageKey, { message: err.message });
+            const errorMessage = err.message.startsWith('Invalid input') 
+              ? t('validationError', { message: err.message })
+              : err.message;
+            newErrors[field] = errorMessage;
           }
         });
         setErrors(newErrors);
@@ -132,45 +133,23 @@ export default function EditProfileModal({
     validateField(field, value);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Escape") {
-      onClose();
-    }
-  };
-
   useModalScrollLock(isOpen);
 
   if (!isOpen) return null;
 
   return (
-    <div
-      className="fixed inset-0 backdrop-blur-lg z-50 flex items-center justify-center p-4"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
+    <Modal
+      title={t("editProfile")}
+      onClose={onClose}
+      iconHeader={<div className=" bg-background-500 rounded-full">
+        <User className="w-5 h-5" />
+      </div>}
+      subtitle={t("editProfileDescription")}
+      size="md"
     >
-      <Card
-        className="bg-background shadow-2xl max-w-md w-full animate-in slide-in-from-bottom-4"
-      >
-        <CardHeader className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-background-500 rounded-full">
-              <User className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-text-primary">
-                {t("editProfile")}
-              </h2>
-              <p className="text-text-muted text-sm">
-                {t("editProfileDescription")}
-              </p>
-            </div>
-          </div>
-            <Button variant="ghost" size="xs" icon={<X className="w-4 h-4" />} onClick={onClose} rounded={true}/>
-        </CardHeader>
-        <CardBody className="p-6">
           <form
             onSubmit={handleSubmit}
             className="space-y-4"
-            onKeyDown={handleKeyDown}
           >
             <Input
               label={t("firstName")}
@@ -206,7 +185,7 @@ export default function EditProfileModal({
               <Button
                 variant="ghost"
                 onClick={onClose}
-                className="flex-1"
+                fullWidth
                 disabled={isLoading}
                 type="button"
               >
@@ -215,7 +194,7 @@ export default function EditProfileModal({
               <Button
                 variant="primary"
                 type="submit"
-                className="flex-1"
+                fullWidth
                 loading={isLoading}
                 disabled={isLoading}
               >
@@ -223,8 +202,6 @@ export default function EditProfileModal({
               </Button>
             </div>
           </form>
-        </CardBody>
-      </Card>
-    </div>
-  );
+    </Modal>
+  )
 }

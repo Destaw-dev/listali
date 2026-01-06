@@ -105,7 +105,7 @@ export function Card({
 interface CardHeaderProps {
   children: React.ReactNode;
   className?: string;
-  padding?: 'none' | 'sm' | 'md' | 'lg';
+  padding?: 'none' | 'xs' | 'sm' | 'md' | 'lg';
 }
 
 export function CardHeader({ 
@@ -115,6 +115,7 @@ export function CardHeader({
 }: CardHeaderProps) {
   const paddingClasses = {
     none: '',
+    xs: 'p-2',
     sm: 'p-3',
     md: 'p-4',
     lg: 'p-6'

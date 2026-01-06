@@ -97,7 +97,7 @@ export const useAuthStore = create<AuthStore>()(
             isLoading: false,
             error: null,
             lastLoginTime: null,
-            isInitialized: true, // Ensure initialized is true so redirect hooks can work
+            isInitialized: true,
             websocket: {
               isConnected: false,
               connectionError: null,
@@ -114,7 +114,6 @@ export const useAuthStore = create<AuthStore>()(
 
         bootstrapAuth: async () => {
           const state = get();
-          // If already bootstrapping, return
           if (state.isBootstrapping) {
             return;
           }
@@ -130,14 +129,12 @@ export const useAuthStore = create<AuthStore>()(
                 set({ user, isAuthenticated: true, error: null, lastLoginTime: Date.now(), isInitialized: true });
               } catch (error) {
                 console.error('Failed to get user data:', error);
-                // Clear auth if we had a user before
                 const currentUser = get().user;
                 if (currentUser) {
                   set({ user: null, accessToken: null, isAuthenticated: false, lastLoginTime: null, isInitialized: true });
                 }
               }
             } else {
-              // Clear auth if we had a user before (refresh token expired)
               const currentUser = get().user;
               if (currentUser) {
                 set({ user: null, accessToken: null, isAuthenticated: false, lastLoginTime: null, isInitialized: true });
@@ -145,7 +142,6 @@ export const useAuthStore = create<AuthStore>()(
             }
           } catch (error) {
             console.error('Auth bootstrap error:', error);
-            // Clear auth if we had a user before
             const currentUser = get().user;
             if (currentUser) {
               set({ user: null, accessToken: null, isAuthenticated: false, lastLoginTime: null, isInitialized: true });

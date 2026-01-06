@@ -7,9 +7,6 @@ import {
   getKosherProducts,
   getOrganicProducts,
   getGlutenFreeProducts,
-  // markAsKosher,
-  // markAsOrganic,
-  // markAsGlutenFree,
   getBySearchByNameHebrew,
   getProductById,
   getProductByBarcode
@@ -27,9 +24,5 @@ router.get('/kosher', authenticateToken, asyncHandler(getKosherProducts));
 router.get('/organic', authenticateToken, asyncHandler(getOrganicProducts));
 router.get('/gluten-free', authenticateToken, asyncHandler(getGlutenFreeProducts));
 router.get('/barcode/:barcode', authenticateToken, asyncHandler(getProductByBarcode));
-
-// router.post('/:id/mark-kosher', markAsKosher);
-// router.post('/:id/mark-organic', markAsKosher);
-// router.post('/:id/mark-gluten-free', markAsKosher);
 
 export default router;

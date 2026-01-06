@@ -4,7 +4,6 @@ import userEvent from '@testing-library/user-event';
 import { PurchaseQuantityModal } from '../../../components/shoppingList/items/PurchaseQuantityModal';
 import { mockItems } from '../../mocks/mockData';
 
-// Mock dependencies
 vi.mock('../../../hooks/useModalScrollLock', () => ({
   useModalScrollLock: vi.fn(),
 }));
@@ -74,7 +73,6 @@ describe('PurchaseQuantityModal', () => {
     if (incrementButton) {
       await user.click(incrementButton);
       
-      // Quantity should increase (might be 1 or 2)
       const quantityTexts = screen.queryAllByText(/1|2/);
       expect(quantityTexts.length > 0).toBeTruthy();
     }
@@ -98,10 +96,8 @@ describe('PurchaseQuantityModal', () => {
     );
     
     if (incrementButton) {
-      // First increment
       await user.click(incrementButton);
       
-      // Then find decrement button
       const decrementButton = buttons.find((btn: HTMLButtonElement) => 
         btn.querySelector('svg') && btn !== incrementButton && !btn.disabled
       );
@@ -110,7 +106,6 @@ describe('PurchaseQuantityModal', () => {
         await user.click(decrementButton);
       }
       
-      // Quantity should be displayed
       const quantityTexts = screen.queryAllByText(/1|2/);
       expect(quantityTexts.length > 0).toBeTruthy();
     }
@@ -128,7 +123,6 @@ describe('PurchaseQuantityModal', () => {
       />
     );
     
-    // First increment quantity to enable confirm button
     const buttons = screen.getAllByRole('button') as HTMLButtonElement[];
     const incrementButton = buttons.find((btn) => 
       btn.querySelector('svg') && !btn.disabled && btn.textContent !== 'Cancel'
@@ -138,7 +132,6 @@ describe('PurchaseQuantityModal', () => {
       await user.click(incrementButton);
     }
     
-    // Now find and click confirm button
     const updatedButtons = screen.getAllByRole('button') as HTMLButtonElement[];
     const confirmButton = updatedButtons.find((btn: HTMLButtonElement) => 
       btn.textContent === 'confirm' || 
@@ -154,7 +147,6 @@ describe('PurchaseQuantityModal', () => {
         expect(mockOnConfirm).toHaveBeenCalled();
       }, { timeout: 3000 });
     } else {
-      // If button not found or disabled, check if it's because item has no product
       expect(mockItems[0].product).toBeDefined();
     }
   });

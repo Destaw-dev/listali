@@ -17,7 +17,6 @@ const connectDB = async (): Promise<void> => {
 
     console.log(`🍃 MongoDB Connected: ${conn.connection.host}`);
     
-    // Connection event listeners
     mongoose.connection.on('connected', () => {
       console.log('✅ Mongoose connected to MongoDB');
     });

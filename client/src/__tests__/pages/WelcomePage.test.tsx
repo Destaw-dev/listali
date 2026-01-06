@@ -5,7 +5,6 @@ import WelcomePage from '../../app/[locale]/welcome/page';
 import { useAuthStore } from '../../store/authStore';
 import { mockUser } from '../mocks/mockData';
 
-// Mock dependencies
 vi.mock('../../store/authStore');
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
@@ -33,7 +32,6 @@ describe('WelcomePage', () => {
     } as ReturnType<typeof useAuthStore>);
 
     renderWithProviders(<WelcomePage />);
-    // Check for welcome text (might appear multiple times)
     const welcomeTexts = screen.getAllByText(/welcome|ברוכים/i);
     expect(welcomeTexts.length).toBeGreaterThan(0);
   });
@@ -46,7 +44,6 @@ describe('WelcomePage', () => {
     } as ReturnType<typeof useAuthStore>);
 
     renderWithProviders(<WelcomePage />);
-    // Should redirect or return null
     expect(screen.queryByText(/welcome/i)).not.toBeInTheDocument();
   });
 
@@ -69,7 +66,6 @@ describe('WelcomePage', () => {
     } as ReturnType<typeof useAuthStore>);
 
     renderWithProviders(<WelcomePage />);
-    // WelcomePage uses Buttons with onClick, not Links
     const buttons = screen.getAllByRole('button');
     const loginButton = buttons.find(btn => btn.textContent?.includes('loginButton') || btn.textContent?.includes('התחבר'));
     const registerButton = buttons.find(btn => btn.textContent?.includes('registerButton') || btn.textContent?.includes('הרשם'));

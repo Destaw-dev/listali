@@ -351,7 +351,6 @@ export const useSubCategoriesByCategory = (categoryId?: string | null, enabled: 
   const subCategories = useMemo(() => {
     if (!enabled || !categoryId) return [];
     return allSubCategories.filter((sc: ISubCategory) => {
-      // categoryId can be string or populated ICategory object
       const scCategoryId = typeof sc.categoryId === 'string' 
         ? sc.categoryId 
         : (typeof sc.categoryId === 'object' && sc.categoryId !== null && '_id' in sc.categoryId 

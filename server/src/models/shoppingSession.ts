@@ -79,13 +79,11 @@ const shoppingSessionSchema = new Schema<IShoppingSession>({
   timestamps: true
 });
 
-// Indexes for efficient queries
 shoppingSessionSchema.index({ listId: 1, isActive: 1 });
 shoppingSessionSchema.index({ userId: 1, isActive: 1 });
 shoppingSessionSchema.index({ groupId: 1, isActive: 1 });
 shoppingSessionSchema.index({ startedAt: -1 });
 
-// Virtual for shopping duration
 shoppingSessionSchema.virtual('duration').get(function() {
   if (this.endedAt) {
     return Math.round((this.endedAt.getTime() - this.startedAt.getTime()) / (1000 * 60));
@@ -93,7 +91,6 @@ shoppingSessionSchema.virtual('duration').get(function() {
   return Math.round((Date.now() - this.startedAt.getTime()) / (1000 * 60));
 });
 
-// Method to end shopping session
 shoppingSessionSchema.methods.endSession = function() {
   this.isActive = false;
   this.endedAt = new Date();
@@ -102,21 +99,18 @@ shoppingSessionSchema.methods.endSession = function() {
   return this.save();
 };
 
-// Method to pause shopping session
 shoppingSessionSchema.methods.pauseSession = function() {
   this.status = 'paused';
   this.lastActivity = new Date();
   return this.save();
 };
 
-// Method to resume shopping session
 shoppingSessionSchema.methods.resumeSession = function() {
   this.status = 'active';
   this.lastActivity = new Date();
   return this.save();
 };
 
-// Method to update purchase count
 shoppingSessionSchema.methods.updatePurchaseCount = function(purchased: number, total: number) {
   this.itemsPurchased = purchased;
   this.totalItems = total;
@@ -124,7 +118,6 @@ shoppingSessionSchema.methods.updatePurchaseCount = function(purchased: number, 
   return this.save();
 };
 
-// Static method to get active shopping sessions for a list
 shoppingSessionSchema.statics.getActiveSessions = function(listId: string) {
   return this.find({ 
     listId, 
@@ -133,7 +126,6 @@ shoppingSessionSchema.statics.getActiveSessions = function(listId: string) {
   }).populate('userId', 'username firstName lastName avatar');
 };
 
-// Static method to get user's active shopping session
 shoppingSessionSchema.statics.getUserActiveSession = function(userId: string) {
   return this.findOne({ 
     userId, 

@@ -3,7 +3,6 @@ import { apiClient } from '../../lib/api';
 import { mockApiResponse, mockApiError } from './mockData';
 import { AxiosRequestConfig } from 'axios';
 
-// Mock API client methods
 export const createApiMocks = () => {
   const mockGet = vi.fn();
   const mockPost = vi.fn();
@@ -11,7 +10,6 @@ export const createApiMocks = () => {
   const mockDelete = vi.fn();
   const mockPatch = vi.fn();
 
-  // Mock apiClient methods
   vi.spyOn(apiClient, 'get').mockImplementation(mockGet);
   vi.spyOn(apiClient, 'post').mockImplementation(mockPost);
   vi.spyOn(apiClient, 'put').mockImplementation(mockPut);
@@ -34,7 +32,6 @@ export const createApiMocks = () => {
   };
 };
 
-// Helper to mock successful API responses
 export const mockSuccessResponse = <T>(data: T) => ({
   data: mockApiResponse(data),
   status: 200,
@@ -43,7 +40,6 @@ export const mockSuccessResponse = <T>(data: T) => ({
   config: {} as AxiosRequestConfig,
 });
 
-// Helper to mock error API responses
 export const mockErrorResponse = (message: string, statusCode = 400) => ({
   response: {
     data: mockApiError(message, statusCode),

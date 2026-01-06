@@ -4,7 +4,6 @@ import userEvent from '@testing-library/user-event';
 import { CategorySection } from '../../../components/shoppingList/items/CategorySection';
 import { mockItems } from '../../mocks/mockData';
 
-// Mock dependencies
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
 }));
@@ -69,7 +68,6 @@ describe('CategorySection', () => {
       />
     );
     
-    // Items count might appear multiple times
     const countTexts = screen.queryAllByText('2');
     expect(countTexts.length > 0 || screen.getByText('Unpurchased Items')).toBeTruthy();
   });
@@ -95,7 +93,6 @@ describe('CategorySection', () => {
     const headerButton = screen.getByRole('button');
     await user.click(headerButton);
     
-    // Section should be toggled (items might be hidden)
     expect(headerButton).toBeInTheDocument();
   });
 

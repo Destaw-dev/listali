@@ -4,7 +4,6 @@ import userEvent from '@testing-library/user-event';
 import { CreateShoppingListModal } from '../../../components/shoppingList/CreateShoppingListModal';
 import { renderWithProviders } from '../../../test/test-utils';
 
-// Mock dependencies
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
 }));
@@ -141,7 +140,6 @@ describe('CreateShoppingListModal', () => {
       />
     );
     
-    // Find tag input (might be a separate input or part of form)
     const inputs = screen.getAllByRole('textbox');
     const tagInput = inputs.find(inp => 
       (inp as HTMLInputElement).placeholder?.toLowerCase().includes('tag')
@@ -151,7 +149,6 @@ describe('CreateShoppingListModal', () => {
       await user.type(tagInput, 'tag1');
       await user.keyboard('{Enter}');
       
-      // Tag should be added
       await waitFor(() => {
         expect(screen.queryByText('tag1')).toBeTruthy();
       });

@@ -21,7 +21,7 @@ beforeAll(async () => {
   const { groupId: groupIdRes } = await createGroupWithList(token);
 
   groupId = groupIdRes
-}, 60000); // 60 second timeout for MongoDB and setup
+}, 60000);
 
 afterAll(async () => {
   await disconnectDB();

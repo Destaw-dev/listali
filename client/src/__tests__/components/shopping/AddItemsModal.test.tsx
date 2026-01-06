@@ -6,7 +6,6 @@ import { renderWithProviders } from '../../../test/test-utils';
 import { mockProducts } from '../../mocks/mockData';
 import { IProduct, ItemInput } from '../../../types';
 
-// Mock dependencies
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
 }));
@@ -110,11 +109,9 @@ describe('AddItemsModal', () => {
       />
     );
     
-    // Select a product
     const selectButton = screen.getByText('Select Product');
     await user.click(selectButton);
     
-    // Close modal
     const closeButtons = screen.getAllByRole('button');
     const closeButton = closeButtons.find(btn => 
       btn.querySelector('svg') || btn.textContent?.includes('X')
@@ -124,7 +121,6 @@ describe('AddItemsModal', () => {
       await user.click(closeButton);
     }
     
-    // Reopen modal - should be reset
     rerender(
       <AddItemsModal
         isOpen={true}
@@ -154,7 +150,6 @@ describe('AddItemsModal', () => {
     const selectButton = screen.getByText('Select Product');
     await user.click(selectButton);
     
-    // Product should be selected
     await waitFor(() => {
       const selectedText = screen.queryByText(/Selected: 1/i);
       expect(selectedText || screen.getByText('Select Product')).toBeTruthy();
@@ -173,15 +168,12 @@ describe('AddItemsModal', () => {
       />
     );
     
-    // Select a product first
     const selectButton = screen.getByText('Select Product');
     await user.click(selectButton);
     
-    // Clear all
     const clearButton = screen.getByText('Clear All');
     await user.click(clearButton);
     
-    // Should clear selection
     await waitFor(() => {
       const selectedText = screen.queryByText(/Selected: 0/i);
       expect(selectedText || screen.getByText('Select Product')).toBeTruthy();

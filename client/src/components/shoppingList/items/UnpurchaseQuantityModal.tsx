@@ -1,10 +1,9 @@
 "use client";
 
 import { memo, useEffect, useState } from "react";
-import { Minus, Plus } from "lucide-react";
-import { Button, LoadingSpinner } from "../../common";
+import { Minus, Package, Plus } from "lucide-react";
+import { Button, LoadingSpinner, Modal } from "../../common";
 import { useModalScrollLock } from "../../../hooks/useModalScrollLock";
-
 import { IItem } from "../../../types";
 
 interface UnpurchaseQuantityModalProps {
@@ -66,22 +65,20 @@ export const UnpurchaseQuantityModal = memo(function UnpurchaseQuantityModal({
   };
 
   return (
-    <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/25 backdrop-blur-sm p-4"
-      onClick={onClose}
+    <Modal
+      title={tItems("unpurchaseQuantityTitle")}
+      onClose={onClose}
+      iconHeader={<div className=" p-2 bg-primary-500 rounded-full">
+        <Package className="w-5 h-5 text-text-primary" />
+      </div>}
     >
-      {isLoading ? (
+            {isLoading ? (
         <div className="rounded-3xl bg-card p-12 text-center shadow-xl">
           <LoadingSpinner />
         </div>
       ) : (
       <div
-        className="w-full max-w-sm rounded-3xl bg-card p-6 shadow-2xl"
-        onClick={(event) => event.stopPropagation()}
       >
-        <h3 className="text-lg font-semibold text-text-primary">
-          {tItems("unpurchaseQuantityTitle")}
-        </h3>
         <p className="mt-2 text-sm text-text-muted">
           {item.name}
         </p>
@@ -144,7 +141,8 @@ export const UnpurchaseQuantityModal = memo(function UnpurchaseQuantityModal({
         </div>
       </div>
       )}
-    </div>
+      </Modal>
   );
+
 });
 

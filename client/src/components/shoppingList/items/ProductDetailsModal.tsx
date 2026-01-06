@@ -2,10 +2,10 @@
 
 import { memo, useState } from "react";
 import { Package, X } from "lucide-react";
-import { Button } from "../../common";
+import { Button, Modal } from "../../common";
 import { useModalScrollLock } from "../../../hooks/useModalScrollLock";
 import { IItem } from "../../../types";
-import { extractImageUrl } from "@/lib/utils";
+import { extractImageUrl } from "../../../lib/utils";
 
 interface ProductDetailsModalProps {
   item: IItem | null;
@@ -48,6 +48,72 @@ export const ProductDetailsModal = memo(function ProductDetailsModal({
     });
   if (item.notes)
     metaRows.push({ label: tItems("notesLabel") ?? "הערות", value: item.notes });
+
+  return (
+    <Modal
+      title={title}
+      onClose={onClose}
+      iconHeader={<div className=" p-2 bg-info-500 rounded-full">
+        <Package className="w-5 h-5 text-text-primary" />
+      </div>}
+      subtitle={brand}
+    >
+              <div className="px-6 pb-6 pt-4">
+          <div className="flex flex-col gap-4">
+            <div className="sm:w-40 w-full">
+              <div className="aspect-square overflow-hidden rounded-2xl shadow-sm bg-background">
+                {productImage ? (
+                  <>
+                    {!imgLoaded && (
+                      <div className="animate-pulse bg-background" />
+                    )}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={productImage}
+                      alt={title}
+                      className={`h-full w-full object-contain transition duration-200 ${imgLoaded ? "opacity-100" : "opacity-0"}`}
+                      loading="lazy"
+                      onLoad={() => setImgLoaded(true)}
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = "none";
+                        setImgLoaded(true);
+                      }}
+                    />
+                  </>
+                ) : (
+                  <div className="grid h-full w-full place-items-center text-text-muted">
+                    <Package className="h-7 w-7" />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="min-w-0 flex-1">
+              {productDescription && (
+                <p className="mb-3 text-sm leading-relaxed text-text-secondary">
+                  {productDescription}
+                </p>
+              )}
+
+              <dl className="grid grid-cols-1 gap-y-2 text-sm">
+                {metaRows.map((row, idx) => (
+                  <div key={idx} className="flex items-center gap-2">
+                    <dt className="shrink-0 text-text-primary font-medium">{row.label}:</dt>
+                    <dd className="truncate text-text-muted">{row.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          </div>
+
+          <div className=" flex justify-end gap-2">
+            <Button variant="primary" size="md" onClick={onClose} aria-label={tCommon("close")}>
+              {tCommon("close")}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+  );
 
   return (
     <div

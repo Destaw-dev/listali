@@ -78,7 +78,6 @@ export const SelectedItemsSidebar = memo(({
               name: product.name,
             });
 
-        // Extract image URL: for manual products it's already a string, for regular products extract from object
         const imageUrl = extractImageUrl(product.image);
 
         return {
@@ -168,7 +167,6 @@ export const SelectedItemsSidebar = memo(({
               : selectedProducts[index];
             const units = (product?.units || item?.units || []) as string[];
 
-            // Check if this item is a duplicate
             const normalizedName = (item?.name || '').trim().replace(/\s+/g, ' ');
             const existingItem = existingItems.length > 0 && normalizedName ? findExistingItem(existingItems, {
               name: normalizedName,

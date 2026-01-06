@@ -109,7 +109,6 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   }, [t, showToast]);
 
   const handleApiError = useCallback((error: Error | AxiosError) => {
-    // Check if it's an AxiosError
     if (error instanceof AxiosError) {
       if (!error.response) {
         showError('notifications.networkError', NotificationType.NETWORK);
@@ -144,7 +143,6 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         showError(message, NotificationType.SERVER);
       }
     } else {
-      // Regular Error object
       showError(error, NotificationType.CLIENT);
     }
   }, [showError]);

@@ -45,7 +45,6 @@ describe('Button Component', () => {
     const iconElement = screen.getByTestId('icon');
     expect(iconElement).toBeInTheDocument();
     
-    // Check icon is before text
     const buttonText = button.textContent;
     expect(buttonText?.indexOf('Icon')).toBeLessThan(buttonText?.indexOf('Button with Icon') || -1);
   });

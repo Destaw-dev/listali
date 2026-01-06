@@ -133,7 +133,6 @@ class WebSocketService {
         if (accessToken && isAuthenticated) {
           const newToken = await this.refreshAccessTokenForSocket();
           if (newToken && this.socket) {
-            // Socket.IO auth property is not in the type definitions, but it's a valid feature
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (this.socket as any).auth = { token: newToken };
             this.handleReconnect();
@@ -232,7 +231,6 @@ class WebSocketService {
   public disconnect(): void {
     if (!this.isClient()) return;
     
-    // Stop any reconnection attempts
     this.reconnectAttempts = 0;
     
     if (this.socket) {
@@ -258,7 +256,6 @@ class WebSocketService {
     this.listeners.get(event)!.add(listener);
     
     if (this.socket && this.isConnected) {
-      // Socket.io-client's on method accepts string events with generic listeners
       this.socket.on(event as string, listener as (data: unknown) => void);
     }
     

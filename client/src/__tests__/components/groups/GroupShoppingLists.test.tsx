@@ -7,7 +7,6 @@ import { useGroup } from '../../../hooks/useGroups';
 import { useGroupShoppingLists, useCreateShoppingList, useDeleteShoppingList } from '../../../hooks/useShoppingLists';
 import { mockGroups, mockShoppingLists } from '../../mocks/mockData';
 
-// Mock dependencies
 vi.mock('../../../hooks/useGroups');
 vi.mock('../../../hooks/useShoppingLists');
 vi.mock('../../../hooks/useAuthRedirect', () => ({
@@ -105,7 +104,6 @@ describe('GroupShoppingLists', () => {
     } as ReturnType<typeof useGroup>);
 
     renderWithProviders(<GroupShoppingLists />);
-    // Should show empty state or create button
     const emptyText = screen.queryByText(/no lists|אין רשימות/i);
     const buttons = screen.getAllByRole('button');
     expect(emptyText || buttons.length > 0).toBeTruthy();

@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { mockUser, mockGroups, mockShoppingLists, mockItems } from '../mocks/mockData';
 import axios, { AxiosInstance } from 'axios';
 
-// Mock axios
 vi.mock('axios', () => {
   const mockAxiosInstance = {
     get: vi.fn(),
@@ -41,7 +40,6 @@ vi.mock('../../store/authStore', () => ({
   },
 }));
 
-// Import after mocks
 import { apiClient } from '../../lib/api';
 
 describe('API Client', () => {
@@ -64,7 +62,6 @@ describe('API Client', () => {
       const mockAxiosInstance = axios.create({});
       vi.mocked(mockAxiosInstance.post).mockImplementation(mockPost);
       
-      // Mock the login method directly
       vi.spyOn(apiClient, 'login').mockResolvedValue({
         accessToken: 'token123',
         user: mockUser,
@@ -90,7 +87,6 @@ describe('API Client', () => {
       const mockAxiosInstance = axios.create({});
       vi.mocked(mockAxiosInstance.post).mockImplementation(mockPost);
       
-      // Mock the register method directly
       vi.spyOn(apiClient, 'register').mockResolvedValue({
         accessToken: 'token123',
         user: mockUser,

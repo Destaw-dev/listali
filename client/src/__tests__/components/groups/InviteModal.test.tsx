@@ -4,7 +4,6 @@ import userEvent from '@testing-library/user-event';
 import { InviteModal } from '../../../components/groups/InviteModal';
 import { renderWithProviders } from '../../../test/test-utils';
 
-// Mock dependencies
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
 }));
@@ -110,7 +109,6 @@ describe('InviteModal', () => {
     const submitButton = screen.getByRole('button', { name: /invite|send|submit/i });
     await user.click(submitButton);
     
-    // Form should prevent submission or show errors
     await waitFor(() => {
       const errors = screen.queryAllByText(/required|invalid|email/i);
       const wasCalled = mockOnInvite.mock.calls.length > 0;
@@ -165,7 +163,6 @@ describe('InviteModal', () => {
     
     if (closeButton) {
       await user.click(closeButton);
-      // Form should be reset
       await waitFor(() => {
         expect(emailInput.value === '' || mockOnClose).toBeTruthy();
       });

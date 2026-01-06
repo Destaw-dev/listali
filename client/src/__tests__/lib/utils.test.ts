@@ -33,7 +33,7 @@ describe('getProductUnit', () => {
   it('should return "piece" as default', () => {
     expect(getProductUnit({})).toBe('piece');
     expect(getProductUnit({ defaultUnit: 'יחידה' })).toBe('piece');
-    expect(getProductUnit({ defaultUnit: 'ק״ג' })).toBe('piece'); // Only works if includes משקל
+    expect(getProductUnit({ defaultUnit: 'ק״ג' })).toBe('piece');
   });
 });
 
@@ -102,13 +102,11 @@ describe('findExistingItem', () => {
   });
 
   it('should find item by name, unit, and category when product matches _id', () => {
-    // Note: findExistingItem checks item._id === newItem.product
-    // So we need to pass the item _id as product
     const newItem = {
       name: 'Bread',
       unit: 'piece',
       category: 'cat2',
-      product: 'item2', // Must match the _id
+      product: 'item2',
     };
     const result = findExistingItem(existingItems, newItem);
     expect(result).toEqual(existingItems[1]);
@@ -138,7 +136,7 @@ describe('findExistingItem', () => {
       name: 'Milk',
       unit: 'l',
       category: 'cat1',
-      product: 'item1', // Must match the _id
+      product: 'item1',
     };
     const result = findExistingItem(itemsWithWhitespace, newItem);
     expect(result).toEqual(itemsWithWhitespace[0]);

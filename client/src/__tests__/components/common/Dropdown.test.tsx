@@ -85,7 +85,6 @@ describe('Dropdown Component', () => {
       expect(screen.getByRole('listbox')).toBeInTheDocument();
     });
     
-    // Find disabled option button
     const disabledOptionButton = screen.getByText('Option 3').closest('button');
     expect(disabledOptionButton).toBeDisabled();
     
@@ -111,7 +110,6 @@ describe('Dropdown Component', () => {
     await user.keyboard('{ArrowDown}');
     await user.keyboard('{Enter}');
     
-    // Should select second option
     await waitFor(() => {
       expect(handleSelect).toHaveBeenCalled();
     });

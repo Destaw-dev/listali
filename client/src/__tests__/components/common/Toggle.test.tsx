@@ -25,7 +25,6 @@ describe('Toggle Component', () => {
     const toggle = container.querySelector('button');
     expect(toggle).toBeInTheDocument();
     
-    // Check for enabled styling
     const innerCircle = container.querySelector('.translate-x-3');
     expect(innerCircle).toBeInTheDocument();
   });
@@ -35,7 +34,6 @@ describe('Toggle Component', () => {
     const toggle = container.querySelector('button');
     expect(toggle).toBeInTheDocument();
     
-    // Check for disabled styling
     const innerCircle = container.querySelector('.-translate-x-3');
     expect(innerCircle).toBeInTheDocument();
   });

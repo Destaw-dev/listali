@@ -5,7 +5,6 @@ import { EditItemModal } from '../../../components/shoppingList/items/EditItemMo
 import { renderWithProviders } from '../../../test/test-utils';
 import { mockItems, mockCategories } from '../../mocks/mockData';
 
-// Mock dependencies
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
 }));
@@ -61,7 +60,6 @@ describe('EditItemModal', () => {
       />
     );
     
-    // Form should be populated with item data
     expect(screen.getByDisplayValue(mockItems[0].name)).toBeInTheDocument();
   });
 
@@ -79,11 +77,9 @@ describe('EditItemModal', () => {
     const nameInput = inputs.find(inp => inp.value === mockItems[0].name);
     
     if (nameInput) {
-      // Select all and type new value
       nameInput.select();
       await user.type(nameInput, 'Updated Item');
       
-      // Find submit button (might be save, update, or submit)
       const buttons = screen.getAllByRole('button');
       const submitButton = buttons.find(btn => 
         btn.textContent?.toLowerCase().includes('save') ||
@@ -96,10 +92,8 @@ describe('EditItemModal', () => {
         await user.click(submitButton);
         
         await waitFor(() => {
-          // Form should submit (might need validation or might be called)
           const wasCalled = mockOnSubmit.mock.calls.length > 0;
           const hasErrors = screen.queryAllByText(/required|invalid/i).length > 0;
-          // Either form was submitted or there are validation errors (both are valid test outcomes)
           expect(wasCalled || hasErrors).toBe(true);
         }, { timeout: 3000 });
       }

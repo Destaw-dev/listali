@@ -133,7 +133,6 @@ const messageSchema = new Schema<IMessage, MessageModel, MessageDocument>(
   }
 );
 
-// Indexes for performance
 messageSchema.index({ group: 1, createdAt: -1 });
 messageSchema.index({ sender: 1 });
 messageSchema.index({ messageType: 1 });
@@ -141,25 +140,19 @@ messageSchema.index({ "readBy.user": 1 });
 messageSchema.index({ isDeleted: 1, createdAt: -1 });
 messageSchema.index({ content: "text" });
 
-// Virtual for is edited
 messageSchema.virtual("isEdited").get(function () {
   return !!this.editedAt;
 });
 
-// Virtual for unread count for a specific user
 messageSchema.virtual("isReadBy").get(function () {
-  // This will be set dynamically when querying
   return false;
 });
 
-// Virtual for read count
 messageSchema.virtual("readCount").get(function () {
   return this.readBy.length;
 });
 
-// Pre-save middleware
 messageSchema.pre("save", function (next) {
-  // Set editedAt when content is modified (but not on creation)
   if (this.isModified("content") && !this.isNew) {
     this.editedAt = new Date();
   }
@@ -167,9 +160,7 @@ messageSchema.pre("save", function (next) {
   next();
 });
 
-// Instance method to mark as read by user
 messageSchema.methods.markAsRead = async function (userId: string) {
-  // Check if user already read this message
   const existingRead = this.readBy.find(
     (read: IReadStatus) => read.user.toString() === userId
   );
@@ -185,22 +176,18 @@ messageSchema.methods.markAsRead = async function (userId: string) {
   return this;
 };
 
-// Instance method to edit message
 messageSchema.methods.editMessage = async function (
   newContent: string,
   editorId: string
 ) {
-  // Only sender can edit
   if (this.sender.toString() !== editorId) {
     throw new Error("Only the sender can edit this message");
   }
 
-  // Can't edit system messages
   if (this.messageType === "system") {
     throw new Error("System messages cannot be edited");
   }
 
-  // Can't edit messages older than 24 hours
   const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
   if (this.createdAt < oneDayAgo) {
     throw new Error("Messages older than 24 hours cannot be edited");
@@ -219,7 +206,6 @@ messageSchema.methods.deleteMessage = async function (deleterId: string) {
     throw new Error("Only the sender can delete this message");
   }
 
-  // Can't delete system messages
   if (this.messageType === "system") {
     throw new Error("System messages cannot be deleted");
   }
@@ -390,7 +376,6 @@ messageSchema.statics.searchMessages = function (
     .limit(limit);
 };
 
-// Static method to get most active users in group
 messageSchema.statics.getMostActiveUsers = function (
   groupId: string,
   timeRange?: { start: Date; end: Date },
@@ -445,7 +430,6 @@ messageSchema.statics.getMostActiveUsers = function (
   ]);
 };
 
-// Static method to create system message
 messageSchema.statics.createSystemMessage = function (
   groupId: string,
   content: string,
@@ -453,15 +437,14 @@ messageSchema.statics.createSystemMessage = function (
 ) {
   return this.create({
     content,
-    sender: null, // System messages don't have a sender 
+    sender: null,
     group: groupId,
     messageType: "system",
     metadata,
-    readBy: [], // System messages start unread
+    readBy: [],
   });
 };
 
-// Static method to create item update message
 messageSchema.statics.createItemUpdateMessage = function (
   groupId: string,
   itemId: string,
@@ -487,7 +470,6 @@ messageSchema.statics.createItemUpdateMessage = function (
   });
 };
 
-// Static method to create list update message
 messageSchema.statics.createListUpdateMessage = function (
   groupId: string,
   listId: string,
@@ -519,7 +501,6 @@ messageSchema.statics.createListUpdateMessage = function (
   });
 };
 
-// Ensure virtuals are included in JSON
 messageSchema.set("toJSON", { virtuals: true });
 messageSchema.set("toObject", { virtuals: true });
 

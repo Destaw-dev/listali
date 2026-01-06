@@ -8,7 +8,6 @@ import { useAuthStore } from '../../../store/authStore';
 import { mockDashboardData } from '../../mocks/mockData';
 import type { AxiosResponse } from 'axios';
 
-// Mock dependencies
 vi.mock('../../../lib/api');
 vi.mock('../../../store/authStore');
 

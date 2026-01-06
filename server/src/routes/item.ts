@@ -1,4 +1,3 @@
-// routes/itemRoutes.ts
 import express from 'express';
 import {
   getItems,
@@ -39,9 +38,8 @@ const router = express.Router();
 router.get('/popular', popularItemsValidation, asyncHandler(getPopularItems));
 router.get('/search', searchItemsValidation, asyncHandler(searchItems));
 router.get('/stats/categories', categoryStatsValidation, asyncHandler(getCategoryStats));
-router.get('/units', asyncHandler(getAvailableUnits)); // <- חשוב לפני `/:id`
+router.get('/units', asyncHandler(getAvailableUnits));
 
-// New product-related routes
 router.get('/manual', asyncHandler(getManualItems));
 router.get('/product-based', asyncHandler(getProductBasedItems));
 router.get('/by-product', asyncHandler(getItemsByProduct));

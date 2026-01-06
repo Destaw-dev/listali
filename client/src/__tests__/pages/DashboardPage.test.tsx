@@ -45,7 +45,6 @@ interface DashboardData {
   };
 }
 
-// Mock dependencies
 vi.mock('../../store/authStore');
 vi.mock('../../hooks/useDashboard');
 const mockUseAuthRedirect = vi.fn(() => ({

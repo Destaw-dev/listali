@@ -3,7 +3,6 @@ import { mockProducts, mockItems, mockGroups, mockShoppingLists, mockCategories 
 
 
 export const handlers = [
-  // Products
   http.get('/api/products', () => {
     return HttpResponse.json({
       success: true,
@@ -11,7 +10,6 @@ export const handlers = [
     });
   }),
 
-  // Items
   http.get('/api/items', () => {
     return HttpResponse.json({
       success: true,
@@ -26,7 +24,6 @@ export const handlers = [
     });
   }),
 
-  // Groups
   http.get('/api/groups', () => {
     return HttpResponse.json({
       success: true,
@@ -34,7 +31,6 @@ export const handlers = [
     });
   }),
 
-  // Shopping Lists
   http.get('/api/shopping-lists', () => {
     return HttpResponse.json({
       success: true,
@@ -42,7 +38,6 @@ export const handlers = [
     });
   }),
 
-  // Categories
   http.get('/api/categories', () => {
     return HttpResponse.json({
       success: true,

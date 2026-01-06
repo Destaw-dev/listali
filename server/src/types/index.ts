@@ -1,10 +1,6 @@
 // ============================================================================
 // SERVER TYPES - SERVER-SPECIFIC EXTENSIONS
 // ============================================================================
-// This file contains server-specific type extensions and Mongoose-specific types
-// Due to rootDir restrictions, we define the base types locally but keep them
-// consistent with the shared types structure
-
 import { Document, Types } from "mongoose";
 import { Request as ExpressRequest } from "express";
 
@@ -14,8 +10,6 @@ export type Language = 'he' | 'en' | 'ar';
 // EXPRESS REQUEST TYPE EXTENSIONS
 // ============================================================================
 
-// Extend Express Request to include our custom properties
-// Using declare global for Express namespace extension (required by Express types)
 /* eslint-disable @typescript-eslint/no-namespace */
 declare global {
   namespace Express {
@@ -27,7 +21,6 @@ declare global {
 }
 /* eslint-enable @typescript-eslint/no-namespace */
 
-// Our custom Request interface (for backward compatibility)
 export interface Request extends ExpressRequest {
   user?: IUser;
   userId?: string;
@@ -37,7 +30,6 @@ export interface Request extends ExpressRequest {
 // MONGOOSE BASE TYPES
 // ============================================================================
 
-// Base interface for all documents with Mongoose ObjectId support
 export interface BaseDocument extends Document {
   _id: Types.ObjectId;
   createdAt: Date;

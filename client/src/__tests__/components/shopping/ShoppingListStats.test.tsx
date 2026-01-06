@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { ShoppingListStats } from '../../../components/shoppingList/ShoppingListStats';
 
-// Mock dependencies
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
 }));
@@ -22,8 +21,8 @@ describe('ShoppingListStats', () => {
     );
     
     expect(screen.getByText('3')).toBeInTheDocument();
-    expect(screen.getByText('7')).toBeInTheDocument(); // remaining
-    expect(screen.getByText('2')).toBeInTheDocument(); // active shoppers
+    expect(screen.getByText('7')).toBeInTheDocument();
+    expect(screen.getByText('2')).toBeInTheDocument();
   });
 
   it('should calculate progress correctly', () => {
@@ -35,7 +34,6 @@ describe('ShoppingListStats', () => {
       />
     );
     
-    // Progress should be 50%
     expect(screen.getByText('50%')).toBeInTheDocument();
   });
 
@@ -85,7 +83,6 @@ describe('ShoppingListStats', () => {
       />
     );
     
-    // Remaining = 10 - 3 = 7
     const remainingTexts = screen.getAllByText('7');
     expect(remainingTexts.length).toBeGreaterThan(0);
   });

@@ -4,7 +4,6 @@ import userEvent from '@testing-library/user-event';
 import UpdateEmailModal from '../../../components/settings/UpdateEmailModal';
 import { renderWithProviders } from '../../../test/test-utils';
 
-// Mock dependencies
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
 }));
@@ -95,7 +94,6 @@ describe('UpdateEmailModal', () => {
       const submitButton = screen.getByRole('button', { name: /save|submit|update/i });
       await user.click(submitButton);
       
-      // Should call mutation (mocked)
       await waitFor(() => {
         expect(screen.queryByText(/invalid/i)).not.toBeInTheDocument();
       }, { timeout: 3000 });

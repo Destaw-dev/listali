@@ -24,7 +24,6 @@ import { googleAuth, googleCallback, googleUrl } from '../controllers/googleAuth
 
 const router = express.Router();
 
-// Rate limiting for auth endpoints
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 500,
@@ -36,7 +35,6 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// Rate limiting for registration
 const registerLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 300,
@@ -46,13 +44,12 @@ const registerLimiter = rateLimit({
   }
 });
 
-// Routes - Note: Most functions already use asyncHandler internally
 router.post('/google', googleAuth);
 router.get('/google/url', googleUrl);
 router.get('/google/callback', googleCallback);
 router.post('/register', registerLimiter, registerValidation, register);
 router.post('/login', authLimiter, loginValidation, login);
-router.post('/logout', optionalAuth, logout); // Logout can work with just cookies/sessionId, accessToken is optional
+router.post('/logout', optionalAuth, logout);
 router.get('/me', authenticateToken, getMe);
 router.put('/profile', authenticateToken, profileValidation, updateProfile);
 router.put('/email', authenticateToken, emailValidation, updateEmail);
@@ -61,12 +58,10 @@ router.post('/refresh', refreshToken);
 router.get('/check-username/:username', checkUsernameAvailability);
 router.get('/check-email/:email', checkEmailAvailability);
 
-// Email verification routes
 router.post('/verify-email', verifyEmail);
 router.post('/resend-verification', resendVerification);
 router.post('/resend-verification-login', resendVerificationForLogin);
 
-// Invitation routes
 router.get('/invitations', authenticateToken, getMyInvitations);
 router.post('/invitations/accept', authenticateToken, acceptInvitation);
 router.post('/invitations/decline', authenticateToken, declineInvitation);

@@ -7,7 +7,6 @@ import { apiClient } from '../../lib/api';
 import { useAuthStore } from '../../store/authStore';
 import { mockUser } from '../mocks/mockData';
 
-// Mock dependencies
 vi.mock('../../lib/api');
 vi.mock('../../store/authStore');
 vi.mock('next/navigation', () => ({
@@ -45,7 +44,6 @@ describe('LoginPage', () => {
 
   it('should render login form', () => {
     renderWithProviders(<LoginPage />);
-    // Check for form inputs by placeholder or label text
     const emailInput = screen.getByPlaceholderText(/email|אימייל/i) || screen.queryByLabelText(/email/i);
     const passwordInput = screen.getByPlaceholderText(/password|סיסמה/i) || screen.queryByLabelText(/password/i);
     expect(emailInput || passwordInput).toBeTruthy();
@@ -58,7 +56,6 @@ describe('LoginPage', () => {
     const submitButton = screen.getByRole('button', { name: /login|submit/i });
     await user.click(submitButton);
     
-    // Should show validation errors
     await waitFor(() => {
       expect(screen.queryByText(/required|invalid/i)).toBeInTheDocument();
     });
@@ -74,7 +71,6 @@ describe('LoginPage', () => {
     const user = userEvent.setup();
     renderWithProviders(<LoginPage />);
     
-    // Find inputs by placeholder or type
     const emailInput = screen.getByPlaceholderText(/email|אימייל/i) as HTMLInputElement;
     const passwordInput = screen.getByPlaceholderText(/password|סיסמה/i) as HTMLInputElement;
     const submitButton = screen.getByRole('button', { name: /login|submit|התחבר/i });
@@ -98,7 +94,6 @@ describe('LoginPage', () => {
     if (passwordInput) {
       expect(passwordInput).toHaveAttribute('type', 'password');
       
-      // Find toggle button by icon or aria-label
       const toggleButtons = screen.getAllByRole('button');
       const toggleButton = toggleButtons.find(btn => 
         btn.querySelector('svg') || btn.getAttribute('aria-label')?.includes('password')
@@ -123,7 +118,6 @@ describe('LoginPage', () => {
     } as ReturnType<typeof useAuthStore>);
 
     renderWithProviders(<LoginPage />);
-    // Should redirect or return null
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
   });
 

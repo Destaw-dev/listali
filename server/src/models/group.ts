@@ -3,7 +3,6 @@ import { IGroup, IGroupMember } from '../types';
 
 interface GroupModel extends Model<IGroup> {
   findByUser(userId: string): Promise<IGroup[]>;
-  // findByInviteCode(inviteCode: string): Promise<IGroup>;
 }
 
 const groupMemberSchema = new Schema<IGroupMember>({
@@ -93,13 +92,11 @@ const groupSchema = new Schema<IGroup, GroupModel>({
     ref: 'ShoppingList'
   }],
   pendingInvites: [{
-    // For registered users
     user: {
       type: Schema.Types.ObjectId,
       ref: 'User',
       required: false
     },
-    // For non-registered users
     email: {
       type: String,
       required: false
@@ -130,25 +127,20 @@ const groupSchema = new Schema<IGroup, GroupModel>({
   toObject: { virtuals: true }
 });
 
-// Indexes for performance
 groupSchema.index({ owner: 1 });
 groupSchema.index({ 'members.user': 1 });
 groupSchema.index({ isActive: 1 });
 groupSchema.index({ createdAt: -1 });
 
-// Virtual for members count
 groupSchema.virtual('membersCount').get(function () {
   return Array.isArray(this.members) ? this.members.length : 0;
 });
 
-// Virtual for active shopping lists count
 groupSchema.virtual('activeListsCount').get(function () {
   return Array.isArray(this.shoppingLists) ? this.shoppingLists.length : 0;
 });
 
-// Pre-save middleware to ensure owner is in members
 groupSchema.pre('save', function(next) {
-  // Check if owner is in members array
   const ownerInMembers = this.members.some(member => 
     member.user.toString() === this.owner.toString()
   );
@@ -174,9 +166,7 @@ groupSchema.pre('save', function(next) {
   next();
 });
 
-// Instance method to add member
 groupSchema.methods.addMember = function(userId: string, role: 'admin' | 'member' = 'member') {
-  // Check if user is already a member
   const existingMember = this.members.find((member: IGroupMember) => 
     member.user.toString() === userId
   );
@@ -185,12 +175,10 @@ groupSchema.methods.addMember = function(userId: string, role: 'admin' | 'member
     throw new Error('User is already a member of this group');
   }
   
-  // Check if group is at capacity
   if (this.members.length >= this.settings.maxMembers) {
     throw new Error('Group has reached maximum member capacity');
   }
   
-  // Set permissions based on role
   let permissions;
   if (role === 'admin') {
     permissions = {
@@ -223,7 +211,6 @@ groupSchema.methods.addMember = function(userId: string, role: 'admin' | 'member
   return this.save();
 };
 
-// Instance method to remove member
 groupSchema.methods.removeMember = function(userId: string, removedBy: string) {
   const memberIndex = this.members.findIndex((member: IGroupMember) => 
     member.user.toString() === userId
@@ -235,12 +222,10 @@ groupSchema.methods.removeMember = function(userId: string, removedBy: string) {
   
   const memberToRemove = this.members[memberIndex];
   
-  // Can't remove the owner
   if (memberToRemove.role === 'owner') {
     throw new Error('Cannot remove the group owner');
   }
   
-  // Check permissions
   const remover = this.members.find((member: IGroupMember) => 
     member.user.toString() === removedBy
   );
@@ -257,7 +242,6 @@ groupSchema.methods.removeMember = function(userId: string, removedBy: string) {
   return this.save();
 };
 
-// Instance method to update member role
 groupSchema.methods.updateMemberRole = function(userId: string, newRole: 'admin' | 'member', updatedBy: string) {
   const member = this.members.find((member: IGroupMember) => 
     member.user.toString() === userId
@@ -271,7 +255,6 @@ groupSchema.methods.updateMemberRole = function(userId: string, newRole: 'admin'
     throw new Error('Cannot change owner role');
   }
   
-  // Check permissions
   const updater = this.members.find((member: IGroupMember) => 
     member.user.toString() === updatedBy
   );
@@ -282,7 +265,6 @@ groupSchema.methods.updateMemberRole = function(userId: string, newRole: 'admin'
   
   member.role = newRole;
   
-  // Update permissions based on new role
   if (newRole === 'admin') {
     member.permissions = {
       canCreateLists: true,
@@ -304,7 +286,6 @@ groupSchema.methods.updateMemberRole = function(userId: string, newRole: 'admin'
   return this.save();
 };
 
-// Instance method to transfer ownership
 groupSchema.methods.transferOwnership = function(currentOwnerId: string, newOwnerId: string) {
   const currentOwner = this.members.find((member: IGroupMember) => 
     member.user.toString() === currentOwnerId
@@ -326,7 +307,6 @@ groupSchema.methods.transferOwnership = function(currentOwnerId: string, newOwne
     throw new Error('Cannot transfer ownership to yourself');
   }
   
-  // Transfer ownership
   currentOwner.role = 'admin';
   currentOwner.permissions = {
     canCreateLists: true,
@@ -345,13 +325,11 @@ groupSchema.methods.transferOwnership = function(currentOwnerId: string, newOwne
     canManageMembers: true
   };
   
-  // Update the owner field in the group
   this.owner = new mongoose.Types.ObjectId(newOwnerId);
   
   return this.save();
 };
 
-// Instance method to check if user has permission
 groupSchema.methods.hasPermission = function(userId: string, permission: string) {
   const member = this.members.find((member: IGroupMember) => 
     member.user.toString() === userId
@@ -368,7 +346,6 @@ groupSchema.methods.hasPermission = function(userId: string, permission: string)
   return member.permissions[permission as keyof typeof member.permissions] || false;
 };
 
-// Static method to find groups by user
 groupSchema.statics.findByUser = function(userId: string) {
   return this.find({
     'members.user': userId,
@@ -377,15 +354,6 @@ groupSchema.statics.findByUser = function(userId: string) {
     .populate('owner', 'username firstName lastName avatar')
     .sort({ updatedAt: -1 });
 };
-
-// Static method to find by invite code
-// groupSchema.statics.findByInviteCode = function(inviteCode: string) {
-//   return this.findOne({
-//     inviteCode,
-//     isActive: true
-//   }).populate('members.user', 'username firstName lastName avatar')
-//     .populate('owner', 'username firstName lastName avatar');
-// };
 
 const Group = mongoose.model<IGroup, GroupModel>('Group', groupSchema);
 

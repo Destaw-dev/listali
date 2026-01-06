@@ -3,7 +3,6 @@ import { screen } from '@testing-library/react';
 import { ShoppingModeCard } from '../../../components/shoppingList/ShoppingModeCard';
 import { renderWithProviders } from '../../../test/test-utils';
 
-// Mock dependencies
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
 }));
@@ -93,7 +92,6 @@ describe('ShoppingModeCard', () => {
       />
     );
     
-    // Should show session controls (might be stop, pause, or resume button)
     const buttons = screen.getAllByRole('button');
     const sessionButton = buttons.find(btn => 
       btn.textContent?.toLowerCase().includes('stop') ||
@@ -101,7 +99,6 @@ describe('ShoppingModeCard', () => {
       btn.textContent?.toLowerCase().includes('עצור') ||
       btn.textContent?.toLowerCase().includes('השהה')
     );
-    // If no session button found, at least should have some buttons
     expect(sessionButton || buttons.length > 0).toBeTruthy();
   });
 
@@ -130,7 +127,6 @@ describe('ShoppingModeCard', () => {
       />
     );
     
-    // Remaining = 10 - 3 = 7 (might appear multiple times)
     const remainingTexts = screen.queryAllByText('7');
     expect(remainingTexts.length > 0 || screen.getByText('10')).toBeTruthy();
   });
@@ -146,7 +142,6 @@ describe('ShoppingModeCard', () => {
       />
     );
     
-    // Should show active sessions count
     const activeTexts = screen.queryAllByText(/1|active/i);
     expect(activeTexts.length > 0 || screen.getByText('10')).toBeTruthy();
   });

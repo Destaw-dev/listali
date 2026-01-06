@@ -5,7 +5,7 @@ import { BrowserMultiFormatReader, IScannerControls } from '@zxing/browser';
 import { BarcodeFormat, DecodeHintType } from '@zxing/library';
 import { useTranslations } from 'next-intl';
 import { Button } from '../common/Button';
-import { useModalScrollLock } from '@/hooks/useModalScrollLock';
+import { useModalScrollLock } from '../../hooks/useModalScrollLock';
 
 type ScannerState = 'idle' | 'requesting' | 'scanning' | 'detected' | 'error';
 

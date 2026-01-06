@@ -8,7 +8,6 @@ import { useAuthStore } from '../../../store/authStore';
 import { mockUser } from '../../mocks/mockData';
 import type { AxiosResponse } from 'axios';
 
-// Mock dependencies
 vi.mock('../../../lib/api');
 vi.mock('../../../store/authStore');
 vi.mock('../../../contexts/NotificationContext', () => ({
@@ -86,8 +85,6 @@ describe('useChat Hooks', () => {
         wrapper: createWrapper(),
       });
 
-      // When disabled, query should not be enabled
-      // React Query might still initialize, so we just verify the hook works
       expect(result.current).toBeDefined();
     });
   });

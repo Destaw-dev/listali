@@ -1,6 +1,5 @@
 import { z } from 'zod'
 
-// Factory functions that create schemas with translations
 export const createLoginSchema = (t: (key: string) => string) => z.object({
   email: z.string().email(t('emailInvalid')),
   password: z.string().min(6, t('passwordMinLength')),
@@ -49,11 +48,11 @@ export const createListSchema = (t: (key: string) => string) => z.object({
       .string()
       .min(2, t('firstNameMinLength'))
       .max(50, t('firstNameMaxLength'))
-      .regex(/^[a-zA-Z\u0590-\u05FF\s]+$/, "firstNameInvalid"),
+      .regex(/^[a-zA-Z\u0590-\u05FF\s]+$/, t('firstNameInvalid')),
     lastName: z
       .string()
       .min(2, t('lastNameMinLength'))
-      .max(50, "lastNameMaxLength")
+      .max(50, t('lastNameMaxLength'))
       .regex(/^[a-zA-Z\u0590-\u05FF\s]+$/, t('lastNameInvalid')),
     username: z
       .string()

@@ -363,11 +363,9 @@ export const createBulkItemsValidation = [
   body('items.*.product')
     .optional()
     .custom((value) => {
-      // If value is not provided, null, empty string, or undefined, it's valid (for manual items)
       if (!value || value === null || value === '' || value === undefined) {
         return true;
       }
-      // If value is provided, it must be a valid MongoId
       if (typeof value === 'string' && /^[0-9a-fA-F]{24}$/.test(value)) {
         return true;
       }
@@ -577,11 +575,9 @@ export const addItemValidation = [
   body('product')
     .optional()
     .custom((value) => {
-      // If value is not provided, null, empty string, or undefined, it's valid (for manual items)
       if (!value || value === null || value === '' || value === undefined) {
         return true;
       }
-      // If value is provided, it must be a valid MongoId
       if (typeof value === 'string' && /^[0-9a-fA-F]{24}$/.test(value)) {
         return true;
       }

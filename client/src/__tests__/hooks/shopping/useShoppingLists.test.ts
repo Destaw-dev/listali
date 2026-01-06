@@ -13,7 +13,6 @@ import { apiClient } from '../../../lib/api';
 import { useAuthStore } from '../../../store/authStore';
 import { mockShoppingLists } from '../../mocks/mockData';
 
-// Mock dependencies
 vi.mock('../../../lib/api');
 vi.mock('../../../store/authStore');
 vi.mock('../../../contexts/NotificationContext', () => ({

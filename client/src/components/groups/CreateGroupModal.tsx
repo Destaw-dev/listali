@@ -6,7 +6,7 @@ import { X, Users, Group } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useModalScrollLock } from '../../hooks/useModalScrollLock';
-import { Button, Input, TextArea } from '../common';
+import { Button, Input, TextArea, Modal } from '../common';
 import { createGroupSchema } from '../../lib/schemas';
 
 type CreateGroupFormData = {
@@ -56,23 +56,11 @@ export function CreateGroupModal({ isOpen, onClose, onCreateGroup }: CreateGroup
 
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={(e) => e.target === e.currentTarget && handleClose()}>
-      <div className="bg-card shadow-2xl rounded-xl max-w-md w-full max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom-4">
-        <div className="flex items-center justify-between p-6">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl">
-              <Users className="w-5 h-5 text-text-primary" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-text-primary">{t('createNewGroup')}</h2>
-              <p className="text-text-muted text-sm">{t('createNewGroupDescription')}</p>
-            </div>
-          </div>
-          <Button variant='ghost' size='sm' onClick={handleClose} rounded={true}><X className="w-4 h-4" /></Button>
-        </div>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
+  return(
+    <Modal title={t('createNewGroup')} onClose={handleClose} iconHeader={            <div className="p-2 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl">
+      <Users className="w-5 h-5 text-text-primary" />
+    </div>} subtitle={t('createNewGroupDescription')} size="md">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <Input
             label={t('groupName') + ' *'}
             error={errors.name?.message}
@@ -107,7 +95,7 @@ export function CreateGroupModal({ isOpen, onClose, onCreateGroup }: CreateGroup
             <Button variant='primary' type="submit" fullWidth disabled={isLoading} loading={isLoading}>{isLoading ? t('creatingGroup') : t('createGroup')}</Button>
           </div>
         </form>
-      </div>
-    </div>
-  );
+    </Modal>
+  )
+
 } 

@@ -4,7 +4,6 @@ import userEvent from '@testing-library/user-event';
 import { ShoppingItemCard } from '../../../components/shoppingList/items/ShoppingItemCard';
 import { mockItems } from '../../mocks/mockData';
 
-// Mock dependencies
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
 }));
@@ -80,9 +79,8 @@ describe('ShoppingItemCard', () => {
       />
     );
     
-    // Find the checkbox/purchase button (first button)
     const buttons = screen.getAllByRole('button');
-    const purchaseButton = buttons[0]; // First button is the purchase checkbox
+    const purchaseButton = buttons[0];
     await user.click(purchaseButton);
     
     expect(mockOnUnpurchase).toHaveBeenCalledWith(purchasedItem);
@@ -170,7 +168,6 @@ describe('ShoppingItemCard', () => {
       />
     );
     
-    // Priority badge should be rendered
     const badges = screen.queryAllByText(/priority|high/i);
     expect(badges.length).toBeGreaterThan(0);
   });
@@ -194,9 +191,8 @@ describe('ShoppingItemCard', () => {
       />
     );
     
-    // Should show purchased/total quantity - might be in different format
     const quantityTexts = screen.queryAllByText(/1/) || screen.queryAllByText(/3/);
-    // Or check if the item name is displayed (which means card rendered)
+
     expect(quantityTexts.length > 0 || screen.getByText(partiallyPurchasedItem.name)).toBeTruthy();
   });
 });

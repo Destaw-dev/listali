@@ -123,7 +123,6 @@ describe('GroupsPage', () => {
     } as ReturnType<typeof useGroups>);
 
     renderWithProviders(<GroupsPage />);
-    // When empty, should show create button or empty message
     const buttons = screen.getAllByRole('button');
     const createButton = buttons.find(btn => 
       btn.textContent?.toLowerCase().includes('create') ||

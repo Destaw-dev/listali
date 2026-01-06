@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { X, Globe, Palette, Check } from 'lucide-react';
-import { Card, CardBody, Button } from '../common';
+import { Button, Modal } from '../common';
 import { useNotification } from '../../contexts/NotificationContext';
 import { useModalScrollLock } from '../../hooks/useModalScrollLock';
-import { Theme } from '@/types';
+import { Theme } from '../../types';
 
 interface LanguageThemeModalProps {
   isOpen: boolean;
@@ -77,42 +77,21 @@ export default function LanguageThemeModal({
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      onClose();
-    }
-  };
-
   useModalScrollLock(isOpen);
 
   if (!isOpen) return null;
 
   return (
-    <div 
-      className="fixed inset-0 backdrop-blur-lg z-50 flex items-center justify-center p-4 overflow-y-auto"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
+    <Modal
+      title={t("languageAndTheme")}
+      onClose={onClose}
+      iconHeader={<div className=" p-2 bg-background-500 rounded-full">
+        <Globe className="w-5 h-5 text-text-primary" />
+      </div>}
+      subtitle={t("customizeYourExperience")}
+      size="md"
     >
-      <Card  className="bg-background shadow-2xl max-w-lg w-full animate-in slide-in-from-bottom-4">
-        <CardBody className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl">
-                <Globe className="w-5 h-5 text-text-primary" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-text-primary">{t('languageAndTheme')}</h2>
-                <p className="text-text-muted text-sm">{t('customizeYourExperience')}</p>
-              </div>
-            </div>
-            <Button
-              variant="ghost"
-              onClick={onClose}
-            >
-              <X className="w-5 h-5 text-text-primary" />
-            </Button>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-6" onKeyDown={handleKeyDown}>
+      <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <h3 className="text-lg font-semibold text-text-primary mb-3 flex items-center gap-2">
                 <Globe className="w-4 h-4" />
@@ -184,7 +163,7 @@ export default function LanguageThemeModal({
               <Button
                 variant="ghost"
                 onClick={onClose}
-                className="flex-1"
+                fullWidth
                 disabled={isLoading}
                 type="button"
               >
@@ -193,15 +172,13 @@ export default function LanguageThemeModal({
               <Button
                 variant="primary"
                 type="submit"
-                className="flex-1"
+                fullWidth
                 loading={isLoading}
               >
                 {isLoading ? t('saving') : t('save')}
               </Button>
             </div>
           </form>
-        </CardBody>
-      </Card>
-    </div>
-  );
+    </Modal>
+  )
 }

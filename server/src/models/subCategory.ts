@@ -51,11 +51,9 @@ nameEn: {
   toObject: { virtuals: true }
 });
 
-// Indexes
 SubCategorySchema.index({ categoryId: 1, sortOrder: 1 });
 SubCategorySchema.index({ isActive: 1 });
 
-// Virtual Fields
 SubCategorySchema.virtual('category', {
   ref: 'Category',
   localField: 'categoryId',
@@ -63,7 +61,6 @@ SubCategorySchema.virtual('category', {
   justOne: true
 });
 
-// Instance Methods
 SubCategorySchema.methods.deactivate = function() {
   this.isActive = false;
   return this.save();
@@ -74,7 +71,6 @@ SubCategorySchema.methods.activate = function() {
   return this.save();
 };
 
-// Static Methods
 SubCategorySchema.statics.getByCategory = function(categoryId: mongoose.Types.ObjectId) {
   return this.find({ categoryId, isActive: true }).sort({ sortOrder: 1 });
 };

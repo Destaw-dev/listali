@@ -6,7 +6,6 @@ import { useAuthStore } from '../../store/authStore';
 import { useUserProfile, useUserPreferences, useNotificationSettings, useLogout, useDeleteAccount, useUpdateProfile, useUpdatePreferences, useUpdateNotificationSettings } from '../../hooks/useSettings';
 import { mockUser } from '../mocks/mockData';
 
-// Mock dependencies
 vi.mock('../../store/authStore');
 vi.mock('../../store/themeStore', () => {
   const mockSetTheme = vi.fn();
@@ -122,14 +121,12 @@ describe('SettingsPage', () => {
 
   it('should render settings page', () => {
     renderWithProviders(<SettingsPage />);
-    // Settings text might appear multiple times
     const settingsTexts = screen.getAllByText(/settings|הגדרות/i);
     expect(settingsTexts.length).toBeGreaterThan(0);
   });
 
   it('should show profile section', () => {
     renderWithProviders(<SettingsPage />);
-    // Profile section might be rendered with different text
     const profileTexts = screen.queryAllByText(/profile|פרופיל|user|משתמש/i);
     const buttons = screen.getAllByRole('button');
     expect(profileTexts.length > 0 || buttons.length > 0).toBeTruthy();
@@ -137,7 +134,6 @@ describe('SettingsPage', () => {
 
   it('should show preferences section', () => {
     renderWithProviders(<SettingsPage />);
-    // Preferences section might be rendered with different text
     const preferenceTexts = screen.queryAllByText(/preferences|העדפות|language|theme/i);
     const buttons = screen.getAllByRole('button');
     expect(preferenceTexts.length > 0 || buttons.length > 0).toBeTruthy();
@@ -145,7 +141,6 @@ describe('SettingsPage', () => {
 
   it('should show notification settings section', () => {
     renderWithProviders(<SettingsPage />);
-    // Notification section might be rendered with different text
     const notificationTexts = screen.queryAllByText(/notifications|התראות|bell/i);
     const buttons = screen.getAllByRole('button');
     expect(notificationTexts.length > 0 || buttons.length > 0).toBeTruthy();

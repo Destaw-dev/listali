@@ -27,7 +27,6 @@ const mockInvitations = [
   },
 ];
 
-// Mock dependencies
 vi.mock('../../hooks/useInvitations');
 vi.mock('../../hooks/useAuthRedirect', () => ({
   useAuthRedirect: () => ({
@@ -66,7 +65,6 @@ describe('InvitationsPage', () => {
 
   it('should render invitations page', () => {
     renderWithProviders(<InvitationsPage />);
-    // Check for invitations text (might appear multiple times)
     const invitationTexts = screen.getAllByText(/invitations|הזמנות/i);
     expect(invitationTexts.length).toBeGreaterThan(0);
   });
@@ -148,7 +146,6 @@ describe('InvitationsPage', () => {
     } as ReturnType<typeof useInvitations>);
 
     renderWithProviders(<InvitationsPage />);
-    // Check for empty state - might be "noInvitations" or "noNewInvitations"
     const emptyState = screen.queryByText(/no invitations|noNewInvitations|אין הזמנות/i);
     expect(emptyState || screen.queryByText(/noNewInvitations/i)).toBeTruthy();
   });

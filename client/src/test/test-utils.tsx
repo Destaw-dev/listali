@@ -8,7 +8,6 @@ import {
 } from '@tanstack/react-query';
 import { vi } from 'vitest';
 
-// --- Providers & Test Environment Setup ---
 
 const NotificationProvider = ({ children }: { children: React.ReactNode }) => <>{children}</>;
 
@@ -38,7 +37,6 @@ export function renderWithProviders(
   return { ...render(ui, { wrapper: Wrapper, ...renderOptions }), queryClient };
 }
 
-// --- Query Mock Helpers ---
 
 export function createMockQueryResult<TData, TError = Error>(
   overrides?: Partial<UseQueryResult<TData, TError>>
@@ -72,14 +70,12 @@ export function createMockQueryResult<TData, TError = Error>(
     isRefetchError: false,
     errorUpdateCount: 0,
     isEnabled: true,
-    // Fix: v5 requires 'promise' in pending states
     promise: new Promise(() => {}), 
   };
 
   return Object.assign(base, overrides) as UseQueryResult<TData, TError>;
 }
 
-// --- Mutation Mock Helpers ---
 
 export function createMockMutationResult<TData, TError = Error, TVariables = unknown, TContext = unknown>(
   overrides?: Partial<UseMutationResult<TData, TError, TVariables, TContext>>

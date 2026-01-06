@@ -4,13 +4,12 @@ import { memo, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
-import { X } from "lucide-react";
-import { Button, Input, TextArea, Dropdown } from "../../common";
+import { Edit, X } from "lucide-react";
+import { z } from "zod";
+import { Button, Input, TextArea, Dropdown, Modal } from "../../common";
 import { useModalScrollLock } from "../../../hooks/useModalScrollLock";
 import { useAvailableCategories } from "../../../hooks/useItems";
 import { itemSchema } from "../../../lib/schemas";
-import { z } from "zod";
-
 import { IItem, ICategory } from "../../../types";
 import { QuantityStepper } from "../AddItemsModal/QuantityStepper";
 
@@ -49,7 +48,7 @@ export const EditItemModal = memo(function EditItemModal({
   const itemSchemaInstance = isPartiallyPurchasedForSchema
     ? itemSchema(t).extend({
         quantity: z.number()
-          .min(purchasedQtyForSchema, `הכמות חייבת להיות לפחות ${purchasedQtyForSchema} (הכמות שנקנתה)`)
+          .min(purchasedQtyForSchema, t('quantityMin', { quantity: purchasedQtyForSchema }))
           .max(10000, t('quantityMax')),
       })
     : itemSchema(t);
@@ -144,32 +143,19 @@ export const EditItemModal = memo(function EditItemModal({
     })),
   ];
 
-
   return (
-    <div
-      className="fixed inset-0 z-[55] flex items-center justify-center p-4 bg-black/30 backdrop-blur-[2px]"
-      aria-labelledby="edit-item-dialog-title"
-      role="dialog"
-      aria-modal="true"
-      onClick={onClose}
+    <Modal
+      title={tItems("editItem")}
+      onClose={onClose}
+      iconHeader={<div className=" p-2 bg-primary-500 rounded-full">
+        <Edit className="w-5 h-5 text-text-primary" />
+      </div>}
+      size="md"
     >
-      <div
-        className="relative w-full max-w-lg rounded-3xl bg-card shadow-2xl transition-all animate-[fadeIn_.15s_ease-out] max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <header className="flex items-center justify-between gap-3 px-6 pt-6 pb-4 sticky top-0 bg-card border-b border-border">
-          <h3 id="edit-item-dialog-title" className="text-lg font-semibold text-text-primary">
-            {tItems("editItem") || "ערוך פריט"}
-          </h3>
-          <Button variant="ghost" size="md" onClick={onClose} aria-label={t("cancel")} disabled={isLoading}>
-            <X className="h-4 w-4" />
-          </Button>
-        </header>
-
-        <form onSubmit={handleSubmit(onSubmitForm)} className="px-6 pb-6 pt-4 space-y-4">
+      <form onSubmit={handleSubmit(onSubmitForm)} className="space-y-4">
           {isFromCatalog && (
-            <div className="mb-4 p-3 bg-background-50 dark:bg-background-900/20 rounded-lg border border-primary-100 ">
-              <p className="text-sm text-text-primary dark:text-primary-200">
+            <div className="mb-4 p-3 bg-warning-50 border border-warning-200 rounded-lg">
+              <p className="text-sm text-warning">
                 {tItems("catalogItemEditNote") || "זהו מוצר מהקטלוג. ניתן לערוך רק כמות, עדיפות והערות."}
               </p>
             </div>
@@ -196,11 +182,11 @@ export const EditItemModal = memo(function EditItemModal({
                 </p>
               </div>
               {currentQuantity < purchasedQty && (
-                <p className="text-sm font-medium text-error dark:text-error-400 mt-2">
+                <p className="text-sm font-medium text-error mt-2">
                   {tItems("quantityWarning", { 
                     newQuantity: currentQuantity, 
                     purchasedQuantity: purchasedQty 
-                  }) || `⚠️ שים לב: הכמות החדשה (${currentQuantity}) קטנה מהכמות שנקנתה (${purchasedQty}). הכמות שנקנתה תתעדכן אוטומטית.`}
+                  }) || t('quantityWarning', { newQuantity: currentQuantity, purchasedQuantity: purchasedQty })}
                 </p>
               )}
             </div>
@@ -314,8 +300,7 @@ export const EditItemModal = memo(function EditItemModal({
             </Button>
           </div>
         </form>
-      </div>
-    </div>
+      </Modal>
   );
 });
 

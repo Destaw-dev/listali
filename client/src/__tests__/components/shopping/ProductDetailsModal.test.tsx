@@ -3,9 +3,8 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ProductDetailsModal } from '../../../components/shoppingList/items/ProductDetailsModal';
 import { mockItems, mockProduct } from '../../mocks/mockData';
-import type { IItem } from '@/types';
+import type { IItem } from '../../../types';
 
-// Mock dependencies
 vi.mock('../../../hooks/useModalScrollLock', () => ({
   useModalScrollLock: vi.fn(),
 }));
@@ -97,7 +96,6 @@ describe('ProductDetailsModal', () => {
       />
     );
     
-    // Brand might be displayed in header or body
     const brandTexts = screen.queryAllByText('Test Brand');
     expect(brandTexts.length > 0 || screen.getByText(mockItems[0].name)).toBeTruthy();
   });

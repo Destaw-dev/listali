@@ -10,7 +10,7 @@ beforeAll(async () => {
   mongoServer = await MongoMemoryServer.create();
   const uri = mongoServer.getUri();
   await mongoose.connect(uri);
-}, 30000); // 30 second timeout for MongoDB binary download
+}, 30000);
 
 afterAll(async () => {
   await mongoose.disconnect();
@@ -135,7 +135,6 @@ describe('🔐 Auth API', () => {
     const body = res.body as IApiResponse<void>;
     expect(body.message).toMatch(/updated/i);
 
-    // Confirm login with new password works
     const loginRes2 = await request(app).post('/api/auth/login').send({
       email: user.email,
       password: 'NewPassword123'
@@ -170,7 +169,6 @@ describe('🔐 Auth API', () => {
       password: user.password
     });
 
-    // Get cookies from login response
     const cookies = loginRes.headers['set-cookie'];
     const cookiesArray: string[] = Array.isArray(cookies) ? cookies : cookies ? [cookies] : [];
     const refreshTokenCookie = cookiesArray.find((c: string) => c.startsWith('refreshToken='));

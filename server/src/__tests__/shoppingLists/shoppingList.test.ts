@@ -51,7 +51,7 @@ beforeAll(async () => {
 
   const group = getGroupData(groupRes);
   groupId = group._id.toString();
-}, 60000); // 60 second timeout for MongoDB and setup
+}, 60000);
 
 afterAll(async () => {
   await mongoose.disconnect();
@@ -108,7 +108,6 @@ describe('📝 Shopping List API', () => {
   });
 
   test('PUT /api/shopping-lists/:id → should assign shopping list to user via update', async () => {
-    // Register second user
     const newUserRes = await request(app).post('/api/auth/register').send({
       username: 'assignUser',
       email: 'assign@example.com',
@@ -117,7 +116,6 @@ describe('📝 Shopping List API', () => {
       lastName: 'User',
     });
   
-    // Verify email for testing
     await mongoose.connection.db?.collection('users').updateOne(
       { email: 'assign@example.com' },
       { $set: { isEmailVerified: true } }

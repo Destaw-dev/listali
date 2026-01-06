@@ -4,7 +4,6 @@ import userEvent from '@testing-library/user-event';
 import LanguageThemeModal from '../../../components/settings/LanguageThemeModal';
 import { renderWithProviders } from '../../../test/test-utils';
 
-// Mock dependencies
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
 }));
@@ -51,7 +50,6 @@ describe('LanguageThemeModal', () => {
       />
     );
     
-    // Should show language and theme options
     const buttons = screen.getAllByRole('button');
     expect(buttons.length).toBeGreaterThan(0);
   });
@@ -68,7 +66,6 @@ describe('LanguageThemeModal', () => {
       />
     );
     
-    // Find and click English language option
     const buttons = screen.getAllByRole('button');
     const englishButton = buttons.find(btn => 
       btn.textContent?.includes('English') || btn.textContent?.includes('en')
@@ -98,7 +95,6 @@ describe('LanguageThemeModal', () => {
       />
     );
     
-    // Find and click dark theme option
     const buttons = screen.getAllByRole('button');
     const darkThemeButton = buttons.find(btn => 
       btn.textContent?.toLowerCase().includes('dark') ||

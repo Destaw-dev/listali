@@ -4,7 +4,6 @@ import userEvent from '@testing-library/user-event';
 import { JoinGroupModal } from '../../../components/groups/JoinGroupModal';
 import { renderWithProviders } from '../../../test/test-utils';
 
-// Mock dependencies
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
 }));

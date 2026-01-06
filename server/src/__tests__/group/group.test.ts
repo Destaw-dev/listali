@@ -1,4 +1,3 @@
-// src/__tests__/group/group.test.ts
 import request from 'supertest';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import { app } from '../../app';
@@ -31,7 +30,6 @@ beforeAll(async () => {
 
   await request(app).post('/api/auth/register').send(userData);
   
-  // Verify email for testing
   await mongoose.connection.db?.collection('users').updateOne(
     { email: userData.email },
     { $set: { isEmailVerified: true } }
@@ -112,7 +110,6 @@ describe('👥 Group API', () => {
       password: 'Password123'
     });
 
-    // Verify email for testing
     await mongoose.connection.db?.collection('users').updateOne(
       { email: 'second@example.com' },
       { $set: { isEmailVerified: true } }
@@ -127,14 +124,12 @@ describe('👥 Group API', () => {
     const body = getResponseData<{ message: string }>(res);
     expect(body.data?.message || body.message).toMatch(/invitation.*sent successfully/i);
     
-    // Get invite code from user's pending invitations
     const user = await User.findOne({ email: 'second@example.com' });
     const invitation = user?.pendingInvitations.find(inv => inv.group.toString() === groupId);
     expect(invitation).toBeDefined();
   });
 
   test('POST /api/auth/invitations/accept → should accept invitation and join group', async () => {
-    // Make sure invitation exists
     const userBefore = await User.findOne({ email: 'second@example.com' });
     const invitationBefore = userBefore?.pendingInvitations.find(inv => inv.group.toString() === groupId);
     if (!invitationBefore) {
@@ -153,7 +148,6 @@ describe('👥 Group API', () => {
 
     expect(res.status).toBe(200);
     
-    // Verify user is now a member
     const group = await Group.findById(groupId);
     const user = await User.findOne({ email: 'second@example.com' });
     const isMember = group?.members.some(m => m.user.toString() === user?._id.toString());
@@ -191,7 +185,6 @@ describe('👥 Group API', () => {
   });
 
   test('PUT /api/groups/:groupId/members/:userId/role → should update user role in group', async () => {
-    // First register the user
     await request(app).post('/api/auth/register').send({
       firstName: 'Change',
       lastName: 'Role',
@@ -254,7 +247,6 @@ describe('👥 Group API', () => {
   });
 
   test('DELETE /api/groups/:groupId/members/:userId → should remove user from group', async () => {
-    // First make sure the user is invited and accepted
     await request(app)
       .post(`/api/groups/${groupId}/invite`)
       .set('Authorization', `Bearer ${token}`)
@@ -264,7 +256,6 @@ describe('👥 Group API', () => {
     if (invitedUser) {
       const invitation = invitedUser.pendingInvitations.find(inv => inv.group.toString() === groupId);
       if (invitation) {
-        // Verify email and login
         await mongoose.connection.db?.collection('users').updateOne(
           { email: 'invited@example.com' },
           { $set: { isEmailVerified: true } }
@@ -301,17 +292,14 @@ describe('👥 Group API', () => {
   });
 
   test('POST /api/groups/:groupId/leave → should allow owner to leave and deactivate group', async () => {
-    // First, make sure second user is a member (from previous test)
     const groupBefore = await Group.findById(groupId);
     const secondUser = await User.findOne({ email: 'second@example.com' });
     const isMemberBefore = groupBefore?.members.some(m => m.user.toString() === secondUser?._id.toString());
     
-    // If not a member, skip this test
     if (!isMemberBefore) {
       return;
     }
 
-    // Check if second user is the owner
     const secondUserMember = groupBefore?.members.find(m => m.user.toString() === secondUser?._id.toString());
     const isOwner = secondUserMember?.role === 'owner';
 

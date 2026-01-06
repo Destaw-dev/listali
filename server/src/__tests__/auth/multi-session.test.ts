@@ -26,7 +26,7 @@ beforeAll(async () => {
   });
   const uri = mongoServer.getUri();
   await mongoose.connect(uri);
-}, 60000); // 60 second timeout for MongoDB binary download
+}, 60000);
 
 afterAll(async () => {
   await mongoose.disconnect();
@@ -53,7 +53,6 @@ const user = {
   password: 'Password123'
 };
 
-// Helper to verify email for testing
 const verifyUserEmail = async (email: string) => {
   await mongoose.connection.db?.collection('users').updateOne(
     { email },
@@ -66,7 +65,6 @@ describe('🔐 Multi-Session Auth API', () => {
     test('POST /api/auth/login → should set HttpOnly cookies (refreshToken, sessionId) and return accessToken', async () => {
       await request(app).post('/api/auth/register').send(user);
       
-      // Verify email for testing
       await mongoose.connection.db?.collection('users').updateOne(
         { email: user.email },
         { $set: { isEmailVerified: true } }
@@ -82,11 +80,10 @@ describe('🔐 Multi-Session Auth API', () => {
       expect(res.status).toBe(200);
       const authData = getAuthResponse(res);
       expect(authData.accessToken).toBeDefined();
-      expect(authData).not.toHaveProperty('token'); // Old token field removed
-      expect(authData).not.toHaveProperty('refreshToken'); // Not returned in WEB mode
-      expect(authData).not.toHaveProperty('sessionId'); // Not returned in WEB mode
+      expect(authData).not.toHaveProperty('token');
+      expect(authData).not.toHaveProperty('refreshToken');
+      expect(authData).not.toHaveProperty('sessionId');
       
-      // Check cookies are set
       const refreshTokenCookie = getCookieValue(res, 'refreshToken');
       const sessionIdCookie = getCookieValue(res, 'sessionId');
       expect(refreshTokenCookie).toBeDefined();
@@ -144,7 +141,6 @@ describe('🔐 Multi-Session Auth API', () => {
       if (!refreshTokenCookie || !sessionIdCookie) {
         throw new Error('Cookies not found');
       }
-      // Extract cookie values
       const refreshTokenParts = refreshTokenCookie.split(';')[0]?.split('=');
       const sessionIdParts = sessionIdCookie.split(';')[0]?.split('=');
       if (!refreshTokenParts || !sessionIdParts || !refreshTokenParts[1] || !sessionIdParts[1]) {
@@ -160,11 +156,10 @@ describe('🔐 Multi-Session Auth API', () => {
       expect(refreshRes.status).toBe(200);
       const refreshData = getAuthResponse(refreshRes);
       expect(refreshData.accessToken).toBeDefined();
-      expect(refreshData).not.toHaveProperty('refreshToken'); // Not returned in WEB mode
+      expect(refreshData).not.toHaveProperty('refreshToken');
       
-      // Check new cookies are set (rotated)
       const newRefreshTokenValue = getRefreshTokenCookie(refreshRes);
-      expect(newRefreshTokenValue).not.toBe(refreshTokenValue); // Should be rotated
+      expect(newRefreshTokenValue).not.toBe(refreshTokenValue);
     });
 
     test('POST /api/auth/logout → should clear cookies and revoke session', async () => {
@@ -181,14 +176,12 @@ describe('🔐 Multi-Session Auth API', () => {
       const refreshTokenValue = getRefreshTokenCookie(loginRes);
       const sessionIdValue = getSessionIdCookie(loginRes);
 
-      // Logout
       const logoutRes = await request(app)
         .post('/api/auth/logout')
         .set('Cookie', [`refreshToken=${refreshTokenValue}`, `sessionId=${sessionIdValue}`]);
 
       expect(logoutRes.status).toBe(200);
       
-      // Check cookies are cleared
       const clearedRefreshCookie = getCookieValue(logoutRes, 'refreshToken');
       const clearedSessionCookie = getCookieValue(logoutRes, 'sessionId');
       expect(clearedRefreshCookie).toBeDefined();
@@ -201,7 +194,6 @@ describe('🔐 Multi-Session Auth API', () => {
         expect(clearedSessionCookieFull.toLowerCase()).toContain('expires=');
       }
 
-      // Try to refresh with old token - should fail
       const refreshRes = await request(app)
         .post('/api/auth/refresh')
         .set('Cookie', [`refreshToken=${refreshTokenValue}`, `sessionId=${sessionIdValue}`]);
@@ -229,7 +221,6 @@ describe('🔐 Multi-Session Auth API', () => {
       expect(authData.refreshToken).toBeDefined();
       expect(authData.sessionId).toBeDefined();
       
-      // Check NO cookies are set
       const cookies = res.headers['set-cookie'];
       expect(cookies).toBeUndefined();
     });
@@ -267,8 +258,8 @@ describe('🔐 Multi-Session Auth API', () => {
       expect(refreshData.refreshToken).toBeDefined();
       expect(refreshData.sessionId).toBeDefined();
       if (refreshData.refreshToken && refreshData.sessionId) {
-        expect(refreshData.refreshToken).not.toBe(refreshToken); // Should be rotated
-        expect(refreshData.sessionId).toBe(sessionId); // Same sessionId
+        expect(refreshData.refreshToken).not.toBe(refreshToken);
+        expect(refreshData.sessionId).toBe(sessionId);
       }
     });
 
@@ -293,7 +284,6 @@ describe('🔐 Multi-Session Auth API', () => {
 
       expect(logoutRes.status).toBe(200);
 
-      // Try to refresh with old token - should fail
       const oldRefreshToken = getRefreshToken(loginRes);
       const refreshRes = await request(app)
         .post('/api/auth/refresh')
@@ -315,7 +305,6 @@ describe('🔐 Multi-Session Auth API', () => {
       const sessionIds: string[] = [];
       const refreshTokens: string[] = [];
 
-      // Login 5 times
       for (let i = 0; i < 5; i++) {
         const res = await request(app)
           .post('/api/auth/login')
@@ -332,7 +321,6 @@ describe('🔐 Multi-Session Auth API', () => {
         }
       }
 
-      // Get user from DB
       const dbUser = await User.findOne({ email: user.email });
       expect(dbUser).toBeDefined();
       expect(dbUser!.refreshSessions.length).toBe(5);
@@ -340,7 +328,6 @@ describe('🔐 Multi-Session Auth API', () => {
       const firstSessionId = sessionIds[0];
       const firstRefreshToken = refreshTokens[0];
 
-      // Login 6th time
       const sixthRes = await request(app)
         .post('/api/auth/login')
         .set('x-client', 'mobile')
@@ -349,17 +336,14 @@ describe('🔐 Multi-Session Auth API', () => {
           password: user.password
         });
 
-      // Should still have 5 sessions
       const dbUserAfter = await User.findOne({ email: user.email });
       expect(dbUserAfter!.refreshSessions.length).toBe(5);
 
-      // First session should be removed
       const firstSessionStillExists = dbUserAfter!.refreshSessions.some(
         s => s.sessionId === firstSessionId
       );
       expect(firstSessionStillExists).toBe(false);
 
-      // Try to refresh with removed session - should fail
       const refreshRes = await request(app)
         .post('/api/auth/refresh')
         .set('x-client', 'mobile')
@@ -370,7 +354,6 @@ describe('🔐 Multi-Session Auth API', () => {
 
       expect(refreshRes.status).toBe(401);
 
-      // Latest session should still work
       const latestRefreshRes = await request(app)
         .post('/api/auth/refresh')
         .set('x-client', 'mobile')
@@ -403,7 +386,6 @@ describe('🔐 Multi-Session Auth API', () => {
         throw new Error('Refresh token or session ID not found');
       }
 
-      // First refresh
       const refresh1Res = await request(app)
         .post('/api/auth/refresh')
         .set('x-client', 'mobile')
@@ -420,7 +402,6 @@ describe('🔐 Multi-Session Auth API', () => {
       }
       expect(refreshToken1).not.toBe(initialRefreshToken);
 
-      // Second refresh
       const refresh2Res = await request(app)
         .post('/api/auth/refresh')
         .set('x-client', 'mobile')
@@ -437,7 +418,6 @@ describe('🔐 Multi-Session Auth API', () => {
       }
       expect(refreshToken2).not.toBe(refreshToken1);
 
-      // Old tokens should not work
       const oldTokenRes = await request(app)
         .post('/api/auth/refresh')
         .set('x-client', 'mobile')
@@ -472,8 +452,6 @@ describe('🔐 Multi-Session Auth API', () => {
     });
 
     test('POST /api/auth/refresh with expired token → should return 401', async () => {
-      // This would require mocking time or using a very short expiry
-      // For now, we'll just test the structure
       await request(app).post('/api/auth/register').send(user);
       await verifyUserEmail(user.email);
       
@@ -485,7 +463,6 @@ describe('🔐 Multi-Session Auth API', () => {
           password: user.password
         });
 
-      // Revoke the session
       const dbUser = await User.findOne({ email: user.email });
       dbUser!.revokeSession(getSessionId(loginRes));
       await dbUser!.save();

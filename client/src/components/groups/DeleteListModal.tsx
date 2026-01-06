@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '../common';
 import { useTranslations } from 'next-intl';
-import { useModalScrollLock } from '@/hooks/useModalScrollLock';
+import { useModalScrollLock } from '../../hooks/useModalScrollLock';
 
 export function DeleteListModal({ isOpen, onClose, onDelete, isDeleting }: { isOpen: boolean, onClose: () => void, onDelete: () => void, isDeleting: boolean }) {
   const t = useTranslations('DeleteListModal');

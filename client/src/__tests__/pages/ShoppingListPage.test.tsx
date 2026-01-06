@@ -7,7 +7,6 @@ import { useGroup } from '../../hooks/useGroups';
 import { useAvailableCategories } from '../../hooks/useItems';
 import { mockShoppingLists, mockItems, mockGroups, mockCategories } from '../mocks/mockData';
 
-// Mock dependencies
 vi.mock('../../hooks/useShoppingListData');
 vi.mock('../../hooks/useShoppingListWebSocket', () => ({
   useShoppingListWebSocket: vi.fn(),
@@ -60,7 +59,6 @@ vi.mock('next/navigation', () => ({
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
 }));
-// Don't mock @tanstack/react-query - use the real one with QueryClientProvider
 vi.mock('../../components/shoppingList/AddItemsModal', () => ({
   default: ({ isOpen }: { isOpen: boolean }) => isOpen ? <div>AddItemsModal</div> : null,
 }));
@@ -117,7 +115,6 @@ describe('ShoppingListPage', () => {
 
   it('should display stats', () => {
     renderWithProviders(<ShoppingListPage />);
-    // Stats should show purchased/total items - might appear multiple times
     const statsTexts = screen.queryAllByText(/1/) || screen.queryAllByText(/3/);
     expect(statsTexts.length).toBeGreaterThan(0);
   });

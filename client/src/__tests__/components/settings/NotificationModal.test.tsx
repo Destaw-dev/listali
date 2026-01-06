@@ -4,7 +4,6 @@ import userEvent from '@testing-library/user-event';
 import NotificationModal from '../../../components/settings/NotificationModal';
 import { renderWithProviders } from '../../../test/test-utils';
 
-// Mock dependencies
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
 }));
@@ -57,7 +56,6 @@ describe('NotificationModal', () => {
       />
     );
     
-    // Should show notification toggles
     const toggles = screen.queryAllByRole('switch') || screen.queryAllByRole('button');
     expect(toggles.length > 0 || screen.getAllByRole('button').length > 0).toBeTruthy();
   });
@@ -73,12 +71,10 @@ describe('NotificationModal', () => {
       />
     );
     
-    // Find first toggle
     const toggles = screen.queryAllByRole('switch');
     if (toggles.length > 0) {
       await user.click(toggles[0]);
       
-      // Settings should be updated
       const saveButton = screen.getByRole('button', { name: /save|שמור/i });
       await user.click(saveButton);
       

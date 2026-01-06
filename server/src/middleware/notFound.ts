@@ -1,16 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import { IApiResponse } from '../types';
 
-/**
- * 404 Not Found middleware
- * Handles requests to routes that don't exist
- * Should be placed after all route definitions but before error handler
- */
 export const notFound = (req: Request, res: Response<IApiResponse<null>>, _next: NextFunction): void => {
-  // Set status to 404
   res.status(404);
   
-  // Send structured API response
   res.json({
     success: false,
     message: `Route ${req.method} ${req.originalUrl} not found`,
@@ -21,10 +14,6 @@ export const notFound = (req: Request, res: Response<IApiResponse<null>>, _next:
   });
 };
 
-/**
- * Alternative not found handler with more detailed information
- * Useful for development environments
- */
 export const notFoundDetailed = (req: Request, res: Response<IApiResponse<{ requestedMethod: string; requestedUrl: string; availableRoutes: string[]; suggestion: string } | null>>, _next: NextFunction): void => {
   const availableRoutes = [
     'GET /health',
@@ -67,12 +56,7 @@ export const notFoundDetailed = (req: Request, res: Response<IApiResponse<{ requ
   });
 };
 
-/**
- * API-specific not found handler
- * Only responds to requests starting with /api
- */
 export const apiNotFound = (req: Request, res: Response<IApiResponse<null>>, next: NextFunction): void => {
-  // Only handle API routes
   if (req.originalUrl.startsWith('/api')) {
     res.status(404).json({
       success: false,
@@ -83,15 +67,10 @@ export const apiNotFound = (req: Request, res: Response<IApiResponse<null>>, nex
       }
     });
   } else {
-    // Pass to next middleware for non-API routes
     next();
   }
 };
 
-/**
- * Generic not found handler for non-API routes
- * Useful if serving static files or other content
- */
 export const genericNotFound = (req: Request, res: Response, _next: NextFunction): void => {
   res.status(404).send(`
     <!DOCTYPE html>

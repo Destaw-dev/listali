@@ -15,7 +15,6 @@ export function AuthInitializer({  }: AuthInitializerProps) {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        // Check if there's a persisted user before attempting refresh
         const currentUser = useAuthStore.getState().user;
         const hasAccessToken = await apiClient.initAuthFromRefresh();
         
@@ -25,21 +24,17 @@ export function AuthInitializer({  }: AuthInitializerProps) {
             setUser(user);
           } catch (error) {
             console.error('Failed to get user data:', error);
-            // Only clear if we had a user before (meaning they were logged in)
             if (currentUser) {
               clearUser();
             }
           }
         } else {
-          // Only clear user if there was one before (meaning refresh token expired)
-          // If there was no user, it means user was never logged in, so nothing to clear
           if (currentUser) {
             clearUser();
           }
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
-        // Only clear if there was a user before
         const currentUser = useAuthStore.getState().user;
         if (currentUser) {
           clearUser();

@@ -31,7 +31,6 @@ export const signRefreshToken = (userId: string, sessionId: string): string => {
   const payload = {
     sub: userId,
     sid: sessionId,
-    // Add a random component to ensure token uniqueness even if signed at the same second
     rnd: Math.random().toString(36).substring(2, 15),
   };
 
