@@ -116,8 +116,7 @@ const userSchema = new Schema<IUser, UserModel, IUserMethods>({
   refreshSessions: [{
     sessionId: {
       type: String,
-      required: true,
-      unique: true
+      required: true
     },
     refreshTokenHash: {
       type: String,
@@ -177,6 +176,24 @@ userSchema.pre('save', function (next) {
   if (this.isModified('lastSeen') || this.isNew) {
     this.lastSeen = new Date();
   }
+  
+  // Clean up invalid refresh sessions (null/empty sessionIds)
+  if (this.isModified('refreshSessions') || this.isNew) {
+    this.refreshSessions = this.refreshSessions.filter(
+      (session: IRefreshSession) => session.sessionId && session.sessionId.trim() !== ''
+    );
+    
+    // Remove duplicate sessionIds (keep the most recent one)
+    const seen = new Map<string, IRefreshSession>();
+    for (const session of this.refreshSessions) {
+      const existing = seen.get(session.sessionId);
+      if (!existing || (session.lastUsedAt && existing.lastUsedAt && session.lastUsedAt > existing.lastUsedAt)) {
+        seen.set(session.sessionId, session);
+      }
+    }
+    this.refreshSessions = Array.from(seen.values());
+  }
+  
   next();
 });
 
@@ -246,6 +263,29 @@ userSchema.methods.addSession = function (session: {
   userAgent?: string;
   ip?: string;
 }) {
+  // Validate sessionId is not null or undefined
+  if (!session.sessionId || session.sessionId.trim() === '') {
+    throw new Error('Session ID is required and cannot be null or empty');
+  }
+
+  // Check for duplicate sessionId within the array
+  const existingSession = this.refreshSessions.find(
+    (s: IRefreshSession) => s.sessionId === session.sessionId
+  );
+  if (existingSession) {
+    // If session exists, update it instead of creating a duplicate
+    existingSession.refreshTokenHash = session.refreshTokenHash;
+    existingSession.expiresAt = session.expiresAt;
+    existingSession.lastUsedAt = new Date();
+    if (session.userAgent !== undefined) {
+      existingSession.userAgent = session.userAgent;
+    }
+    if (session.ip !== undefined) {
+      existingSession.ip = session.ip;
+    }
+    return;
+  }
+
   const sessionData: IRefreshSession = {
     sessionId: session.sessionId,
     refreshTokenHash: session.refreshTokenHash,

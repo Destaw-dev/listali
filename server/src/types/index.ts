@@ -217,6 +217,7 @@ export interface IBaseNutritionalValue {
 export interface IBaseProduct {
   name: string;
   idFromApi?: number;
+  sortName?: string;
   barcode?: string;
   defaultUnit: string;
   units: string[];

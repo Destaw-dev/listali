@@ -177,6 +177,9 @@ const ProductSchema = new Schema<IProduct>(
     idFromApi: {
       type: String,
     },
+    sortName:{
+      type: String,
+    }
   },
   {
     timestamps: true,
