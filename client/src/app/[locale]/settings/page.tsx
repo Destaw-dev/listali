@@ -57,6 +57,7 @@ export default function SettingsPage() {
 
   const handleLogout = async () => {
     logoutMutation.mutate();
+    router.push(`/${locale}/auth/welcome`);
   };
 
   const handleDeleteAccount = async () => {

@@ -23,6 +23,7 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const router = useRouter();
   const params = useParams();
   const { isAuthenticated, isInitialized, setUser } = useAuthStore();
@@ -101,32 +102,28 @@ export default function RegisterPage() {
   };
 
   const handleGoogleAuth = async () => {
-    setIsLoading(true);
+    setIsGoogleLoading(true);
     try {
       const searchParams = new URLSearchParams(window.location.search);
       const inviteCode = searchParams.get('inviteCode');
-      
-      const callbackUrlBase = `${window.location.origin}/${locale}/auth/callback`;
       const callbackUrl = inviteCode 
-        ? `${callbackUrlBase}?inviteCode=${encodeURIComponent(inviteCode)}`
-        : callbackUrlBase;
-      
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/google/url?callback=${encodeURIComponent(callbackUrl)}`);
+        ? `${window.location.origin}/${locale}/auth/callback?inviteCode=${encodeURIComponent(inviteCode)}`
+        : `${window.location.origin}/${locale}/auth/callback`;
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/google/url?callback=${encodeURIComponent(callbackUrl)}&inviteCode=${encodeURIComponent(inviteCode || '')}`);
       const data = await response.json();
-      
-      if (data.success && data.url) {
-        window.location.href = data.url;
+      if (data.success && data.data.url) {
+        window.location.href = data.data.url;
       } else {
         throw new Error(data.message || 'Failed to get Google OAuth URL');
       }
     } catch (error) {
-      if (error instanceof Error || error instanceof AxiosError) {
+      if (error instanceof Error) {
         handleApiError(error);
       } else {
         handleApiError(new Error('Failed to get Google OAuth URL'));
       }
     } finally {
-      setIsLoading(false);
+      setIsGoogleLoading(false);
     }
   };
 
@@ -245,7 +242,8 @@ export default function RegisterPage() {
           <GoogleAuthButton 
             type="register" 
             onGoogleAuth={handleGoogleAuth}
-            isLoading={isLoading}
+            disabled={isGoogleLoading || isLoading}
+            isLoading={isGoogleLoading}
           />
 
           <div className="text-center mt-5">
