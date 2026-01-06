@@ -120,7 +120,6 @@ export interface IBaseShoppingList {
   status: "active" | "completed" | "archived";
   isActive: boolean;
   isCompleted: boolean;
-  dueDate?: Date;
   completedAt?: Date | null;
   priority: "low" | "medium" | "high";
   tags: string[];

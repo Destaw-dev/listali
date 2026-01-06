@@ -44,7 +44,7 @@ export const useCreateShoppingList = () => {
   const { showSuccess, handleApiError } = useNotification();
   
   return useMutation({
-    mutationFn: ({ groupId, listData }: { groupId: string; listData: { name: string; description?: string; priority?: 'low'|'medium'|'high'; dueDate?: string; tags?: string[] } }) => {
+    mutationFn: ({ groupId, listData }: { groupId: string; listData: { name: string; description?: string; priority?: 'low'|'medium'|'high'; tags?: string[] } }) => {
       const listDataWithGroupId = { ...listData, groupId };
       return apiClient.createShoppingList(groupId, listDataWithGroupId);
     },
@@ -78,7 +78,7 @@ export const useUpdateShoppingList = () => {
   const { showSuccess, handleApiError } = useNotification();
   
   return useMutation({
-    mutationFn: ({ listId, listData }: { listId: string; listData: { name?: string; description?: string; priority?: 'low'|'medium'|'high'; dueDate?: string; tags?: string[]; assignedTo?: string } }) =>
+    mutationFn: ({ listId, listData }: { listId: string; listData: { name?: string; description?: string; priority?: 'low'|'medium'|'high'; tags?: string[]; assignedTo?: string } }) =>
       apiClient.updateShoppingList(listId, listData),
     onMutate: async ({ listId, listData }) => {
       await queryClient.cancelQueries({ queryKey: shoppingListKeys.detail(listId) });

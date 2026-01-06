@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { X, Bell, Smartphone, Mail } from 'lucide-react';
+import { Bell, Smartphone, Mail } from 'lucide-react';
 import { Button, Modal } from '../common';
 import { useNotification } from '../../contexts/NotificationContext';
 import { Toggle } from '../common/Toggle';

@@ -104,7 +104,6 @@ shoppingListSchema.index({ group: 1, status: 1 });
 shoppingListSchema.index({ createdBy: 1 });
 shoppingListSchema.index({ assignedTo: 1 });
 shoppingListSchema.index({ status: 1, createdAt: -1 });
-shoppingListSchema.index({ dueDate: 1 });
 shoppingListSchema.index({ priority: 1, status: 1 });
 shoppingListSchema.index({ tags: 1 });
 
@@ -113,16 +112,6 @@ shoppingListSchema.virtual('completionPercentage').get(function() {
   return Math.round((this.metadata.completedItemsCount / this.metadata.itemsCount) * 100);
 });
 
-shoppingListSchema.virtual('isOverdue').get(function() {
-  return this.dueDate && this.dueDate < new Date() && this.status === 'active';
-});
-
-shoppingListSchema.virtual('daysUntilDue').get(function() {
-  if (!this.dueDate) return null;
-  const diffTime = this.dueDate.getTime() - Date.now();
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  return diffDays;
-});
 
 shoppingListSchema.virtual('budgetDifference').get(function() {
     if (this.metadata.actualTotal && this.metadata.estimatedTotal) {
@@ -307,7 +296,6 @@ shoppingListSchema.statics.findByGroup = function(groupId: string, options: IFin
 shoppingListSchema.statics.findOverdue = function(groupId?: string) {
   const query: FilterQuery<IShoppingList> = {
     status: 'active',
-    dueDate: { $lt: new Date() }
   };
   
   if (groupId) query.group = groupId;

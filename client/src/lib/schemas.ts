@@ -21,7 +21,6 @@ export const createListSchema = (t: (key: string) => string) => z.object({
   name: z.string().min(2, t('nameMinLength')).max(100, t('nameMaxLength')),
   description: z.string().max(500, t('descriptionMaxLength')).optional(),
   priority: z.enum(['low', 'medium', 'high']).default('medium').optional(),
-  dueDate: z.string().optional(),
   tags: z.array(z.string()).optional(),
 });
 

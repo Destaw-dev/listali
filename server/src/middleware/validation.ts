@@ -116,16 +116,6 @@ export const createListValidation = [
     body('groupId')
       .isMongoId()
       .withMessage('Valid group ID is required'),
-    body('dueDate')
-      .optional()
-      .isISO8601()
-      .toDate()
-      .custom((value) => {
-        if (value && value <= new Date()) {
-          throw new Error('Due date must be in the future');
-        }
-        return true;
-      }),
     body('priority')
       .optional()
       .isIn(['low', 'medium', 'high'])
@@ -490,10 +480,6 @@ export const createShoppingListValidation = [
     .optional()
     .isIn(['low', 'medium', 'high'])
     .withMessage('Priority must be low, medium, or high'),
-  body('dueDate')
-    .optional()
-    .isISO8601()
-    .withMessage('Due date must be a valid date'),
   body('tags')
     .optional()
     .isArray()
@@ -529,10 +515,6 @@ export const updateShoppingListValidation = [
     .optional()
     .isIn(['low', 'medium', 'high'])
     .withMessage('Priority must be low, medium, or high'),
-  body('dueDate')
-    .optional()
-    .isISO8601()
-    .withMessage('Due date must be a valid date'),
   body('tags')
     .optional()
     .isArray()

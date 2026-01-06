@@ -148,7 +148,6 @@ export interface IShoppingList extends BaseDocument {
   isCompleted: boolean;
   items: string[];
   assignedTo?: string | IPopulatedUserInfo;
-  dueDate?: Date;
   completedAt?: Date | null;
   priority: "low" | "medium" | "high";
   tags: string[];
@@ -800,7 +799,6 @@ export interface ICreateListFormData {
   name: string;
   description?: string;
   priority?: "low" | "medium" | "high";
-  dueDate?: string;
   tags?: string[];
 }
 

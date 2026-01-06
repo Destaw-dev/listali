@@ -210,7 +210,7 @@ export const createShoppingList = async (req: express.Request, res: express.Resp
     return;
   }
 
-  const { name, description, priority = 'medium', dueDate, tags = [], assignedTo } = req.body;
+  const { name, description, priority = 'medium', tags = [], assignedTo } = req.body;
   const { groupId } = req.params;
   const userId = req.userId!;
 
@@ -242,7 +242,6 @@ export const createShoppingList = async (req: express.Request, res: express.Resp
     group: groupId,
     createdBy: userId,
     priority,
-    dueDate,
     tags,
     assignedTo
   });
@@ -266,7 +265,7 @@ export const updateShoppingList = async (req: express.Request, res: express.Resp
   }
 
   const { listId } = req.params;
-  const { name, description, priority, dueDate, tags, assignedTo } = req.body;
+  const { name, description, priority, tags, assignedTo } = req.body;
   const userId = req.userId!;
 
   const shoppingList = await ShoppingList.findById(listId);
@@ -290,7 +289,6 @@ export const updateShoppingList = async (req: express.Request, res: express.Resp
   if (name !== undefined) shoppingList.name = name;
   if (description !== undefined) shoppingList.description = description;
   if (priority !== undefined) shoppingList.priority = priority;
-  if (dueDate !== undefined) shoppingList.dueDate = dueDate;
   if (tags !== undefined) shoppingList.tags = tags;
   if (assignedTo !== undefined) {
     shoppingList.assignedTo = assignedTo === null ? null : assignedTo;

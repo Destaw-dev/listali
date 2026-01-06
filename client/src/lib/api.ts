@@ -405,7 +405,6 @@ export class ApiClient {
     name: string;
     description?: string;
     priority?: 'low' | 'medium' | 'high';
-    dueDate?: string;
     tags?: string[];
     groupId: string;
   }) {
@@ -417,7 +416,6 @@ export class ApiClient {
     name?: string;
     description?: string;
     priority?: 'low' | 'medium' | 'high';
-    dueDate?: string;
     tags?: string[];
     assignedTo?: string;
   }) {

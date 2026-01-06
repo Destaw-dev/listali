@@ -24,7 +24,7 @@ interface ShoppingListsDisplayProps {
   t: ReturnType<typeof useTranslations>;
   group: IGroup; 
   handleListClick: (listId: string) => void;
-  handleDeleteList: (listId: string) => Promise<void>;
+  handleDeleteList: (listId: string, listName: string) => Promise<void>;
   setShowCreateModal: (show: boolean) => void;
   activeFiltersCount: number;
 }
@@ -98,7 +98,7 @@ interface ShoppingListCardProps {
   group: IGroup; 
   t: ReturnType<typeof useTranslations>;
   handleListClick: (listId: string) => void;
-  handleDeleteList: (listId: string) => Promise<void>;
+  handleDeleteList: (listId: string, listName: string) => Promise<void>;
 }
 
 function ShoppingListCard({
@@ -201,7 +201,7 @@ function ShoppingListCard({
             >
               {getPriorityText(list.priority)}
             </Badge>
-          <Button variant="ghost" size="sm" onClick={() => handleDeleteList(list._id)}>
+          <Button variant="ghost" size="sm" onClick={() => handleDeleteList(list._id, list.name)}>
             <Trash className="w-4 h-4 text-error-500" />
           </Button>
           </div>

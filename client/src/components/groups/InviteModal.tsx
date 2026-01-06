@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { X, UserPlus, Mail, Bell } from 'lucide-react';
+import { UserPlus, Mail, Bell } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button, Dropdown, Input, Modal } from '../common';

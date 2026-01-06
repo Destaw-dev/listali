@@ -58,7 +58,7 @@ describe('GroupDetailsPage', () => {
       createMockMutationResult<
         IShoppingList,
         Error,
-        { groupId: string; listData: { name: string; description?: string; priority?: 'low' | 'medium' | 'high'; dueDate?: string; tags?: string[] } },
+        { groupId: string; listData: { name: string; description?: string; priority?: 'low' | 'medium' | 'high'; tags?: string[] } },
         { prev: IShoppingList[] | undefined; groupId: string; tempId: string }
       >({
         mutateAsync: vi.fn().mockResolvedValue({} as IShoppingList),

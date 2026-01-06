@@ -13,7 +13,6 @@ type CreateListFormData = {
   name: string;
   description?: string;
   priority?: "low" | "medium" | "high";
-  dueDate?: string;
   tags?: string[];
 };
 
@@ -48,7 +47,6 @@ export function CreateShoppingListModal({
       name: "",
       description: "",
       priority: "medium",
-      dueDate: "",
     },
   });
 
@@ -130,14 +128,6 @@ export function CreateShoppingListModal({
               target: { value: value as "low" | "medium" | "high" },
             })
           }
-        />
-
-        <Input
-          {...register("dueDate")}
-          type="date"
-          error={errors.dueDate?.message}
-          label={t("dueDate")}
-          variant="outlined"
         />
 
         <div className="flex gap-3 pt-4">

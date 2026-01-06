@@ -46,7 +46,7 @@ export function GroupShoppingLists() {
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
   const [showDeleteListModal, setShowDeleteListModal] = useState(false);
-  const [deletingListId, setDeletingListId] = useState<string | null>(null);
+  const [deletingList, setDeletingList] = useState<{listId: string, listName: string} | null>(null);
   useAuthRedirect({
     redirectTo: `/${locale}/welcome`,
     requireAuth: true,
@@ -96,15 +96,15 @@ export function GroupShoppingLists() {
     router.push(`/${locale}/groups/${groupId}/${listId}`);
   };
 
-  const handleDeleteList = async (listId: string) => {
-    setDeletingListId(listId);
+  const handleDeleteList = async (listId: string, listName: string) => {
+    setDeletingList({listId, listName});
     setShowDeleteListModal(true);
   };
 
   const handleConfirmDeleteList = async () => {
-    if (deletingListId) {
-      await deleteListMutation.mutateAsync({ listId: deletingListId, groupId });
-      setDeletingListId(null);
+    if (deletingList?.listId) {
+      await deleteListMutation.mutateAsync({ listId: deletingList.listId, groupId });
+      setDeletingList(null);
       setShowDeleteListModal(false);
     }
   };
@@ -232,6 +232,7 @@ export function GroupShoppingLists() {
           onClose={() => setShowDeleteListModal(false)}
           onDelete={handleConfirmDeleteList}
           isDeleting={deleteListMutation.isPending}
+          listName={deletingList?.listName || ""}
         />
       )}
       <MetricsBar

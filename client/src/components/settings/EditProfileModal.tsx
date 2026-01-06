@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { X, User } from "lucide-react";
+import { User } from "lucide-react";
 import { Button, Input, Modal } from "../common";
 import { z } from "zod";
 import { NotificationType, useNotification } from "../../contexts/NotificationContext";

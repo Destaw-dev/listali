@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { X, Users, Group } from 'lucide-react';
+import { Users, Group } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useModalScrollLock } from '../../hooks/useModalScrollLock';

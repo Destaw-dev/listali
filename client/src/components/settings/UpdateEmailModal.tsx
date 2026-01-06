@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { z } from 'zod';
-import { X, Mail } from 'lucide-react';
+import { Mail } from 'lucide-react';
 import { Button, Input, Modal } from '../common';
 import { useUpdateEmail } from '../../hooks/useSettings';
 import { useModalScrollLock } from '../../hooks/useModalScrollLock';

@@ -1,6 +1,7 @@
 import { X } from "lucide-react";
 import { Card, CardBody, CardHeader } from "./Card";
 import { Button } from "./Button";
+import { LoadingSpinner } from "./LoadingSpinner";
 
 interface ModalProps {
   children: React.ReactNode;
@@ -9,9 +10,10 @@ interface ModalProps {
   iconHeader?: React.ReactNode;
   subtitle?: string;
   size?: "sm" | "md" | "lg" | "xl" | "full";
+  isLoading?: boolean;
 }
 
-export function Modal({ children, onClose, title, iconHeader, subtitle, size = "md" }: ModalProps) {
+export function Modal({ children, onClose, title, iconHeader, subtitle, size = "md", isLoading = false }: ModalProps) {
 
   const sizeClasses = {
     sm: "max-w-sm max-h-[90vh] overflow-y-auto",
@@ -28,6 +30,9 @@ export function Modal({ children, onClose, title, iconHeader, subtitle, size = "
       <div
         className={`relative w-full rounded-3xl bg-surface shadow-2xl transition-all animate-[fadeIn_.15s_ease-out] animate-in slide-in-from-bottom-4 ${sizeClasses[size]}`}
       >
+        {isLoading && <div className="absolute inset-0 bg-background/50 z-10 flex items-center justify-center">
+          <LoadingSpinner />
+        </div>}
         <Card>
           <CardHeader padding='xs'>
             <div className="flex items-start justify-between">
