@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
-import { X, Calendar } from "lucide-react";
+import { Calendar } from "lucide-react";
 import { useModalScrollLock } from "../../hooks/useModalScrollLock";
 import { Button, Dropdown, Input, TextArea, Modal } from "../common";
 import { createListSchema } from "../../lib/schemas";

@@ -4,7 +4,7 @@ import { memo, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
-import { Edit, X } from "lucide-react";
+import { Edit } from "lucide-react";
 import { z } from "zod";
 import { Button, Input, TextArea, Dropdown, Modal } from "../../common";
 import { useModalScrollLock } from "../../../hooks/useModalScrollLock";
