@@ -2,7 +2,9 @@ import { z } from 'zod'
 
 export const createLoginSchema = (t: (key: string) => string) => z.object({
   email: z.string().email(t('emailInvalid')),
-  password: z.string().min(6, t('passwordMinLength')),
+  password: z.string()
+  .min(8, t('passwordMinLength'))
+  .regex(/[A-Z]/, t('passwordUppercase'))
 });
 
 export const createRegisterSchema = (t: (key: string) => string) => z.object({
@@ -10,7 +12,9 @@ export const createRegisterSchema = (t: (key: string) => string) => z.object({
   lastName: z.string().min(2, t('lastNameMinLength')),
   username: z.string().min(3, t('usernameMinLength')),
   email: z.string().email(t('emailInvalid')),
-  password: z.string().min(6, t('passwordMinLength')),
+  password: z.string()
+    .min(8, t('passwordMinLength'))
+    .regex(/[A-Z]/, t('passwordUppercase')),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: t('passwordsDoNotMatch'),

@@ -38,7 +38,7 @@ export default function WelcomePage() {
   return (
     <div className="min-h-screen bg-card text-text-primary">
       <div className="container mx-auto px-4 py-5">
-        <div className="text-center mb-12 shadow-md rounded-lg bg-surface justify-center gap-4 py-5">
+        <div className="text-center mb-12 shadow-md rounded-lg  justify-center gap-4 py-5">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-primary rounded-full">
             <ShoppingCart className="w-10 h-10 text-text-primary" />
           </div>
@@ -51,7 +51,7 @@ export default function WelcomePage() {
         </div>
 
         <div className="grid md:grid-cols-3 gap-8 mb-5">
-          <div className="text-center bg-surface shadow-md rounded-lg py-4">
+          <div className="text-center  shadow-md rounded-lg py-4">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-success rounded-xl mb-6">
               <Users className="w-8 h-8 text-text-primary" />
             </div>
@@ -63,7 +63,7 @@ export default function WelcomePage() {
             </p>
           </div>
 
-          <div className="text-center bg-surface shadow-md rounded-lg py-4">
+          <div className="text-center  shadow-md rounded-lg py-4">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-500 rounded-xl mb-6">
               <ShoppingCart className="w-8 h-8 text-text-primary" />
             </div>
@@ -75,7 +75,7 @@ export default function WelcomePage() {
             </p>
           </div>
 
-          <div className="text-center bg-surface shadow-md rounded-lg py-4">
+          <div className="text-center  shadow-md rounded-lg py-4">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-warning-500 rounded-xl mb-6">
               <Zap className="w-8 h-8 text-text-primary" />
             </div>
@@ -88,12 +88,13 @@ export default function WelcomePage() {
           </div>
         </div>
 
-        <div className="text-center space-y-1">
+        <div className="text-center space-y-1 max-w-xs mx-auto">
 
           <Button
             variant="primary"
             onClick={() => router.push(`/${locale}/auth/login`)}
             size="lg"
+            fullWidth
           >
             {t('welcome.loginButton')}
           </Button>
@@ -103,6 +104,7 @@ export default function WelcomePage() {
             variant="outlineBlue"
             onClick={() => router.push(`/${locale}/auth/register`)}
             size="lg"
+            fullWidth
           >
             {t('welcome.registerButton')}
           </Button>

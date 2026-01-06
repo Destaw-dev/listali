@@ -130,7 +130,7 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 text-text-primary bg-card">
       <div className="w-full max-w-md bg-card">
-        <div className="text-center flex items-center justify-center">
+        <div className="text-center flex items-center justify-start gap-10 sm:gap-30 ">
           <IntlLink
             href='/welcome'
             className="inline-flex items-center text-text-primary hover:text-primary-600 mb-6 transition-colors"
@@ -150,8 +150,7 @@ export default function RegisterPage() {
               type="text"
               id="firstName"
               placeholder={t('firstNamePlaceholder')}
-              icon={<User className="w-5 h-5 text-muted" />}
-              label={t('firstName')}
+              label={t('firstName') + ' *'}
               error={errors.firstName?.message}
             />
 
@@ -160,8 +159,7 @@ export default function RegisterPage() {
               type="text"
               id="lastName"
               placeholder={t('lastNamePlaceholder')}
-              icon={<User className="w-5 h-5 text-muted" />}
-              label={t('lastName')}
+              label={t('lastName') + ' *'}
               error={errors.lastName?.message}
             />
 
@@ -170,8 +168,7 @@ export default function RegisterPage() {
               type="text"
               id="username"
               placeholder={t('usernamePlaceholder')}
-              icon={<UserCheck className="w-5 h-5 text-muted" />}
-              label={t('username')}
+              label={t('username') + ' *'}
               error={errors.username?.message}
             />
 
@@ -180,8 +177,7 @@ export default function RegisterPage() {
               type="email"
               id="email"
               placeholder={t('emailPlaceholder')}
-              icon={<Mail className="w-5 h-5 text-muted" />}
-              label={t('email')}
+              label={t('email') + ' *'}
               error={errors.email?.message}
             />  
 
@@ -190,8 +186,7 @@ export default function RegisterPage() {
               type={showPassword ? 'text' : 'password'}
               id="password"
               placeholder={t('passwordPlaceholder')}
-              icon={<Lock className="w-5 h-5 text-muted" />}
-              label={t('password')}
+              label={t('password') + ' *'}
               error={errors.password?.message}
               iconTwo={
                 <span
@@ -208,8 +203,7 @@ export default function RegisterPage() {
               type={showConfirmPassword ? 'text' : 'password'}
               id="confirmPassword"
               placeholder={t('confirmPasswordPlaceholder')}
-              icon={<Lock className="w-5 h-5 text-muted" />}
-              label={t('confirmPassword')}
+              label={t('confirmPassword') + ' *'}
               error={errors.confirmPassword?.message}
               iconTwo={
                 <span

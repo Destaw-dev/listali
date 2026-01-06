@@ -110,7 +110,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-[calc(100vh-54px)] bg-card flex justify-center items-center p-4 pt-5 text-text-primary">
       <div className="w-full max-w-md">
-        <div className="text-center flex items-center justify-center">
+        <div className="flex items-center justify-start gap-10 sm:gap-30 ">
           <IntlLink
             href={`/welcome`}
             className="inline-flex items-center text-text-primary hover:text-text-secondary mb-6 transition-colors"
@@ -130,7 +130,6 @@ export default function LoginPage() {
                   type="email"
                   id="email"
                   placeholder={t('auth.emailPlaceholder')}
-                  icon={<Mail className="w-5 h-5 text-muted" />}
                   label={t('auth.email')}
                   error={errors.email?.message}
               />
@@ -140,7 +139,6 @@ export default function LoginPage() {
                   type={showPassword ? 'text' : 'password'}
                   id="password"
                   placeholder={t('auth.passwordPlaceholder')}
-                  icon={<Lock className="w-5 h-5 text-muted" />}
                   label={t('auth.password')}
                   error={errors.password?.message}
                   iconTwo={
