@@ -3,7 +3,7 @@ import { validationResult } from 'express-validator';
 import Group from '../models/group';
 import User from '../models/user';
 import { AppError, validationErrorResponse, successResponse, errorResponse } from '../middleware/handlers';
-import { IApiResponse, IGroupMember, IGroup, IBasePendingInvite, IGroupStatistics } from '../types';
+import { IApiResponse, IGroupMember, IGroup, IBasePendingInvite, IGroupStatistics, Language } from '../types';
 import { nanoid } from 'nanoid';
 import { sendGroupInviteEmail } from '../utils/email';
 import { getIO, emitToGroupExcept } from '../socket/socketHandler';
@@ -248,7 +248,7 @@ export const inviteToGroup = async (req: express.Request, res: express.Response<
           pendingInvites: group?.pendingInvites.filter((invite: { code: string }) => invite.code !== existingInvite.code)
         }
       });
-      await sendGroupInviteEmail(email, inviteCode, req.user?.firstName || 'A friend', req.user?.preferences?.language || 'he', true);
+      await sendGroupInviteEmail({to: email, code: inviteCode, inviterName: req.user?.firstName || 'A friend', groupName: group?.name || 'A group', language: req.user?.preferences?.language as Language || 'he', isNewUser: true, inviteType: 'friend'});
       return res.status(200).json(successResponse(null, 'New invite sent successfully'));
     } else {
       const errorMessage = user 
@@ -305,7 +305,7 @@ export const inviteToGroup = async (req: express.Request, res: express.Response<
       $push: { pendingInvites: inviteData }
     });
 
-    await sendGroupInviteEmail(email, inviteCode, req.user?.firstName || 'A friend', req.user?.preferences?.language || 'he', true);
+    await sendGroupInviteEmail({to: email, code: inviteCode, inviterName: req.user?.firstName || 'A friend', groupName: group?.name || 'A group', language: req.user?.preferences?.language as Language || 'he', isNewUser: true, inviteType: 'friend'});
 
     return res.status(200).json(successResponse({ 
       email, 

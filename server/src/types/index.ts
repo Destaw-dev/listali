@@ -8,6 +8,8 @@
 import { Document, Types } from "mongoose";
 import { Request as ExpressRequest } from "express";
 
+export type Language = 'he' | 'en' | 'ar';
+
 // ============================================================================
 // EXPRESS REQUEST TYPE EXTENSIONS
 // ============================================================================

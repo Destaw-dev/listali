@@ -3,7 +3,7 @@ import { validationResult } from 'express-validator';
 import crypto from 'crypto';
 import User from '../models/user';
 import { asyncHandler, AppError, validationErrorResponse, successResponse } from '../middleware/handlers';
-import { IApiResponse, IAuthRequest, IRegisterRequest, IAuthResponse, UserDocument, IBasePendingInvite, IGroupMember, IUser, IPendingInvitation } from '../types';
+import { IApiResponse, IAuthRequest, IRegisterRequest, IAuthResponse, UserDocument, IBasePendingInvite, IGroupMember, IUser, IPendingInvitation, Language } from '../types';
 import { sendEmailVerification } from '../utils/email';
 import { signAccessToken, signRefreshToken, hashToken, verifyRefreshToken } from '../utils/tokens';
 
@@ -210,7 +210,7 @@ export const register = asyncHandler(async (req: Request, res: Response<IApiResp
   }
 if (!user.isEmailVerified && !groupJoined) {
     try {
-      await sendEmailVerification(email, verificationToken, username, language);
+      await sendEmailVerification(email, verificationToken, username, language as Language);
     } catch (emailError) {
       console.error('Failed to send verification email:', emailError);
     }
@@ -432,7 +432,7 @@ export const updateEmail = asyncHandler(async (req: Request, res: Response<IApiR
 
   try {
     const language = user.preferences?.language || 'he';
-    await sendEmailVerification(email, verificationToken, user.username, language);
+    await sendEmailVerification(email, verificationToken, user.username, language as Language);
     res.status(200).json(successResponse(null, 'Email updated successfully. Please check your email to verify the new address.'));
   } catch (emailError) {
     console.error('Failed to send verification email:', emailError);
@@ -748,7 +748,7 @@ export const resendVerification = asyncHandler(async (req: Request, res: Respons
   try {
     const newUser = await User.findById(user._id);
     const language = newUser?.preferences?.language || 'he';
-    await sendEmailVerification(email, verificationToken, user.username, language);
+    await sendEmailVerification(email, verificationToken, user.username, language as Language);
     res.status(200).json(successResponse(null, 'Verification email sent successfully'));
   } catch (emailError) {
     console.error('Failed to send verification email:', emailError);
@@ -779,7 +779,7 @@ export const resendVerificationForLogin = asyncHandler(async (req: Request, res:
     try {
       const newUser = await User.findById(user._id);
       const language = newUser?.preferences?.language || 'he';
-      await sendEmailVerification(email, user.emailVerification.token, user.username, language);
+      await sendEmailVerification(email, user.emailVerification.token, user.username, language as Language);
       res.status(200).json(successResponse(null, 'Verification email resent successfully'));
     } catch (emailError) {
       console.error('Failed to resend verification email:', emailError);
@@ -801,7 +801,7 @@ export const resendVerificationForLogin = asyncHandler(async (req: Request, res:
     try {
       const newUser = await User.findById(user._id);
       const language = newUser?.preferences?.language || 'he';
-      await sendEmailVerification(email, verificationToken, user.username, language);
+      await sendEmailVerification(email, verificationToken, user.username, language as Language);
       res.status(200).json(successResponse(null, 'New verification email sent successfully'));
     } catch (emailError) {
       console.error('Failed to send verification email:', emailError);
