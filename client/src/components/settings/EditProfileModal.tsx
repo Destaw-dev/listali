@@ -146,6 +146,7 @@ export default function EditProfileModal({
       </div>}
       subtitle={t("editProfileDescription")}
       size="md"
+      isLoading={isLoading}
     >
           <form
             onSubmit={handleSubmit}
@@ -195,7 +196,6 @@ export default function EditProfileModal({
                 variant="primary"
                 type="submit"
                 fullWidth
-                loading={isLoading}
                 disabled={isLoading}
               >
                 {isLoading ? t("saving") : t("save")}

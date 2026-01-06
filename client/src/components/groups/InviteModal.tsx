@@ -63,7 +63,7 @@ export function InviteModal({ isOpen, onClose, onInvite, groupName }: InviteModa
   return (
     <Modal title={t('inviteFriends')} onClose={handleClose} iconHeader={ <div className="p-2 bg-gradient-to-br from-accent-400 to-accent-600 rounded-xl">
       <UserPlus className="w-5 h-5 text-text-primary" />
-    </div>} subtitle={t('inviteFriendsToGroup', { groupName })} size="md">
+    </div>} subtitle={t('inviteFriendsToGroup', { groupName })} size="md" isLoading={isLoading}>
        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
            <Input
               {...register('email')}
@@ -138,7 +138,7 @@ export function InviteModal({ isOpen, onClose, onInvite, groupName }: InviteModa
             <Button variant='outline' size='lg' onClick={handleClose} disabled={isLoading} fullWidth>
               {t('cancel')}
             </Button>
-            <Button type='submit' variant='accent' size='lg' loading={isLoading} disabled={isLoading} fullWidth>
+            <Button type='submit' variant='accent' size='lg' disabled={isLoading} fullWidth>
               {isLoading ? t('sendingInvite') : t('sendInvite')}
             </Button>
           </div>

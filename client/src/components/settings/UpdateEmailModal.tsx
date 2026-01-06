@@ -88,6 +88,7 @@ export default function UpdateEmailModal({ isOpen, onClose, currentEmail }: Upda
       </div>}
       subtitle={t("emailUpdateNote")}
       size="md"
+      isLoading={isLoading}
     >
                 <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
@@ -130,7 +131,6 @@ export default function UpdateEmailModal({ isOpen, onClose, currentEmail }: Upda
                 variant="secondary"
                 disabled={isLoading || !formData.email || !!errors.email}
                 fullWidth
-                loading={isLoading}
               >
                 {isLoading ? t('updating') : t('update')}
               </Button>

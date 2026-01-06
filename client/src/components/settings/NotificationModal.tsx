@@ -120,6 +120,7 @@ export default function NotificationModal({
       </div>}
       subtitle={t("controlYourNotifications")}
       size="md"
+      isLoading={isLoading}
     >
        <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-3">
@@ -171,7 +172,6 @@ export default function NotificationModal({
                 variant="accent"
                 type="submit"
                 disabled={isLoading}
-                loading={isLoading}
                 fullWidth
               >
                 {isLoading ? t('saving') : t('save')}

@@ -151,6 +151,7 @@ export const EditItemModal = memo(function EditItemModal({
         <Edit className="w-5 h-5 text-text-primary" />
       </div>}
       size="md"
+      isLoading={isLoading}
     >
       <form onSubmit={handleSubmit(onSubmitForm)} className="space-y-4">
           {isFromCatalog && (

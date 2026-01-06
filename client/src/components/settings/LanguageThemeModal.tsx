@@ -90,6 +90,7 @@ export default function LanguageThemeModal({
       </div>}
       subtitle={t("customizeYourExperience")}
       size="md"
+      isLoading={isLoading}
     >
       <form onSubmit={handleSubmit} className="space-y-6">
             <div>
@@ -173,7 +174,7 @@ export default function LanguageThemeModal({
                 variant="primary"
                 type="submit"
                 fullWidth
-                loading={isLoading}
+                disabled={isLoading}
               >
                 {isLoading ? t('saving') : t('save')}
               </Button>

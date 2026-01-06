@@ -2,7 +2,7 @@
 
 import { memo, useEffect, useState } from "react";
 import { Minus, Package, Plus } from "lucide-react";
-import { Button, LoadingSpinner, Modal } from "../../common";
+import { Button, Modal } from "../../common";
 import { useModalScrollLock } from "../../../hooks/useModalScrollLock";
 import { IItem } from "../../../types";
 
@@ -71,12 +71,8 @@ export const UnpurchaseQuantityModal = memo(function UnpurchaseQuantityModal({
       iconHeader={<div className=" p-2 bg-primary-500 rounded-full">
         <Package className="w-5 h-5 text-text-primary" />
       </div>}
+      isLoading={isLoading}
     >
-            {isLoading ? (
-        <div className="rounded-3xl bg-card p-12 text-center shadow-xl">
-          <LoadingSpinner />
-        </div>
-      ) : (
       <div
       >
         <p className="mt-2 text-sm text-text-muted">
@@ -140,7 +136,6 @@ export const UnpurchaseQuantityModal = memo(function UnpurchaseQuantityModal({
           </Button>  
         </div>
       </div>
-      )}
       </Modal>
   );
 

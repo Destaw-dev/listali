@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useTranslations } from 'next-intl';
-import { Users, Group } from 'lucide-react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useModalScrollLock } from '../../hooks/useModalScrollLock';
-import { Button, Input, TextArea, Modal } from '../common';
-import { createGroupSchema } from '../../lib/schemas';
+import { useState } from "react";
+import { useTranslations } from "next-intl";
+import { Users, Group } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useModalScrollLock } from "../../hooks/useModalScrollLock";
+import { Button, Input, TextArea, Modal } from "../common";
+import { createGroupSchema } from "../../lib/schemas";
 
 type CreateGroupFormData = {
   name: string;
@@ -20,12 +20,16 @@ interface CreateGroupModalProps {
   onCreateGroup: (data: CreateGroupFormData) => Promise<void>;
 }
 
-export function CreateGroupModal({ isOpen, onClose, onCreateGroup }: CreateGroupModalProps) {
+export function CreateGroupModal({
+  isOpen,
+  onClose,
+  onCreateGroup,
+}: CreateGroupModalProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const t = useTranslations('CreateGroupModal');
-  
+  const t = useTranslations("CreateGroupModal");
+
   const groupSchema = createGroupSchema(t);
-  
+
   const {
     register,
     handleSubmit,
@@ -41,7 +45,7 @@ export function CreateGroupModal({ isOpen, onClose, onCreateGroup }: CreateGroup
       await onCreateGroup(data);
       reset();
     } catch (error) {
-      console.error('Error creating group:', error);
+      console.error("Error creating group:", error);
     } finally {
       setIsLoading(false);
     }
@@ -56,46 +60,72 @@ export function CreateGroupModal({ isOpen, onClose, onCreateGroup }: CreateGroup
 
   if (!isOpen) return null;
 
-  return(
-    <Modal title={t('createNewGroup')} onClose={handleClose} iconHeader={            <div className="p-2 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl">
-      <Users className="w-5 h-5 text-text-primary" />
-    </div>} subtitle={t('createNewGroupDescription')} size="md">
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <Input
-            label={t('groupName') + ' *'}
-            error={errors.name?.message}
-            {...register('name')}
-            type="text"
-            id="name"
-            placeholder={t('groupNamePlaceholder')}
-            icon={<Group className="w-5 h-5 text-muted" />}
-          />
+  return (
+    <Modal
+      title={t("createNewGroup")}
+      onClose={handleClose}
+      iconHeader={
+        <div className="p-2 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl">
+          <Users className="w-5 h-5 text-text-primary" />
+        </div>
+      }
+      subtitle={t("createNewGroupDescription")}
+      size="md"
+      isLoading={isLoading}
+    >
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <Input
+          label={t("groupName") + " *"}
+          error={errors.name?.message}
+          {...register("name")}
+          type="text"
+          id="name"
+          placeholder={t("groupNamePlaceholder")}
+          icon={<Group className="w-5 h-5 text-muted" />}
+        />
 
-          <TextArea
-            label={t('description') + ' (' + t('optional') + ')'}
-            error={errors.description?.message}
-            {...register('description')}
-            rows={3}
-            placeholder={t('descriptionPlaceholder')}
+        <TextArea
+          label={t("description") + " (" + t("optional") + ")"}
+          error={errors.description?.message}
+          {...register("description")}
+          rows={3}
+          placeholder={t("descriptionPlaceholder")}
+          fullWidth
+        />
+
+        <div className="bg-background/5 border border-primary/10 rounded-lg p-4">
+          <h4 className="font-medium text-text-primary mb-2">
+            {t("whatHappensAfter")}
+          </h4>
+          <ul className="text-sm text-text-secondary space-y-1">
+            <li>• {t("youWillGetInviteCode")}</li>
+            <li>• {t("youCanCreateLists")}</li>
+            <li>• {t("friendsCanJoinWithCode")}</li>
+            <li>• {t("youCanManageGroup")}</li>
+          </ul>
+        </div>
+
+        <div className="flex gap-3 pt-4">
+          <Button
+            variant="ghost"
+            type="button"
             fullWidth
-          />
-
-          <div className="bg-background/5 border border-primary/10 rounded-lg p-4">
-            <h4 className="font-medium text-text-primary mb-2">{t('whatHappensAfter')}</h4>
-            <ul className="text-sm text-text-secondary space-y-1">
-              <li>• {t('youWillGetInviteCode')}</li>
-              <li>• {t('youCanCreateLists')}</li>
-              <li>• {t('friendsCanJoinWithCode')}</li>
-              <li>• {t('youCanManageGroup')}</li>
-            </ul>
-          </div>
-
-          <div className="flex gap-3 pt-4">
-            <Button variant='ghost' type="button" fullWidth onClick={handleClose} disabled={isLoading}>{t('cancel')}</Button>
-            <Button variant='primary' type="submit" fullWidth disabled={isLoading} loading={isLoading}>{isLoading ? t('creatingGroup') : t('createGroup')}</Button>
-          </div>
-        </form>
+            onClick={handleClose}
+            disabled={isLoading}
+          >
+            {t("cancel")}
+          </Button>
+          <Button
+            variant="primary"
+            type="submit"
+            fullWidth
+            disabled={isLoading}
+            loading={isLoading}
+          >
+            {isLoading ? t("creatingGroup") : t("createGroup")}
+          </Button>
+        </div>
+      </form>
     </Modal>
-  )
-
-} 
+  );
+}

@@ -84,6 +84,7 @@ export function CreateShoppingListModal({
       }
       subtitle={t("willBeCreatedForGroup")}
       size="md"
+      isLoading={isSubmitting}
     >
       {" "}
       {groupName && (

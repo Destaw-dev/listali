@@ -40,6 +40,19 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       },
       icons: {
         icon: '/icon-dark.svg',
+        apple: '/icon-dark.svg',
+        other: [
+          {
+            url: '/icon-dark.svg',
+            sizes: '192x192',
+            type: 'image/svg+xml',
+          },
+          {
+            url: '/icon-dark.svg',
+            sizes: '512x512',
+            type: 'image/svg+xml',
+          },
+        ],
       },
       alternates: {
         canonical: '/he',
@@ -70,6 +83,14 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     },
     icons: {
       icon: '/icon-dark.svg',
+      apple: '/icon-dark.svg',
+      other: [
+        {
+          url: '/icon-dark.svg',
+          sizes: '192x192',
+          type: 'image/svg+xml',
+        },
+      ],
     },
     alternates: {
       canonical: '/en',

@@ -70,6 +70,7 @@ export function JoinGroupModal({
       }
       subtitle={t("joinGroupDescription")}
       size="md"
+      isLoading={isLoading}
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <Input
@@ -122,7 +123,6 @@ export function JoinGroupModal({
             type="submit"
             fullWidth
             disabled={isLoading}
-            loading={isLoading}
           >
             {isLoading ? t("joiningGroup") : t("joinGroup")}
           </Button>

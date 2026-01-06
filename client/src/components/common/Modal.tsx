@@ -24,7 +24,7 @@ export function Modal({ children, onClose, title, iconHeader, subtitle, size = "
   };
   return (
     <div
-      className="fixed inset-0 z-[55] flex items-center justify-center p-4 bg-background/30 backdrop-blur-[2px]"
+      className="fixed inset-0 z-[55] flex items-center justify-center p-4 bg-background/30 backdrop-blur-sm"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div
