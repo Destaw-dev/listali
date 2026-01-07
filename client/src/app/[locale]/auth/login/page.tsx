@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
+import { Eye, EyeOff,  } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useAuthStore } from '../../../../store/authStore';
 import { apiClient } from '../../../../lib/api';
