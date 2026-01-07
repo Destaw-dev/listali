@@ -6,7 +6,7 @@ export const registerValidation = [
     .trim()
     .isLength({ min: 3, max: 30 })
     .withMessage('Username must be between 3 and 30 characters')
-    .matches(/^[a-zA-Z0-9_\u0590-\u05FF]+$/)
+    .matches(/^[a-zA-Z0-9._\-\u0590-\u05FF]+$/)
     .withMessage('Username can contain Hebrew letters, English letters, numbers, and underscores'),
   body('email')
     .isEmail()

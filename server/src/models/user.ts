@@ -17,8 +17,11 @@ const userSchema = new Schema<IUser, UserModel, IUserMethods>({
     trim: true,
     minlength: 3,
     maxlength: 30,
-    match: [/^[a-zA-Z0-9_\u0590-\u05FF]+$/, 'Username can contain letters (Hebrew/English), numbers, and underscores']
-  },
+    match: [
+      /^[a-zA-Z0-9._\-\u0590-\u05FF]+$/,
+      'Username can contain letters (Hebrew/English), numbers, underscores, dots, and hyphens'
+    ]
+  },  
   email: {
     type: String,
     required: true,

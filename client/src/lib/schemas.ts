@@ -10,7 +10,7 @@ export const createLoginSchema = (t: (key: string) => string) => z.object({
 export const createRegisterSchema = (t: (key: string) => string) => z.object({
   firstName: z.string().min(2, t('firstNameMinLength')),
   lastName: z.string().min(2, t('lastNameMinLength')),
-  username: z.string().min(3, t('usernameMinLength')),
+  username: z.string().min(3, t('usernameMinLength')).regex(/^[a-zA-Z0-9._\-\u0590-\u05FF]+$/, t('usernameInvalid')),
   email: z.string().email(t('emailInvalid')),
   password: z.string()
     .min(8, t('passwordMinLength'))
@@ -61,7 +61,7 @@ export const createListSchema = (t: (key: string) => string) => z.object({
       .string()
       .min(3, t('usernameMinLength'))
       .max(30, t('usernameMaxLength'))
-      .regex(/^[a-zA-Z0-9_\u0590-\u05FF]+$/, t('usernameInvalid')),
+      .regex(/^[a-zA-Z0-9._\-\u0590-\u05FF]+$/, t('usernameInvalid')),
   });
 
   export const createEmailSchema = (t: (key: string) => string) => z.object({
