@@ -24,7 +24,7 @@ export default function GuestListPage() {
   const listId = params?.listId as string;
   
   const { isGuest } = useAuthStore();
-  const { getList, addItem, toggleItem, removeItem, purchaseItem, unpurchaseItem, purchaseAllItems, undoPurchaseAll } = useGuestListsStore();
+  const { getList, addItem, removeItem, purchaseItem, unpurchaseItem, purchaseAllItems, undoPurchaseAll } = useGuestListsStore();
   
   const { isInitialized } = useAuthRedirect({
     redirectTo: `/${locale}/welcome`,
@@ -200,20 +200,12 @@ export default function GuestListPage() {
     }
   };
 
-  const handleToggleItem = (itemId: string) => {
-    toggleItem(listId, itemId);
-  };
-
   const handlePurchaseItem = (itemId: string, quantity: number) => {
     purchaseItem(listId, itemId, quantity);
   };
 
   const handleUnpurchaseItem = (itemId: string, quantity: number) => {
     unpurchaseItem(listId, itemId, quantity);
-  };
-
-  const handleEditItem = () => {
-
   };
 
   const handleDeleteItem = (itemId: string) => {
