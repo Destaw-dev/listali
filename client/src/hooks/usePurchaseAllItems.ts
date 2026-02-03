@@ -4,7 +4,6 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNotification } from "../contexts/NotificationContext";
 import { apiClient } from "../lib/api";
 import { IItem } from "../types";
-import { itemKeys } from "./useItems";
 import { shoppingListKeys } from "./useShoppingLists";
 
 interface PurchaseAllItemsParams {
@@ -24,7 +23,7 @@ export const usePurchaseAllItems = () => {
   const { showSuccess, handleApiError } = useNotification();
 
   return useMutation({
-    mutationFn: async ({ items, shoppingListId, groupId }: PurchaseAllItemsParams) => {
+    mutationFn: async ({ items, shoppingListId }: PurchaseAllItemsParams) => {
       const unpurchasedItems = items.filter((item) => {
         const totalQty = item.quantity || 1;
         const purchasedQty = item.purchasedQuantity || 0;

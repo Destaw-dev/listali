@@ -46,7 +46,7 @@ export default function DashboardPage() {
   const { shouldWarn, checkStorage } = useStorageMonitor();
   const [showStorageWarning, setShowStorageWarning] = useState(false);
 
-  const { isAuthenticated, isInitialized } = useAuthRedirect({
+  const { isInitialized } = useAuthRedirect({
     redirectTo: `/${locale}/welcome`,
     requireAuth: true,
   });

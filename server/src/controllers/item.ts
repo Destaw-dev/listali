@@ -493,10 +493,8 @@ export const batchPurchaseItems = async (req: express.Request, res: express.Resp
 
   const userId = req.userId!;
   
-  // Verify shopping list access
-  const { shoppingList, group } = await verifyShoppingListAccess(shoppingListId, userId);
+  const { group } = await verifyShoppingListAccess(shoppingListId, userId);
 
-  // Get all items and verify they belong to the shopping list
   const items = await Item.find({
     _id: { $in: itemIds },
     shoppingList: shoppingListId
@@ -506,12 +504,10 @@ export const batchPurchaseItems = async (req: express.Request, res: express.Resp
     throw new AppError('Some items were not found or do not belong to this shopping list', 404);
   }
 
-  // Filter unpurchased items, calculate quantities, and purchase in one pass
   const user = await (await import('../models/user')).default.findById(userId);
   const listId = shoppingListId;
   const itemIdsToPurchase: string[] = [];
 
-  // Single loop: filter, calculate, and purchase (no individual messages)
   const purchasePromises = items
     .filter((item) => {
       if (item.status === 'purchased') return false;
@@ -525,7 +521,6 @@ export const batchPurchaseItems = async (req: express.Request, res: express.Resp
       const remainingQty = totalQty - currentPurchasedQty;
       const finalPurchasedQty = currentPurchasedQty + remainingQty;
 
-      // Purchase item
       await item.markAsPurchased(userId, finalPurchasedQty);
       itemIdsToPurchase.push(item._id.toString());
     });
@@ -534,10 +529,8 @@ export const batchPurchaseItems = async (req: express.Request, res: express.Resp
     return res.status(200).json(successResponse([], 'All items are already purchased'));
   }
 
-  // Execute all purchases and message creation in parallel
   await Promise.all(purchasePromises);
 
-  // Get updated items in one query
   const updatedItems = await Item.find({
     _id: { $in: itemIdsToPurchase }
   })
@@ -545,10 +538,7 @@ export const batchPurchaseItems = async (req: express.Request, res: express.Resp
     .populate('category', 'name nameEn icon color')
     .populate('product', 'name brand image averagePrice price categoryId subCategoryId');
 
-  // Build Map for O(1) lookup instead of O(n) find
-  const updatedItemsMap = new Map(updatedItems.map(item => [item._id.toString(), item]));
 
-  // Emit socket events
   const io = getIO();
   if (io) {
     const listDoc = await ShoppingList.findById(listId);

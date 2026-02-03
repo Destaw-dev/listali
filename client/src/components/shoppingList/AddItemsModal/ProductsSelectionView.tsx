@@ -67,15 +67,8 @@ export const ProductsSelectionView = memo(({
     setShowAllCategories,
     setAdvancedOpen,
     
-    // Guest mode helpers
-    isGuest,
-    canSearch,
     canLoadImage,
     onImageLoad,
-    searchCount,
-    maxSearchAttempts,
-    imagesLoaded,
-    maxImages,
   } = useProductsSelection();
   const  {showInfo} = useNotification();
 

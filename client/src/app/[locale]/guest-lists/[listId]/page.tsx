@@ -37,12 +37,10 @@ export default function GuestListPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddItemsModal, setShowAddItemsModal] = useState(false);
   const [categories, setCategories] = useState<ICategory[]>([]);
-  const [isLoadingCategories, setIsLoadingCategories] = useState(false);
 
   useEffect(() => {
     const loadCategories = async () => {
       try {
-        setIsLoadingCategories(true);
         const response = await apiClient.getAvailableCategories();
         if (response?.data) {
           setCategories(response.data);
@@ -50,33 +48,16 @@ export default function GuestListPage() {
       } catch (error) {
         console.error('Failed to load categories:', error);
       } finally {
-        setIsLoadingCategories(false);
+
       }
     };
 
     loadCategories();
   }, []);
 
-  useEffect(() => {
-    if (isInitialized && (!isGuest() || !guestList)) {
-      router.push(`/${locale}/dashboard`);
-    }
-  }, [isInitialized, isGuest, guestList, locale, router]);
-
-  if (!isInitialized) {
-    return (
-      <div className="min-h-screen bg-surface flex items-center justify-center">
-        <LoadingSpinner />
-      </div>
-    );
-  }
-
-  if (!isGuest() || !guestList) {
-    return null;
-  }
-
+  // All hooks must be called before any early returns
   const filteredItems = useMemo(() => {
-    if (!guestList.items || guestList.items.length === 0) return [];
+    if (!guestList?.items || guestList.items.length === 0) return [];
 
     let filtered = [...guestList.items];
 
@@ -100,16 +81,18 @@ export default function GuestListPage() {
     }
 
     return filtered;
-  }, [guestList.items, statusFilter, categoryFilter, searchQuery]);
+  }, [guestList?.items, statusFilter, categoryFilter, searchQuery]);
 
-  const checkedItems = guestList.items.filter(item => item.checked).length;
-  const totalItems = guestList.items.length;
+  const checkedItems = guestList?.items?.filter(item => item.checked).length || 0;
+  const totalItems = guestList?.items?.length || 0;
   const remainingItems = totalItems - checkedItems;
 
   const categoryStats = useMemo(() => {
+    if (!guestList?.items) return [];
+    
     const stats: Record<string, { id: string; name: string; count: number }> = {};
     
-    guestList.items?.forEach((item: GuestItem) => {
+    guestList.items.forEach((item: GuestItem) => {
       if (item.categoryId) {
         const category = categories.find((c: ICategory) => c._id === item.categoryId);
         const categoryName = category?.name || 'No Category';
@@ -127,7 +110,25 @@ export default function GuestListPage() {
     });
 
     return Object.values(stats);
-  }, [guestList.items, categories]);
+  }, [guestList?.items, categories]);
+
+  useEffect(() => {
+    if (isInitialized && (!isGuest() || !guestList)) {
+      router.push(`/${locale}/dashboard`);
+    }
+  }, [isInitialized, isGuest, guestList, locale, router]);
+
+  if (!isInitialized) {
+    return (
+      <div className="min-h-screen bg-surface flex items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  if (!isGuest() || !guestList) {
+    return null;
+  }
 
   const purchasedCount = checkedItems;
   const unpurchasedCount = remainingItems;
@@ -211,9 +212,8 @@ export default function GuestListPage() {
     unpurchaseItem(listId, itemId, quantity);
   };
 
-  const handleEditItem = (item: GuestItem) => {
-    // Edit is handled by EditGuestItemModal in GuestListItems
-    // This is just for compatibility
+  const handleEditItem = () => {
+
   };
 
   const handleDeleteItem = (itemId: string) => {
@@ -253,11 +253,9 @@ export default function GuestListPage() {
         <GuestListItems
           items={filteredItems}
           listId={listId}
-          onToggle={handleToggleItem}
           onDelete={handleDeleteItem}
           onPurchase={handlePurchaseItem}
           onUnpurchase={handleUnpurchaseItem}
-          onEdit={handleEditItem}
           onPurchaseAll={() => purchaseAllItems(listId)}
           onUndoPurchaseAll={(previousStates) => undoPurchaseAll(listId, previousStates)}
           categories={categories}

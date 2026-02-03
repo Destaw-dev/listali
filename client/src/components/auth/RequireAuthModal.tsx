@@ -3,19 +3,17 @@
 import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { Lock, Mail, Chrome } from 'lucide-react';
+import { Lock, Mail } from 'lucide-react';
 import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
-import { useAuthStore } from '../../store/authStore';
 import { GoogleAuthButton } from './GoogleAuthButton';
 
 interface RequireAuthModalProps {
   isOpen: boolean;
   onClose: () => void;
-  actionName?: string;
 }
 
-export function RequireAuthModal({ isOpen, onClose, actionName }: RequireAuthModalProps) {
+export function RequireAuthModal({ isOpen, onClose }: RequireAuthModalProps) {
   const router = useRouter();
   const params = useParams();
   const locale = params.locale as string || 'he';

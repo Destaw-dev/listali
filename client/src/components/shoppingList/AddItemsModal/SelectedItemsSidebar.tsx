@@ -64,7 +64,6 @@ export const SelectedItemsSidebar = memo(({
     watch,
     setValue,
     formState: { errors },
-    reset,
   } = useForm<ItemsInput>({
     resolver: zodResolver(itemsSchemaInstance),
     defaultValues: { items: [] },
@@ -78,7 +77,6 @@ export const SelectedItemsSidebar = memo(({
   const watchedItems = watch("items");
   const prevSelectedProductsRef = useRef<string[]>([]);
 
-  // Helper function to create item from product
   const createItemFromProduct = useCallback((product: IProduct | IManualProduct): ItemInput => {
     const categoryId = isManualProduct(product) ? undefined : product.categoryId || undefined;
     const defaultUnit = isManualProduct(product)
@@ -108,7 +106,6 @@ export const SelectedItemsSidebar = memo(({
     };
   }, []);
 
-  // Sync selected products with form fields
   useEffect(() => {
     const currentSelectedIds = selectedProducts
       .map((p) => p._id)
@@ -117,7 +114,6 @@ export const SelectedItemsSidebar = memo(({
 
     const prevSelectedIds = prevSelectedProductsRef.current;
 
-    // Check if products have changed
     const hasChanged =
       currentSelectedIds.length !== prevSelectedIds.length ||
       currentSelectedIds.some((id, index) => id !== prevSelectedIds[index]);
@@ -126,7 +122,6 @@ export const SelectedItemsSidebar = memo(({
 
     prevSelectedProductsRef.current = currentSelectedIds;
 
-    // Handle empty state
     if (selectedProducts.length === 0) {
       if (fields.length > 0) {
         replace([]);
@@ -134,7 +129,6 @@ export const SelectedItemsSidebar = memo(({
       return;
     }
 
-    // Build current state maps
     const currentProductIds = new Set(
       (watchedItems || [])
         .map((item) => item?.product)
@@ -143,12 +137,10 @@ export const SelectedItemsSidebar = memo(({
 
     const selectedProductIds = new Set(currentSelectedIds);
 
-    // Find products to add
     const productsToAdd = selectedProducts.filter(
       (product) => product._id && !currentProductIds.has(product._id)
     );
 
-    // Find indices to remove
     const indicesToRemove: number[] = [];
     (watchedItems || []).forEach((item, index) => {
       if (item?.product && !selectedProductIds.has(item.product)) {
@@ -156,27 +148,22 @@ export const SelectedItemsSidebar = memo(({
       }
     });
 
-    // Remove in reverse order to maintain correct indices
     indicesToRemove.reverse().forEach((index) => remove(index));
 
-    // Add new products
     productsToAdd.forEach((product) => {
       append(createItemFromProduct(product));
     });
 
-    // Initialize if form is empty but products exist
     if (fields.length === 0 && selectedProducts.length > 0) {
       const initialItems = selectedProducts.map(createItemFromProduct);
       replace(initialItems);
     }
   }, [selectedProducts, append, remove, replace, fields.length, watchedItems, createItemFromProduct]);
 
-  // Handle form submission
   const handleFormSubmit = useCallback(async (data: ItemsInput) => {
     await onSubmit(data.items);
   }, [onSubmit]);
 
-  // Handle item removal
   const handleRemoveItem = useCallback((index: number) => {
     const item = watchedItems?.[index];
     remove(index);
@@ -185,7 +172,6 @@ export const SelectedItemsSidebar = memo(({
     }
   }, [watchedItems, remove, onProductRemove]);
 
-  // Check for untreated duplicates
   const hasUntreatedDuplicates = useMemo(() => {
     if (!watchedItems?.length || !existingItems.length) {
       return false;
@@ -202,7 +188,6 @@ export const SelectedItemsSidebar = memo(({
     });
   }, [watchedItems, existingItems]);
 
-  // Render empty state
   const renderEmptyState = () => (
     <div className="text-center py-8 text-text-muted">
       <ShoppingCart className="w-12 h-12 mx-auto mb-2 opacity-50" />
@@ -210,8 +195,7 @@ export const SelectedItemsSidebar = memo(({
     </div>
   );
 
-  // Render item form
-  const renderItemForm = useCallback((field: any, index: number) => {
+  const renderItemForm = useCallback((field: ItemInput & { id: string }, index: number) => {
     const item = watchedItems?.[index] as ItemInput | undefined;
     
     const product: IProduct | IManualProduct | undefined = item?.product 

@@ -14,11 +14,9 @@ import { PurchaseAllButton } from "../shoppingList/PurchaseAllButton";
 interface GuestListItemsProps {
   items: GuestItem[];
   listId: string;
-  onToggle: (itemId: string) => void;
   onDelete: (itemId: string) => void;
   onPurchase: (itemId: string, quantity: number) => void;
   onUnpurchase: (itemId: string, quantity: number) => void;
-  onEdit: (item: GuestItem) => void;
   onPurchaseAll?: () => { itemIds: string[]; previousStates: Array<{ itemId: string; purchasedQuantity: number; checked: boolean }> };
   onUndoPurchaseAll?: (previousStates: Array<{ itemId: string; purchasedQuantity: number; checked: boolean }>) => void;
   categories?: ICategory[];
@@ -59,11 +57,9 @@ const convertGuestItemToIItem = (item: GuestItem, categories: ICategory[]): IIte
 export const GuestListItems = memo(function GuestListItems({
   items,
   listId,
-  onToggle,
   onDelete,
   onPurchase,
   onUnpurchase,
-  onEdit,
   onPurchaseAll,
   onUndoPurchaseAll,
   categories = [],

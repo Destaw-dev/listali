@@ -8,7 +8,6 @@ import { Edit } from "lucide-react";
 import { z } from "zod";
 import { Button, Input, TextArea, Dropdown, Modal } from "../common";
 import { useModalScrollLock } from "../../hooks/useModalScrollLock";
-import { useAvailableCategories } from "../../hooks/useItems";
 import { GuestItem, ICategory } from "../../types";
 import { useGuestListsStore } from "../../store/guestListsStore";
 
