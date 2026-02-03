@@ -11,14 +11,16 @@ import { GoogleAuthButton } from './GoogleAuthButton';
 interface RequireAuthModalProps {
   isOpen: boolean;
   onClose: () => void;
+  actionName?: string;
 }
 
-export function RequireAuthModal({ isOpen, onClose }: RequireAuthModalProps) {
+export function RequireAuthModal({ isOpen, onClose, actionName }: RequireAuthModalProps) {
   const router = useRouter();
   const params = useParams();
   const locale = params.locale as string || 'he';
   const t = useTranslations('auth.RequireAuthModal');
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const actionNameText = actionName as 'register' | 'login' ? "register" : "register";
 
   const handleGoogleAuth = async () => {
     setIsGoogleLoading(true);
@@ -60,7 +62,7 @@ export function RequireAuthModal({ isOpen, onClose }: RequireAuthModalProps) {
 
         <div className="flex flex-col gap-3 pt-4">
           <GoogleAuthButton
-            type="register"
+            type={actionNameText as 'register' | 'login'}
             onGoogleAuth={handleGoogleAuth}
             disabled={isGoogleLoading}
             isLoading={isGoogleLoading}
