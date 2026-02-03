@@ -32,11 +32,33 @@ const app = express();
 const server = createServer(app);
 dotenv.config();
 
+const clientOrigin = process.env.CLIENT_ORIGIN || process.env.CLIENT_URL;
+if (!clientOrigin) {
+  console.warn('⚠️  CLIENT_ORIGIN/CLIENT_URL not set. CORS may not work correctly.');
+}
+
+const corsOptions = {
+  origin: clientOrigin ? (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    if (!origin) return callback(null, true);
+    
+    if (origin === clientOrigin) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  } : false,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'x-client', 'x-refresh-token', 'x-session-id'],
+  exposedHeaders: ['Set-Cookie'],
+};
+
 const io = new Server(server, {
   cors: {
-    origin: [ process.env.CLIENT_URL as string],
-    methods: ["GET", "POST"],
-    credentials: true
+    origin: clientOrigin || false,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'x-client', 'x-refresh-token', 'x-session-id'],
   }
 });
 
@@ -59,12 +81,7 @@ app.use(helmet({
   },
 }));
 
-app.use(cors({
-  origin: [ process.env.CLIENT_URL as string],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'x-client', 'x-refresh-token', 'x-session-id'],
-}));
+app.use(cors(corsOptions));
 
 app.use(limiter);
 app.use(morgan('combined'));
