@@ -8,7 +8,9 @@ import { z } from 'zod';
 import { Eye, EyeOff,  } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useAuthStore } from '../../../../store/authStore';
+import { useGuestListsStore } from '../../../../store/guestListsStore';
 import { apiClient } from '../../../../lib/api';
+import { migrateGuestLists } from '../../../../lib/migration';
 import { useNotification } from '../../../../contexts/NotificationContext';
 import { Link as IntlLink } from '../../../../i18n/navigation';
 import { GoogleAuthButton } from '../../../../components/auth/GoogleAuthButton';
@@ -65,6 +67,19 @@ export default function LoginPage() {
     try {
       const response = await apiClient.login(data.email, data.password);
       setUser(response.user);
+      
+      const guestLists = useGuestListsStore.getState().lists;
+      if (guestLists && guestLists.length > 0) {
+        try {
+          const migrated = await migrateGuestLists();
+          if (migrated) {
+            console.log('Guest lists migrated successfully');
+          }
+        } catch (migrationError) {
+          console.error('Migration error (non-blocking):', migrationError);
+        }
+      }
+      
       showSuccess('auth.loginSuccess');
       router.push(`/${locale}/dashboard`);
     } catch (error) {
@@ -108,7 +123,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-54px)] bg-card flex justify-center items-center p-4 pt-5 text-text-primary">
+    <div className="min-h-[calc(100vh-25px)] bg-card flex justify-center items-center p-4 pt-5 text-text-primary">
       <div className="w-full max-w-md">
         <div className="flex items-center justify-start gap-10 sm:gap-30 ">
           <IntlLink

@@ -738,4 +738,9 @@ export const notificationSettingsValidation = [
     .withMessage('Group invitations must be a boolean')
 ];
 
+export const batchPurchaseItemsValidation = [
+  body('itemIds').isArray().withMessage('Item IDs must be an array'),
+  body('itemIds.*').isMongoId().withMessage('Each item ID must be a valid MongoDB ObjectId'),
+  body('shoppingListId').isMongoId().withMessage('Valid shopping list ID is required'),
+];
 

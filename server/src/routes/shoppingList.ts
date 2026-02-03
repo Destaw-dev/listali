@@ -7,7 +7,8 @@ import {
   deleteShoppingList, 
   addItemToList, 
   removeItemFromList, 
-  completeShoppingList 
+  completeShoppingList,
+  migrateGuestLists 
 } from '../controllers/shoppingList';
 import { 
   createShoppingListValidation, 
@@ -16,7 +17,7 @@ import {
   validateListId, 
   validateItemId 
 } from '../middleware/validation';
-import { checkGroupMembership } from '../middleware/auth';
+import { checkGroupMembership, authenticateToken } from '../middleware/auth';
 import { asyncHandler } from '../middleware/handlers';
 
 const router = express.Router();
@@ -36,5 +37,8 @@ router.post('/:listId/items', addItemValidation, validateListId, asyncHandler(ad
 router.delete('/:listId/items/:itemId', validateListId, validateItemId, asyncHandler(removeItemFromList));
 
 router.post('/:listId/complete', validateListId, asyncHandler(completeShoppingList));
+
+// Migration endpoint (protected - requires auth)
+router.post('/migrate', authenticateToken, asyncHandler(migrateGuestLists));
 
 export default router;

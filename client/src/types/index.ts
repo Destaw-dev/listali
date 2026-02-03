@@ -199,6 +199,7 @@ export interface IShoppingSessionData {
 export interface IItem extends BaseDocument {
   id: string;
   name: string;
+  sortName?: string;
   description?: string;
   quantity: number;
   unit: string;
@@ -245,6 +246,38 @@ export interface IShoppingListItem extends BaseDocument {
   addedAt: Date;
 }
 
+// ============================================================================
+// GUEST MODE TYPES
+// ============================================================================
+
+// Guest Item - minimal item for guest mode (localStorage only)
+export interface GuestItem {
+  id: string;
+  name: string;          // Required, max 100 chars
+  quantity?: number;     // Optional
+  purchasedQuantity?: number;  // Optional, for partial purchase support
+  checked: boolean;      // Required
+  createdAt: Date;       // Required
+  unit?: string;         // Optional, for migration
+  categoryId?: string;   // Optional, for migration (category ObjectId)
+  notes?: string;        // Optional, for notes
+  brand?: string;        // Optional, for brand
+  image?: string;        // Optional, for image
+  productId?: string;    // Optional, for productId
+}
+
+// Guest List - minimal list for guest mode (localStorage only)
+export interface GuestList {
+  id: string;
+  title: string;         // Required, max 100 chars
+  description?: string;  // Optional
+  priority?: 'low' | 'medium' | 'high';  // Optional
+  status?: 'active' | 'completed' | 'archived';  // Optional
+  items: GuestItem[];    // Required
+  createdAt: Date;       // Required
+  updatedAt: Date;       // Required
+}
+
 export type ItemInput = {
   name: string;
   quantity: number;
@@ -282,6 +315,7 @@ export interface ICreateMultipleItemsInput {
 export interface IManualProduct {
   _id: string;
   name: string;
+  sortName?: string;
   defaultUnit: string;
   units: string[];
   priority: 'low' | 'medium' | 'high';
@@ -346,6 +380,25 @@ export interface IWebSocketEvents {
     list: Partial<IShoppingList>;
     updatedBy: { id: string; username: string };
     timestamp: Date | string;
+  };
+  'items:batch-updated': {
+    action: 'batch_purchase' | 'batch_unpurchase';
+    items: Array<{
+      itemId: string;
+      item: IItem;
+      updates: {
+        status: string;
+        isPurchased: boolean;
+        isPartiallyPurchased: boolean;
+        purchasedQuantity: number;
+        purchasedAt: string | null;
+        purchasedBy: string;
+      };
+    }>;
+    updatedBy: IUserSimple;
+    timestamp: Date;
+    listName: string;
+    listId: string;
   };
   'item:updated': {
     listId?: string;
@@ -580,6 +633,7 @@ export type INutritionalKey =
 // Product interface
 export interface IProduct extends BaseDocument {
   name: string;
+  sortName?: string;
   categoryId: string;
   subCategoryId: string;
   barcode?: string;

@@ -11,7 +11,7 @@ export default async function RootPage() {
   const locale = savedLocale || detectedLocale;
   
   const authToken = cookieStore.get('token')?.value;
-
+  
   const isLoggedIn = authToken !== 'none' && authToken !== undefined;
 
   if (isLoggedIn) {

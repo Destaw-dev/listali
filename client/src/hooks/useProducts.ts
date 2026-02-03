@@ -1,6 +1,8 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { apiClient } from '../lib/api';
 import { IProduct } from '../types';
+import { useAuthStore } from '../store/authStore';
+import { GUEST_LIMITS } from '../constants/guestLimits';
 
 interface PaginatedResponse<T> {
   data?: T[];
@@ -20,10 +22,13 @@ export const productKeys = {
 };
 
 export const useSearchProducts = (query: string, page: number = 1, limit: number = 20) => {
+  const { isGuest } = useAuthStore();
+  const minChars = isGuest() ? GUEST_LIMITS.MIN_SEARCH_CHARS : 2;
+  
   return useQuery({
     queryKey: productKeys.search(query, page, limit),
     queryFn: () => apiClient.searchProducts(query, page, limit),
-    enabled: !!query && query.length >= 2,
+    enabled: !!query && query.length >= minChars,
     staleTime: 5 * 60 * 1000,
   });
 };
@@ -37,21 +42,36 @@ export const useProduct = (productId: string) => {
 };
 
 export const useAllProducts = (page: number = 1, limit: number = 50) => {
+  const { isGuest } = useAuthStore();
+  const effectiveLimit = isGuest() 
+    ? Math.min(limit, GUEST_LIMITS.MAX_PRODUCTS_TO_LOAD)
+    : limit;
+  
   return useQuery({
-    queryKey: productKeys.list(page, limit),
-    queryFn: () => apiClient.getAllProducts(page, limit),
+    queryKey: productKeys.list(page, effectiveLimit),
+    queryFn: () => apiClient.getAllProducts(page, effectiveLimit),
     staleTime: 5 * 60 * 1000,
   });
 };
 
 export const useInfiniteAllProducts = (limit: number = 50) => {
+  const { isGuest } = useAuthStore();
+  const effectiveLimit = isGuest() 
+    ? Math.min(limit, GUEST_LIMITS.MAX_PRODUCTS_TO_LOAD)
+    : limit;
+  
   return useInfiniteQuery({
-    queryKey: [...productKeys.all, 'list', 'infinite', limit],
-    queryFn: ({ pageParam = 1 }) => apiClient.getAllProducts(pageParam as number, limit),
+    queryKey: [...productKeys.all, 'list', 'infinite', effectiveLimit],
+    queryFn: ({ pageParam = 1 }) => apiClient.getAllProducts(pageParam as number, effectiveLimit),
     initialPageParam: 1,
     getNextPageParam: (lastPage: PaginatedResponse<IProduct>) => {
       const page = lastPage?.pagination?.page ?? 1;
       const pages = lastPage?.pagination?.pages ?? 1;
+      const maxPages = isGuest() ? GUEST_LIMITS.MAX_PRODUCT_PAGES : Infinity;
+      // Stop infinite scroll if guest and reached max pages
+      if (isGuest() && page >= maxPages) {
+        return undefined;
+      }
       return page < pages ? page + 1 : undefined;
     },
     staleTime: 5 * 60 * 1000,
@@ -59,21 +79,36 @@ export const useInfiniteAllProducts = (limit: number = 50) => {
 };
 
 export const useProductsByCategory = (categoryId: string, page: number = 1, limit: number = 20) => {
+  const { isGuest } = useAuthStore();
+  const effectiveLimit = isGuest() 
+    ? Math.min(limit, GUEST_LIMITS.MAX_PRODUCTS_TO_LOAD)
+    : limit;
+  
   return useQuery({
-    queryKey: productKeys.category(categoryId, page, limit),
-    queryFn: () => apiClient.getProductsByCategory(categoryId, page, limit),
+    queryKey: productKeys.category(categoryId, page, effectiveLimit),
+    queryFn: () => apiClient.getProductsByCategory(categoryId, page, effectiveLimit),
     enabled: !!categoryId,
   });
 }; 
 
 export const useInfiniteProductsByCategory = (categoryId: string, limit: number = 20) => {
+  const { isGuest } = useAuthStore();
+  const effectiveLimit = isGuest() 
+    ? Math.min(limit, GUEST_LIMITS.MAX_PRODUCTS_TO_LOAD)
+    : limit;
+  
   return useInfiniteQuery({
-    queryKey: [...productKeys.all, 'category', 'infinite', categoryId, limit],
-    queryFn: ({ pageParam = 1 }) => apiClient.getProductsByCategory(categoryId, pageParam as number, limit),
+    queryKey: [...productKeys.all, 'category', 'infinite', categoryId, effectiveLimit],
+    queryFn: ({ pageParam = 1 }) => apiClient.getProductsByCategory(categoryId, pageParam as number, effectiveLimit),
     initialPageParam: 1,
     getNextPageParam: (lastPage: PaginatedResponse<IProduct>) => {
       const page = lastPage?.pagination?.page ?? 1;
       const pages = lastPage?.pagination?.pages ?? 1;
+      const maxPages = isGuest() ? GUEST_LIMITS.MAX_PRODUCT_PAGES : Infinity;
+      // Stop infinite scroll if guest and reached max pages
+      if (isGuest() && page >= maxPages) {
+        return undefined;
+      }
       return page < pages ? page + 1 : undefined; 
     },
     enabled: !!categoryId,
@@ -82,16 +117,27 @@ export const useInfiniteProductsByCategory = (categoryId: string, limit: number 
 };
 
 export const useInfiniteSearchProducts = (query: string, limit: number = 20) => {
+  const { isGuest } = useAuthStore();
+  const minChars = isGuest() ? GUEST_LIMITS.MIN_SEARCH_CHARS : 2;
+  const effectiveLimit = isGuest() 
+    ? Math.min(limit, GUEST_LIMITS.MAX_PRODUCTS_TO_LOAD)
+    : limit;
+  
   return useInfiniteQuery({
-    queryKey: [...productKeys.all, 'search', 'infinite', query, limit],
-    queryFn: ({ pageParam = 1 }) => apiClient.searchProducts(query, pageParam as number, limit),
+    queryKey: [...productKeys.all, 'search', 'infinite', query, effectiveLimit],
+    queryFn: ({ pageParam = 1 }) => apiClient.searchProducts(query, pageParam as number, effectiveLimit),
     initialPageParam: 1,
     getNextPageParam: (lastPage: PaginatedResponse<IProduct>) => {
       const page = lastPage?.pagination?.page ?? 1;
       const pages = lastPage?.pagination?.pages ?? 1;
+      const maxPages = isGuest() ? GUEST_LIMITS.MAX_PRODUCT_PAGES : Infinity;
+      // Stop infinite scroll if guest and reached max pages
+      if (isGuest() && page >= maxPages) {
+        return undefined;
+      }
       return page < pages ? page + 1 : undefined;
     },
-    enabled: !!query && query.length >= 2,
+    enabled: !!query && query.length >= minChars,
     staleTime: 5 * 60 * 1000,
   });
 };

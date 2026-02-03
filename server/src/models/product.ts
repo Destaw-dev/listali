@@ -4,7 +4,7 @@ import {
   ProductUnit,
 } from "../types";
 
-const NUTRITIONAL: string[] = [
+export const NUTRITIONAL: string[] = [
   "energy",
   "fat",
   "saturatedFat",
@@ -173,9 +173,6 @@ const ProductSchema = new Schema<IProduct>(
     isActive: {
       type: Boolean,
       default: true,
-    },
-    idFromApi: {
-      type: String,
     },
     sortName:{
       type: String,

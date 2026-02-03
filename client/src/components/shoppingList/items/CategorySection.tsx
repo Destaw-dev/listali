@@ -85,7 +85,7 @@ export const CategorySection = memo(function CategorySection({
         <div className="mt-1">
           {groups.map((group) => (
             <div key={group.categoryId} className="mt-3 first:mt-1">
-              <div className="bg-surface sticky top-0 z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-sm">
+              <div className="bg-surface flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-text-on-primary">
                 <ShoppingBag className="h-3.5 w-3.5 text-neutral-400" />
                 <span className="text-[12px] font-bold tracking-tight text-neutral-500 uppercase">
                   {group.categoryName}
@@ -95,7 +95,7 @@ export const CategorySection = memo(function CategorySection({
                 </span>
               </div>
 
-              <div className="divide-y divide-neutral-100 border-y border-neutral-100">
+              <div className="divide-y">
                 {group.items.map((item) => (
                   <ShoppingItemCard
                     key={item._id}

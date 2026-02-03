@@ -24,7 +24,8 @@ if (!clientId) {
 
 const ticket = await client.verifyIdToken({
   idToken: credential,
-  audience: clientId
+  audience: clientId,
+  maxExpiry: 300000
 });
 
   const payload = ticket.getPayload();
@@ -126,7 +127,8 @@ export const googleCallback = async (req: Request, res: Response) => {
 
     const ticket = await client.verifyIdToken({
       idToken: id_token,
-      audience: client_id
+      audience: client_id,
+      maxExpiry: 300000
     });
 
     const payload = ticket.getPayload();

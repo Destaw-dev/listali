@@ -1,12 +1,16 @@
 import express from 'express';
 import { validationResult } from 'express-validator';
+import fs from 'fs';
 import { Types } from 'mongoose';
 import ShoppingList from '../models/shoppingList';
 import Group from '../models/group';
 import Item from '../models/item';
+import {Category} from '../models/category';
+import User from '../models/user';
 import {ShoppingSession} from '../models/shoppingSession';
 import { AppError, validationErrorResponse, successResponse } from '../middleware/handlers';
 import { IApiResponse, IGroupMember, IShoppingListResponseData,  IShoppingList } from '../types';
+import { MIGRATION_CONSTANTS } from '../constants/migration';
 
 export const getGroupShoppingLists = async (req: express.Request, res: express.Response<IApiResponse<IShoppingList[]>>) => {
   const { groupId } = req.params;
@@ -471,3 +475,189 @@ export const completeShoppingList = async (req: express.Request, res: express.Re
   res.status(200).json(successResponse(updatedList, 'Shopping list completed successfully'));
 };
 
+/**
+ * Migrate guest lists to authenticated user
+ * Creates a default group for the user if needed, then creates shopping lists and items
+ */
+export const migrateGuestLists = async (
+  req: express.Request,
+  res: express.Response<IApiResponse<{ listsCreated: number; itemsCreated: number } | null>>
+) => {
+  const userId = req.userId!;
+  const { guestLists } = req.body;
+  fs.writeFileSync('guestLists.json', JSON.stringify(guestLists, null, 2));
+
+  if (!guestLists || !Array.isArray(guestLists)) {
+    res.status(400).json({
+      success: false,
+      message: 'guestLists array is required',
+    });
+    return;
+  }
+
+  if (guestLists.length === 0) {
+    res.status(200).json(successResponse({ listsCreated: 0, itemsCreated: 0 }, 'No lists to migrate'));
+    return;
+  }
+
+  try {
+    // Find or create a default personal group for the user
+    let userGroup = await Group.findOne({
+      owner: userId,
+      name: MIGRATION_CONSTANTS.DEFAULT_GROUP_NAME,
+    });
+
+    if (!userGroup) {
+      userGroup = await Group.create({
+        name: MIGRATION_CONSTANTS.DEFAULT_GROUP_NAME,
+        description: MIGRATION_CONSTANTS.DEFAULT_GROUP_DESCRIPTION,
+        owner: userId,
+        settings: {
+          allowMemberInvite: false,
+          requireApproval: false,
+          maxMembers: 20,
+        },
+        members: [{
+          user: userId,
+          role: 'owner',
+          joinedAt: new Date(),
+          permissions: {
+            canCreateLists: true,
+            canEditLists: true,
+            canDeleteLists: true,
+            canInviteMembers: false,
+            canManageMembers: false,
+          },
+        }],
+      });
+
+      // Add group to user's groups array
+      await User.findByIdAndUpdate(userId, { $push: { groups: userGroup._id } });
+    }
+
+    let totalListsCreated = 0;
+    let totalItemsCreated = 0;
+
+    // Migrate each guest list
+    for (const guestList of guestLists) {
+      try {
+        // Create shopping list using data from client
+        const shoppingList = await ShoppingList.create({
+          name: guestList.title,
+          description: guestList.description,
+          group: userGroup._id,
+          createdBy: userId,
+          priority: guestList.priority,
+          tags: [],
+          status: guestList.status,
+        });
+
+        // Add list to group
+        userGroup.shoppingLists.push(shoppingList._id);
+        totalListsCreated++;
+
+        // Migrate items using data from client only
+        if (guestList.items && Array.isArray(guestList.items) && guestList.items.length > 0) {
+          const itemsToCreate = [];
+          
+          for (const guestItem of guestList.items) {
+            // All required data must come from client
+            if (!guestItem.name) {
+              console.warn(`Skipping item without name in list ${guestList.id}`);
+              continue;
+            }
+            
+            if (!guestItem.unit) {
+              console.warn(`Skipping item ${guestItem.name} without unit in list ${guestList.id}`);
+              continue;
+            }
+            
+            if (!guestItem.categoryId) {
+              console.warn(`Skipping item ${guestItem.name} without categoryId in list ${guestList.id}`);
+              continue;
+            }
+            
+            // Validate category exists
+            const category = await Category.findById(guestItem.categoryId);
+            if (!category) {
+              console.warn(`Category ${guestItem.categoryId} not found for item ${guestItem.name}`);
+              continue;
+            }
+            console.log('guestItem', guestItem);  
+
+            // Safely parse numeric values with defaults
+            const quantity = Number(guestItem.quantity) || 1;
+            const purchasedQuantity = Number(guestItem.purchasedQuantity) || 0;
+            const quantityToPurchase = Math.max(0, quantity - purchasedQuantity);
+
+            if (guestItem.checked) {
+              itemsToCreate.push({
+                name: guestItem.name,
+                quantity: quantity,
+                unit: guestItem.unit,
+                category: guestItem.categoryId,
+                shoppingList: shoppingList._id,
+                addedBy: userId,
+                status: 'purchased',
+                isManualEntry: false,
+                purchasedAt: guestItem.purchasedAt ? new Date(guestItem.purchasedAt) : null,
+                product: guestItem.productId,
+                brand: guestItem.brand,
+                isPartiallyPurchased: false,
+                purchasedQuantity: purchasedQuantity,
+                purchasedBy: userId,
+                createdAt: new Date(guestItem.createdAt),
+                quantityToPurchase: 0,
+              });
+            }else {
+              itemsToCreate.push({
+                name: guestItem.name,
+                quantity: quantity,
+                unit: guestItem.unit,
+                category: guestItem.categoryId,
+                shoppingList: shoppingList._id,
+                addedBy: userId,
+                status: 'pending',
+                isManualEntry: false,
+                createdAt: new Date(guestItem.createdAt),
+                product: guestItem.productId,
+                brand: guestItem.brand,
+                isPartiallyPurchased: purchasedQuantity > 0 && purchasedQuantity < quantity,
+                purchasedQuantity: purchasedQuantity,
+                quantityToPurchase: quantityToPurchase,
+              });
+            }
+            
+
+          }
+          
+          if (itemsToCreate.length > 0) {
+            const createdItems = await Item.insertMany(itemsToCreate);
+            shoppingList.items = createdItems.map(item => item._id);
+            await shoppingList.save();
+            totalItemsCreated += createdItems.length;
+          }
+        }
+      } catch (error) {
+        console.error(`Error migrating guest list ${guestList.id}:`, error);
+        // Continue with next list even if one fails
+      }
+    }
+
+    // Save group updates
+    await userGroup.save();
+
+    res.status(200).json(
+      successResponse(
+        { listsCreated: totalListsCreated, itemsCreated: totalItemsCreated },
+        `Successfully migrated ${totalListsCreated} lists with ${totalItemsCreated} items`
+      )
+    );
+  } catch (error) {
+    console.error('Migration error:', error);
+    if (error instanceof AppError) {
+      throw error;
+    }
+    throw new AppError('Failed to migrate guest lists', 500);
+  }
+};

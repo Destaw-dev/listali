@@ -101,7 +101,13 @@ export class ApiClient {
             
             return this.client(originalRequest);
           } catch (refreshError) {
-            await this.handleAuthError();
+            // On refresh failure, set guest mode (NO redirect)
+            const authStore = useAuthStore.getState();
+            if (authStore.isGuest()) {
+              authStore.setGuestMode();
+            }else{
+              await this.handleAuthError();
+            }
             return Promise.reject(refreshError);
           }
         }
@@ -131,7 +137,10 @@ export class ApiClient {
       } catch (error) {
         if (axios.isAxiosError(error) && error.response?.status === 401) {
           const authStore = useAuthStore.getState();
-          if (authStore.authReady) {
+          if (authStore.isGuest()) {
+            // On 401, set guest mode (NO redirect)
+            authStore.setGuestMode();
+          }else if (authStore.authReady) {
             authStore.clearAuth();
             if (typeof window !== 'undefined') {
               const path = window.location.pathname;
@@ -140,7 +149,7 @@ export class ApiClient {
               if (!path.includes('/welcome') && !path.includes('/auth/login')) {
                 window.location.href = `/${locale}/welcome`;
               }
-            }
+              }
           }
         }
         throw error;
@@ -159,22 +168,27 @@ export class ApiClient {
     if (!authStore.authReady) {
       return;
     }
-
+    
+    if (authStore.isGuest()) {
+    // Set guest mode instead of redirecting
+    authStore.setGuestMode();
+    return;
+    }
     authStore.clearAuth();
 
-    await this.client.post('/auth/logout');
+      await this.client.post('/auth/logout');
 
-    setTimeout(() => {
-      if (typeof window !== 'undefined') {
-        const path = window.location.pathname;
-        const localeMatch = path.match(/^\/([a-z]{2})\//);
-        const locale = localeMatch ? localeMatch[1] : 'he';
-        
-        if (!path.includes('/welcome') && !path.includes('/auth/login')) {
-          window.location.href = `/${locale}/welcome`;
+      setTimeout(() => {
+        if (typeof window !== 'undefined') {
+          const path = window.location.pathname;
+          const localeMatch = path.match(/^\/([a-z]{2})\//);
+          const locale = localeMatch ? localeMatch[1] : 'he';
+          
+          if (!path.includes('/welcome') && !path.includes('/auth/login')) {
+            window.location.href = `/${locale}/welcome`;
+          }
         }
-      }
-    }, 100);
+      }, 100);
   }
 
   async get(url: string, config?: AxiosRequestConfig) {
@@ -244,6 +258,7 @@ export class ApiClient {
       return false;
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 401) {
+        console.log('401 error', useAuthStore.getState());
         return false;
       }
       console.error('Error refreshing token:', error);
@@ -453,6 +468,33 @@ export class ApiClient {
     return response.data;
   }
 
+  async migrateGuestLists(guestLists: Array<{
+    id: string;
+    title: string;
+    description?: string;
+    priority?: 'low' | 'medium' | 'high';
+    status?: 'active' | 'completed' | 'archived';
+    items: Array<{
+      id: string;
+      name: string;
+      quantity?: number;
+      checked: boolean;
+      createdAt: Date;
+      unit?: string;
+      categoryId?: string;
+      productId?: string;
+      purchasedQuantity?: number;
+      purchasedAt?: Date;
+      brand?: string;
+      notes?: string;
+    }>;
+    createdAt: Date;
+    updatedAt: Date;
+  }>) {
+    const response = await this.post('/shopping-lists/migrate', { guestLists });
+    return response.data;
+  }
+
   async getItems(shoppingListId: string, options?: {
     status?: string;
     category?: string;
@@ -534,6 +576,11 @@ export class ApiClient {
 
   async purchaseItem(itemId: string, options?: { quantityToPurchase?: number; purchasedQuantity?: number; actualPrice?: number }) {
     const response = await this.post(`/items/${itemId}/purchase`, options || {});
+    return response.data;
+  }
+
+  async batchPurchaseItems(itemIds: string[], shoppingListId: string) {
+    const response = await this.post(`/items/batch-purchase`, { itemIds, shoppingListId });
     return response.data;
   }
 

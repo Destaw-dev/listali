@@ -23,6 +23,6 @@ router.get('/search', authenticateToken, asyncHandler(getBySearchByNameHebrew));
 router.get('/kosher', authenticateToken, asyncHandler(getKosherProducts));
 router.get('/organic', authenticateToken, asyncHandler(getOrganicProducts));
 router.get('/gluten-free', authenticateToken, asyncHandler(getGlutenFreeProducts));
-router.get('/barcode/:barcode', authenticateToken, asyncHandler(getProductByBarcode));
+router.get('/barcode/:barcode', asyncHandler(getProductByBarcode));
 
 export default router;

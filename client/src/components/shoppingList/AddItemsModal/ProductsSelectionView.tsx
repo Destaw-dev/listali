@@ -66,6 +66,16 @@ export const ProductsSelectionView = memo(({
     setCategoriesOpen,
     setShowAllCategories,
     setAdvancedOpen,
+    
+    // Guest mode helpers
+    isGuest,
+    canSearch,
+    canLoadImage,
+    onImageLoad,
+    searchCount,
+    maxSearchAttempts,
+    imagesLoaded,
+    maxImages,
   } = useProductsSelection();
   const  {showInfo} = useNotification();
 
@@ -102,7 +112,7 @@ export const ProductsSelectionView = memo(({
 
   return (
   <>
-      <div className="mb-4">
+      <div className="mb-4 space-y-2">
         <Button
           onClick={handleOpenScanModal}
           variant="primary"
@@ -182,6 +192,8 @@ export const ProductsSelectionView = memo(({
       onAddManual={onAddManual}
       showAddManualButton={true}
       selectedProductIds={selectedProductIds}
+      canLoadImage={canLoadImage}
+      onImageLoad={onImageLoad}
       multiSelect={true}
       selectedCategoryId={selectedCategoryId}
       existingItems={existingItems}

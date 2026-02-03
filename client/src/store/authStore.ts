@@ -4,10 +4,32 @@ import { persist } from 'zustand/middleware';
 import type { User } from '../types';
 import { apiClient } from '../lib/api';
 
+// Generate or retrieve guest ID from localStorage
+const getOrCreateGuestId = (): string => {
+  if (typeof window === 'undefined') return '';
+  
+  const stored = localStorage.getItem('guest-id');
+  if (stored) return stored;
+  
+  // Generate UUID v4
+  const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+  
+  localStorage.setItem('guest-id', uuid);
+  return uuid;
+};
+
+export type AuthMode = 'guest' | 'authenticated' | null;
+
 interface AuthStore {
   user: User | null;
   accessToken: string | null;
   isAuthenticated: boolean;
+  authMode: AuthMode | null; // 'guest' | 'authenticated'
+  guestId: string | null; // UUID for guest user (persisted in localStorage)
   isLoading: boolean;
   isInitialized: boolean;
   error: string | null;
@@ -24,6 +46,7 @@ interface AuthStore {
 
   setUser: (user: User) => void;
   setAccessToken: (token: string | null) => void;
+  setGuestMode: () => void; // Set guest mode (no redirect)
   clearUser: () => void;
   clearAuth: () => void;
   setIsLoading: (loading: boolean) => void;
@@ -31,6 +54,10 @@ interface AuthStore {
   setError: (value: string | null) => void;
   setAuthReady: (ready: boolean) => void;
   bootstrapAuth: () => Promise<void>;
+  
+  // Helper getters (computed)
+  isGuest: () => boolean;
+  isAuthed: () => boolean;
   
   setWebSocketConnected: (connected: boolean) => void;
   setWebSocketError: (error: string | null) => void;
@@ -41,31 +68,54 @@ interface AuthStore {
 export const useAuthStore = create<AuthStore>()(
   devtools(
     persist(
-      (set, get) => ({
-        user: null,
-        accessToken: null,
-        isAuthenticated: false,
-        isLoading: false,
-        isInitialized: false,
-        error: null,
-        lastLoginTime: null,
-        authReady: false,
-        isBootstrapping: false,
+      (set, get) => {
         
-        websocket: {
-          isConnected: false,
-          connectionError: null,
-          lastConnectedAt: null,
-          isConnecting: false,
-        },
+        return {
+          user: null,
+          accessToken: null,
+          isAuthenticated: false,
+          authMode: null,
+          guestId: null,
+          isLoading: false,
+          isInitialized: false,
+          error: null,
+          lastLoginTime: null,
+          authReady: false,
+          isBootstrapping: false,
+          
+          websocket: {
+            isConnected: false,
+            connectionError: null,
+            lastConnectedAt: null,
+            isConnecting: false,
+          },
 
-        setUser: (user) =>
-          set({
-            user,
-            isAuthenticated: true,
+          setUser: (user) =>
+            set({
+              user,
+              isAuthenticated: true,
+              authMode: 'authenticated' as AuthMode,
+              error: null,
+              lastLoginTime: Date.now(),
+              isInitialized: true,
+            }),
+
+          setGuestMode: () =>
+            set({
+            user: null,
+            accessToken: null,
+            isAuthenticated: false,
+            authMode: 'guest' as AuthMode,
+            isLoading: false,
             error: null,
-            lastLoginTime: Date.now(),
             isInitialized: true,
+            guestId: typeof window !== 'undefined' ? getOrCreateGuestId() : null,
+            websocket: {
+              isConnected: false,
+              connectionError: null,
+              lastConnectedAt: null,
+              isConnecting: false,
+            },
           }),
 
         setAccessToken: (token) =>
@@ -76,6 +126,7 @@ export const useAuthStore = create<AuthStore>()(
             user: null,
             accessToken: null,
             isAuthenticated: false,
+            authMode: null,
             isLoading: false,
             error: null,
             lastLoginTime: null,
@@ -94,6 +145,7 @@ export const useAuthStore = create<AuthStore>()(
             user: null,
             accessToken: null,
             isAuthenticated: false,
+            authMode: null,
             isLoading: false,
             error: null,
             lastLoginTime: null,
@@ -126,29 +178,55 @@ export const useAuthStore = create<AuthStore>()(
             if (hasAccessToken) {
               try {
                 const user = await apiClient.getMe();
-                set({ user, isAuthenticated: true, error: null, lastLoginTime: Date.now(), isInitialized: true });
+                set({ 
+                  user, 
+                  isAuthenticated: true, 
+                  authMode: 'authenticated' as AuthMode,
+                  error: null, 
+                  lastLoginTime: Date.now(), 
+                  isInitialized: true 
+                });
               } catch (error) {
                 console.error('Failed to get user data:', error);
+                // On 401, set guest mode (NO redirect)
                 const currentUser = get().user;
                 if (currentUser) {
-                  set({ user: null, accessToken: null, isAuthenticated: false, lastLoginTime: null, isInitialized: true });
+                  set({ user: null, accessToken: null, isAuthenticated: false, authMode: null, lastLoginTime: null, isInitialized: true });
+
+                } else if (get().isGuest()) {
+                  set({ authMode: 'guest' as AuthMode, isInitialized: true });
                 }
               }
             } else {
               const currentUser = get().user;
               if (currentUser) {
-                set({ user: null, accessToken: null, isAuthenticated: false, lastLoginTime: null, isInitialized: true });
+                set({ user: null, accessToken: null, isAuthenticated: false, authMode: null, lastLoginTime: null, isInitialized: true });
+              } else if (get().isGuest()) {
+                set({ authMode: 'guest' as AuthMode, isInitialized: true });
               }
             }
           } catch (error) {
             console.error('Auth bootstrap error:', error);
             const currentUser = get().user;
             if (currentUser) {
-              set({ user: null, accessToken: null, isAuthenticated: false, lastLoginTime: null, isInitialized: true });
+              set({ user: null, accessToken: null, isAuthenticated: false, authMode: null, lastLoginTime: null, isInitialized: true });
+            } else if (get().isGuest()) {
+              set({ authMode: 'guest' as AuthMode, isInitialized: true });
             }
           } finally {
             set({ authReady: true, isBootstrapping: false, isInitialized: true });
           }
+        },
+
+        // Helper getters
+        isGuest: () => {
+          const state = get();
+          return state.authMode === 'guest' && !state.isAuthenticated;
+        },
+
+        isAuthed: () => {
+          const state = get();
+          return state.authMode === 'authenticated' && state.isAuthenticated;
         },
         
         setWebSocketConnected: (connected) =>
@@ -185,12 +263,14 @@ export const useAuthStore = create<AuthStore>()(
               lastConnectedAt: new Date(),
             },
           })),
-      }),
+        };
+      },
       {
         name: 'auth-storage',
-        partialize: (state) => ({
+        partialize: (state: AuthStore) => ({
           user: state.user,
           isAuthenticated: state.isAuthenticated,
+          authMode: state.authMode,
           lastLoginTime: state.lastLoginTime,
         }),
       }

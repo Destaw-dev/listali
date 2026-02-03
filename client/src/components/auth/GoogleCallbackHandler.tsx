@@ -3,7 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '../../store/authStore';
+import { useGuestListsStore } from '../../store/guestListsStore';
 import { apiClient } from '../../lib/api';
+import { migrateGuestLists } from '../../lib/migration';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { useNotification } from '../../contexts/NotificationContext';
 import { useParams } from 'next/navigation';
@@ -14,6 +16,7 @@ import { Button } from '../common';
 export function GoogleCallbackHandler() {
   const [isProcessing, setIsProcessing] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [hasProcessed, setHasProcessed] = useState(false);
   const router = useRouter();
   const params = useParams();
   const { setUser } = useAuthStore();
@@ -22,7 +25,12 @@ export function GoogleCallbackHandler() {
   const t = useTranslations('auth');
 
   useEffect(() => {
+    if (hasProcessed) {
+      return;
+    }
+
     const handleGoogleCallback = async () => {
+      setHasProcessed(true);
       try {
         const urlParams = new URLSearchParams(window.location.search);
         const hasGoogleParams = urlParams.has('token') || urlParams.has('user') || urlParams.has('google');
@@ -32,6 +40,19 @@ export function GoogleCallbackHandler() {
           
           if (user) {
             setUser(user);
+            
+            const guestLists = useGuestListsStore.getState().lists;
+            if (guestLists && guestLists.length > 0) {
+              try {
+                const migrated = await migrateGuestLists();
+                if (migrated) {
+                  console.log('Guest lists migrated successfully');
+                }
+              } catch (migrationError) {
+                console.error('Migration error (non-blocking):', migrationError);
+              }
+            }
+            
             showSuccess('auth.googleLoginSuccess');
             
             const inviteError = urlParams.get('inviteError');
@@ -73,7 +94,7 @@ export function GoogleCallbackHandler() {
     };
 
     handleGoogleCallback();
-  }, [setUser, router, locale, t, showSuccess, showWarning, handleApiError]);
+  }, [setUser, router, locale, t, showSuccess, showWarning, handleApiError, hasProcessed]);
 
   if (error) {
     return (

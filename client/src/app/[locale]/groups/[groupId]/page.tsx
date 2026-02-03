@@ -290,7 +290,7 @@ export default function GroupDetailsPage() {
               </Button>
               <div className="min-w-0 flex-1">
                 <h1 className="text-lg md:text-2xl font-bold text-text-primary truncate">{group.name}</h1>
-                <p className="text-secondary text-xs md:text-sm truncate">{group.description}</p>
+                <p className="text-text-secondary text-xs md:text-sm truncate">{group.description}</p>
               </div>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">

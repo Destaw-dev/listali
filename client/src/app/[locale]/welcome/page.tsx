@@ -4,15 +4,20 @@ import { useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthStore } from '../../../store/authStore';
-import { ShoppingCart, Users, Zap } from 'lucide-react';
+import { ShoppingCart, Users, Zap, User } from 'lucide-react';
 import { Button } from '../../../components/common/Button';
 
 export default function WelcomePage() {
   const t = useTranslations();
   const router = useRouter();
   const params = useParams();
-  const { isAuthenticated, isInitialized } = useAuthStore();
+  const { isAuthenticated, isInitialized, setGuestMode } = useAuthStore();
   const locale = params?.locale as string || 'he';
+
+  const handleContinueAsGuest = () => {
+    setGuestMode();
+    router.push(`/${locale}/dashboard`);
+  };
 
   useEffect(() => {
     if (isInitialized && isAuthenticated) {
@@ -107,6 +112,26 @@ export default function WelcomePage() {
             fullWidth
           >
             {t('welcome.registerButton')}
+          </Button>
+
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-border"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-card text-text-muted">{t('welcome.or')}</span>
+            </div>
+          </div>
+
+          <Button
+            variant="outline"
+            onClick={handleContinueAsGuest}
+            size="lg"
+            fullWidth
+            icon={<User className="h-5 w-5" />}
+            iconPosition="left"
+          >
+            {t('welcome.continueAsGuest')}
           </Button>
         </div>
       </div>

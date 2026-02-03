@@ -1,4 +1,4 @@
-import { IManualProduct, IProduct } from '../types';
+import { IItem, IManualProduct, IProduct } from '../types';
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -200,4 +200,13 @@ export function extractImageUrl(
   }
   
   return undefined;
+}
+
+export function extractNameFromProduct(product: IProduct | IManualProduct | IItem): string {
+  if(!product) return '';
+  if(product.sortName) {
+    const name = product.name.trim().length > product.sortName.trim().length ? product.sortName : product.name;
+    return name;
+  }
+  return product.name;
 }

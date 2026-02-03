@@ -8,6 +8,8 @@ import {
 } from '../../../../hooks/useProducts';
 import { useDebounce } from '../../../../hooks/useDebounce';
 import { IProduct, ICategory, ISubCategory } from '../../../../types';
+import { useAuthStore } from '../../../../store/authStore';
+import { GUEST_LIMITS } from '../../../../constants/guestLimits';
 
 let lastFetchTime = 0;
 const MIN_FETCH_INTERVAL = 300;
@@ -20,12 +22,18 @@ export interface ActiveFilter {
 
 export function useProductsSelection() {
   const t = useTranslations('AddItemsModalFilters');
+  const { isGuest } = useAuthStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [selectedSubCategoryId, setSelectedSubCategoryId] = useState<string | null>(null);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [showAllCategories, setShowAllCategories] = useState(false);
   const { data: categories = [] } = useAvailableCategories();
+
+  // Guest mode tracking
+  const [searchCount, setSearchCount] = useState(0);
+  const [imagesLoaded, setImagesLoaded] = useState(0);
+  const [lastSearchTime, setLastSearchTime] = useState(0);
 
   const [sortOption, setSortOption] = useState<'name-asc' | 'name-desc'>("name-asc");
   const [filterKosher, setFilterKosher] = useState(false);
@@ -36,9 +44,13 @@ export function useProductsSelection() {
   const listContainerRef = useRef<HTMLDivElement>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
+  const minSearchChars = isGuest() ? GUEST_LIMITS.MIN_SEARCH_CHARS : 2;
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
-  const isSearching = debouncedSearchQuery.length >= 2;
+  const isSearching = debouncedSearchQuery.length >= minSearchChars;
   const isFilteringByCategory = !!selectedCategoryId;
+  
+  // Check if guest can search
+  const canSearch = !isGuest() || searchCount < GUEST_LIMITS.MAX_SEARCH_ATTEMPTS;
 
   const { data: subCategories = [] } = useSubCategoriesByCategory(selectedCategoryId, advancedOpen);
 
@@ -74,6 +86,11 @@ export function useProductsSelection() {
       base = categoryInfinite?.pages?.flatMap((p: { data?: IProduct[] }) => p?.data ?? []) ?? [];
     } else {
       base = allInfinite?.pages?.flatMap((p: { data?: IProduct[] }) => p?.data ?? []) ?? [];
+    }
+
+    // Limit total products for guest
+    if (isGuest() && base.length > GUEST_LIMITS.MAX_PRODUCTS_TO_LOAD) {
+      base = base.slice(0, GUEST_LIMITS.MAX_PRODUCTS_TO_LOAD);
     }
 
     const filtered = base.filter((p: IProduct) => {
@@ -117,10 +134,14 @@ export function useProductsSelection() {
     filterOrganic,
     filterGlutenFree,
     sortOption,
+    isGuest,
   ]);
 
   const isLoading = isLoadingAll || isLoadingSearch || isLoadingCategory;
-  const hasNext = isSearching ? !!hasNextSearch : isFilteringByCategory ? !!hasNextCategory : !!hasNextAll;
+  // Disable infinite scroll for guest if reached max pages
+  const hasNext = isGuest() 
+    ? false // Guest mode: no infinite scroll
+    : (isSearching ? !!hasNextSearch : isFilteringByCategory ? !!hasNextCategory : !!hasNextAll);
   const isFetchingNext = isFetchingNextAll || isFetchingNextSearch || isFetchingNextCategory;
 
   useEffect(() => {
@@ -186,8 +207,28 @@ export function useProductsSelection() {
   }, [searchQuery, selectedCategoryId, selectedSubCategoryId, filterKosher, filterOrganic, filterGlutenFree, categories, subCategories, t]);
 
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-  }, []);
+    const value = e.target.value;
+    setSearchQuery(value);
+    
+    // Track search attempts for guest mode
+    if (isGuest() && value.length >= minSearchChars) {
+      const now = Date.now();
+      // Check cooldown
+      if (now - lastSearchTime < GUEST_LIMITS.SEARCH_COOLDOWN_MS) {
+        return;
+      }
+      
+      // Check max searches
+      if (searchCount >= GUEST_LIMITS.MAX_SEARCH_ATTEMPTS) {
+        // Show warning or prevent search
+        return;
+      }
+      
+      // Increment search count
+      setSearchCount(prev => prev + 1);
+      setLastSearchTime(now);
+    }
+  }, [isGuest, minSearchChars, searchCount, lastSearchTime]);
 
   const handleCategoryFilter = useCallback((categoryId: string | null) => {
     setSelectedCategoryId(categoryId);
@@ -241,6 +282,19 @@ export function useProductsSelection() {
     } catch {}
   }, [categoriesOpen]);
 
+  // Helper to check if image can be loaded (guest mode limit)
+  const canLoadImage = useCallback(() => {
+    if (!isGuest()) return true;
+    return imagesLoaded < GUEST_LIMITS.MAX_IMAGES_TO_LOAD;
+  }, [isGuest, imagesLoaded]);
+
+  // Helper to track image load
+  const onImageLoad = useCallback(() => {
+    if (isGuest()) {
+      setImagesLoaded(prev => prev + 1);
+    }
+  }, [isGuest]);
+
   return {
     searchQuery,
     selectedCategoryId,
@@ -252,6 +306,15 @@ export function useProductsSelection() {
     filterOrganic,
     filterGlutenFree,
     advancedOpen,
+    // Guest mode helpers
+    isGuest: isGuest(),
+    canSearch,
+    canLoadImage,
+    onImageLoad,
+    searchCount,
+    maxSearchAttempts: GUEST_LIMITS.MAX_SEARCH_ATTEMPTS,
+    imagesLoaded,
+    maxImages: GUEST_LIMITS.MAX_IMAGES_TO_LOAD,
     categories,
     subCategories,
     activeFilters,

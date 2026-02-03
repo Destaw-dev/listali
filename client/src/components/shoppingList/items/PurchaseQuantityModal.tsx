@@ -5,6 +5,7 @@ import { Minus, Package, Plus } from "lucide-react";
 import { Button, Modal } from "../../common";
 import { useModalScrollLock } from "../../../hooks/useModalScrollLock";
 import { IItem } from "../../../types";
+import { extractNameFromProduct } from "../../../lib/utils";
 
 interface PurchaseQuantityModalProps {
   item: IItem | null;
@@ -32,7 +33,7 @@ export const PurchaseQuantityModal = memo(function PurchaseQuantityModal({
       if (purchasedQty > 0 && purchasedQty < totalQty) {
         setQuantity(remainingQty);
       } else {
-        setQuantity(1);
+        setQuantity(totalQty);
       }
     }
   }, [item]);
@@ -75,7 +76,7 @@ export const PurchaseQuantityModal = memo(function PurchaseQuantityModal({
       <div
       >
         <p className="text-sm text-text-muted">
-          {item.name}
+          {extractNameFromProduct(item)}
         </p>
         {isPartiallyPurchased && (
           <p className="mt-1 text-xs text-text-muted">
@@ -133,7 +134,7 @@ export const PurchaseQuantityModal = memo(function PurchaseQuantityModal({
           <Button
             variant="primary"
             onClick={handleConfirm}
-            disabled={quantity <= 0 || quantity > maxQuantity || !item.product || isLoading}          
+            disabled={quantity <= 0 || quantity > maxQuantity || isLoading}          
             size="md"
             fullWidth={true}
             rounded={true}

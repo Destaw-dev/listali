@@ -17,6 +17,8 @@ import { ProductDetailsModal } from "./items/ProductDetailsModal";
 import { EditItemModal } from "./items/EditItemModal";
 import { ICategory, IItem } from "../../types";
 import { UnpurchaseQuantityModal } from "./items/UnpurchaseQuantityModal";
+import { PurchaseAllButton } from "./PurchaseAllButton";
+import { usePurchaseAllItems } from "../../hooks/usePurchaseAllItems";
 
 interface ShoppingListItemsProps {
   items: IItem[];
@@ -42,12 +44,14 @@ export const ShoppingListItems = memo(function ShoppingListItems({
   const unpurchaseItemMutation = useUnpurchaseItem();
   const updateItemMutation = useUpdateItem();
   const deleteItemMutation = useDeleteItem();
+  const purchaseAllItemsMutation = usePurchaseAllItems();
   const { data: categories = [] } = useAvailableCategories();
 
   const [purchaseModalItem, setPurchaseModalItem] = useState<IItem | null>(null);
   const [unpurchaseModalItem, setUnpurchaseModalItem] = useState<IItem | null>(null);
   const [productPreview, setProductPreview] = useState<IItem | null>(null);
   const [editModalItem, setEditModalItem] = useState<IItem | null>(null);
+  const [undoState, setUndoState] = useState<Array<{ itemId: string; purchasedQuantity: number; checked: boolean }> | null>(null);
 
   const isItemLoading = useCallback(
     (itemId: string) =>
@@ -154,6 +158,47 @@ export const ShoppingListItems = memo(function ShoppingListItems({
     [deleteItemMutation, listId, tItems]
   );
 
+  const handlePurchaseAll = useCallback(async () => {
+    const result = await purchaseAllItemsMutation.mutateAsync({
+      items,
+      shoppingListId: listId,
+      groupId,
+    });
+    setUndoState(result.previousStates);
+  }, [purchaseAllItemsMutation, items, listId, groupId]);
+
+  const handleUndoPurchaseAll = useCallback(async () => {
+    if (!undoState) return;
+    
+    const unpurchasePromises = undoState.map(async (state) => {
+      const item = items.find((i) => i._id === state.itemId);
+      if (!item) return;
+      
+      const currentPurchased = item.purchasedQuantity || 0;
+      const quantityToUnpurchase = currentPurchased - state.purchasedQuantity;
+      
+      if (quantityToUnpurchase > 0) {
+        await unpurchaseItemMutation.mutateAsync({
+          itemId: state.itemId,
+          shoppingListId: listId,
+          groupId,
+          quantityToUnpurchase,
+        });
+      }
+    });
+    
+    await Promise.all(unpurchasePromises);
+    setUndoState(null);
+  }, [undoState, items, unpurchaseItemMutation, listId, groupId]);
+
+  const unpurchasedCount = useMemo(() => {
+    return items.filter((item) => {
+      const totalQty = item.quantity || 1;
+      const purchasedQty = item.purchasedQuantity || 0;
+      return !item.isPurchased && purchasedQty < totalQty;
+    }).length;
+  }, [items]);
+
   const groupedItems = useMemo(() => {
     const purchased: Record<
       string,
@@ -233,6 +278,14 @@ export const ShoppingListItems = memo(function ShoppingListItems({
               {tItems("listItems")} <span className="text-sm text-text-muted">({items.length} {tItems("items")})</span>
             </h2>
           </div>
+          <PurchaseAllButton
+            onPurchaseAll={handlePurchaseAll}
+            unpurchasedCount={unpurchasedCount}
+            isLoading={purchaseAllItemsMutation.isPending}
+            showUndo={!!undoState}
+            setUndoState={setUndoState}
+            onUndo={handleUndoPurchaseAll}
+          />
         </header>
 
         <div>

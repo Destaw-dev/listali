@@ -216,6 +216,7 @@ export interface IBaseNutritionalValue {
 // Base product interface (consistent with shared types)
 export interface IBaseProduct {
   name: string;
+  source?: string;
   idFromApi?: number;
   sortName?: string;
   barcode?: string;
@@ -228,6 +229,8 @@ export interface IBaseProduct {
       imagekit: { url: string; fileId: string; path: string };
     };
     meta: { width: number; height: number; format: string; bytes: number };
+    status?: string;
+    originalUrl?: string;
   };
   averagePrice?: number;
   price?: number;

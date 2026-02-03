@@ -7,6 +7,7 @@ import {
   updateItem,
   deleteItem,
   purchaseItem,
+  batchPurchaseItems,
   unpurchaseItem,
   notAvailableItem,
   updateItemQuantity,
@@ -29,7 +30,8 @@ import {
   popularItemsValidation,
   searchItemsValidation,
   categoryStatsValidation,
-  unpurchaseItemValidation
+  unpurchaseItemValidation,
+  batchPurchaseItemsValidation,
 } from '../middleware/validation';
 import { asyncHandler } from '../middleware/handlers';
 
@@ -55,5 +57,6 @@ router.post('/:id/purchase', purchaseItemValidation, asyncHandler(purchaseItem))
 router.post('/:id/unpurchase', unpurchaseItemValidation, asyncHandler(unpurchaseItem));
 router.post('/:id/not-available', itemIdValidation, asyncHandler(notAvailableItem));
 router.put('/:id/quantity', updateQuantityValidation, asyncHandler(updateItemQuantity));
+router.post('/batch-purchase', batchPurchaseItemsValidation, asyncHandler(batchPurchaseItems));
 
 export default router;

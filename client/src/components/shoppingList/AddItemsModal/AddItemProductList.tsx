@@ -2,7 +2,7 @@ import React, { RefObject, useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Search, Image as ImageIcon, Check, Package, AlertCircle } from 'lucide-react';
 import { Button, LoadingSpinner, Badge } from '../../common';
-import { extractImageUrl, findExistingItemById } from '../../../lib/utils';
+import { extractImageUrl, extractNameFromProduct, findExistingItemById } from '../../../lib/utils';
 import { IProduct, IItem } from '../../../types';
 
 interface Props {
@@ -21,10 +21,12 @@ interface Props {
   multiSelect?: boolean;
   selectedCategoryId?: string | null;
   existingItems?: IItem[];
+  canLoadImage?: () => boolean;
+  onImageLoad?: () => void;
 }
 
 
-export function AddItemProductList({ products, onSelect, isLoading, hasNext, isFetchingNext, debouncedSearchQuery, listContainerRef, loadMoreRef, onAddManual, showAddManualButton, selectedProductIds = [], multiSelect = false, selectedCategoryId = null, existingItems = [] }: Props) {
+export function AddItemProductList({ products, onSelect, isLoading, hasNext, isFetchingNext, debouncedSearchQuery, listContainerRef, loadMoreRef, onAddManual, showAddManualButton, selectedProductIds = [], multiSelect = false, selectedCategoryId = null, existingItems = [], canLoadImage, onImageLoad }: Props) {
   const t = useTranslations('AddItemProductList');
   const ITEM_HEIGHT = 88;
   const BUFFER = 6;
@@ -119,12 +121,13 @@ export function AddItemProductList({ products, onSelect, isLoading, hasNext, isF
                     >
                     <div className="flex items-center space-x-2 sm:space-x-3 space-x-reverse">
                       <div className="flex-shrink-0 relative">
-                        {product.image ? (
+                        {product.image && canLoadImage  ? (
                           <img
                             src={extractImageUrl(product.image)}
-                            alt={product.name}
+                            alt={extractNameFromProduct(product)}
                             loading="lazy"
                             className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-lg border border-border"
+                            onLoad={onImageLoad}
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
                               target.style.display = 'none';
@@ -154,7 +157,7 @@ export function AddItemProductList({ products, onSelect, isLoading, hasNext, isF
 
                       <div className="flex-1 text-start min-w-0 gap-10">
                         <div className="flex items-center gap-2">
-                          <h3 className="text-sm sm:text-base font-medium text-text-primary whitespace-normal break-words">{product.name}</h3>
+                          <h3 className="text-sm sm:text-base font-medium text-text-primary whitespace-normal break-words">{extractNameFromProduct(product)}</h3>
                           {existingItem && (
                             <Badge variant="warning" size="sm" className="text-xs flex-shrink-0">
                               {t('alreadyInList') || 'קיים ברשימה'}

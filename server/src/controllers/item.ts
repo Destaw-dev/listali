@@ -475,6 +475,168 @@ export const purchaseItem = async (req: express.Request, res: express.Response) 
   return res.status(200).json(successResponse(updatedItem, 'Item marked as purchased'));
 };
 
+export const batchPurchaseItems = async (req: express.Request, res: express.Response<IApiResponse<IItem[] | void>>) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json(validationErrorResponse(errors.array()));
+  }
+
+  const { itemIds, shoppingListId } = req.body;
+
+  if (!Array.isArray(itemIds) || itemIds.length === 0) {
+    throw new AppError('itemIds must be a non-empty array', 400);
+  }
+
+  if (!shoppingListId) {
+    throw new AppError('shoppingListId is required', 400);
+  }
+
+  const userId = req.userId!;
+  
+  // Verify shopping list access
+  const { shoppingList, group } = await verifyShoppingListAccess(shoppingListId, userId);
+
+  // Get all items and verify they belong to the shopping list
+  const items = await Item.find({
+    _id: { $in: itemIds },
+    shoppingList: shoppingListId
+  }).populate<{ shoppingList: PopulatedShoppingListWithGroup }>({ path: 'shoppingList', populate: { path: 'group' } });
+
+  if (items.length !== itemIds.length) {
+    throw new AppError('Some items were not found or do not belong to this shopping list', 404);
+  }
+
+  // Filter unpurchased items, calculate quantities, and purchase in one pass
+  const user = await (await import('../models/user')).default.findById(userId);
+  const listId = shoppingListId;
+  const itemIdsToPurchase: string[] = [];
+
+  // Single loop: filter, calculate, and purchase (no individual messages)
+  const purchasePromises = items
+    .filter((item) => {
+      if (item.status === 'purchased') return false;
+      const currentPurchasedQty = item.purchasedQuantity || 0;
+      const totalQty = item.quantity || 1;
+      return currentPurchasedQty < totalQty;
+    })
+    .map(async (item) => {
+      const currentPurchasedQty = item.purchasedQuantity || 0;
+      const totalQty = item.quantity || 1;
+      const remainingQty = totalQty - currentPurchasedQty;
+      const finalPurchasedQty = currentPurchasedQty + remainingQty;
+
+      // Purchase item
+      await item.markAsPurchased(userId, finalPurchasedQty);
+      itemIdsToPurchase.push(item._id.toString());
+    });
+
+  if (purchasePromises.length === 0) {
+    return res.status(200).json(successResponse([], 'All items are already purchased'));
+  }
+
+  // Execute all purchases and message creation in parallel
+  await Promise.all(purchasePromises);
+
+  // Get updated items in one query
+  const updatedItems = await Item.find({
+    _id: { $in: itemIdsToPurchase }
+  })
+    .populate('addedBy purchasedBy', 'username firstName lastName avatar')
+    .populate('category', 'name nameEn icon color')
+    .populate('product', 'name brand image averagePrice price categoryId subCategoryId');
+
+  // Build Map for O(1) lookup instead of O(n) find
+  const updatedItemsMap = new Map(updatedItems.map(item => [item._id.toString(), item]));
+
+  // Emit socket events
+  const io = getIO();
+  if (io) {
+    const listDoc = await ShoppingList.findById(listId);
+    const listName = listDoc?.name || '';
+    const freshList = await ShoppingList.findById(listId)
+      .populate('createdBy', 'username firstName lastName avatar')
+      .populate('assignedTo', 'username firstName lastName avatar');
+    const timestamp = new Date();
+    const updatedBy = { id: userId, username: user?.username || 'user' };
+
+    // Emit batch item:updated event (one event for all items)
+    emitToGroupExcept(io, group._id.toString(), userId, 'items:batch-updated', {
+      action: 'batch_purchase',
+      items: updatedItems.map(item => ({
+        itemId: item._id.toString(),
+        item,
+        updates: {
+          status: item.status,
+          isPurchased: item.status === 'purchased',
+          isPartiallyPurchased: item.status === 'partially_purchased',
+          purchasedQuantity: item.purchasedQuantity || 0,
+          purchasedAt: item.purchasedAt ? new Date(item.purchasedAt).toISOString() : null,
+          purchasedBy: userId,
+        }
+      })),
+      updatedBy,
+      timestamp,
+      listName,
+      listId
+    });
+
+    // Emit list updated event once
+    emitToGroupExcept(io, group._id.toString(), userId, 'list:updated', {
+      listId,
+      groupId: group._id.toString(),
+      action: 'items_purchased',
+      list: freshList,
+      updatedBy,
+      timestamp
+    });
+
+    // Create single batch chat message instead of N messages
+    if (itemIdsToPurchase.length > 0) {
+      const batchMessage = await Message.create({
+        content: `${user?.username || 'user'} קנה/תה ${itemIdsToPurchase.length} פריטים`,
+        sender: null,
+        group: group._id.toString(),
+        messageType: "item_update",
+        metadata: { 
+          itemIds: itemIdsToPurchase, 
+          listId,
+          action: 'batch_purchase',
+          count: itemIdsToPurchase.length
+        },
+      });
+
+      const populatedBatchMessage = await Message.findById(batchMessage._id)
+        .populate<{ sender: PopulatedSender }>('sender', 'username firstName lastName avatar');
+
+      if (populatedBatchMessage) {
+        io.to(`group:${group._id.toString()}`).emit('chat:message', {
+          groupId: group._id.toString(),
+          message: {
+            id: populatedBatchMessage._id.toString(),
+            content: populatedBatchMessage.content,
+            senderId: populatedBatchMessage.sender?._id?.toString() || 'system',
+            senderName: populatedBatchMessage.sender?.username || 'System',
+            senderAvatar: populatedBatchMessage.sender?.avatar,
+            timestamp: populatedBatchMessage.createdAt,
+            type: populatedBatchMessage.messageType,
+            status: "delivered",
+            metadata: populatedBatchMessage.metadata
+          }
+        });
+      }
+    }
+  }
+
+  // Update shopping list stats
+  const listDoc = await ShoppingList.findById(listId);
+  if (listDoc) {
+    await listDoc.updateMetadata();
+  }
+
+  return res.status(200).json(successResponse(updatedItems, `${itemIdsToPurchase.length} items purchased successfully`));
+};
+
+
 export const unpurchaseItem = async (req: express.Request, res: express.Response) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {

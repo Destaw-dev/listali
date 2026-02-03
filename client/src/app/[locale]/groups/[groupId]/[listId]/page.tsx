@@ -19,6 +19,7 @@ import { ICategory, IItem, IGroupMember, ItemInput } from '../../../../../types'
 import { useGroup } from '../../../../../hooks/useGroups';
 import { useAuthStore } from '../../../../../store/authStore';
 import { useUpdateItem } from '../../../../../hooks/useItems';
+import { extractNameFromProduct } from '../../../../../lib/utils';
 
 export default function ShoppingListPage() {
   const params = useParams();
@@ -80,7 +81,7 @@ export default function ShoppingListPage() {
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter((item: IItem) => {
-        const name = (item.name || '').toLowerCase();
+        const name = (extractNameFromProduct(item) || '').toLowerCase();
         const brand = (item.brand || '').toLowerCase();
         const notes = (item.notes || '').toLowerCase();
         return name.includes(query) || brand.includes(query) || notes.includes(query);

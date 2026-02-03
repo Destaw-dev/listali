@@ -1,6 +1,6 @@
 import { useTranslations } from "next-intl";
 import { Edit, Info, Trash2, Package } from "lucide-react";
-import { cn, extractImageUrl } from "../../../lib/utils";
+import { cn, extractImageUrl, extractNameFromProduct } from "../../../lib/utils";
 import { Button, Badge } from "../../common";
 import { IItem } from "../../../types";
 
@@ -50,16 +50,16 @@ export function ShoppingItemCard({
   const getQuantityDisplay = () => {
     if (isPartiallyPurchased) {
       return (
-        <div className="flex sm:items-end sm:flex-row flex-col sm:gap-1 text-[12px] text-text-muted">
+        <div className="flex sm:items-end sm:flex-row flex-col sm:gap-1 text-[12px] text-text-on-primary">
         <div className="flex flex-col gap-0.5">
-          <span className="font-medium text-[12px] text-text-muted">
+          <span className="font-medium text-[12px] text-text-on-primary">
             {tItems("purchasedQuantityLabel", { 
               purchased: purchasedQty, 
               total: item.quantity, 
               unit: unitLabel 
             }) || `${purchasedQty}/${item.quantity} ${unitLabel}`}
           </span>
-          <span className="text-[11px] text-text-muted">
+          <span className="text-[11px] text-text-on-primary">
             {tItems("remainingQuantityLabel", { 
               remaining: remainingQty, 
               unit: unitLabel 
@@ -76,8 +76,8 @@ export function ShoppingItemCard({
       );
     }
     return (
-    <div className="flex sm:items-center sm:flex-row flex-col sm:gap-1 text-[12px] text-text-muted">
-    <span className="font-medium">{item.quantity} {unitLabel}</span>
+    <div className="flex sm:items-center sm:flex-row flex-col sm:gap-1 text-[12px] text-text-on-primary">
+    <span className="font-medium text-text-on-primary">{item.quantity} {unitLabel}</span>
     {brand && <span className="truncate opacity-70">• {brand}</span>}
     <div className="hidden sm:block">
     {!item?.isPurchased &&  item.priority && (
@@ -90,10 +90,9 @@ export function ShoppingItemCard({
 
   return (
     <article className={cn(
-      "relative flex items-center gap-2 bg-card py-3 pl-2 pr-1 active:bg-card/80 transition-colors hover:bg-card/80 cursor-pointer",
-      (item?.isPurchased) && "bg-success-50/50"
+      "flex flex-col sm:flex-row sm:items-center gap-2 bg-card py-4 pl-2 pr-1 active:bg-card/80 transition-colors hover:bg-surface cursor-pointer border-2 border-border rounded-lg p-2 mt-2",
     )}>
-      
+      <div className="flex items-center gap-2">
       <Button
       variant="checkbox"
       checked={item?.isPurchased}
@@ -107,21 +106,23 @@ export function ShoppingItemCard({
       disabled={isLoading}
       />
 
-      <div className="size-11 shrink-0 overflow-hidden rounded-lg bg-card ring-1 ring-border" onClick={() => onPreview(item)}>
-        {typeof item?.product === 'object' && item.product.image ? (
-          <img src={extractImageUrl(item.product.image)} alt="" className="h-full w-full object-contain p-1" />
+      <div className="size-30 shrink-0 overflow-hidden rounded-lg" onClick={() => onPreview(item)}>
+        {extractImageUrl(item.image) ? (
+          <img src={extractImageUrl(item.image)} alt={item.name} className="h-full w-full object-contain p-1" />
+        ) : typeof item?.product === 'object' && item.product.image ? (
+          <img src={extractImageUrl(item.product.image)} alt={item.name} className="h-full w-full object-contain p-1" />
         ) : (
           <div className="grid h-full w-full place-items-center"><Package className="h-4 w-4 text-border" /></div>
         )}
       </div>
-
+      </div>
       <div className="flex min-w-0 flex-1 flex-col" onClick={() => onPreview(item)}>
         <div className="flex items-center gap-1.5">
           <h3 className={cn(
             "truncate text-[15px] font-semibold text-text-primary",
             item?.isPurchased && !isPartiallyPurchased && "line-through text-muted font-normal"
           )}>
-            {item?.name}
+            {extractNameFromProduct(item)}
           </h3>
 
         </div>
@@ -139,34 +140,32 @@ export function ShoppingItemCard({
           <>
           {canEdit && (
             <Button
-              variant="ghost"
-              size="xs"
+              variant="secondary"
+              size="sm"
               onClick={() => onEdit?.(item)}
-              className="p-2 text-muted hover:text-primary-500 cursor-pointer"
               aria-label="עריכה"
               disabled={isLoading}
             >
-              <Edit className="h-4 w-4 hover:text-primary-500" />
+              <Edit className="h-4 w-4 text-text-primary" />
             </Button>
           )}
           {canDelete && (
             <Button
-              variant="ghost"
-              size="xs"
+              variant="destructive"
+              size="sm"
               onClick={() => onDelete?.(item._id)}
-              className="p-2 text-muted hover:text-error-500 cursor-pointer"
               aria-label="מחיקה"
               disabled={isLoading}
             >
-              <Trash2 className="h-4 w-4 hover:text-error-500" />
+              <Trash2 className="h-4 w-4 text-text-primary" />
             </Button>
           )}
           </>
         )}
         {item?.isPurchased && (
            <Button
-            variant="ghost"
-            size="xs"
+            variant="primary"
+            size="sm"
             onClick={() => onPreview(item)}
             rounded={true}
             aria-label="מידע"

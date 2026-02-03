@@ -10,7 +10,7 @@ interface AuthInitializerProps {
 }
 
 export function AuthInitializer({  }: AuthInitializerProps) {
-  const { setIsInitialized, setUser, clearUser, isAuthenticated } = useAuthStore();
+  const { setIsInitialized, setUser, clearUser, isAuthenticated, setGuestMode, isGuest } = useAuthStore();
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -26,11 +26,15 @@ export function AuthInitializer({  }: AuthInitializerProps) {
             console.error('Failed to get user data:', error);
             if (currentUser) {
               clearUser();
+            }else if (isGuest()) {
+              setGuestMode();
             }
           }
         } else {
           if (currentUser) {
             clearUser();
+          }else if (isGuest()) {
+            setGuestMode();
           }
         }
       } catch (error) {
@@ -38,6 +42,8 @@ export function AuthInitializer({  }: AuthInitializerProps) {
         const currentUser = useAuthStore.getState().user;
         if (currentUser) {
           clearUser();
+        }else if (isGuest()) {
+          setGuestMode();
         }
       } finally {
         setIsInitialized(true);
@@ -45,7 +51,7 @@ export function AuthInitializer({  }: AuthInitializerProps) {
     };
 
     initializeAuth();
-  }, [setIsInitialized, setUser, clearUser]);
+  }, [setIsInitialized, setUser, clearUser, setGuestMode, isGuest]);
 
   useEffect(() => {
     if (isAuthenticated) {

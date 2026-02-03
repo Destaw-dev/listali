@@ -65,7 +65,7 @@ const iconSizeBy: Record<Size, string> = {
 };
 
 const variantBase: Record<Variant, string> = {
-  default: "bg-background shadow-sm",
+  default: "bg-surface shadow-sm",
   outlined: "bg-transparent border border-border",
   filled: "bg-background",
 };

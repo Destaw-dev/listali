@@ -104,6 +104,29 @@ export function useShoppingListWebSocket(groupId: string, listIds: string[]) {
         queryClient.invalidateQueries({ queryKey: ['shopping-lists', 'full-data', e.listId] });
       });
       
+      const offItemsBatchUpdated = safeWebSocketHandler('items:batch-updated', (e: IWebSocketEvents['items:batch-updated']) => {
+        if (!listIds.includes(e.listId)) return;
+        
+        queryClient.invalidateQueries({ queryKey: ['shopping-lists', 'full-data', e.listId] });
+
+        if (e.updatedBy?.id !== user?._id && e.items.length > 0) {
+          const listName = e.listName || '';
+          if (e.action === 'batch_purchase') {
+            showSuccess('shopping.itemsPurchased', { 
+              username: e.updatedBy?.username || t('user'), 
+              count: String(e.items.length),
+              listName: listName ? ` ${t('fromList')} "${listName}"` : ''
+            });
+          } else if (e.action === 'batch_unpurchase') {
+            showInfo('shopping.itemsUnpurchased', { 
+              username: e.updatedBy?.username || t('user'), 
+              count: String(e.items.length),
+              listName: listName ? ` ${t('fromList')} "${listName}"` : ''
+            });
+          }
+        }
+      });
+
       const offItemUpdated = safeWebSocketHandler('item:updated', (e: IWebSocketEvents['item:updated']) => {
         const eventListId = e.listId || (typeof e.item?.shoppingList === 'string' 
           ? e.item.shoppingList 
@@ -143,7 +166,7 @@ export function useShoppingListWebSocket(groupId: string, listIds: string[]) {
       setIsConnected(true);
       setError(null);
 
-      cleanupFunctions = [offStarted, offStopped, offPaused, offResumed, offLocationUpdated, offItemUpdated, offListUpdated];
+      cleanupFunctions = [offStarted, offStopped, offPaused, offResumed, offLocationUpdated, offItemsBatchUpdated, offItemUpdated, offListUpdated];
 
     } catch (err) {
      
