@@ -165,8 +165,8 @@ export function Navigation() {
                   className="rounded-full border-2 border-primary/30 shadow-md"
                 />
               ) : (
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 border-2 border-primary/30 flex items-center justify-center">
-                  <span className="text-primary font-bold text-xs">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 border-2 border-text-primary flex items-center justify-center">
+                  <span className="text-text-primary font-bold text-xs">
                     {(user?.firstName?.[0] || user?.username?.[0] || 'U').toUpperCase()}
                   </span>
                 </div>

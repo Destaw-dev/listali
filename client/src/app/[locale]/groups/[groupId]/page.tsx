@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { Plus, Settings, ShoppingCart, MessageCircle, BarChart3, ChartArea, UserPlus } from 'lucide-react';
@@ -40,7 +40,12 @@ export default function GroupDetailsPage() {
   const { data: shoppingLists } = useGroupShoppingLists(groupId);
   const createListMutation = useCreateShoppingList();
   const inviteToGroupMutation = useInviteToGroup();
-  useShoppingListWebSocket(groupId, shoppingLists?.map((list: IShoppingList) => list._id) || []);
+  
+  const listIds = useMemo(() => {
+    return shoppingLists?.map((list: IShoppingList) => list._id) || [];
+  }, [shoppingLists]);
+  
+  useShoppingListWebSocket(groupId, listIds);
   
   useGroupMemberRoleWebSocket(groupId);
 

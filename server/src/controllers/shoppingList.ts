@@ -1,6 +1,5 @@
 import express from 'express';
 import { validationResult } from 'express-validator';
-import fs from 'fs';
 import { Types } from 'mongoose';
 import ShoppingList from '../models/shoppingList';
 import Group from '../models/group';
@@ -485,7 +484,6 @@ export const migrateGuestLists = async (
 ) => {
   const userId = req.userId!;
   const { guestLists } = req.body;
-  fs.writeFileSync('guestLists.json', JSON.stringify(guestLists, null, 2));
 
   if (!guestLists || !Array.isArray(guestLists)) {
     res.status(400).json({

@@ -50,16 +50,16 @@ export function ShoppingItemCard({
   const getQuantityDisplay = () => {
     if (isPartiallyPurchased) {
       return (
-        <div className="flex sm:items-end sm:flex-row flex-col sm:gap-1 text-[12px] text-text-on-primary">
+        <div className="flex sm:items-end sm:flex-row flex-col sm:gap-1 text-[12px] text-text-primary">
         <div className="flex flex-col gap-0.5">
-          <span className="font-medium text-[12px] text-text-on-primary">
+          <span className="font-medium text-[12px] text-text-primary">
             {tItems("purchasedQuantityLabel", { 
               purchased: purchasedQty, 
               total: item.quantity, 
               unit: unitLabel 
             }) || `${purchasedQty}/${item.quantity} ${unitLabel}`}
           </span>
-          <span className="text-[11px] text-text-on-primary">
+          <span className="text-[11px] text-text-primary">
             {tItems("remainingQuantityLabel", { 
               remaining: remainingQty, 
               unit: unitLabel 
@@ -76,8 +76,8 @@ export function ShoppingItemCard({
       );
     }
     return (
-    <div className="flex sm:items-center sm:flex-row flex-col sm:gap-1 text-[12px] text-text-on-primary">
-    <span className="font-medium text-text-on-primary">{item.quantity} {unitLabel}</span>
+    <div className="flex sm:items-center sm:flex-row flex-col sm:gap-1 text-[12px] text-text-primary">
+    <span className="font-medium text-text-primary">{item.quantity} {unitLabel}</span>
     {brand && <span className="truncate opacity-70">• {brand}</span>}
     <div className="hidden sm:block">
     {!item?.isPurchased &&  item.priority && (
@@ -146,7 +146,7 @@ export function ShoppingItemCard({
               aria-label="עריכה"
               disabled={isLoading}
             >
-              <Edit className="h-4 w-4 text-text-primary" />
+              <Edit className="h-4 w-4 text-white" />
             </Button>
           )}
           {canDelete && (
@@ -157,7 +157,7 @@ export function ShoppingItemCard({
               aria-label="מחיקה"
               disabled={isLoading}
             >
-              <Trash2 className="h-4 w-4 text-text-primary" />
+              <Trash2 className="h-4 w-4 text-white" />
             </Button>
           )}
           </>

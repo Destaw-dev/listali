@@ -20,6 +20,7 @@ import { useGroup } from '../../../../../hooks/useGroups';
 import { useAuthStore } from '../../../../../store/authStore';
 import { useUpdateItem } from '../../../../../hooks/useItems';
 import { extractNameFromProduct } from '../../../../../lib/utils';
+import { useShoppingListItemsWebSocket } from '../../../../../hooks/useShoppingListItemsWebSocket';
 
 export default function ShoppingListPage() {
   const params = useParams();
@@ -27,6 +28,8 @@ export default function ShoppingListPage() {
   const groupId = params?.groupId as string;
   const listId = params?.listId as string;
   const t = useTranslations('ShoppingListPage');
+
+  useShoppingListItemsWebSocket(groupId, listId)
 
   const { isInitialized } = useAuthRedirect({
     redirectTo: `/${locale}/welcome`,
