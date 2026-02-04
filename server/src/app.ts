@@ -93,7 +93,9 @@ app.use(helmet({
 // }));
 
 app.use(limiter);
-app.use(morgan('combined'));
+app.use(morgan('combined', {
+  skip: (req) => req.url === '/health',
+}));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
