@@ -7,7 +7,7 @@ dotenv.config();
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 const DEFAULT_CLIENT_URL = "https://www.app.listali.co.il";
-const CLIENT_URL = (process.env.CLIENT_URL || DEFAULT_CLIENT_URL).replace(/\/$/, "");
+const CLIENT_URL = (process.env.CLIENT_URL ?? DEFAULT_CLIENT_URL).replace(/\/$/, "");
 
 const EMAIL_FROM_VERIFICATION = "Listali <hello@listali.co.il>";
 const EMAIL_FROM_INVITE = "Listali <invite@listali.co.il>";

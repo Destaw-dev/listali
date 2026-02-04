@@ -79,18 +79,19 @@ class WebSocketService {
         return;
       }
 
-      const WS_URL = process.env.NEXT_PUBLIC_WS_URL || "http://localhost:5000";
+      const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? "http://localhost:5000";
 
       useAuthStore.getState().setWebSocketConnecting(true);
 
       if (!this.socket) {
         this.socket = io(WS_URL, {
           auth: { token: accessToken },
+          withCredentials: true,
           transports: ["websocket", "polling"],
           timeout: 10000,
           autoConnect: false,
           reconnection: false,
-        });
+        });        
       } else {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (this.socket as any).auth = { token: accessToken };

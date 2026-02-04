@@ -29,16 +29,42 @@ import { authenticateToken } from './middleware/auth';
 import { initializeSocket } from './socket/socketHandler';
 
 const app = express();
+app.set('trust proxy', 1);
+
 const server = createServer(app);
 dotenv.config();
 
-const io = new Server(server, {
-  cors: {
-    origin: [ process.env.CLIENT_URL as string],
-    methods: ["GET", "POST"],
-    credentials: true
-  }
+const allowedOrigins = (process.env.CLIENT_URLS ?? process.env.CLIENT_URL ?? '')
+  .split(',')
+  .map(s => s.trim())
+  .filter(Boolean);
+
+const corsOptions: cors.CorsOptions = {
+  origin: (origin, cb) => {
+    if (!origin) return cb(null, true);
+
+    if (allowedOrigins.includes(origin)) return cb(null, true);
+
+    return cb(new Error(`CORS blocked for origin: ${origin}`));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'x-client', 'x-refresh-token', 'x-session-id'],
+};
+
+
+app.use(cors(corsOptions));
+
+const io = new Server(server, { cors: corsOptions });
+
+io.engine.on("connection_error", (err) => {
+  console.log("SOCKET connection_error:");
+  console.log("  code:", err.code);
+  console.log("  message:", err.message);
+  console.log("  context:", err.context);
 });
+
+
 
 const limiter = rateLimit({
   windowMs: 10 * 60 * 1000,
@@ -59,19 +85,18 @@ app.use(helmet({
   },
 }));
 
-app.use(cors({
-  origin: [ process.env.CLIENT_URL as string],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'x-client', 'x-refresh-token', 'x-session-id'],
-}));
+// app.use(cors({
+//   origin: [ process.env.CLIENT_URL as string],
+//   credentials: true,
+//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+//   allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'x-client', 'x-refresh-token', 'x-session-id'],
+// }));
 
 app.use(limiter);
 app.use(morgan('combined'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
-app.set("trust proxy", 1);
 
 
 app.get('/health', (req, res) => {
