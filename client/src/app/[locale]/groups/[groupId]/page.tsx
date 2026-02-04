@@ -16,6 +16,7 @@ import { ArrowIcon } from '../../../../components/common/Arrow';
 import {CreateShoppingListModal} from '../../../../components/shoppingList/CreateShoppingListModal';
 import { IShoppingList, IGroupMember, ICreateListFormData, getCreatedByDisplayName } from '../../../../types';
 import { useShoppingListWebSocket } from '../../../../hooks/useShoppingListWebSocket';
+import { useChatWebSocket, useUnreadInfo } from '../../../../hooks/useChat';
 
 type TabType = 'overview' | 'lists' | 'chat' | 'stats';
 
@@ -48,6 +49,15 @@ export default function GroupDetailsPage() {
   useShoppingListWebSocket(groupId, listIds);
   
   useGroupMemberRoleWebSocket(groupId);
+
+  useChatWebSocket(groupId, { isActive: true });
+
+  const { data: unreadInfo } = useUnreadInfo(groupId, {
+    staleTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: false
+  });
+
 
   useEffect(() => {
     const tabFromUrl = searchParams.get('tab') as TabType;
@@ -152,13 +162,15 @@ export default function GroupDetailsPage() {
       id: 'lists' as TabType,
       label: t('lists'),
       icon: ShoppingCart,
-      count: shoppingLists?.length || 0
+      count: shoppingLists?.length || 0,
+      countColor: 'bg-primary-400'
     },
     {
       id: 'chat' as TabType,
       label: t('chat'),
       icon: MessageCircle,
-      count: group?.unreadMessages || 0
+      count: unreadInfo?.unreadCount || 0,
+      countColor: 'bg-success-400'
     },
     {
       id: 'stats' as TabType,
@@ -167,6 +179,7 @@ export default function GroupDetailsPage() {
       count: null
     }
   ];
+
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -324,7 +337,7 @@ export default function GroupDetailsPage() {
                 <tab.icon className="w-4 h-4 text-text-primary" />
                 <span className="font-medium text-text-primary">{tab.label}</span>
                 {tab.count !== null && tab.count > 0 && (
-                  <span className="bg-error-500 text-text-primary text-xs rounded-full px-2 py-1 min-w-[20px] text-center">
+                  <span className={`${tab.countColor} text-text-primary text-xs rounded-full px-2 py-1 min-w-[20px] text-center`}>
                     {tab.count}
                   </span>
                 )}

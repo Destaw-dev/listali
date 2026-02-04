@@ -195,6 +195,16 @@ export const validateReadAll = [
   body('groupId').isMongoId().withMessage('Valid group ID is required')
 ];
 
+export const validateBatchRead = [
+  body('messageIds')
+    .isArray({ min: 1 })
+    .withMessage('messageIds must be a non-empty array'),
+  body('messageIds.*')
+    .isString()
+    .notEmpty()
+    .withMessage('Each message ID must be a non-empty string')
+];
+
 export const validateSearchQuery = [
   query('groupId').isMongoId().withMessage('Valid group ID is required'),
   query('q').notEmpty().withMessage('Search query is required'),

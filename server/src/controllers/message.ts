@@ -198,6 +198,41 @@ export const markMessageAsRead = async (req: express.Request, res: express.Respo
   res.status(200).json(successResponse(null, 'Message marked as read'));
 };
 
+export const markMessagesAsReadBatch = async (req: express.Request, res: express.Response<IApiResponse<{ modifiedCount: number; messageIds: string[] } | null>>) => {
+  const { messageIds } = req.body;
+  const userId = req.userId!;
+
+  if (!userId) {
+    res.status(401).json(errorResponse('unauthorized', 401));
+    return;
+  }
+
+  if (!Array.isArray(messageIds) || messageIds.length === 0) {
+    res.status(400).json(errorResponse('messageIds must be a non-empty array', 400));
+    return;
+  }
+
+  const validMessageIds = messageIds.filter((id: string) => {
+    try {
+      return typeof id === 'string' && id.length > 0;
+    } catch {
+      return false;
+    }
+  });
+
+  if (validMessageIds.length === 0) {
+    res.status(400).json(errorResponse('No valid message IDs provided', 400));
+    return;
+  }
+
+  const result = await Message.markMessagesAsReadBatch(userId, validMessageIds);
+
+  res.json(successResponse({
+    modifiedCount: result.modifiedCount,
+    messageIds: result.messageIds
+  }, 'Messages marked as read'));
+};
+
 export const updateMessage = editMessage;
 
 export const markAllMessagesAsRead = async (req: express.Request, res: express.Response<IApiResponse<{ count: number } | null >>) => {

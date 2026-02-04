@@ -11,6 +11,7 @@ import {
   useEditMessage, 
   useDeleteMessage,
   useMarkGroupMessagesAsRead,
+  useMarkMessagesAsReadBatch,
   useChatWebSocket,
   useUnreadInfo
 } from '../../hooks/useChat';
@@ -55,24 +56,64 @@ interface ChatComponentProps {
   groupName: string;
 }
 
+interface MessageWithObserverProps {
+  messageId: string;
+  onVisible: (messageId: string, isVisible: boolean) => void;
+  children: React.ReactNode;
+}
+
+function MessageWithObserver({ messageId, onVisible, children }: MessageWithObserverProps) {
+  const elementRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const element = elementRef.current;
+    if (!element) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            onVisible(messageId, true);
+          }
+        });
+      },
+      {
+        rootMargin: '0px',
+        threshold: 0.1
+      }
+    );
+
+    observer.observe(element);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [messageId, onVisible]);
+
+  return <div ref={elementRef}>{children}</div>;
+}
+
 export function ChatComponent({ groupId, groupName }: ChatComponentProps ) {
-  const t = useTranslations('Chat');
+  const t = useTranslations('chat');
   const { user, websocket: { isConnected } } = useAuthStore();
   const [newMessage, setNewMessage] = useState('');
   const [editingMessage, setEditingMessage] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
-  const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const lastScrollTopRef = useRef(0);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const hasMarkedAsReadRef = useRef(false);
 
   useChatWebSocket(groupId, { isActive: true });
 
   const { data: messages = [], isLoading } = useGroupMessages(groupId);
-const { data: unreadInfo } = useUnreadInfo(groupId, {
-  staleTime: 0,
-  refetchOnMount: true,
-  refetchOnWindowFocus: false
-});
+  const { data: unreadInfo } = useUnreadInfo(groupId, {
+    staleTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: false
+  });
   
   const unreadCount = unreadInfo?.unreadCount ?? 0;
   const lastReadMessage = unreadInfo?.lastReadMessage;
@@ -80,40 +121,142 @@ const { data: unreadInfo } = useUnreadInfo(groupId, {
   const editMessageMutation = useEditMessage();
   const deleteMessageMutation = useDeleteMessage();
   const markGroupAsReadMutation = useMarkGroupMessagesAsRead();
+  const markMessagesAsReadBatchMutation = useMarkMessagesAsReadBatch();
+  
+  const pendingReadMessagesRef = useRef<Set<string>>(new Set());
+  const batchReadTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
+    messagesEndRef.current?.scrollIntoView({ behavior, block: 'end' });
+  }, []);
 
   const scrollToLastReadMessage = useCallback(() => {
     if (lastReadMessage?._id) {
       const lastReadElement = document.getElementById(`message-${lastReadMessage._id}`);
       if (lastReadElement) {
         lastReadElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        return;
+        return true;
       }
     }
-    scrollToBottom();
+    return false;
   }, [lastReadMessage]);
 
-  useEffect(() => {
-    if (groupId && !isLoading && unreadCount > 0 && !markGroupAsReadMutation.isPending) {
-      markGroupAsReadMutation.mutate(groupId);
+  const isNearBottom = useCallback(() => {
+    if (!messagesContainerRef.current) return false;
+    const container = messagesContainerRef.current;
+    const threshold = 150;
+    return container.scrollHeight - container.scrollTop - container.clientHeight < threshold;
+  }, []);
+
+  const scheduleBatchRead = useCallback(() => {
+    if (batchReadTimeoutRef.current) {
+      clearTimeout(batchReadTimeoutRef.current);
     }
-  }, [groupId, isLoading, unreadCount, markGroupAsReadMutation.isPending, markGroupAsReadMutation.mutate]);
+
+    batchReadTimeoutRef.current = setTimeout(() => {
+      const messageIds = Array.from(pendingReadMessagesRef.current);
+      if (messageIds.length === 0) return;
+      if (unreadCount === 0) return;
+      if (messageIds.length > 0 && !markMessagesAsReadBatchMutation.isPending) {
+        pendingReadMessagesRef.current.clear();
+        markMessagesAsReadBatchMutation.mutate(messageIds);
+      }
+    }, 1500);
+  }, [markMessagesAsReadBatchMutation, unreadCount]);
+
+  const handleMessageVisible = useCallback((messageId: string, isVisible: boolean) => {
+    if (!user || !isVisible) return;
+    
+    const message = messages.find(m => m._id === messageId);
+    if (!message) return;
+    
+    if (message.messageType === 'item_update' || message.messageType === 'list_update') return;
+    if (message.sender._id === user._id) return;
+    
+    if (message.readBy.includes(user._id)) return;
+    
+    pendingReadMessagesRef.current.add(messageId);
+    scheduleBatchRead();
+  }, [user, messages, scheduleBatchRead]);
 
   useEffect(() => {
-    if (messages.length === 0) return;
-    
+    setIsInitialLoad(true);
+    hasMarkedAsReadRef.current = false;
+    pendingReadMessagesRef.current.clear();
+    if (batchReadTimeoutRef.current) {
+      clearTimeout(batchReadTimeoutRef.current);
+      batchReadTimeoutRef.current = null;
+    }
+  }, [groupId]);
+
+  useEffect(() => {
+    return () => {
+      if (batchReadTimeoutRef.current) {
+        clearTimeout(batchReadTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isLoading || messages.length === 0 || !isInitialLoad) return;
+
+    const timer = setTimeout(() => {
+      if (unreadCount > 0 && lastReadMessage) {
+        const scrolled = scrollToLastReadMessage();
+        if (!scrolled) {
+          scrollToBottom('auto');
+        }
+      } else {
+        scrollToBottom('auto');
+      }
+      setIsInitialLoad(false);
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [isLoading, messages.length, isInitialLoad, unreadCount, lastReadMessage, scrollToBottom, scrollToLastReadMessage]);
+
+  useEffect(() => {
+    if (isInitialLoad || messages.length === 0) return;
+
     if (sendMessageMutation.isSuccess) {
-      scrollToBottom();
+      scrollToBottom('smooth');
       return;
     }
-    
-    if (!lastReadMessage || hasScrolledToBottom) {
-      scrollToBottom();
-    } else {
-      setTimeout(() => {
-        scrollToLastReadMessage();
-      }, 100);
+
+    if (isNearBottom()) {
+      scrollToBottom('smooth');
     }
-  }, [messages, sendMessageMutation.isSuccess, lastReadMessage, hasScrolledToBottom, scrollToLastReadMessage]);
+  }, [messages, sendMessageMutation.isSuccess, isInitialLoad, isNearBottom, scrollToBottom]);
+
+
+  const handleScroll = useCallback(() => {
+    if (!messagesContainerRef.current) return;
+
+    const container = messagesContainerRef.current;
+    const currentScrollTop = container.scrollTop;
+    
+    const isScrollingDown = currentScrollTop > lastScrollTopRef.current;
+    lastScrollTopRef.current = currentScrollTop;
+
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
+
+    if (isNearBottom() && isScrollingDown && unreadCount > 0 && !hasMarkedAsReadRef.current && !markGroupAsReadMutation.isPending) {
+      scrollTimeoutRef.current = setTimeout(() => {
+        hasMarkedAsReadRef.current = true;
+        markGroupAsReadMutation.mutate(groupId);
+      }, 500);
+    }
+  }, [unreadCount, groupId, markGroupAsReadMutation, isNearBottom]);
+
+  useEffect(() => {
+    return () => {
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const sendMessage = async () => {
     if (!newMessage.trim() || sendMessageMutation.isPending) return;
@@ -151,25 +294,6 @@ const { data: unreadInfo } = useUnreadInfo(groupId, {
     deleteMessageMutation.mutate({ messageId, groupId });
   };
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    setHasScrolledToBottom(true);
-  };
-
-
-
-  const handleScroll = () => {
-    if (!messagesContainerRef.current) return;
-    
-    const container = messagesContainerRef.current;
-    const isAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 100;
-    setHasScrolledToBottom(isAtBottom);
-    
-    if (isAtBottom && unreadCount > 0 && !markGroupAsReadMutation.isPending) {
-      markGroupAsReadMutation.mutate(groupId);
-    }
-  };
-
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -181,7 +305,7 @@ const { data: unreadInfo } = useUnreadInfo(groupId, {
 
   const canEditMessage = (message: Message) => {
     if (!user) return false;
-    if(whoIsSender(message) === 'system') return false;
+    if (whoIsSender(message) === 'system') return false;
     if (message.sender._id !== user._id) return false;
     
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
@@ -190,7 +314,7 @@ const { data: unreadInfo } = useUnreadInfo(groupId, {
 
   const canDeleteMessage = (message: Message) => {
     if (!user) return false;
-    if(whoIsSender(message) === 'system') return false;
+    if (whoIsSender(message) === 'system') return false;
     return message.sender._id === user._id;
   };
 
@@ -207,7 +331,7 @@ const { data: unreadInfo } = useUnreadInfo(groupId, {
       return 'sending';
     }
     
-    const readByOthers = message.readBy.filter(id => id !== 'current-user');
+    const readByOthers = message.readBy.filter(id => id !== user?._id);
     if (readByOthers.length > 0) {
       return 'read';
     }
@@ -219,8 +343,7 @@ const { data: unreadInfo } = useUnreadInfo(groupId, {
     if (!user || !lastReadMessage) return -1;
     
     return messages.findIndex(message => {
-      if (message.messageType === 'system') return false;
-      
+      if (message.messageType === 'item_update' || message.messageType === 'list_update') return false;
       if (message.sender?._id === user?._id) return false;
       
       return new Date(message.createdAt) > new Date(lastReadMessage.createdAt);
@@ -244,14 +367,13 @@ const { data: unreadInfo } = useUnreadInfo(groupId, {
     return new Intl.DateTimeFormat('he-IL', {
       hour: '2-digit',
       minute: '2-digit'
-    }).format(date);
+    }).format(new Date(date));
   };
 
   const isOnTheTopOfTheWindow = () => {
     if (!messagesContainerRef.current) return false;
     const container = messagesContainerRef.current;
-    const isAtTop = container.scrollTop === 0;
-    return isAtTop;
+    return container.scrollTop < 100;
   };
 
   if (isLoading) {
@@ -325,8 +447,8 @@ const { data: unreadInfo } = useUnreadInfo(groupId, {
                 {showUnreadDivider && (
                   <div className="flex items-center justify-center my-6 animate-fade-in">
                     <div className="flex items-center gap-2 px-4 py-2 bg-background-50 text-text-primary-700 rounded-full text-xs font-medium border border-primary-100 shadow-sm">
-                      <div className="w-2 h-2 bg-background-700 rounded-full animate-pulse"></div>
-                      <span>{t('newMessages')}</span>
+                      <div className="w-2 h-2 bg-background-700 rounded-full animate-pulse text-text-primary"></div>
+                      <span className="text-text-primary">{t('newMessages')}</span>
                     </div>
                   </div>
                 )}
@@ -334,12 +456,16 @@ const { data: unreadInfo } = useUnreadInfo(groupId, {
                 {isSystemMessage ? (
                   <SystemMessage message={message} groupId={groupId} />
                 ) : (
-                  <div
-                    id={`message-${message._id}`}
-                    className={`flex ${isMyMessage ? 'justify-end' : 'justify-start'} ${
-                      isNewMessage ? 'animate-slide-in' : ''
-                    }`}
+                  <MessageWithObserver
+                    messageId={message._id}
+                    onVisible={handleMessageVisible}
                   >
+                    <div
+                      id={`message-${message._id}`}
+                      className={`flex ${isMyMessage ? 'justify-end' : 'justify-start'} ${
+                        isNewMessage ? 'animate-slide-in' : ''
+                      }`}
+                    >
                     <div className={`max-w-xs lg:max-w-md ${isMyMessage ? 'order-2' : 'order-1'}`}>
                       {!isMyMessage && (
                         <div className="flex items-center gap-2 mb-1 animate-fade-in">
@@ -362,40 +488,51 @@ const { data: unreadInfo } = useUnreadInfo(groupId, {
                               : 'bg-accent-300 hover:bg-accent-600'
                           }`}
                         >
-                          <p className="text-sm leading-relaxed">{message.content}</p>
+                          <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{message.content}</p>
                           
                           {(canEditMessage(message) || canDeleteMessage(message)) && (
-                            <MenuButton size='sm' variant='ghost' className='absolute top-1 start-0 opacity-0 group-hover:opacity-100 transition-all duration-200 transform scale-90 group-hover:scale-100' options={[
-                              {
-                                label: t('edit'),
-                                onClick: () => {
-                                  setEditingMessage(message._id);
-                                  setEditContent(message.content);
-                                },
-                                variant: 'default',
-                                icon: <Edit3 className="w-3 h-3 text-text-primary" />
-                              },
-                              {
-                                label: t('delete'),
-                                onClick: () => {
-                                  deleteMessage(message._id);
-                                },
-                                variant: 'danger',
-                                icon: <Trash2 className="w-3 h-3 text-danger" />
-                              }
-                            ]} align='start' position={isOnTheTopOfTheWindow() ? 'bottom' : 'top'} />
+                            <MenuButton 
+                              size='sm' 
+                              variant='ghost' 
+                              className='absolute top-1 start-0 opacity-0 group-hover:opacity-100 transition-all duration-200 z-10 transform scale-90 group-hover:scale-100' 
+                              options={[
+                                ...(canEditMessage(message) ? [{
+                                  label: t('edit'),
+                                  onClick: () => {
+                                    setEditingMessage(message._id);
+                                    setEditContent(message.content);
+                                  },
+                                  variant: 'default' as const,
+                                  icon: <Edit3 className="w-3 h-3 text-text-primary" />
+                                }] : []),
+                                ...(canDeleteMessage(message) ? [{
+                                  label: t('delete'),
+                                  onClick: () => {
+                                    deleteMessage(message._id);
+                                  },
+                                  variant: 'danger' as const,
+                                  icon: <Trash2 className="w-3 h-3 text-danger" />
+                                }] : [])
+                              ]} 
+                              align='start' 
+                              position={isOnTheTopOfTheWindow() ? 'bottom' : 'top'} 
+                            />
                           )}
                         </div>
                       </div>
                       
                       <div className={`flex items-center gap-2 mt-1 ${isMyMessage ? 'justify-end' : 'justify-start'}`}>
                         <span className="text-xs text-text-muted">
-                          {formatTime(new Date(message.createdAt))}
+                          {formatTime(message.createdAt)}
                         </span>
+                        {message.isEdited && (
+                          <span className="text-xs text-text-muted italic">({t('edited')})</span>
+                        )}
                         {isMyMessage && getStatusIcon(getMessageStatus(message))}
                       </div>
                     </div>
                   </div>
+                  </MessageWithObserver>
                 )}
               </React.Fragment>
             );
@@ -408,35 +545,64 @@ const { data: unreadInfo } = useUnreadInfo(groupId, {
         {editingMessage ? (
           <div className="flex gap-2 items-end">
             <div className='w-full'>
-            <span className="text-xs text-text-muted mb-1 block">{t('editingMessage')}</span>
-            <TextArea
-              value={editContent}
-              rows={2}
-              onChange={(e) => setEditContent(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && editMessage(editingMessage)}
-              placeholder={t('editMessagePlaceholder')}
-              fullWidth
-            />
+              <span className="text-xs text-text-muted mb-1 block">{t('editingMessage')}</span>
+              <TextArea
+                value={editContent}
+                rows={2}
+                onChange={(e) => setEditContent(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    editMessage(editingMessage);
+                  }
+                }}
+                placeholder={t('editMessagePlaceholder')}
+                fullWidth
+              />
             </div>
-            <Button variant='primary' size='md' onClick={() => editMessage(editingMessage)} disabled={!editContent.trim() || editMessageMutation.isPending} loading={editMessageMutation.isPending}>{t('save')}</Button>
-            <Button variant='ghost' size='md' onClick={() => {
-              setEditingMessage(null);
-              setEditContent('');
-            }}>{t('cancel')}</Button>
+            <Button 
+              variant='primary' 
+              size='md' 
+              onClick={() => editMessage(editingMessage)} 
+              disabled={!editContent.trim() || editMessageMutation.isPending} 
+              loading={editMessageMutation.isPending}
+            >
+              {t('save')}
+            </Button>
+            <Button 
+              variant='ghost' 
+              size='md' 
+              onClick={() => {
+                setEditingMessage(null);
+                setEditContent('');
+              }}
+            >
+              {t('cancel')}
+            </Button>
           </div>
         ) : (
-          <div className="flex items-center gap-3">
-            <TextArea
-              value={newMessage}
-              rows={2}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder={t('typeMessagePlaceholder')}
-              disabled={sendMessageMutation.isPending}
-              icon={<Send className="w-5 h-5 text-muted" />}
-              fullWidth
-            />
-            <Button variant='primary' size='sm' onClick={sendMessage} disabled={!newMessage.trim() || sendMessageMutation.isPending} loading={sendMessageMutation.isPending}><Send className="w-5 h-5" /></Button>
+          <div className="flex items-end gap-3">
+            <div className="flex-1">
+              <TextArea
+                value={newMessage}
+                rows={2}
+                onChange={(e) => setNewMessage(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder={t('typeMessagePlaceholder')}
+                disabled={sendMessageMutation.isPending}
+                icon={<Send className="w-5 h-5 text-muted" />}
+                fullWidth
+              />
+            </div>
+            <Button 
+              variant='primary' 
+              size='sm' 
+              onClick={sendMessage} 
+              disabled={!newMessage.trim() || sendMessageMutation.isPending} 
+              loading={sendMessageMutation.isPending}
+            >
+              <Send className="w-5 h-5" />
+            </Button>
           </div>
         )}
       </div>

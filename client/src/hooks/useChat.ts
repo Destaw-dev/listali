@@ -432,6 +432,83 @@ export function useMarkGroupMessagesAsRead() {
   });
 }
 
+export function useMarkMessagesAsReadBatch() {
+  const queryClient = useQueryClient();
+  const { user } = useAuthStore();
+
+  return useMutation({
+    mutationFn: async (messageIds: string[]) => {
+      if (!messageIds || messageIds.length === 0) {
+        return { modifiedCount: 0, messageIds: [] };
+      }
+
+      const { data } = await apiClient.post('/messages/batch-read', { messageIds });
+      return data?.data ?? { modifiedCount: 0, messageIds: [] };
+    },
+    onSuccess: (result, messageIds) => {
+      if (!result || result.modifiedCount === 0) return;
+
+      const uid = user?._id ?? 'current-user';
+      
+      // Track groups and find last read message
+      const groupToMessagesMap = new Map<string, Message[]>();
+      
+      // Update messages in cache and track groups
+      queryClient.setQueriesData<Message[]>(
+        { queryKey: ['chat', 'messages'] },
+        (old) => {
+          if (!old) return old;
+          const updated = old.map((m: Message) => {
+            if (messageIds.includes(m._id) && !m.readBy.includes(uid)) {
+              // Track group for this message
+              if (m.group) {
+                if (!groupToMessagesMap.has(m.group)) {
+                  groupToMessagesMap.set(m.group, []);
+                }
+                groupToMessagesMap.get(m.group)!.push({
+                  ...m,
+                  readBy: uniq([...(m.readBy ?? []), uid])
+                });
+              }
+              
+              return {
+                ...m,
+                readBy: uniq([...(m.readBy ?? []), uid])
+              };
+            }
+            return m;
+          });
+          
+          return updated;
+        }
+      );
+
+      // Update unread info for each affected group
+      groupToMessagesMap.forEach((markedMessages, groupId) => {
+        // Find the latest marked message as the new lastReadMessage
+        const latestMessage = markedMessages
+          .filter(m => m.messageType !== 'item_update' && m.messageType !== 'list_update')
+          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
+
+        queryClient.setQueryData<UnreadInfo>(QK.unreadInfo(groupId), (old) => {
+          if (!old) {
+            return {
+              unreadCount: 0,
+              lastReadMessage: latestMessage || null
+            };
+          }
+          
+          const newCount = Math.max(0, old.unreadCount - markedMessages.length);
+          return {
+            unreadCount: newCount,
+            lastReadMessage: latestMessage || old.lastReadMessage
+          };
+        });
+      });
+    },
+  });
+}
+
 export function useChatWebSocket(
   groupId: string,
   options?: { isActive?: boolean }
@@ -469,9 +546,26 @@ export function useChatWebSocket(
         return upsertMessage(old, newMsg);
       });
 
-      if (!options?.isActive) {
+      // Update unreadInfo when new message arrives
+      // Only count messages from other users and non-system messages
+      const shouldIncrementUnread = 
+        newMsg.sender._id !== uid && 
+        newMsg.messageType !== 'item_update' && 
+        newMsg.messageType !== 'list_update';
+
+      if (shouldIncrementUnread) {
         queryClient.setQueryData<UnreadInfo>(QK.unreadInfo(groupId), (old) => {
           if (!old) return { unreadCount: 1, lastReadMessage: null };
+          
+          // Check if message is already marked as read
+          const isAlreadyRead = newMsg.readBy?.includes(uid || '');
+          
+          if (isAlreadyRead) {
+            return old;
+          }
+          
+          // Increment unread count
+          // The Intersection Observer will handle decrementing when user sees the message
           return {
             ...old,
             unreadCount: (old.unreadCount || 0) + 1

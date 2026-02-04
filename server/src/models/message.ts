@@ -16,6 +16,7 @@ type MessageModel = Model<MessageDocument> & {
     groupId?: string
   ): Promise<MessageDocument[]>;
   markAllAsRead(userId: string, groupId: string): Promise<number>;
+  markMessagesAsReadBatch(userId: string, messageIds: string[]): Promise<{ modifiedCount: number; messageIds: string[] }>;
   searchMessages(
     groupId: string,
     searchTerm: string,
@@ -302,6 +303,37 @@ messageSchema.statics.markAllAsRead = async function (
   );
   
   return result.modifiedCount;
+};
+
+messageSchema.statics.markMessagesAsReadBatch = async function (
+  userId: string,
+  messageIds: string[]
+) {
+  if (!messageIds || messageIds.length === 0) {
+    return { modifiedCount: 0 };
+  }
+
+  const result = await this.updateMany(
+    {
+      _id: { $in: messageIds },
+      isDeleted: false,
+      sender: { $ne: userId },
+      $or: [
+        { readBy: { $exists: false } },
+        { readBy: { $not: { $elemMatch: { user: userId } } } }
+      ]
+    },
+    {
+      $addToSet: {
+        readBy: {
+          user: userId,
+          readAt: new Date()
+        }
+      }
+    }
+  );
+  
+  return { modifiedCount: result.modifiedCount, messageIds };
 };
 
 messageSchema.statics.getStatistics = function (

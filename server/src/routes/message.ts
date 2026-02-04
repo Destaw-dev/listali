@@ -8,6 +8,7 @@ import {
   updateMessage,
   markAllMessagesAsRead,
   markGroupMessagesAsRead,
+  markMessagesAsReadBatch,
   getUnreadMessages,
   searchMessages,
   getMessageStats,
@@ -26,6 +27,7 @@ import {
   validateGroupIdQuery,
   validatePaginationQuery,
   validateReadAll,
+  validateBatchRead,
   validateSearchQuery,
   validateStatsQuery,
   validateByTypeParams,
@@ -51,6 +53,8 @@ router.delete('/:id', validateIdParam, asyncHandler(deleteMessage));
 router.post('/:id/read', validateIdParam, asyncHandler(markMessageAsRead));
 
 router.post('/read-all', validateReadAll, asyncHandler(markAllMessagesAsRead));
+
+router.post('/batch-read', validateBatchRead, asyncHandler(markMessagesAsReadBatch));
 
 router.get('/unread', validateGroupIdQuery, asyncHandler(getUnreadMessages));
 

@@ -540,7 +540,18 @@
     "messageSendError": "Error sending message",
     "messageEdited": "Message edited successfully",
     "messageEditError": "Error editing message",
-    "messageDeleteError": "Error deleting message"
+    "messageDeleteError": "Error deleting message",
+    "connected": "Connected",
+    "disconnected": "Disconnected",
+    "newMessages": "New Messages",
+    "editingMessage": "Editing message...",
+    "edit": "Edit",
+    "delete": "Delete",
+    "toList": "to list",
+    "unreadMessagesCount": "{count} new messages",
+    "allMessagesRead": "All messages read",
+    "editMessagePlaceholder": "Edit the message...",
+    "typeMessagePlaceholder": "Type a message..."
   },
   "shoppingLists": {
     "createSuccess": "Shopping list created successfully",
@@ -1302,24 +1313,6 @@
     "foundResults": "Found {count} results",
     "showingProducts": "Showing {count} products",
     "loadingMore": "Loading more..."
-  },
-  "Chat": {
-    "connected": "Connected",
-    "disconnected": "Disconnected",
-    "newMessages": "New Messages",
-    "editingMessage": "Editing message...",
-    "edit": "Edit",
-    "delete": "Delete",
-    "toList": "to list",
-    "loading": "Loading...",
-    "noMessages": "No messages",
-    "startConversation": "Start a conversation",
-    "unreadMessagesCount": "{count} new messages",
-    "allMessagesRead": "All messages read",
-    "editMessagePlaceholder": "Edit the message...",
-    "typeMessagePlaceholder": "Type a message...",
-    "save": "Save",
-    "cancel": "Cancel"
   },
   "ShoppingListPage": {
     "errorLoadingList": "Error Loading List",

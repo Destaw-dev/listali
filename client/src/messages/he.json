@@ -540,7 +540,18 @@
     "messageSendError": "שגיאה בשליחת ההודעה",
     "messageEdited": "הודעה נערכה בהצלחה",
     "messageEditError": "שגיאה בעריכת ההודעה",
-    "messageDeleteError": "שגיאה במחיקת ההודעה"
+    "messageDeleteError": "שגיאה במחיקת ההודעה",
+    "connected": "מחובר",
+    "disconnected": "מנותק",
+    "newMessages": "הודעות חדשות",
+    "editingMessage": "עורך הודעה...",
+    "edit": "ערוך",
+    "delete": "מחק",
+    "unreadMessagesCount": "{count} הודעות חדשות",
+    "allMessagesRead": "כל ההודעות נקראו",
+    "editMessagePlaceholder": "ערוך את ההודעה...",
+    "typeMessagePlaceholder": "הקלד הודעה...",
+    "toList": "לרשימה"
   },
   "shoppingLists": {
     "createSuccess": "רשימת הקניות נוצרה בהצלחה",
@@ -1304,25 +1315,6 @@
     "foundResults": "נמצאו {count} תוצאות",
     "showingProducts": "מציג {count} מוצרים",
     "loadingMore": "טוען עוד..."
-  },
-  "Chat": {
-    "connected": "מחובר",
-    "disconnected": "מנותק",
-    "newMessages": "הודעות חדשות",
-    "editingMessage": "עורך הודעה...",
-    "edit": "ערוך",
-    "delete": "מחק",
-    "deleteConfirm": "האם אתה בטוח שברצונך למחוק את ההודעה?",
-    "toList": "לרשימה",
-    "loading": "טוען...",
-    "noMessages": "אין הודעות",
-    "startConversation": "התחל שיחה",
-    "unreadMessagesCount": "{count} הודעות חדשות",
-    "allMessagesRead": "כל ההודעות נקראו",
-    "editMessagePlaceholder": "ערוך את ההודעה...",
-    "typeMessagePlaceholder": "הקלד הודעה...",
-    "save": "שמור",
-    "cancel": "ביטול"
   },
   "ShoppingListPage": {
     "errorLoadingList": "שגיאה בטעינת הרשימה",

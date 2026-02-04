@@ -24,7 +24,7 @@ interface SystemMessageProps {
 }
 
 export function SystemMessage({ message, groupId }: SystemMessageProps) {
-  const t = useTranslations('Chat');
+  const t = useTranslations('chat');
   const renderContent = () => {
     switch (message.messageType) {
       case 'item_update':
