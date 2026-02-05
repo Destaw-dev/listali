@@ -1,4 +1,3 @@
-# תיעוד ListaLi
 
 <div dir="rtl">
 
