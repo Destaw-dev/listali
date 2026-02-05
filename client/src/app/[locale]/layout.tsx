@@ -39,16 +39,16 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
         description: 'אפליקציה לניהול רשימות קניות משותפות עם המשפחה והחברים',
       },
       icons: {
-        icon: '/icon-dark.svg',
-        apple: '/icon-dark.svg',
+        icon: '/icon.svg',
+        apple: '/icon.svg',
         other: [
           {
-            url: '/icon-dark.svg',
+            url: '/icon.svg',
             sizes: '192x192',
             type: 'image/svg+xml',
           },
           {
-            url: '/icon-dark.svg',
+            url: '/icon.svg',
             sizes: '512x512',
             type: 'image/svg+xml',
           },
@@ -82,11 +82,11 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       description: 'Application for managing collaborative shopping lists with family and friends',
     },
     icons: {
-      icon: '/icon-dark.svg',
-      apple: '/icon-dark.svg',
+      icon: '/icon.svg',
+      apple: '/icon.svg',
       other: [
         {
-          url: '/icon-dark.svg',
+          url: '/icon.svg',
           sizes: '192x192',
           type: 'image/svg+xml',
         },
@@ -96,7 +96,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       canonical: '/en',
       languages: {
         'he': '/he',
-        'en': '/en',
+        'en': '/en', 
       },
     },
   };
