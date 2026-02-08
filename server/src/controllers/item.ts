@@ -22,7 +22,7 @@ import {
 import { UNITS } from '../middleware/validation';
 import { io } from '../app';
 import { emitToGroupExcept, getIO } from '../socket/socketHandler';
-import { sendPushNotificationToUser } from '@/utils/pushNotifications';
+import { sendPushNotificationToUser } from '../utils/pushNotifications';
 
 const verifyShoppingListAccess = async (shoppingListId: string, userId: string) => {
   const shoppingList = await ShoppingList.findById(shoppingListId).populate<{ group: IGroup }>('group');
