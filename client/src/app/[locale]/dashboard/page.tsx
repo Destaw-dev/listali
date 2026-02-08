@@ -32,6 +32,7 @@ import { useRequireAuth } from "../../../hooks/useRequireAuth";
 import { CreateGuestListModal } from "../../../components/guestList/CreateGuestListModal";
 import { StorageWarningModal } from "../../../components/guestList/StorageWarningModal";
 import { useStorageMonitor } from "../../../hooks/useStorageMonitor";
+import { apiClient } from "@/lib/api";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -320,6 +321,14 @@ export default function DashboardPage() {
     group_player: Users,
   };
 
+  const testPushNotification = async () => {
+    apiClient.post('/settings/test-push').then((res) => {
+      console.log(res);
+    }).catch((err) => {
+      console.error(err);
+    });
+  };
+
   return (
     <div className="min-h-screen  bg-surface">
       <div className="container mx-auto px-4 py-8 relative z-10">
@@ -364,6 +373,11 @@ export default function DashboardPage() {
                   </p>
                 </div>
               </div>
+              <Button variant="primary" onClick={() => {
+                testPushNotification();
+              }}>
+                test push notification
+              </Button>
             </CardBody>
           </Card>
 

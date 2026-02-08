@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
+import { validationResult } from 'express-validator';
 import  User  from '../models/user';
 import { successResponse, validationErrorResponse } from '../middleware/handlers';
-import { validationResult } from 'express-validator';
+import { sendPushNotificationToUser } from '../utils/pushNotifications';
 
 export const getUserPreferences = async (req: Request, res: Response) => {
   const user = await User.findById(req.userId).select('preferences');
@@ -188,8 +189,6 @@ export const testPushNotification = async (req: Request, res: Response) => {
   const userId = req.userId!;
   
   try {
-    const { sendPushNotificationToUser } = await import('../utils/pushNotifications');
-    
     await sendPushNotificationToUser(userId, {
       title: '🧪 בדיקת התראה',
       body: 'זוהי התראה לבדיקה! אם אתה רואה את זה, הכל עובד מצוין 🎉',
