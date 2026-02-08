@@ -63,7 +63,7 @@ coverage/
 # =========================
 # PWA / Service Worker
 # =========================
-public/sw.js
+# sw.js is committed - it's manually maintained, not a build artifact
 public/workbox-*.js
 public/worker-*.js
 public/sw.js.map
