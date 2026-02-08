@@ -49,6 +49,10 @@ export function usePushNotifications() {
       showError('Push notifications are not supported or you are not authenticated');
       throw err;
     }
+
+    console.log("VAPID exists?", !!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY);
+    console.log("VAPID key length:", process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.length);
+    console.log("VAPID key:", process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY);
   
     const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
     if (!vapidPublicKey) {
