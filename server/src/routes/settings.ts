@@ -12,6 +12,7 @@ import {
   testPushNotification
 } from '../controllers/settings';
 
+
 const router = express.Router();
 
 router.use(authenticateToken);
