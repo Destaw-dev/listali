@@ -195,7 +195,7 @@ export const testPushNotification = async (req: Request, res: Response) => {
       icon: '/icon-192.svg',
       badge: '/icon-192.svg',
       data: {
-        url: '/dashboard',
+        url: '/he/dashboard',
         test: true,
         timestamp: new Date().toISOString()
       },

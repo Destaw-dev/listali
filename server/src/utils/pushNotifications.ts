@@ -1,5 +1,7 @@
 import webpush from 'web-push';
 import User from '../models/user';
+import Group from '@/models/group';
+import { IGroupMember } from '@/types';
 
 if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY && process.env.VAPID_EMAIL) {
   webpush.setVapidDetails(
@@ -90,4 +92,17 @@ export async function sendPushNotificationToUsers(
   );
   
   await Promise.allSettled(promises);
+}
+
+
+export async function sendPushNotificationToGroupExceptUser(
+  groupId: string,
+  excludeUserId: string,
+  payload: PushNotificationPayload
+): Promise<void> {
+  const group = await Group.findById(groupId).select('members');
+  const userIds = group?.members.map((member: IGroupMember) => member.user.toString()).filter((userId: string) => userId !== excludeUserId) || [];
+  if (userIds.length > 0) {
+    await sendPushNotificationToUsers(userIds, payload);
+  }
 }

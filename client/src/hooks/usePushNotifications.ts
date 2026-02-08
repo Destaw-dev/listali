@@ -50,20 +50,20 @@ export function usePushNotifications() {
   const subscribe = useCallback(async () => {
     if (!isSupported || !isAuthenticated) {
       const err = new Error('Push not supported or not authenticated');
-      showError('Push notifications are not supported or you are not authenticated');
+      showError('settings.pushNotSupportedOrNotAuth');
       throw err;
     }
 
     if (!vapidPublicKey) {
       const err = new Error('Missing VAPID public key');
-      showError('Push notifications are not configured. Please contact support.');
+      showError('settings.pushNotConfigured');
       throw err;
     }
 
     const permission = await Notification.requestPermission();
     if (permission !== 'granted') {
       const err = new Error('Notification permission denied');
-      showError('Notification permission denied');
+      showError('settings.notificationPermissionDenied');
       throw err;
     }
   
@@ -75,7 +75,7 @@ export function usePushNotifications() {
       const keyArray = urlBase64ToUint8Array(vapidPublicKey);
       sub = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: keyArray,
+        applicationServerKey: keyArray as BufferSource,
       });
     }
   
@@ -91,8 +91,8 @@ export function usePushNotifications() {
   
     setSubscription(sub);
     setIsSubscribed(true);
-    showSuccess('Push notifications enabled successfully');
-  
+    showSuccess('settings.pushEnabledSuccess');
+
     return sub;
   }, [isSupported, isAuthenticated, vapidPublicKey, showSuccess, showError]);
   
@@ -105,10 +105,10 @@ export function usePushNotifications() {
       await apiClient.removePushSubscription(subscription.endpoint);
       setSubscription(null);
       setIsSubscribed(false);
-      showSuccess('Push notifications disabled successfully');
+      showSuccess('settings.pushDisabledSuccess');
     } catch (error) {
       console.error('Error unsubscribing from push notifications:', error);
-      showError('Failed to disable push notifications');
+      showError('settings.pushDisableFailed');
     }
   }, [subscription, showSuccess, showError]);
 

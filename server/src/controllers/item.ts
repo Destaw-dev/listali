@@ -22,7 +22,7 @@ import {
 import { UNITS } from '../middleware/validation';
 import { io } from '../app';
 import { emitToGroupExcept, getIO } from '../socket/socketHandler';
-import { sendPushNotificationToUser } from '../utils/pushNotifications';
+import { sendPushNotificationToUser, sendPushNotificationToGroupExceptUser } from '../utils/pushNotifications';
 
 const verifyShoppingListAccess = async (shoppingListId: string, userId: string) => {
   const shoppingList = await ShoppingList.findById(shoppingListId).populate<{ group: IGroup }>('group');
@@ -473,7 +473,7 @@ export const purchaseItem = async (req: express.Request, res: express.Response) 
     }
   }
 
-  await sendPushNotificationToUser(userId, {title: 'Item marked as purchased', body: `${user?.username || 'user'} קנה/תה ${item.quantity} פריטים`, data: { itemId: item._id.toString() }});
+  await sendPushNotificationToGroupExceptUser(group._id.toString(), userId, {title: 'Item marked as purchased', body: `${user?.username || 'user'} קנה/תה ${item.quantity} פריטים`, data: { itemId: item._id.toString() }});
 
   return res.status(200).json(successResponse(updatedItem, 'Item marked as purchased'));
 };
@@ -727,7 +727,7 @@ export const unpurchaseItem = async (req: express.Request, res: express.Response
       });
     }
   }
-  await sendPushNotificationToUser(userId, {title: 'Item marked as not purchased', body: `${user?.username || 'user'} סירט ${item.quantity} פריטים`, data: { itemId: item._id.toString() }});
+  await sendPushNotificationToGroupExceptUser(group._id.toString(), userId, {title: 'Item marked as not purchased', body: `${user?.username || 'user'} סירט ${item.quantity} פריטים`, data: { itemId: item._id.toString() }});
 
   return res.status(200).json(successResponse(updatedItem, 'Item marked as not purchased'));
 };
