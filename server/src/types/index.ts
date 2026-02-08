@@ -269,6 +269,16 @@ export interface IRefreshSession {
   ip?: string;
 }
 
+export interface IPushSubscription {
+  endpoint: string;
+  keys: {
+    p256dh: string;
+    auth: string;
+  };
+  userAgent?: string;
+  createdAt: Date;
+}
+
 // User with password and server methods (extends base user)
 export interface IUser extends IBaseUser, BaseDocument {
   password: string;
@@ -280,6 +290,7 @@ export interface IUser extends IBaseUser, BaseDocument {
     expiresAt: Date;
   };
   refreshSessions: IRefreshSession[];
+  pushSubscriptions: IPushSubscription[];
 }
 
 // User methods for server-side operations

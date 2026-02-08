@@ -40,7 +40,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       },
       icons: {
         icon: '/icon.svg',
-        apple: '/icon.svg',
+        apple: '/apple-touch-icon.svg',
         other: [
           {
             url: '/icon.svg',
@@ -61,6 +61,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
           'en': '/en',
         },
       },
+      manifest: '/manifest.json',
+    other: {
+      'mobile-web-app-capable': 'yes',
+      'apple-mobile-web-app-capable': 'yes',
+      'apple-mobile-web-app-status-bar-style': 'default',
+      'apple-mobile-web-app-title': 'רשימות קניות',
+    },
     };
   }
   
@@ -83,7 +90,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     },
     icons: {
       icon: '/icon.svg',
-      apple: '/icon.svg',
+      apple: '/apple-touch-icon.svg',
       other: [
         {
           url: '/icon.svg',
@@ -98,6 +105,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
         'he': '/he',
         'en': '/en', 
       },
+    },
+    manifest: '/manifest.json',
+    other: {
+      'mobile-web-app-capable': 'yes',
+      'apple-mobile-web-app-capable': 'yes',
+      'apple-mobile-web-app-status-bar-style': 'default',
+      'apple-mobile-web-app-title': 'Shopping Lists',
     },
   };
 }

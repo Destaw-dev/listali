@@ -143,6 +143,29 @@ const userSchema = new Schema<IUser, UserModel, IUserMethods>({
     ip: {
       type: String
     }
+  }],
+  pushSubscriptions: [{
+    endpoint: {
+      type: String,
+      required: true
+    },
+    keys: {
+      p256dh: {
+        type: String,
+        required: true
+      },
+      auth: {
+        type: String,
+        required: true
+      }
+    },
+    userAgent: {
+      type: String
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now
+    }
   }]
 }, {
   timestamps: true,

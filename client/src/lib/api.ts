@@ -715,7 +715,18 @@ export class ApiClient {
     return response.data;
   }
 
+  async savePushSubscription(subscription: { endpoint: string; keys: { p256dh: string; auth: string } }) {
+    const response = await this.post('/settings/push-subscription', subscription);
+    return response.data;
+  }
 
+  async removePushSubscription(endpoint: string) {
+    const response = await this.delete('/settings/push-subscription', { 
+      data: { endpoint },
+      headers: { 'Content-Type': 'application/json' }
+    });
+    return response.data;
+  }
 
   async deleteAccount() {
     const response = await this.delete('/auth/account');

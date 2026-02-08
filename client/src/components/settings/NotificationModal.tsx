@@ -7,6 +7,7 @@ import { Button, Modal } from '../common';
 import { useNotification } from '../../contexts/NotificationContext';
 import { Toggle } from '../common/Toggle';
 import { useModalScrollLock } from '../../hooks/useModalScrollLock';
+import { usePushNotifications } from '../../hooks/usePushNotifications';
 
 interface NotificationModalProps {
   isOpen: boolean;
@@ -70,16 +71,41 @@ export default function NotificationModal({
 }: NotificationModalProps) {
   const t = useTranslations('settings');
   const { handleApiError } = useNotification();
+  const { subscribe, isSubscribed, isSupported, checkSubscription } = usePushNotifications();
   const [internalIsLoading, setInternalIsLoading] = useState(false);
+  const [isRegisteringPush, setIsRegisteringPush] = useState(false);
   const isLoading = externalIsLoading || internalIsLoading;
   const [settings, setSettings] = useState(currentSettings);
 
 
-  const handleToggle = (key: keyof typeof settings) => {
-    setSettings(prev => ({
-      ...prev,
-      [key]: !prev[key]
-    }));
+  const pushOnButNotRegistered = settings.pushNotifications && !isSubscribed && isSupported;
+
+
+  const handleToggle = async (key: keyof typeof settings) => {
+    const newValue = !settings[key];
+    
+    if (key === 'pushNotifications' && newValue && !isSubscribed) {
+      if (!isSupported) {
+        handleApiError(new Error('Push notifications are not supported in this browser'));
+        return;
+      }
+      
+      try {
+        await subscribe();
+        setSettings(prev => ({
+          ...prev,
+          [key]: true
+        }));
+      } catch (error) {
+        handleApiError(error as Error);
+        return;
+      }
+    } else {
+      setSettings(prev => ({
+        ...prev,
+        [key]: newValue
+      }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -97,6 +123,31 @@ export default function NotificationModal({
     setInternalIsLoading(true);
     
     try {
+      // if (settings.pushNotifications && !currentSettings.pushNotifications && !isSubscribed) {
+      //   if (isSupported) {
+      //     try {
+      //       await subscribe();
+      //     } catch (error) {
+      //       setSettings(prev => ({
+      //         ...prev,
+      //         pushNotifications: false
+      //       }));
+      //       throw error;
+      //     }
+      //   } else {
+      //     setSettings(prev => ({
+      //       ...prev,
+      //       pushNotifications: false
+      //     }));
+      //     handleApiError(new Error('Push notifications are not supported in this browser'));
+      //     return;
+      //   }
+      // }
+      
+      if (!settings.pushNotifications && currentSettings.pushNotifications && isSubscribed) {
+        // ה-unsubscribe יעשה אוטומטית דרך ה-hook
+      }
+      
       await onSave(settings);
       onClose();
     } catch (error) {
@@ -127,6 +178,7 @@ export default function NotificationModal({
               {notificationTypes.map((type) => {
                 const Icon = type.icon;
                 const isEnabled = settings[type.id as keyof typeof settings];
+                const isPushType = type.id === 'pushNotifications';
                 
                 return (
                   <div
@@ -153,6 +205,31 @@ export default function NotificationModal({
                       </div>
                       <Toggle isEnabled={isEnabled} onClick={() => handleToggle(type.id as keyof typeof settings)}/>
                     </div>
+                    {/* כשהתראות דחיפה מופעלות אבל אין subscription - כפתור רישום מכשיר */}
+                    {isPushType && pushOnButNotRegistered && (
+                      <div className="mt-3 pt-3 border-t border-border">
+                        <p className="text-text-muted text-sm mb-2">{t('registerDeviceForPushDesc')}</p>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={isRegisteringPush}
+                          onClick={async () => {
+                            setIsRegisteringPush(true);
+                            try {
+                              await subscribe();
+                              await checkSubscription();
+                            } catch (e) {
+                              handleApiError(e as Error);
+                            } finally {
+                              setIsRegisteringPush(false);
+                            }
+                          }}
+                        >
+                          {isRegisteringPush ? t('saving') : t('registerDeviceForPush')}
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 );
               })}

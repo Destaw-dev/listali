@@ -754,3 +754,17 @@ export const batchPurchaseItemsValidation = [
   body('shoppingListId').isMongoId().withMessage('Valid shopping list ID is required'),
 ];
 
+export const pushSubscriptionValidation = [
+  body('endpoint')
+    .isURL()
+    .withMessage('Endpoint must be a valid URL'),
+  body('keys')
+    .isObject()
+    .withMessage('Keys must be an object'),
+  body('keys.p256dh')
+    .notEmpty()
+    .withMessage('P256dh key is required'),
+  body('keys.auth')
+    .notEmpty()
+    .withMessage('Auth key is required')
+];
