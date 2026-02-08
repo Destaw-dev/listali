@@ -2,9 +2,8 @@
 const CACHE_NAME = 'listali-v1';
 const RUNTIME_CACHE = 'listali-runtime';
 
-// Assets to cache on install
+// Assets to cache on install (exclude / - it redirects to /he and caching it breaks redirects)
 const PRECACHE_ASSETS = [
-  '/',
   '/manifest.json',
   '/icon-192.svg',
   '/icon-512.svg',
@@ -46,6 +45,11 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Never intercept navigation: redirects (e.g. / -> /he) must be followed by the browser
+  if (event.request.mode === 'navigate') {
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request)
       .then((cachedResponse) => {
@@ -71,9 +75,9 @@ self.addEventListener('fetch', (event) => {
             return response;
           })
           .catch(() => {
-            // Return offline page if available
+            // Return offline fallback for non-navigation requests only
             if (event.request.destination === 'document') {
-              return caches.match('/');
+              return caches.match('/he');
             }
           });
       })
