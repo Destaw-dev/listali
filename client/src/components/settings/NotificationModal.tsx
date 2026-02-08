@@ -77,6 +77,10 @@ export default function NotificationModal({
   const isLoading = externalIsLoading || internalIsLoading;
   const [settings, setSettings] = useState(currentSettings);
 
+  console.log("VAPID exists?", !!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY);
+  console.log("VAPID key length:", process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.length);
+  console.log("VAPID key:", process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY);
+
 
   const pushOnButNotRegistered = settings.pushNotifications && !isSubscribed && isSupported;
 
