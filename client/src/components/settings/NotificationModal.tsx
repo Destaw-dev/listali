@@ -71,16 +71,11 @@ export default function NotificationModal({
 }: NotificationModalProps) {
   const t = useTranslations('settings');
   const { handleApiError } = useNotification();
-  const { subscribe, isSubscribed, isSupported, checkSubscription } = usePushNotifications();
+  const { subscribe, isSubscribed, isSupported, isPushConfigured, checkSubscription } = usePushNotifications();
   const [internalIsLoading, setInternalIsLoading] = useState(false);
   const [isRegisteringPush, setIsRegisteringPush] = useState(false);
   const isLoading = externalIsLoading || internalIsLoading;
   const [settings, setSettings] = useState(currentSettings);
-
-  console.log("VAPID exists?", !!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY);
-  console.log("VAPID key length:", process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.length);
-  console.log("VAPID key:", process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY);
-
 
   const pushOnButNotRegistered = settings.pushNotifications && !isSubscribed && isSupported;
 
@@ -93,7 +88,10 @@ export default function NotificationModal({
         handleApiError(new Error('Push notifications are not supported in this browser'));
         return;
       }
-      
+      if (!isPushConfigured) {
+        handleApiError(new Error('Push notifications are not configured. Please contact support.'));
+        return;
+      }
       try {
         await subscribe();
         setSettings(prev => ({

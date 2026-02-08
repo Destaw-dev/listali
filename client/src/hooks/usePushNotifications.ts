@@ -20,9 +20,9 @@ export function usePushNotifications() {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [subscription, setSubscription] = useState<PushSubscription | null>(null);
 
-  console.log("VAPID exists?", !!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY);
-  console.log("VAPID key length:", process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.length);
-  console.log("VAPID key:", process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY);
+  const vapidPublicKey = typeof window !== 'undefined'
+    ? (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? '').trim()
+    : '';
 
   useEffect(() => {
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window) {
@@ -54,14 +54,12 @@ export function usePushNotifications() {
       throw err;
     }
 
-  
-    const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
     if (!vapidPublicKey) {
       const err = new Error('Missing VAPID public key');
       showError('Push notifications are not configured. Please contact support.');
       throw err;
     }
-  
+
     const permission = await Notification.requestPermission();
     if (permission !== 'granted') {
       const err = new Error('Notification permission denied');
@@ -96,7 +94,7 @@ export function usePushNotifications() {
     showSuccess('Push notifications enabled successfully');
   
     return sub;
-  }, [isSupported, isAuthenticated, showSuccess, showError]);
+  }, [isSupported, isAuthenticated, vapidPublicKey, showSuccess, showError]);
   
 
   const unsubscribe = useCallback(async () => {
@@ -117,6 +115,7 @@ export function usePushNotifications() {
   return {
     isSupported,
     isSubscribed,
+    isPushConfigured: !!vapidPublicKey,
     subscribe,
     unsubscribe,
     checkSubscription
