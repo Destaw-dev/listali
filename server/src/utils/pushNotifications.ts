@@ -1,7 +1,7 @@
 import webpush from 'web-push';
 import User from '../models/user';
-import Group from '@/models/group';
-import { IGroupMember } from '@/types';
+import Group from '../models/group';
+import { IGroupMember } from '../types';
 
 if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY && process.env.VAPID_EMAIL) {
   webpush.setVapidDetails(
