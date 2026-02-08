@@ -40,7 +40,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       },
       icons: {
         icon: '/icon.svg',
-        apple: '/apple-touch-icon.svg',
+        apple: '/icon.svg',
         other: [
           {
             url: '/icon.svg',
@@ -90,7 +90,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     },
     icons: {
       icon: '/icon.svg',
-      apple: '/apple-touch-icon.svg',
+      apple: '/icon.svg',
       other: [
         {
           url: '/icon.svg',

@@ -20,7 +20,5 @@ DEPLOY_HETZNER.md
 __tests__
 *.test.ts
 *.spec.ts
-tsconfig.json
-tsconfig.build.json
 vitest.config.ts
 jest.config.js
