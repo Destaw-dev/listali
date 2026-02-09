@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '../../../../i18n/navigation';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { AxiosError } from 'axios';
@@ -75,7 +75,7 @@ export default function RegisterPage() {
       if (response.inviteError) {
         const translationKey = mapInviteErrorToTranslationKey(response.inviteError);
         showWarning(translationKey);
-        router.push(`/${locale}/auth/verify-email?inviteError=${encodeURIComponent(response.inviteError)}`);
+        router.push(`/auth/verify-email?inviteError=${encodeURIComponent(response.inviteError)}`);
         return;
       } else {
         showSuccess('auth.registerSuccess');
@@ -84,10 +84,10 @@ export default function RegisterPage() {
       
       if (response.groupJoined) {
         setUser(response.user);
-        router.push(`/${locale}/groups/${response.groupJoined}`);
+        router.push(`/groups/${response.groupJoined}`);
         return;
       } else {
-        router.push(`/${locale}/auth/verify-email?email=${encodeURIComponent(data.email)}`);
+        router.push(`/auth/verify-email?email=${encodeURIComponent(data.email)}`);
         return;
       }
     } catch (error) {

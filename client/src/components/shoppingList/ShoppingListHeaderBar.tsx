@@ -4,7 +4,7 @@ import { Button } from "../common";
 import { cn } from "../../lib/utils";
 import { Calendar, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
+import { useRouter } from "../../i18n/navigation";
 import { ArrowIcon } from "../common/Arrow";
 import { IShoppingList } from "../../types";
 
@@ -35,7 +35,7 @@ export function ShoppingListHeaderBar({
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-start gap-4">
           <Button
-            onClick={() => router.push(`/${locale}/groups/${groupId}?tab=lists`)}
+            onClick={() => router.push(`/groups/${groupId}?tab=lists`)}
             variant='surface'
             size='md'
             rounded

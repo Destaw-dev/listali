@@ -84,7 +84,7 @@ export default function GroupsPage() {
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-surface">
-        <Card variant="glass" className="bg-white/80 shadow-2xl max-w-md">
+        <Card variant="glass" className="bg-card shadow-2xl max-w-md">
           <CardBody className="p-6 text-center">
             <h3 className="text-lg font-bold text-text-primary mb-2">
               {t("errorLoadingGroups")}

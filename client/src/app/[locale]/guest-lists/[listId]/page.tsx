@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useRouter } from '../../../../i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { LoadingSpinner } from '../../../../components/common';
 import { useGuestListsStore } from '../../../../store/guestListsStore';
@@ -27,7 +28,7 @@ export default function GuestListPage() {
   const { getList, addItem, removeItem, purchaseItem, unpurchaseItem, purchaseAllItems, undoPurchaseAll } = useGuestListsStore();
   
   const { isInitialized } = useAuthRedirect({
-    redirectTo: `/${locale}/welcome`,
+    redirectTo: '/welcome',
     requireAuth: false
   });
 
@@ -114,7 +115,7 @@ export default function GuestListPage() {
 
   useEffect(() => {
     if (isInitialized && (!isGuest() || !guestList)) {
-      router.push(`/${locale}/dashboard`);
+      router.push('/dashboard');
     }
   }, [isInitialized, isGuest, guestList, locale, router]);
 

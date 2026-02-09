@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, Suspense, useCallback } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
+import { useRouter } from '../../../../i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { AxiosError } from 'axios';
 import { LoadingSpinner, Button } from '../../../../components/common';
@@ -86,9 +87,9 @@ function VerifyEmailContent() {
 
   useEffect(() => {
     if (verificationStatus === 'success' && countdown === 0) {
-      router.push(`/${locale}/dashboard`);
+      router.push('/dashboard');
     }
-  }, [verificationStatus, countdown, router, locale]);
+  }, [verificationStatus, countdown, router]);
 
 
   const resendVerification = useCallback(async () => {
@@ -135,7 +136,7 @@ function VerifyEmailContent() {
               {t('redirectingIn')} {countdown} {t('seconds')}
             </p>
             <Button 
-              onClick={() => router.push(`/${locale}/dashboard`)}
+              onClick={() => router.push('/dashboard')}
               className="mt-4"
             >
               {t('goToDashboard')}
@@ -198,7 +199,7 @@ function VerifyEmailContent() {
             <h2 className="text-2xl font-bold text-blue-600 mb-2">{t('emailAlreadyVerified')}</h2>
             <p className="text-gray-600 mb-4">{t('emailAlreadyVerifiedMessage')}</p>
             <Button 
-              onClick={() => router.push(`/${locale}/auth/login`)}
+              onClick={() => router.push('/auth/login')}
             >
               {t('backToLogin')}
             </Button>

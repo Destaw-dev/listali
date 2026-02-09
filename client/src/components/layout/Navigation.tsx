@@ -1,8 +1,8 @@
 'use client';
 
 import { useAuthStore } from '../../store/authStore';
-import { useRouter, usePathname } from 'next/navigation';
 import { useParams } from 'next/navigation';
+import { useRouter, usePathname } from '../../i18n/navigation';
 import { Home, Users, Settings, LogOut, UserPlus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import LanguageSwitcher from '../common/LanguageSwitcher';
@@ -33,29 +33,29 @@ export function Navigation() {
     {
       label: t('home'),
       icon: Home,
-      href: `/${locale}/dashboard`,
-      active: pathname === `/${locale}/dashboard`,
+      href: '/dashboard',
+      active: pathname === '/dashboard',
       showOnMobile: true,
     },
     {
       label: t('groups'),
       icon: Users,
-      href: `/${locale}/groups`,
-      active: pathname.startsWith(`/${locale}/groups`),
+      href: '/groups',
+      active: pathname.startsWith('/groups'),
       showOnMobile: true,
     },
     {
       label: t('invitations'),
       icon: UserPlus,
-      href: `/${locale}/invitations`,
-      active: pathname === `/${locale}/invitations`,
+      href: '/invitations',
+      active: pathname === '/invitations',
       showOnMobile: true,
     },
     {
       label: t('settings'),
       icon: Settings,
-      href: `/${locale}/settings`,
-      active: pathname === `/${locale}/settings`,
+      href: '/settings',
+      active: pathname === '/settings',
       showOnMobile: true,
     },
   ];
@@ -66,7 +66,7 @@ export function Navigation() {
           <div className="flex items-center justify-around p-4">
             <div 
               className="flex items-center cursor-pointer" 
-              onClick={() => router.push(`/${locale}/dashboard`)}
+              onClick={() => router.push('/dashboard')}
             >
               <h1 className="text-2xl font-bold bg-gradient-to-r from-primary-500 to-primary-600 bg-clip-text text-transparent">Listali</h1>
             </div>

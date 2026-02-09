@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '../../../../i18n/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -43,7 +43,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (isInitialized && isAuthenticated) {
-      router.push(`/${locale}/dashboard`);
+      router.push('/dashboard');
     }
   }, [isAuthenticated, isInitialized, locale, router]);
 
@@ -81,12 +81,12 @@ export default function LoginPage() {
       }
       
       showSuccess('auth.loginSuccess');
-      router.push(`/${locale}/dashboard`);
+      router.push('/dashboard');
     } catch (error) {
       if (error && typeof error === 'object' && 'response' in error) {
         const apiError = error as { response?: { data?: { isEmailVerified?: boolean } } };
         if (apiError.response?.data?.isEmailVerified === false) {
-          router.push(`/${locale}/auth/verify-email?email=${encodeURIComponent(data.email)}&status=emailNotVerified`);
+          router.push(`/auth/verify-email?email=${encodeURIComponent(data.email)}&status=emailNotVerified`);
           return;
         }
       }

@@ -32,7 +32,6 @@ import { useRequireAuth } from "../../../hooks/useRequireAuth";
 import { CreateGuestListModal } from "../../../components/guestList/CreateGuestListModal";
 import { StorageWarningModal } from "../../../components/guestList/StorageWarningModal";
 import { useStorageMonitor } from "../../../hooks/useStorageMonitor";
-import { apiClient } from "@/lib/api";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -321,14 +320,6 @@ export default function DashboardPage() {
     group_player: Users,
   };
 
-  const testPushNotification = async () => {
-    apiClient.post('/settings/test-push').then((res) => {
-      console.log(res);
-    }).catch((err) => {
-      console.error(err);
-    });
-  };
-
   return (
     <div className="min-h-screen  bg-surface">
       <div className="container mx-auto px-4 py-8 relative z-10">
@@ -373,11 +364,6 @@ export default function DashboardPage() {
                   </p>
                 </div>
               </div>
-              <Button variant="primary" onClick={() => {
-                testPushNotification();
-              }}>
-                test push notification
-              </Button>
             </CardBody>
           </Card>
 
@@ -717,7 +703,7 @@ export default function DashboardPage() {
                     <p className="text-text-muted mb-4">{t("noGroups")}</p>
                     <Button
                       variant="primary"
-                      onClick={() => router.push(`/${locale}/groups`)}
+                      onClick={() => router.push('/groups')}
                       className="mx-auto"
                     >
                       {t("createGroup")}
@@ -753,7 +739,7 @@ export default function DashboardPage() {
                     )}
 
                     {stats.lists > 0 && (
-                      <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-success-50/50 to-success-100/30 rounded-xl">
+                      <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-success-400 to-success-400/30 rounded-xl">
                         <div className="p-2 bg-gradient-to-br from-success-400 to-success-600 rounded-lg shadow-lg">
                           <ShoppingCart className="w-5 h-5 text-text-primary" />
                         </div>
@@ -761,12 +747,12 @@ export default function DashboardPage() {
                           <p className="font-medium text-text-primary">
                             {t("totalLists")}
                           </p>
-                          <p className="text-sm text-text-muted">
+                          <p className="text-sm text-text-on-primary">
                             {stats.lists} {t("lists")}
                           </p>
                         </div>
                         <div className="text-right">
-                          <span className="text-sm text-text-muted">
+                          <span className="text-sm text-text-on-primary">
                             {stats.completedLists} {t("completed")}
                           </span>
                         </div>
@@ -774,7 +760,7 @@ export default function DashboardPage() {
                     )}
 
                     {stats.groups > 0 && (
-                      <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-secondary-50/50 to-secondary-100/30 rounded-xl">
+                      <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-secondary-50 to-secondary-100/30 rounded-xl">
                         <div className="p-2 bg-gradient-to-br from-secondary-400 to-secondary-600 rounded-lg shadow-lg">
                           <Users className="w-5 h-5 text-text-primary" />
                         </div>
@@ -782,7 +768,7 @@ export default function DashboardPage() {
                           <p className="font-medium text-text-primary">
                             {t("totalGroups")}
                           </p>
-                          <p className="text-sm text-text-muted">
+                          <p className="text-sm text-text-on-primary">
                             {stats.groups} {t("groups")}
                           </p>
                         </div>

@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useRouter } from '../../i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { Lock, Mail } from 'lucide-react';
 import { Modal } from '../common/Modal';
@@ -41,7 +42,7 @@ export function RequireAuthModal({ isOpen, onClose, actionName }: RequireAuthMod
   };
 
   const handleEmailLogin = () => {
-    router.push(`/${locale}/auth/register`);
+    router.push('/auth/register');
     onClose();
   };
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '../../i18n/navigation';
 import { useAuthStore } from '../../store/authStore';
 import { useGuestListsStore } from '../../store/guestListsStore';
 import { apiClient } from '../../lib/api';
@@ -64,18 +64,18 @@ export function GoogleCallbackHandler() {
             
             const groupJoined = urlParams.get('groupJoined');
             if (groupJoined) {
-              router.push(`/${locale}/groups/${groupJoined}`);
+              router.push(`/groups/${groupJoined}`);
             } else {
-              router.push(`/${locale}/dashboard`);
+              router.push('/dashboard');
             }
           } else {
             const loginError = new Error(t('googleLoginError'));
             setError(t('googleLoginError'));
             handleApiError(loginError);
-            router.push(`/${locale}/welcome`);
+            router.push('/welcome');
           }
         } else {
-          router.push(`/${locale}/welcome`);
+            router.push('/welcome');
         }
         } catch (error) {
           console.error('Google callback error:', error);
@@ -87,7 +87,7 @@ export function GoogleCallbackHandler() {
             setError(defaultError.message);
             handleApiError(defaultError);
           }
-          router.push(`/${locale}/welcome`);
+            router.push('/welcome');
         } finally {
         setIsProcessing(false);
       }
@@ -102,7 +102,7 @@ export function GoogleCallbackHandler() {
         <div className="text-center">
           <h1 className="text-2xl font-bold text-error mb-4">{t('loginError')}</h1>
           <p className="text-secondary mb-6">{error}</p>
-          <Button variant='primary' size='lg' fullWidth loading={isProcessing} onClick={() => router.push(`/${locale}/auth/login`)}>
+          <Button variant='primary' size='lg' fullWidth loading={isProcessing} onClick={() => router.push('/auth/login')}>
             {t('backToLogin')}
           </Button>
         </div>

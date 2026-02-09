@@ -4,7 +4,7 @@ import { Button } from "../common";
 import { cn } from "../../lib/utils";
 import { Calendar, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
+import { useRouter } from "../../i18n/navigation";
 import { ArrowIcon } from "../common/Arrow";
 import { GuestList } from "../../types";
 import { useRequireAuth } from "../../hooks/useRequireAuth";
@@ -37,7 +37,7 @@ export function GuestListHeaderBar({
         <div className="flex items-start justify-between gap-2">
         <div className="flex items-start gap-4">
           <Button
-            onClick={() => router.push(`/${locale}/dashboard`)}
+            onClick={() => router.push('/dashboard')}
             variant="surface"
             size="md"
             rounded

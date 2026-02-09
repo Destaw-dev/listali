@@ -2,7 +2,8 @@
 
 import { useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { useRouter, useParams } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useRouter } from '../../../i18n/navigation';
 import { useAuthStore } from '../../../store/authStore';
 import { ShoppingCart, Users, Zap, User } from 'lucide-react';
 import { Button } from '../../../components/common/Button';
@@ -16,12 +17,12 @@ export default function WelcomePage() {
 
   const handleContinueAsGuest = () => {
     setGuestMode();
-    router.push(`/${locale}/dashboard`);
+    router.push('/dashboard');
   };
 
   useEffect(() => {
     if (isInitialized && isAuthenticated) {
-      router.push(`/${locale}/dashboard`);
+      router.push('/dashboard');
     }
   }, [isAuthenticated, isInitialized, router, locale]);
 
@@ -97,7 +98,7 @@ export default function WelcomePage() {
 
           <Button
             variant="primary"
-            onClick={() => router.push(`/${locale}/auth/login`)}
+            onClick={() => router.push('/auth/login')}
             size="lg"
             fullWidth
           >
@@ -107,7 +108,7 @@ export default function WelcomePage() {
           
           <Button
             variant="outlineBlue"
-            onClick={() => router.push(`/${locale}/auth/register`)}
+            onClick={() => router.push('/auth/register')}
             size="lg"
             fullWidth
           >

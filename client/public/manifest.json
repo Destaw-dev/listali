@@ -1,13 +1,13 @@
 {
-    "name": "רשימות קניות",
-    "short_name": "קניות",
+    "name": "Listali",
+    "short_name": "Listali",
     "description": "אפליקציה לניהול רשימות קניות משותפות עם המשפחה והחברים",
-    "start_url": "/",
+    "start_url": "/he",
     "display": "standalone",
     "background_color": "#ffffff",
     "theme_color": "#2563eb",
     "orientation": "portrait-primary",
-    "scope": "/",
+    "scope": "/he",
     "lang": "he",
     "dir": "rtl",
     "icons": [
@@ -35,7 +35,7 @@
         "name": "הקבוצות שלי",
         "short_name": "קבוצות",
         "description": "צפייה בקבוצות שלי",
-        "url": "/groups",
+        "url": "/he/groups",
         "icons": [
           {
             "src": "/icon-192.svg",
@@ -44,10 +44,34 @@
         ]
       },
       {
-        "name": "רשימה חדשה",
-        "short_name": "חדש",
-        "description": "יצירת רשימת קניות חדשה",
-        "url": "/lists/create",
+        "name": "דשבורד",
+        "short_name": "דשבורד",
+        "description": "דשבורד ראשי",
+        "url": "/he/dashboard",
+        "icons": [
+          {
+            "src": "/icon-192.svg",
+            "sizes": "192x192"
+          }
+        ]
+      },
+      {
+        "name": "הזמנות",
+        "short_name": "הזמנות",
+        "description": "הזמנות לקבוצות",
+        "url": "/he/invitations",
+        "icons": [
+          {
+            "src": "/icon-192.svg",
+            "sizes": "192x192"
+          }
+        ]
+      },
+      {
+        "name": "הגדרות",
+        "short_name": "הגדרות",
+        "description": "הגדרות האפליקציה",
+        "url": "/he/settings",
         "icons": [
           {
             "src": "/icon-192.svg",

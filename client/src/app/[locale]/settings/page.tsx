@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useAuthStore } from "../../../store/authStore";
-import { useRouter, useParams, usePathname } from "next/navigation";
+import { useParams } from "next/navigation";
+import { useRouter, usePathname } from "../../../i18n/navigation";
 import {
   useLogout,
   useDeleteAccount,
@@ -57,7 +58,7 @@ export default function SettingsPage() {
 
   const handleLogout = async () => {
     logoutMutation.mutate();
-    router.push(`/${locale}/auth/welcome`);
+    router.push('/auth/welcome');
   };
 
   const handleDeleteAccount = async () => {
@@ -102,9 +103,9 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (isInitialized && !isAuthenticated) {
-      router.push(`/${locale}/welcome`);
+      router.push('/welcome');
     }
-  }, [isAuthenticated, isInitialized, locale, router]);
+  }, [isAuthenticated, isInitialized, router]);
 
   if (!isInitialized) {
     return (
