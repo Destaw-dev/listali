@@ -1,18 +1,81 @@
 // Service Worker for ListaLi PWA
-const CACHE_NAME = 'listali-v1';
-const RUNTIME_CACHE = 'listali-runtime';
+// Cache version - increment on deploy to invalidate old caches
+const CACHE_NAME = 'listali-v2';
+const STATIC_CACHE = 'listali-static-v2';
 
-// Assets to cache on install (exclude / - it redirects to /he and caching it breaks redirects)
+// Assets to cache on install (static assets only)
 const PRECACHE_ASSETS = [
   '/manifest.json',
   '/icon-192.svg',
   '/icon-512.svg',
+  '/icon.svg',
+  '/apple-touch-icon.svg',
 ];
 
-// Install event - cache assets
+// Helper: Check if request is for static assets that should be cached
+function isStaticAsset(url) {
+  const urlObj = new URL(url);
+  const pathname = urlObj.pathname;
+  
+  // Next.js static assets
+  if (pathname.startsWith('/_next/static/')) {
+    return true;
+  }
+  
+  // Static file extensions
+  const staticExtensions = ['.js', '.css', '.woff', '.woff2', '.ttf', '.eot', '.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp', '.ico', '.json'];
+  return staticExtensions.some(ext => pathname.endsWith(ext));
+}
+
+// Helper: Check if request is for API calls (should never be cached)
+function isApiCall(url) {
+  const urlObj = new URL(url);
+  return urlObj.pathname.startsWith('/api/');
+}
+
+// Helper: Check if request is for HTML/navigation (should never be cached)
+// function isHtmlRequest(request) {
+//   // Check request mode
+//   if (request.mode === 'navigate') {
+//     return true;
+//   }
+  
+//   // Check destination
+//   if (request.destination === 'document') {
+//     return true;
+//   }
+  
+//   // Check Accept header
+//   const acceptHeader = request.headers.get('Accept');
+//   if (acceptHeader && acceptHeader.includes('text/html')) {
+//     return true;
+//   }
+  
+//   // Check URL path (Next.js routes without file extensions)
+//   const urlObj = new URL(request.url);
+//   const pathname = urlObj.pathname;
+  
+//   // If it's not a static asset and not an API call, it's likely HTML
+//   if (!isStaticAsset(request.url) && !isApiCall(request.url)) {
+//     // Exclude known static paths
+//     if (!pathname.startsWith('/_next/') && 
+//         !pathname.includes('.') && 
+//         pathname !== '/') {
+//       return true;
+//     }
+//   }
+  
+//   return false;
+// }
+
+function isHtmlRequest(request) {
+  return request.mode === 'navigate' || request.destination === 'document';
+}
+
+// Install event - cache static assets
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
+    caches.open(STATIC_CACHE)
       .then((cache) => cache.addAll(PRECACHE_ASSETS))
       .then(() => self.skipWaiting())
   );
@@ -25,61 +88,108 @@ self.addEventListener('activate', (event) => {
       return Promise.all(
         cacheNames
           .filter((cacheName) => {
-            return cacheName !== CACHE_NAME && cacheName !== RUNTIME_CACHE;
+            // Keep only current caches
+            return cacheName !== CACHE_NAME && cacheName !== STATIC_CACHE;
           })
-          .map((cacheName) => caches.delete(cacheName))
+          .map((cacheName) => {
+            console.log('[SW] Deleting old cache:', cacheName);
+            return caches.delete(cacheName);
+          })
       );
     }).then(() => self.clients.claim())
   );
 });
 
-// Fetch event - serve from cache, fallback to network
+// Fetch event - proper caching strategies
 self.addEventListener('fetch', (event) => {
+  const { request } = event;
+  
   // Skip non-GET requests
-  if (event.request.method !== 'GET') {
+  if (request.method !== 'GET') {
     return;
   }
 
   // Skip cross-origin requests
-  if (!event.request.url.startsWith(self.location.origin)) {
+  if (!request.url.startsWith(self.location.origin)) {
     return;
   }
 
-  // Never intercept navigation: redirects (e.g. / -> /he) must be followed by the browser
-  if (event.request.mode === 'navigate') {
+  // NEVER cache navigation requests - let browser handle them
+  if (request.mode === 'navigate') {
     return;
   }
 
-  event.respondWith(
-    caches.match(event.request)
-      .then((cachedResponse) => {
-        if (cachedResponse) {
-          return cachedResponse;
-        }
+  // NEVER cache API calls - always fetch fresh
+  if (isApiCall(request.url)) {
+    event.respondWith(
+      fetch(request).catch(() => {
+        // Return error response for offline API calls
+        return new Response(
+          JSON.stringify({ error: 'Network error - please check your connection' }),
+          {
+            status: 503,
+            statusText: 'Service Unavailable',
+            headers: { 'Content-Type': 'application/json' }
+          }
+        );
+      })
+    );
+    return;
+  }
 
-        return fetch(event.request)
-          .then((response) => {
-            // Don't cache if not a valid response
-            if (!response || response.status !== 200 || response.type !== 'basic') {
-              return response;
+  // NEVER cache HTML requests - use NetworkOnly strategy
+  if (isHtmlRequest(request)) {
+    event.respondWith(
+      fetch(request).catch(() => new Response('Offline', { status: 503 }))
+    );
+    return;
+  }
+  
+
+  // Cache static assets with CacheFirst strategy
+  if (isStaticAsset(request.url)) {
+    event.respondWith(
+      caches.open(STATIC_CACHE).then((cache) => {
+        return cache.match(request).then((cachedResponse) => {
+          if (cachedResponse) {
+            return cachedResponse;
+          }
+
+          return fetch(request).then((response) => {
+            // Only cache successful responses
+            if (response && response.status === 200 && response.type === 'basic') {
+              const responseToCache = response.clone();
+              cache.put(request, responseToCache);
             }
-
-            // Clone the response
-            const responseToCache = response.clone();
-
-            caches.open(RUNTIME_CACHE)
-              .then((cache) => {
-                cache.put(event.request, responseToCache);
-              });
-
             return response;
-          })
-          .catch(() => {
-            // Return offline fallback for non-navigation requests only
-            if (event.request.destination === 'document') {
-              return caches.match('/he');
-            }
+          }).catch(() => {
+            // Return cached version if available, even if stale
+            return cachedResponse || new Response('Asset not available offline', { status: 404 });
           });
+        });
+      })
+    );
+    return;
+  }
+
+  // For any other requests, use NetworkFirst strategy
+  event.respondWith(
+    fetch(request)
+      .then((response) => {
+        // Only cache successful static-like responses
+        if (response && response.status === 200 && response.type === 'basic' && isStaticAsset(request.url)) {
+          const responseToCache = response.clone();
+          caches.open(STATIC_CACHE).then((cache) => {
+            cache.put(request, responseToCache);
+          });
+        }
+        return response;
+      })
+      .catch(() => {
+        // Try cache as fallback
+        return caches.match(request).then((cachedResponse) => {
+          return cachedResponse || new Response('Network error', { status: 503 });
+        });
       })
   );
 });
