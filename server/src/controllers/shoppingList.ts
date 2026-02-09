@@ -10,6 +10,7 @@ import {ShoppingSession} from '../models/shoppingSession';
 import { AppError, validationErrorResponse, successResponse } from '../middleware/handlers';
 import { IApiResponse, IGroupMember, IShoppingListResponseData,  IShoppingList } from '../types';
 import { MIGRATION_CONSTANTS } from '../constants/migration';
+import { sendLocalizedPushToGroupExceptUserWithPreference } from '../utils/pushNotifications';
 
 export const getGroupShoppingLists = async (req: express.Request, res: express.Response<IApiResponse<IShoppingList[]>>) => {
   const { groupId } = req.params;
@@ -251,6 +252,34 @@ export const createShoppingList = async (req: express.Request, res: express.Resp
 
   group.shoppingLists.push(shoppingList._id);
   await group.save();
+
+  const creator = await User.findById(userId).select('username');
+  await sendLocalizedPushToGroupExceptUserWithPreference(
+    group._id.toString(),
+    userId,
+    {
+      key: 'listCreated',
+      vars: {
+        username: creator?.username || 'user',
+        listName: name
+      },
+      url: `/groups/${groupId}/${shoppingList._id.toString()}`,
+      tag: `list:${shoppingList._id.toString()}`,
+      renotify: true,
+      data: {
+        listId: shoppingList._id.toString(),
+        groupId: groupId
+      },
+      actions: [
+        {
+          action: 'open-list',
+          title: name || 'Open List',
+          icon: '/icon-192.svg'
+        }
+      ]
+    },
+    'shoppingListUpdates'
+  );
 
   const populatedList = await ShoppingList.findById(shoppingList._id)
     .populate('createdBy', 'username firstName lastName avatar')

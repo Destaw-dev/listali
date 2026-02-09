@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { validationResult } from 'express-validator';
 import  User  from '../models/user';
 import { successResponse, validationErrorResponse } from '../middleware/handlers';
-import { sendPushNotificationToUser } from '../utils/pushNotifications';
+import { sendLocalizedPushToUser } from '../utils/pushNotifications';
 
 export const getUserPreferences = async (req: Request, res: Response) => {
   const user = await User.findById(req.userId).select('preferences');
@@ -189,17 +189,18 @@ export const testPushNotification = async (req: Request, res: Response) => {
   const userId = req.userId!;
   
   try {
-    await sendPushNotificationToUser(userId, {
-      title: '🧪 בדיקת התראה',
-      body: 'זוהי התראה לבדיקה! אם אתה רואה את זה, הכל עובד מצוין 🎉',
+    await sendLocalizedPushToUser(userId, {
+      key: 'test',
+      vars: {},
+      url: '/dashboard',
       icon: '/icon-192.svg',
       badge: '/icon-192.svg',
+      tag: 'test-notification',
+      renotify: true,
       data: {
-        url: '/he/dashboard',
         test: true,
         timestamp: new Date().toISOString()
       },
-      tag: 'test-notification',
       requireInteraction: false
     });
 

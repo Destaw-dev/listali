@@ -103,9 +103,12 @@ self.addEventListener('push', (event) => {
     badge: data.badge || '/icon-192.svg',
     data: data.data || {},
     tag: data.tag || 'default',
+    renotify: data.renotify !== undefined ? data.renotify : (data.tag && data.tag !== 'default'),
     requireInteraction: data.requireInteraction || false,
     vibrate: [200, 100, 200],
-    timestamp: Date.now()
+    timestamp: Date.now(),
+    ...(data.image && { image: data.image }),
+    ...(data.actions && Array.isArray(data.actions) && data.actions.length > 0 && { actions: data.actions })
   };
 
   event.waitUntil(
@@ -118,7 +121,32 @@ self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
   const data = event.notification.data || {};
-  const urlToOpen = data.url || '/';
+  const action = event.action; // Action button clicked, if any
+  
+  // Determine URL to open based on action or default
+  let urlToOpen = '/';
+  
+  if (action) {
+    // Handle action button clicks
+    if (action === 'open-list' && data.listId) {
+      urlToOpen = `/${data.locale || 'he'}/groups/${data.groupId}/lists/${data.listId}`;
+    } else if (action === 'open-group' && data.groupId) {
+      urlToOpen = `/${data.locale || 'he'}/groups/${data.groupId}`;
+    } else if (action === 'open-dashboard') {
+      urlToOpen = `/${data.locale || 'he'}/dashboard`;
+    } else if (data.url) {
+      urlToOpen = data.url;
+    }
+  } else if (data.url) {
+    urlToOpen = data.url;
+  }
+
+  try {
+    const absoluteUrl = new URL(urlToOpen, self.location.origin).href;
+    urlToOpen = absoluteUrl;
+  } catch (e) {
+    urlToOpen = new URL('/', self.location.origin).href;
+  }
 
   event.waitUntil(
     clients.matchAll({
@@ -128,7 +156,11 @@ self.addEventListener('notificationclick', (event) => {
       // Check if there's already a window/tab open with the target URL
       for (let i = 0; i < clientList.length; i++) {
         const client = clientList[i];
-        if (client.url === urlToOpen && 'focus' in client) {
+        // Compare URLs (normalize for comparison)
+        const clientUrl = new URL(client.url).pathname;
+        const targetUrl = new URL(urlToOpen).pathname;
+        
+        if (clientUrl === targetUrl && 'focus' in client) {
           return client.focus();
         }
       }

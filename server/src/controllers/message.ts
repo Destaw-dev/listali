@@ -6,6 +6,7 @@ import { io } from '../app';
 import { AppError, validationErrorResponse, successResponse } from '../middleware/handlers';
 import { IApiResponse, IGroupMember, PopulatedSender, IGroup, IMessage, PopulatedMessage, PopulatedMessageWithGroup, IReadStatus, IBaseMessage, IMessageStatistic } from '../types';
 import { errorResponse } from '../middleware/handlers';
+import { sendLocalizedPushToGroupExceptUserWithPreference } from '../utils/pushNotifications';
 
 export const getMessages = async (req: express.Request, res: express.Response<IApiResponse<{ messages: IMessage[]; hasMore: boolean } | null | void>>) => {
   const errors = validationResult(req);
@@ -81,6 +82,39 @@ export const createMessage = async (req: express.Request, res: express.Response<
     }
   } catch (error) {
     console.error('Error sending WebSocket event:', error);
+  }
+
+  if (populatedMessage && populatedMessage.messageType === 'text') {
+    const messagePreview = populatedMessage.content.length > 50 
+      ? populatedMessage.content.substring(0, 50) + '...'
+      : populatedMessage.content;
+
+    await sendLocalizedPushToGroupExceptUserWithPreference(
+      groupId,
+      userId,
+      {
+        key: 'newMessage',
+        vars: {
+          username: populatedMessage.sender.username,
+          messagePreview: messagePreview
+        },
+        url: `/groups/${groupId}?tab=chat`,
+        tag: `group:${groupId}`,
+        renotify: true,
+        data: {
+          groupId: groupId,
+          messageId: populatedMessage._id.toString()
+        },
+        actions: [
+          {
+            action: 'open-group',
+            title: 'Open Group',
+            icon: '/icon-192.svg'
+          }
+        ]
+      },
+      'newMessageNotifications'
+    );
   }
 
   res.status(201).json(successResponse(populatedMessage, 'Message created successfully'));

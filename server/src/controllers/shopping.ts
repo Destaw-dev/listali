@@ -6,6 +6,7 @@ import { AppError } from '../middleware/handlers';
 import { getIO, emitToGroupExcept } from '../socket/socketHandler';
 import { Types } from 'mongoose';
 import { IGroup, IGroupMember } from '../types';
+import { sendLocalizedPushToGroupExceptUser } from '../utils/pushNotifications';
 
 export const startShopping = async (req: Request, res: Response) => {
   try {
@@ -92,6 +93,25 @@ export const startShopping = async (req: Request, res: Response) => {
         }
       );
     }
+
+    await sendLocalizedPushToGroupExceptUser(
+      String(shoppingList.group._id),
+      String(userObjId),
+      {
+        key: 'started',
+        vars: {
+          username: req.user?.username || 'user'
+        },
+        url: `/groups/${shoppingList.group._id.toString()}/${String(listObjId)}`,
+        tag: `list:${String(listObjId)}`,
+        renotify: true,
+        data: {
+          listId: String(listObjId),
+          groupId: String(shoppingList.group._id),
+          sessionId: shoppingSession._id.toString()
+        }
+      }
+    );
 
     return res.status(201).json({
       success: true,
@@ -196,6 +216,25 @@ export const stopShopping = async (req: Request, res: Response) => {
       );
     }
 
+    await sendLocalizedPushToGroupExceptUser(
+      shoppingSession.groupId.toString(),
+      userId,
+      {
+        key: 'stopped',
+        vars: {
+          username: req.user?.username || 'user'
+        },
+        url: `/groups/${shoppingSession.groupId.toString()}/${shoppingSession.listId.toString()}`,
+        tag: `list:${shoppingSession.listId.toString()}`,
+        renotify: true,
+        data: {
+          listId: shoppingSession.listId.toString(),
+          groupId: shoppingSession.groupId.toString(),
+          sessionId: shoppingSession._id.toString()
+        }
+      }
+    );
+
     res.json({
       success: true,
       data: {
@@ -271,6 +310,25 @@ export const pauseShopping = async (req: Request, res: Response) => {
       );
     }
 
+    await sendLocalizedPushToGroupExceptUser(
+      shoppingSession.groupId.toString(),
+      userId,
+      {
+        key: 'paused',
+        vars: {
+          username: req.user?.username || 'user'
+        },
+        url: `/groups/${shoppingSession.groupId.toString()}/${shoppingSession.listId.toString()}`,
+        tag: `list:${shoppingSession.listId.toString()}`,
+        renotify: true,
+        data: {
+          listId: shoppingSession.listId.toString(),
+          groupId: shoppingSession.groupId.toString(),
+          sessionId: shoppingSession._id.toString()
+        }
+      }
+    );
+
     res.json({
       success: true,
       data: {
@@ -342,6 +400,25 @@ export const resumeShopping = async (req: Request, res: Response) => {
         }
       );
     }
+
+    await sendLocalizedPushToGroupExceptUser(
+      shoppingSession.groupId.toString(),
+      userId,
+      {
+        key: 'resumed',
+        vars: {
+          username: req.user?.username || 'user'
+        },
+        url: `/groups/${shoppingSession.groupId.toString()}/${shoppingSession.listId.toString()}`,
+        tag: `list:${shoppingSession.listId.toString()}`,
+        renotify: true,
+        data: {
+          listId: shoppingSession.listId.toString(),
+          groupId: shoppingSession.groupId.toString(),
+          sessionId: shoppingSession._id.toString()
+        }
+      }
+    );
 
     res.json({
       success: true,

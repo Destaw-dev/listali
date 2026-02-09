@@ -7,6 +7,7 @@ import { IApiResponse, IGroupMember, IGroup, IBasePendingInvite, IGroupStatistic
 import { nanoid } from 'nanoid';
 import { sendGroupInviteEmail } from '../utils/email';
 import { getIO, emitToGroupExcept } from '../socket/socketHandler';
+import { sendLocalizedPushToUser, sendLocalizedPushToGroupExceptUser, sendLocalizedPushToGroupExceptUserWithPreference } from '../utils/pushNotifications';
 
 export const getUserGroups = async (req: express.Request, res: express.Response<IApiResponse<IGroup[] | null>>) => {
   const groups = await Group.findByUser(req.userId!);
@@ -180,6 +181,24 @@ export const joinGroup = async (req: express.Request, res: express.Response<IApi
     .populate('members.user', 'username firstName lastName avatar')
     .populate('owner', 'username firstName lastName avatar');
 
+  const joinedUser = await User.findById(userId).select('username');
+  await sendLocalizedPushToGroupExceptUser(
+    group._id.toString(),
+    userId,
+    {
+      key: 'groupJoined',
+      vars: {
+        username: joinedUser?.username || 'user'
+      },
+      url: `/groups/${group._id.toString()}`,
+      tag: `group:${group._id.toString()}`,
+      renotify: true,
+      data: {
+        groupId: group._id.toString()
+      }
+    }
+  );
+
   res.status(200).json(successResponse(updatedGroup, 'Successfully joined group'));
 };
 
@@ -206,6 +225,24 @@ export const leaveGroup = async (req: express.Request, res: express.Response<IAp
     group.isActive = false;
     await group.save();
   }
+
+  const leftUser = await User.findById(userId).select('username');
+  await sendLocalizedPushToGroupExceptUser(
+    groupId!!,
+    userId,
+    {
+      key: 'groupLeft',
+      vars: {
+        username: leftUser?.username || 'user'
+      },
+      url: `/groups/${groupId}`,
+      tag: `group:${groupId}`,
+      renotify: true,
+      data: {
+        groupId: groupId
+      }
+    }
+  );
 
   res.status(200).json(successResponse(null, 'Successfully left group'));
 };
@@ -284,8 +321,28 @@ export const inviteToGroup = async (req: express.Request, res: express.Response<
       }
     });
 
-    // TODO: Send in-app notification to user
-    // This would typically be done via Socket.IO or push notification
+    const inviter = await User.findById(req.userId).select('username');
+    await sendLocalizedPushToUser(user._id.toString(), {
+      key: 'groupInvited',
+      vars: {
+        username: inviter?.username || 'user',
+        groupName: group?.name || 'group'
+      },
+      url: `/invitations`,
+      tag: `group:${group?._id.toString()}`,
+      renotify: false, // New invitation, don't replace
+      data: {
+        groupId: group?._id.toString(),
+        inviteCode: inviteCode
+      },
+      actions: [
+        {
+          action: 'open-group',
+          title: 'Open Group',
+          icon: '/icon-192.svg'
+        }
+      ]
+    });
 
     return res.status(200).json(successResponse({ 
       email, 

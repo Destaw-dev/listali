@@ -22,7 +22,8 @@ import {
 import { UNITS } from '../middleware/validation';
 import { io } from '../app';
 import { emitToGroupExcept, getIO } from '../socket/socketHandler';
-import { sendPushNotificationToUser, sendPushNotificationToGroupExceptUser } from '../utils/pushNotifications';
+import { sendLocalizedPushToGroupExceptUser } from '../utils/pushNotifications';
+import { queueListUpdatePush } from '../utils/pushAggregator';
 
 const verifyShoppingListAccess = async (shoppingListId: string, userId: string) => {
   const shoppingList = await ShoppingList.findById(shoppingListId).populate<{ group: IGroup }>('group');
@@ -183,6 +184,34 @@ export const createItem = async (req: express.Request, res: express.Response<IAp
       timestamp: new Date()
     });
   }
+
+  if (populatedItem && freshList) {
+    const pushOptions: any = {
+      key: 'itemCreated',
+      vars: {
+        username: user?.username || 'user',
+        itemName: populatedItem.name,
+        listName: freshList.name
+      },
+      url: `/groups/${group._id.toString()}/${shoppingListId}`,
+      tag: `list:${shoppingListId}`,
+      renotify: true,
+      data: {
+        itemId: populatedItem._id.toString(),
+        listId: shoppingListId,
+        groupId: group._id.toString()
+      },
+      actions: [
+        {
+          action: 'open-list',
+          title: freshList.name || 'Open List',
+          icon: '/icon-192.svg'
+        }
+      ]
+    };
+
+    await sendLocalizedPushToGroupExceptUser(group._id.toString(), userId, pushOptions);
+  }
     
   res.status(201).json(successResponse(populatedItem, 'Item created successfully'));
 };
@@ -288,6 +317,32 @@ export const updateItem = async (req: express.Request, res: express.Response<IAp
     .populate('addedBy purchasedBy', 'username firstName lastName avatar')
     .populate('category', 'name nameEn icon color')
     .populate('product', 'name brand image averagePrice price categoryId subCategoryId');
+
+  if (updatedItem && (updates.includes('name') || updates.includes('quantity'))) {
+    const listDoc = await ShoppingList.findById(listId);
+    if (listDoc) {
+      const user = await (await import('../models/user')).default.findById(req.userId);
+      const pushOptions: any = {
+        key: 'itemUpdated',
+        vars: {
+          username: user?.username || 'user',
+          itemName: updatedItem.name,
+          listName: listDoc.name
+        },
+        url: `/groups/${group._id.toString()}/${listId}`,
+        tag: `list:${listId}`,
+        renotify: true,
+        data: {
+          itemId: updatedItem._id.toString(),
+          listId: listId,
+          groupId: group._id.toString()
+        }
+      };
+
+      await sendLocalizedPushToGroupExceptUser(group._id.toString(), req.userId!, pushOptions);
+    }
+  }
+
   res.status(200).json(successResponse(updatedItem, 'Item updated successfully'));
 };
 
@@ -324,6 +379,25 @@ export const deleteItem = async (req: express.Request, res: express.Response<IAp
     .populate<{ sender: PopulatedSender }>('sender', 'username firstName lastName avatar')
     .populate('metadata.itemId', 'name')
     .populate('metadata.listId', 'name');
+
+  const listDoc = await ShoppingList.findById(listId);
+  if (listDoc) {
+    await sendLocalizedPushToGroupExceptUser(group._id.toString(), userId, {
+      key: 'itemDeleted',
+      vars: {
+        username: user?.username || 'user',
+        itemName: item.name,
+        listName: listDoc.name
+      },
+      url: `/groups/${group._id.toString()}/${listId}`,
+      tag: `list:${listId}`,
+      renotify: true,
+      data: {
+        listId: listId,
+        groupId: group._id.toString()
+      }
+    });
+  }
 
   if (io) {
     if (populatedMessage) {
@@ -473,7 +547,31 @@ export const purchaseItem = async (req: express.Request, res: express.Response) 
     }
   }
 
-  await sendPushNotificationToGroupExceptUser(group._id.toString(), userId, {title: 'Item marked as purchased', body: `${user?.username || 'user'} קנה/תה ${item.quantity} פריטים`, data: { itemId: item._id.toString() }});
+  if (updatedItem) {
+    const groupDoc = await Group.findById(group._id).select('members');
+    if (groupDoc) {
+      const targetUserIds = groupDoc.members
+        .map((member: IGroupMember) => member.user.toString())
+        .filter((memberId: string) => memberId !== userId);
+
+      const queuePromises = targetUserIds.map((targetUserId: string) =>
+        queueListUpdatePush({
+          targetUserId,
+          actorName: user?.username || 'user',
+          listId: listId,
+          listName: listName,
+          groupId: group._id.toString(),
+          type: 'itemPurchased',
+          itemName: updatedItem.name,
+          itemQuantity: updatedItem.quantity
+        }).catch(error => {
+          console.error(`Error queueing push for user ${targetUserId}:`, error);
+        })
+      );
+
+      await Promise.allSettled(queuePromises);
+    }
+  }
 
   return res.status(200).json(successResponse(updatedItem, 'Item marked as purchased'));
 };
@@ -727,7 +825,33 @@ export const unpurchaseItem = async (req: express.Request, res: express.Response
       });
     }
   }
-  await sendPushNotificationToGroupExceptUser(group._id.toString(), userId, {title: 'Item marked as not purchased', body: `${user?.username || 'user'} סירט ${item.quantity} פריטים`, data: { itemId: item._id.toString() }});
+
+  if (updatedItem) {
+    const groupDoc = await Group.findById(group._id).select('members');
+    if (groupDoc) {
+      const targetUserIds = groupDoc.members
+        .map((member: IGroupMember) => member.user.toString())
+        .filter((memberId: string) => memberId !== userId);
+
+      // Queue push for each target user (aggregator will batch them)
+      const queuePromises = targetUserIds.map((targetUserId: string) =>
+        queueListUpdatePush({
+          targetUserId,
+          actorName: user?.username || 'user',
+          listId: listId,
+          listName: listName,
+          groupId: group._id.toString(),
+          type: 'itemUnpurchased',
+          itemName: updatedItem.name,
+          itemQuantity: updatedItem.quantity
+        }).catch(error => {
+          console.error(`Error queueing push for user ${targetUserId}:`, error);
+        })
+      );
+
+      await Promise.allSettled(queuePromises);
+    }
+  }
 
   return res.status(200).json(successResponse(updatedItem, 'Item marked as not purchased'));
 };
