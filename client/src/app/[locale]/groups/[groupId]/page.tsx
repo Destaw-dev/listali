@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
-import { useRouter, useParams, useSearchParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
+import { useRouter, usePathname } from '../../../../i18n/navigation';
 import { Plus, Settings, ShoppingCart, MessageCircle, BarChart3, ChartArea, UserPlus } from 'lucide-react';
 import { GroupShoppingLists } from '../../../../components/groups/GroupShoppingLists';
 import { LoadingSpinner, Button } from '../../../../components/common';
@@ -25,6 +26,7 @@ export default function GroupDetailsPage() {
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [showCreateListModal, setShowCreateListModal] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
   const params = useParams();
   const searchParams = useSearchParams();
   const t = useTranslations('GroupDetails');
@@ -33,7 +35,7 @@ export default function GroupDetailsPage() {
   const { user } = useAuthStore();
   
   const { isInitialized } = useAuthRedirect({
-    redirectTo: `/${locale}/welcome`,
+    redirectTo: '/welcome',
     requireAuth: true
   });
   
@@ -73,9 +75,7 @@ export default function GroupDetailsPage() {
 
   const handleTabChange = (tab: TabType) => {
     setActiveTab(tab);
-    const newUrl = new URL(window.location.href);
-    newUrl.searchParams.set('tab', tab);
-    router.replace(newUrl.pathname + newUrl.search, { scroll: false });
+    router.replace(`${pathname}?tab=${tab}`, { scroll: false });
   };
 
   const handleInviteToGroup = async ({ email, role }: { email: string; role: 'member' | 'admin' }) => {
@@ -84,18 +84,18 @@ export default function GroupDetailsPage() {
   };
 
   const navigateBack = () => {
-    router.push(`/${locale}/groups`);
+    router.push('/groups');
   };
 
   const navigateToSettings = () => {
-    router.push(`/${locale}/groups/${groupId}/settings`);
+    router.push(`/groups/${groupId}/settings`);
   };
 
   useEffect(() => {
     if (error && (error as { response?: { status?: number } })?.response?.status === 403) {
-      router.push(`/${locale}/groups`);
+      router.push('/groups');
     }
-  }, [error, locale, router]);
+  }, [error, router]);
 
   if (!isInitialized) {
     return (
@@ -199,7 +199,7 @@ export default function GroupDetailsPage() {
               <div className="divide-y divide-border">
                 {
                   shoppingLists?.map((list: IShoppingList) => (
-                    <div key={list._id} className="p-4 hover:bg-background transition-colors flex items-center justify-between group cursor-pointer" onClick={() => router.push(`/${locale}/groups/${groupId}/${list._id}`)}>
+                    <div key={list._id} className="p-4 hover:bg-background transition-colors flex items-center justify-between group cursor-pointer" onClick={() => router.push(`/groups/${groupId}/${list._id}`)}>
                     <div className="flex items-center gap-4">
                       <div className="h-10 w-10 rounded-lg bg-background-100 flex items-center justify-center text-text-primary-600">
                         <ShoppingCart className="h-5 w-5" />

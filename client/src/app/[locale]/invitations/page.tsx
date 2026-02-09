@@ -47,7 +47,7 @@ export default function InvitationsPage() {
   const declineInvitationMutation = useDeclineInvitation();
 
   const { isInitialized } = useAuthRedirect({
-    redirectTo: `/${locale}/welcome`,
+    redirectTo: '/welcome',
     requireAuth: true,
   });
 

@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useRouter } from '../../../../../i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { useQueryClient } from '@tanstack/react-query';
 import { Button, LoadingSpinner } from '../../../../../components/common';
@@ -32,7 +33,7 @@ export default function ShoppingListPage() {
   useShoppingListItemsWebSocket(groupId, listId)
 
   const { isInitialized } = useAuthRedirect({
-    redirectTo: `/${locale}/welcome`,
+    redirectTo: '/welcome',
     requireAuth: true
   });
 
@@ -184,7 +185,7 @@ export default function ShoppingListPage() {
   }
 
   const navigateBack = () => {
-    router.push(`/${locale}/groups/${groupId}`);
+    router.push(`/groups/${groupId}`);
   };
 
   if (error || !shoppingList) {

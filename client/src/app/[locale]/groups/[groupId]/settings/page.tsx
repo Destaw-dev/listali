@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useTranslations } from "next-intl";
-import { useRouter, useParams } from "next/navigation";
+import { useParams } from "next/navigation";
+import { useRouter } from "../../../../../i18n/navigation";
 import {
   Settings,
   Trash2,
@@ -129,7 +130,7 @@ export default function GroupSettingsPage({}) {
   const { user } = useAuthStore();
 
   const { isInitialized } = useAuthRedirect({
-    redirectTo: `/${locale}/welcome`,
+    redirectTo: '/welcome',
     requireAuth: true,
   });
 
@@ -188,7 +189,7 @@ export default function GroupSettingsPage({}) {
     }
   };
 
-  const navigateBack = () => router.push(`/${locale}/groups/${groupId}`);
+  const navigateBack = () => router.push(`/groups/${groupId}`);
 
   const currentUserMembership = useMemo(() => {
     if (!group?.members || !user?._id) return undefined;
@@ -291,7 +292,7 @@ export default function GroupSettingsPage({}) {
 
     try {
       await deleteGroupMutation.mutateAsync(groupId);
-      router.push(`/${locale}/groups`);
+      router.push('/groups');
     } catch (err) {
       console.error("Failed to delete group", err);
     }
@@ -384,7 +385,7 @@ export default function GroupSettingsPage({}) {
   const handleLeaveGroup = async () => {
     try {
       await leaveGroupMutation.mutateAsync({ groupId });
-      router.push(`/${locale}/groups`);
+      router.push('/groups');
     } catch (err) {
       console.error(t('failedToLeaveGroup'), err);
     }

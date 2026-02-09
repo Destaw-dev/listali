@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { useRouter, useParams } from "next/navigation";
+import { useParams } from "next/navigation";
+import { useRouter } from "../../../i18n/navigation";
 import {
   Plus,
   Users,
@@ -40,7 +41,7 @@ export default function GroupsPage() {
   const joinGroupMutation = useJoinGroup();
 
   const { isInitialized } = useAuthRedirect({
-    redirectTo: `/${locale}/welcome`,
+    redirectTo: '/welcome',
     requireAuth: true,
   });
 
@@ -58,7 +59,7 @@ export default function GroupsPage() {
   };
 
   const navigateToGroup = (groupId: string) => {
-    router.push(`/${locale}/groups/${groupId}`);
+    router.push(`/groups/${groupId}`);
   };
 
   const filteredGroups = groups.filter(

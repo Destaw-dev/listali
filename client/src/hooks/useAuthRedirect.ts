@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useRouter } from '../i18n/navigation';
 import { useAuthStore } from '../store/authStore';
 
 interface UseAuthRedirectOptions {
@@ -20,9 +21,12 @@ export function useAuthRedirect({
     if (!isInitialized) return;
 
     if (requireAuth && !isAuthenticated && !isGuest()) {
-      router.push(`${redirectTo}`);
+      const pathWithoutLocale = redirectTo.startsWith(`/${locale}/`) 
+        ? redirectTo.replace(`/${locale}`, '') 
+        : redirectTo;
+      router.push(pathWithoutLocale);
     } else if (!requireAuth && isAuthenticated) {
-      router.push(`/${locale}/dashboard`);
+      router.push('/dashboard');
     }
   }, [isAuthenticated, isInitialized, requireAuth, redirectTo, router, locale, isGuest]);
 

@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
 import { useParams } from "next/navigation";
+import { useRouter } from "../../../i18n/navigation";
 import {
   Users,
   ShoppingCart,
@@ -48,7 +48,7 @@ export default function DashboardPage() {
   const [showStorageWarning, setShowStorageWarning] = useState(false);
 
   const { isInitialized } = useAuthRedirect({
-    redirectTo: `/${locale}/welcome`,
+    redirectTo: '/welcome',
     requireAuth: true,
   });
 
@@ -230,7 +230,7 @@ export default function DashboardPage() {
                         hover
                         className="cursor-pointer shadow-lg hover:shadow-xl transition-all duration-300"
                         onClick={() =>
-                          router.push(`/${locale}/guest-lists/${list.id}`)
+                          router.push(`/guest-lists/${list.id}`)
                         }
                       >
                         <CardBody className="p-4">
@@ -299,7 +299,7 @@ export default function DashboardPage() {
       title: `צור/${t("joinGroup")}`,
       description: t("joinGroupDesc"),
       icon: Plus,
-      action: () => router.push(`/${locale}/groups`),
+      action: () => router.push('/groups'),
       variant: "secondary" as const,
       gradient: "from-secondary-500 to-secondary-600",
       bgGradient: "from-secondary-300 to-secondary-400",
@@ -308,7 +308,7 @@ export default function DashboardPage() {
       title: t("viewInvitations"),
       description: t("viewInvitationsDesc"),
       icon: Bell,
-      action: () => router.push(`/${locale}/invitations`),
+      action: () => router.push('/invitations'),
       variant: "accent" as const,
       gradient: "from-accent-500 to-accent-600",
       bgGradient: "from-accent-300 to-accent-400",
@@ -743,7 +743,7 @@ export default function DashboardPage() {
                             variant="warning"
                             size="sm"
                             onClick={() =>
-                              router.push(`/${locale}/invitations`)
+                              router.push('/invitations')
                             }
                           >
                             {t("viewAll")}
@@ -790,7 +790,7 @@ export default function DashboardPage() {
                           <Button
                             variant="secondary"
                             size="sm"
-                            onClick={() => router.push(`/${locale}/groups`)}
+                            onClick={() => router.push('/groups')}
                           >
                             {t("manage")}
                           </Button>

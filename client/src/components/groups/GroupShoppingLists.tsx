@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
+import { useRouter } from "../../i18n/navigation";
 import { useTranslations } from "next-intl";
 import {
   CheckCircle,
@@ -48,7 +49,7 @@ export function GroupShoppingLists() {
   const [showDeleteListModal, setShowDeleteListModal] = useState(false);
   const [deletingList, setDeletingList] = useState<{listId: string, listName: string} | null>(null);
   useAuthRedirect({
-    redirectTo: `/${locale}/welcome`,
+    redirectTo: '/welcome',
     requireAuth: true,
   });
 
@@ -93,7 +94,7 @@ export function GroupShoppingLists() {
   };
 
   const handleListClick = (listId: string) => {
-    router.push(`/${locale}/groups/${groupId}/${listId}`);
+    router.push(`/groups/${groupId}/${listId}`);
   };
 
   const handleDeleteList = async (listId: string, listName: string) => {
@@ -144,7 +145,7 @@ export function GroupShoppingLists() {
             </h3>
             <Button
               variant="primary"
-              onClick={() => router.push(`/${locale}/groups`)}
+              onClick={() => router.push('/groups')}
               className="w-full"
             >
               {t("navigation.backToGroups")}
