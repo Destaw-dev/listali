@@ -30,7 +30,6 @@ export default function GroupDetailsPage() {
   const params = useParams();
   const searchParams = useSearchParams();
   const t = useTranslations('GroupDetails');
-  const locale = params?.locale as string || 'he';
   const groupId = params?.groupId as string;
   const { user } = useAuthStore();
   

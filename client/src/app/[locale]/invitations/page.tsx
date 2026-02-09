@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { useParams } from "next/navigation";
 import { Check, X, UserPlus, Calendar } from "lucide-react";
 import { LoadingSpinner, Button } from "../../../components/common";
 import {
@@ -38,9 +37,7 @@ export default function InvitationsPage() {
   const [processingInvitation, setProcessingInvitation] = useState<
     string | null
   >(null);
-  const params = useParams();
   const t = useTranslations("Invitations");
-  const locale = (params?.locale as string) || "he";
 
   const { data: invitations = [], isLoading, error } = useInvitations();
   const acceptInvitationMutation = useAcceptInvitation();

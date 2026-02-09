@@ -124,7 +124,6 @@ export default function GroupSettingsPage({}) {
 
   const router = useRouter();
   const params = useParams();
-  const locale = params.locale as string;
   const groupId = params.groupId as string;
   const memberActionsRef = useRef<HTMLDivElement>(null);
   const { user } = useAuthStore();

@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { useParams } from "next/navigation";
 import { useRouter } from "../../../i18n/navigation";
 import {
   Plus,
@@ -32,9 +31,7 @@ export default function GroupsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const router = useRouter();
-  const params = useParams();
   const t = useTranslations("Groups");
-  const locale = (params?.locale as string) || "he";
 
   const { data: groups = [], isLoading, error } = useGroups();
   const createGroupMutation = useCreateGroup();

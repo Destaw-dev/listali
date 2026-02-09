@@ -37,7 +37,6 @@ export function GroupShoppingLists() {
   const t = useTranslations();
 
   const groupId = params.groupId as string;
-  const locale = params.locale as string;
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
