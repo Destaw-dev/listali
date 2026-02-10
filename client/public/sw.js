@@ -1,9 +1,7 @@
-// Service Worker for ListaLi PWA
-// Cache version - increment on deploy to invalidate old caches
+// Service Worker for Listali PWA
 const CACHE_NAME = 'listali-v2';
 const STATIC_CACHE = 'listali-static-v2';
 
-// Assets to cache on install (static assets only)
 const PRECACHE_ASSETS = [
   '/manifest.json',
   '/icon-192.svg',
@@ -12,28 +10,23 @@ const PRECACHE_ASSETS = [
   '/apple-touch-icon.svg',
 ];
 
-// Helper: Check if request is for static assets that should be cached
 function isStaticAsset(url) {
   const urlObj = new URL(url);
   const pathname = urlObj.pathname;
   
-  // Next.js static assets
   if (pathname.startsWith('/_next/static/')) {
     return true;
   }
   
-  // Static file extensions
   const staticExtensions = ['.js', '.css', '.woff', '.woff2', '.ttf', '.eot', '.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp', '.ico', '.json'];
   return staticExtensions.some(ext => pathname.endsWith(ext));
 }
 
-// Helper: Check if request is for API calls (should never be cached)
 function isApiCall(url) {
   const urlObj = new URL(url);
   return urlObj.pathname.startsWith('/api/');
 }
 
-// Helper: Check if request is for HTML/navigation (should never be cached)
 // function isHtmlRequest(request) {
 //   // Check request mode
 //   if (request.mode === 'navigate') {
@@ -72,7 +65,6 @@ function isHtmlRequest(request) {
   return request.mode === 'navigate' || request.destination === 'document';
 }
 
-// Install event - cache static assets
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(STATIC_CACHE)
@@ -81,14 +73,12 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames
           .filter((cacheName) => {
-            // Keep only current caches
             return cacheName !== CACHE_NAME && cacheName !== STATIC_CACHE;
           })
           .map((cacheName) => {
@@ -100,30 +90,24 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch event - proper caching strategies
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   
-  // Skip non-GET requests
   if (request.method !== 'GET') {
     return;
   }
 
-  // Skip cross-origin requests
   if (!request.url.startsWith(self.location.origin)) {
     return;
   }
 
-  // NEVER cache navigation requests - let browser handle them
   if (request.mode === 'navigate') {
     return;
   }
 
-  // NEVER cache API calls - always fetch fresh
   if (isApiCall(request.url)) {
     event.respondWith(
       fetch(request).catch(() => {
-        // Return error response for offline API calls
         return new Response(
           JSON.stringify({ error: 'Network error - please check your connection' }),
           {
@@ -137,7 +121,6 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // NEVER cache HTML requests - use NetworkOnly strategy
   if (isHtmlRequest(request)) {
     event.respondWith(
       fetch(request).catch(() => new Response('Offline', { status: 503 }))
@@ -146,7 +129,6 @@ self.addEventListener('fetch', (event) => {
   }
   
 
-  // Cache static assets with CacheFirst strategy
   if (isStaticAsset(request.url)) {
     event.respondWith(
       caches.open(STATIC_CACHE).then((cache) => {
@@ -156,14 +138,12 @@ self.addEventListener('fetch', (event) => {
           }
 
           return fetch(request).then((response) => {
-            // Only cache successful responses
             if (response && response.status === 200 && response.type === 'basic') {
               const responseToCache = response.clone();
               cache.put(request, responseToCache);
             }
             return response;
           }).catch(() => {
-            // Return cached version if available, even if stale
             return cachedResponse || new Response('Asset not available offline', { status: 404 });
           });
         });
@@ -172,11 +152,9 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // For any other requests, use NetworkFirst strategy
   event.respondWith(
     fetch(request)
       .then((response) => {
-        // Only cache successful static-like responses
         if (response && response.status === 200 && response.type === 'basic' && isStaticAsset(request.url)) {
           const responseToCache = response.clone();
           caches.open(STATIC_CACHE).then((cache) => {
@@ -186,7 +164,6 @@ self.addEventListener('fetch', (event) => {
         return response;
       })
       .catch(() => {
-        // Try cache as fallback
         return caches.match(request).then((cachedResponse) => {
           return cachedResponse || new Response('Network error', { status: 503 });
         });
@@ -194,7 +171,6 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-// Handle push notifications
 self.addEventListener('push', (event) => {
   let data = {};
   
@@ -226,18 +202,15 @@ self.addEventListener('push', (event) => {
   );
 });
 
-// Handle notification clicks
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
   const data = event.notification.data || {};
-  const action = event.action; // Action button clicked, if any
+  const action = event.action;
   
-  // Determine URL to open based on action or default
   let urlToOpen = '/';
   
   if (action) {
-    // Handle action button clicks
     if (action === 'open-list' && data.listId) {
       urlToOpen = `/${data.locale || 'he'}/groups/${data.groupId}/lists/${data.listId}`;
     } else if (action === 'open-group' && data.groupId) {
@@ -254,7 +227,7 @@ self.addEventListener('notificationclick', (event) => {
   try {
     const absoluteUrl = new URL(urlToOpen, self.location.origin).href;
     urlToOpen = absoluteUrl;
-  } catch (e) {
+  } catch {
     urlToOpen = new URL('/', self.location.origin).href;
   }
 
@@ -263,10 +236,8 @@ self.addEventListener('notificationclick', (event) => {
       type: 'window',
       includeUncontrolled: true
     }).then((clientList) => {
-      // Check if there's already a window/tab open with the target URL
       for (let i = 0; i < clientList.length; i++) {
         const client = clientList[i];
-        // Compare URLs (normalize for comparison)
         const clientUrl = new URL(client.url).pathname;
         const targetUrl = new URL(urlToOpen).pathname;
         
@@ -274,7 +245,6 @@ self.addEventListener('notificationclick', (event) => {
           return client.focus();
         }
       }
-      // If not, open a new window/tab
       if (clients.openWindow) {
         return clients.openWindow(urlToOpen);
       }
