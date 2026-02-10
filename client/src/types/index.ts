@@ -123,6 +123,31 @@ export interface IPendingInvitation extends BaseDocument {
   status: 'pending' | 'accepted' | 'declined';
 }
 
+export interface IJoinRequest {
+  _id?: string;
+  user: string;
+  inviteCode: string;
+  role: 'admin' | 'member';
+  requestedAt: Date;
+  status: 'pending' | 'approved' | 'rejected';
+}
+
+export interface IUserJoinRequestWithGroup {
+  _id?: string;
+  user: string;
+  group: {
+    _id: string;
+    name: string;
+    description?: string;
+    avatar?: string;
+    membersCount: number;
+  };
+  inviteCode: string;
+  role: 'admin' | 'member';
+  requestedAt: Date;
+  status: 'pending' | 'approved' | 'rejected';
+}
+
 // ============================================================================
 // SHOPPING LIST TYPES
 // ============================================================================
