@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
 import React from 'react';
-import { renderWithProviders, createMockQueryResult } from '../../test/test-utils';
+import { renderWithProviders, createMockQueryResult, createMockAuthStore } from '../../test/test-utils';
 import DashboardPage from '../../app/[locale]/dashboard/page';
 import { useAuthStore } from '../../store/authStore';
 import { useDashboard } from '../../hooks/useDashboard';
@@ -134,9 +134,7 @@ describe('DashboardPage', () => {
       isAuthenticated: true,
       isInitialized: true,
     });
-    vi.mocked(useAuthStore).mockReturnValue({
-      user: mockUser,
-    } as ReturnType<typeof useAuthStore>);
+    vi.mocked(useAuthStore).mockReturnValue(createMockAuthStore({ user: mockUser }));
     vi.mocked(useDashboard).mockReturnValue(
       createMockQueryResult<DashboardData, Error>({
         data: mockDashboardData,

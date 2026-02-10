@@ -120,6 +120,35 @@ const groupSchema = new Schema<IGroup, GroupModel>({
       default: Date.now
     }
   }],
+  joinRequests: [{
+    _id: {
+      type: Schema.Types.ObjectId,
+      auto: true
+    },
+    user: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true
+    },
+    inviteCode: {
+      type: String,
+      required: true
+    },
+    role: {
+      type: String,
+      enum: ['admin', 'member'],
+      default: 'member'
+    },
+    requestedAt: {
+      type: Date,
+      default: Date.now
+    },
+    status: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected'],
+      default: 'pending'
+    }
+  }],
   
 }, {
   timestamps: true,

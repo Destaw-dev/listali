@@ -78,7 +78,7 @@ export const useUpdateGroup = () => {
   const { showSuccess, handleApiError } = useNotification();
 
   return useMutation({
-    mutationFn: async ({ groupId, groupData }: { groupId: string; groupData: { name: string; description?: string } }) => {
+    mutationFn: async ({ groupId, groupData }: { groupId: string; groupData: { name?: string; description?: string; settings?: { allowMemberInvite?: boolean; requireApproval?: boolean; maxMembers?: number } } }) => {
       const response = await apiClient.updateGroup(groupId, groupData);
       return response.data;
     },
@@ -121,9 +121,13 @@ export const useJoinGroup = () => {
       const response = await apiClient.joinGroup(inviteCode);
       return response.data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: groupKeys.lists() });
-      showSuccess('groups.joinSuccess');
+    onSuccess: (data) => {
+      if (data) {
+        queryClient.invalidateQueries({ queryKey: groupKeys.lists() });
+        showSuccess('groups.joinSuccess');
+      } else {
+        showSuccess('groups.joinRequestPending');
+      }
     },
     onError: (error: Error) => {
       handleApiError(error);
@@ -250,6 +254,43 @@ export const useLeaveGroup = () => {
       });
       
       showSuccess('groups.leaveSuccess');
+    },
+    onError: (error: Error) => {
+      handleApiError(error);
+    },
+  });
+};
+
+export const useApproveJoinRequest = () => {
+  const queryClient = useQueryClient();
+  const { showSuccess, handleApiError } = useNotification();
+
+  return useMutation({
+    mutationFn: ({ groupId, requestId }: { groupId: string; requestId: string }) =>
+      apiClient.approveJoinRequest(groupId, requestId),
+    onSuccess: (_, { groupId }) => {
+      queryClient.invalidateQueries({ queryKey: groupKeys.detail(groupId) });
+      queryClient.invalidateQueries({ queryKey: groupKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: ['invitations', 'join-requests'] });
+      showSuccess('groups.joinRequestApproved');
+    },
+    onError: (error: Error) => {
+      handleApiError(error);
+    },
+  });
+};
+
+export const useRejectJoinRequest = () => {
+  const queryClient = useQueryClient();
+  const { showSuccess, handleApiError } = useNotification();
+
+  return useMutation({
+    mutationFn: ({ groupId, requestId }: { groupId: string; requestId: string }) =>
+      apiClient.rejectJoinRequest(groupId, requestId),
+    onSuccess: (_, { groupId }) => {
+      queryClient.invalidateQueries({ queryKey: groupKeys.detail(groupId) });
+      queryClient.invalidateQueries({ queryKey: ['invitations', 'join-requests'] });
+      showSuccess('groups.joinRequestRejected');
     },
     onError: (error: Error) => {
       handleApiError(error);

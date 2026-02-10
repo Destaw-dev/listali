@@ -81,6 +81,7 @@ export interface IGroup extends BaseDocument {
   isActive: boolean;
   shoppingLists: string[];
   pendingInvites: IPendingInvite[];
+  joinRequests?: IJoinRequest[];
 }
 
 // Group member interface

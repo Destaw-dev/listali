@@ -12,7 +12,10 @@ import {
   getGroupById,
   getUserGroups,
   transferOwnership,
-  cancelGroupInvitation
+  cancelGroupInvitation,
+  joinGroup,
+  approveJoinRequest,
+  rejectJoinRequest
 } from '../controllers/group';
 import {
   createGroupValidation,
@@ -37,11 +40,14 @@ router.put('/:groupId', validateGroupId, updateGroupValidation, checkGroupMember
 router.delete('/:groupId', validateGroupId, checkOwnership('group'), asyncHandler(deleteGroup));
 router.post('/:groupId/leave', validateGroupId, checkGroupMembership(), asyncHandler(leaveGroup));
 router.post('/:groupId/invite', validateGroupId, inviteToGroupValidation, checkGroupMembership('canInviteMembers'), asyncHandler(inviteToGroup));
+router.post('/:groupId/join', validateGroupId, asyncHandler(joinGroup));
 router.delete('/:groupId/invitations/:inviteCode', cancelGroupInvitationValidation, checkGroupMembership('canInviteMembers'), asyncHandler(cancelGroupInvitation));
 router.delete('/:groupId/members/:userId', validateGroupId, validateMemberId, checkGroupMembership('canManageMembers'), asyncHandler(removeGroupMember));
 router.put('/:groupId/members/:userId/role', validateGroupId, validateMemberId, updateMemberRoleValidation, checkGroupMembership('canManageMembers'), asyncHandler(updateMemberRole));
 router.post('/:groupId/transfer-ownership', validateGroupId, checkGroupMembership('canManageMembers'), asyncHandler(transferOwnership));
 router.get('/:groupId/members', validateGroupId, checkGroupMembership(), asyncHandler(getGroupMembers));
 router.get('/:groupId/stats', validateGroupId, checkGroupMembership(), asyncHandler(getGroupStats));
+router.post('/:groupId/join-requests/:requestId/approve', validateGroupId, checkGroupMembership('canManageMembers'), asyncHandler(approveJoinRequest));
+router.post('/:groupId/join-requests/:requestId/reject', validateGroupId, checkGroupMembership('canManageMembers'), asyncHandler(rejectJoinRequest));
 
 export default router;

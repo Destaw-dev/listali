@@ -28,7 +28,6 @@ function VerifyEmailContent() {
 
   const token = searchParams.get('token');
   const email = searchParams.get('email');
-  const locale = searchParams.get('locale') || 'he';
   const inviteError = searchParams.get('inviteError');
   const status = searchParams.get('status');
 

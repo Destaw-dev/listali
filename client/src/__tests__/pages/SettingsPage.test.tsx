@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen } from '@testing-library/react';
-import { renderWithProviders, createMockMutationResult } from '../../test/test-utils';
+import { renderWithProviders, createMockMutationResult, createMockAuthStore } from '../../test/test-utils';
 import SettingsPage from '../../app/[locale]/settings/page';
 import { useAuthStore } from '../../store/authStore';
 import { useUserProfile, useUserPreferences, useNotificationSettings, useLogout, useDeleteAccount, useUpdateProfile, useUpdatePreferences, useUpdateNotificationSettings } from '../../hooks/useSettings';
@@ -57,11 +57,7 @@ vi.mock('../../components/settings/NotificationModal', () => ({
 describe('SettingsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(useAuthStore).mockReturnValue({
-      user: mockUser,
-      isAuthenticated: true,
-      isInitialized: true,
-    } as ReturnType<typeof useAuthStore>);
+    vi.mocked(useAuthStore).mockReturnValue(createMockAuthStore({ user: mockUser }));
     vi.mocked(useUserProfile).mockReturnValue({
       data: mockUser,
       isLoading: false,

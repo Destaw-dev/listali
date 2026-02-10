@@ -19,8 +19,15 @@ import {
   Calendar,
   Mail,
   XCircle,
+  CheckCircle,
 } from "lucide-react";
-import { LoadingSpinner, Button, Input, TextArea } from "../../../../../components/common";
+import {
+  LoadingSpinner,
+  Button,
+  Input,
+  TextArea,
+  Toggle,
+} from "../../../../../components/common";
 import {
   useGroup,
   useUpdateGroup,
@@ -32,6 +39,8 @@ import {
   useCancelGroupInvitation,
   useLeaveGroup,
   useGroupMemberRoleWebSocket,
+  useApproveJoinRequest,
+  useRejectJoinRequest,
 } from "../../../../../hooks/useGroups";
 import { useAuthRedirect } from "../../../../../hooks/useAuthRedirect";
 import { useAuthStore } from "../../../../../store/authStore";
@@ -56,9 +65,18 @@ interface PendingInvite {
   user?: GroupUserObject | string;
   email?: string;
   code: string;
-  role: 'admin' | 'member';
-  type: 'in-app' | 'email';
+  role: "admin" | "member";
+  type: "in-app" | "email";
   invitedAt: string | Date;
+}
+
+interface JoinRequest {
+  _id?: string;
+  user: GroupUserObject | string;
+  inviteCode: string;
+  role: "admin" | "member";
+  requestedAt: string | Date;
+  status: "pending" | "approved" | "rejected";
 }
 
 interface Group {
@@ -68,8 +86,13 @@ interface Group {
   createdAt: string;
   members?: GroupMember[];
   pendingInvites?: PendingInvite[];
+  joinRequests?: JoinRequest[];
+  settings?: {
+    allowMemberInvite?: boolean;
+    requireApproval?: boolean;
+    maxMembers?: number;
+  };
 }
-
 
 interface MemberActionsDropdownProps {
   children: React.ReactNode;
@@ -115,10 +138,15 @@ export default function GroupSettingsPage({}) {
   const [groupDescription, setGroupDescription] = useState("");
   const [groupNameError, setGroupNameError] = useState<string | null>(null);
   const [showMemberActions, setShowMemberActions] = useState<string | null>(
-    null
+    null,
   );
   const [isRemovingMember, setIsRemovingMember] = useState<string | null>(null);
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [isEditingSettings, setIsEditingSettings] = useState(false);
+  const [allowMemberInvite, setAllowMemberInvite] = useState(false);
+  const [requireApproval, setRequireApproval] = useState(false);
+  const [maxMembers, setMaxMembers] = useState(50);
+  const [maxMembersError, setMaxMembersError] = useState<string | null>(null);
 
   const t = useTranslations("groups.settings");
 
@@ -129,7 +157,7 @@ export default function GroupSettingsPage({}) {
   const { user } = useAuthStore();
 
   const { isInitialized } = useAuthRedirect({
-    redirectTo: '/welcome',
+    redirectTo: "/welcome",
     requireAuth: true,
   });
 
@@ -149,6 +177,8 @@ export default function GroupSettingsPage({}) {
   const inviteToGroupMutation = useInviteToGroup();
   const cancelInvitationMutation = useCancelGroupInvitation();
   const leaveGroupMutation = useLeaveGroup();
+  const approveJoinRequestMutation = useApproveJoinRequest();
+  const rejectJoinRequestMutation = useRejectJoinRequest();
 
   useGroupMemberRoleWebSocket(groupId);
 
@@ -161,9 +191,9 @@ export default function GroupSettingsPage({}) {
       const fn = member.user.firstName ?? "";
       const ln = member.user.lastName ?? "";
       const full = `${fn} ${ln}`.trim();
-      return full || t('unknownUser');
+      return full || t("unknownUser");
     }
-    return t('unknownUser');
+    return t("unknownUser");
   };
 
   const getRoleIcon = (role: MemberRole) => {
@@ -180,11 +210,11 @@ export default function GroupSettingsPage({}) {
   const getRoleText = (role: MemberRole) => {
     switch (role) {
       case "owner":
-        return t('owner');
+        return t("owner");
       case "admin":
-        return t('admin');
+        return t("admin");
       default:
-        return t('member');
+        return t("member");
     }
   };
 
@@ -200,12 +230,12 @@ export default function GroupSettingsPage({}) {
       currentUserMembership &&
       (currentUserMembership.role === "admin" ||
         currentUserMembership.role === "owner"),
-    [currentUserMembership]
+    [currentUserMembership],
   );
 
   const canDeleteGroup = useMemo(
     () => currentUserMembership?.role === "owner",
-    [currentUserMembership]
+    [currentUserMembership],
   );
 
   const isMember = useMemo(() => {
@@ -232,7 +262,6 @@ export default function GroupSettingsPage({}) {
 
   const canTransferOwnership = () => currentUserMembership?.role === "owner";
 
-
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -246,7 +275,6 @@ export default function GroupSettingsPage({}) {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
 
   const handleEdit = () => {
     if (!group) return;
@@ -265,7 +293,7 @@ export default function GroupSettingsPage({}) {
 
   const handleSave = async () => {
     if (!groupName.trim()) {
-      setGroupNameError(t('groupNameRequired'));
+      setGroupNameError(t("groupNameRequired"));
       return;
     }
 
@@ -284,14 +312,12 @@ export default function GroupSettingsPage({}) {
   };
 
   const handleDeleteGroup = async () => {
-    const confirmed = window.confirm(
-      t('deleteGroupConfirmation')
-    );
+    const confirmed = window.confirm(t("deleteGroupConfirmation"));
     if (!confirmed) return;
 
     try {
       await deleteGroupMutation.mutateAsync(groupId);
-      router.push('/groups');
+      router.push("/groups");
     } catch (err) {
       console.error("Failed to delete group", err);
     }
@@ -299,7 +325,7 @@ export default function GroupSettingsPage({}) {
 
   const handleRemoveMember = async (memberId: string, memberName: string) => {
     const confirmed = window.confirm(
-      t('removeMemberConfirmation', { memberName })
+      t("removeMemberConfirmation", { memberName }),
     );
     if (!confirmed) return;
 
@@ -317,7 +343,7 @@ export default function GroupSettingsPage({}) {
   const handleChangeRole = async (
     memberId: string,
     newRole: Exclude<MemberRole, "owner">,
-    memberName: string
+    memberName: string,
   ) => {
     try {
       await updateRoleMutation.mutateAsync({ groupId, memberId, newRole });
@@ -332,7 +358,7 @@ export default function GroupSettingsPage({}) {
       await transferOwnershipMutation.mutateAsync({ groupId, newOwnerId });
       setShowMemberActions(null);
     } catch (err) {
-      console.error(t('failedToTransferOwnership'), err);
+      console.error(t("failedToTransferOwnership"), err);
     }
   };
 
@@ -346,32 +372,32 @@ export default function GroupSettingsPage({}) {
       await inviteToGroupMutation.mutateAsync({ groupId, inviteData: data });
       setShowInviteModal(false);
     } catch (err) {
-      console.error(t('failedToInviteMember'), err);
+      console.error(t("failedToInviteMember"), err);
     }
   };
 
   const handleCancelInvitation = async (inviteCode: string) => {
-    const confirmed = window.confirm(t('cancelInvitationConfirm'));
+    const confirmed = window.confirm(t("cancelInvitationConfirm"));
     if (!confirmed) return;
 
     try {
       await cancelInvitationMutation.mutateAsync({ groupId, inviteCode });
     } catch (err) {
-      console.error(t('failedToCancelInvitation'), err);
+      console.error(t("failedToCancelInvitation"), err);
     }
   };
 
   const getInviteDisplayName = (invite: PendingInvite): string => {
     if (invite.user) {
-      if (typeof invite.user === 'object') {
-        const fn = invite.user.firstName ?? '';
-        const ln = invite.user.lastName ?? '';
+      if (typeof invite.user === "object") {
+        const fn = invite.user.firstName ?? "";
+        const ln = invite.user.lastName ?? "";
         const full = `${fn} ${ln}`.trim();
-        return full || t('unknownUser');
+        return full || t("unknownUser");
       }
-      return t('unknownUser');
+      return t("unknownUser");
     }
-    return invite.email || t('unknownEmail');
+    return invite.email || t("unknownEmail");
   };
 
   const getInviteDisplayIcon = (invite: PendingInvite) => {
@@ -384,12 +410,98 @@ export default function GroupSettingsPage({}) {
   const handleLeaveGroup = async () => {
     try {
       await leaveGroupMutation.mutateAsync({ groupId });
-      router.push('/groups');
+      router.push("/groups");
     } catch (err) {
-      console.error(t('failedToLeaveGroup'), err);
+      console.error(t("failedToLeaveGroup"), err);
     }
   };
 
+  const getJoinRequestUserId = (request: JoinRequest): string => {
+    return typeof request.user === "object" ? request.user._id : request.user;
+  };
+
+  const getJoinRequestUserName = (request: JoinRequest): string => {
+    if (typeof request.user === "object") {
+      const fn = request.user.firstName ?? "";
+      const ln = request.user.lastName ?? "";
+      const full = `${fn} ${ln}`.trim();
+      return full || t("unknownUser");
+    }
+    return t("unknownUser");
+  };
+
+  const handleApproveJoinRequest = async (requestId: string) => {
+    try {
+      await approveJoinRequestMutation.mutateAsync({ groupId, requestId });
+    } catch (err) {
+      console.error("Failed to approve join request", err);
+    }
+  };
+
+  const handleRejectJoinRequest = async (requestId: string) => {
+    try {
+      await rejectJoinRequestMutation.mutateAsync({ groupId, requestId });
+    } catch (err) {
+      console.error("Failed to reject join request", err);
+    }
+  };
+
+  useEffect(() => {
+    if (group?.settings) {
+      setAllowMemberInvite(group.settings.allowMemberInvite ?? false);
+      setRequireApproval(group.settings.requireApproval ?? false);
+      setMaxMembers(group.settings.maxMembers ?? 50);
+    }
+  }, [group?.settings]);
+
+  const handleEditSettings = () => {
+    if (!group) return;
+    setAllowMemberInvite(group.settings?.allowMemberInvite ?? false);
+    setRequireApproval(group.settings?.requireApproval ?? false);
+    setMaxMembers(group.settings?.maxMembers ?? 50);
+    setMaxMembersError(null);
+    setIsEditingSettings(true);
+  };
+
+  const handleCancelSettings = () => {
+    setIsEditingSettings(false);
+    if (group?.settings) {
+      setAllowMemberInvite(group.settings.allowMemberInvite ?? false);
+      setRequireApproval(group.settings.requireApproval ?? false);
+      setMaxMembers(group.settings.maxMembers ?? 50);
+    }
+    setMaxMembersError(null);
+  };
+
+  const handleSaveSettings = async () => {
+    const currentMembersCount = group?.members?.length || 0;
+    
+    if (maxMembers < 2 || maxMembers > 100) {
+      setMaxMembersError(t("maxMembersRange"));
+      return;
+    }
+
+    if (maxMembers < currentMembersCount) {
+      setMaxMembersError(t("maxMembersMinCurrent", { count: currentMembersCount }));
+      return;
+    }
+
+    try {
+      await updateGroupMutation.mutateAsync({
+        groupId,
+        groupData: {
+          settings: {
+            allowMemberInvite,
+            requireApproval,
+            maxMembers,
+          },
+        },
+      });
+      setIsEditingSettings(false);
+    } catch (err) {
+      console.error("Failed to update group settings", err);
+    }
+  };
 
   if (!isInitialized || isGroupLoading) {
     return (
@@ -403,14 +515,14 @@ export default function GroupSettingsPage({}) {
     return (
       <div className="min-h-screen bg-surface flex items-center justify-center">
         <div className="text-center">
-          <p className="text-error-500 mb-4">{t('errorLoadingGroup')}</p>
+          <p className="text-error-500 mb-4">{t("errorLoadingGroup")}</p>
           <Button
             onClick={navigateBack}
             variant="primary"
             size="md"
             className="px-4 py-2 rounded-lg"
           >
-            {t('backToGroups')}
+            {t("backToGroups")}
           </Button>
         </div>
       </div>
@@ -422,16 +534,17 @@ export default function GroupSettingsPage({}) {
       <div className="min-h-screen bg-surface flex items-center justify-center">
         <div className="text-center">
           <Settings className="w-16 h-16 text-error-500 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-text-primary mb-2">{t('noPermission')}</h3>
-          <p className="text-secondary mb-6">{t('notAMember')}</p>
+          <h3 className="text-xl font-semibold text-text-primary mb-2">
+            {t("noPermission")}
+          </h3>
+          <p className="text-secondary mb-6">{t("notAMember")}</p>
           <Button onClick={navigateBack} variant="primary" size="md">
-            {t('backToGroup')}
+            {t("backToGroup")}
           </Button>
         </div>
       </div>
     );
   }
-
 
   return (
     <div className="min-h-screen bg-surface pb-12">
@@ -446,7 +559,9 @@ export default function GroupSettingsPage({}) {
             >
               <ArrowIcon />
             </Button>
-            <h1 className="text-xl font-bold text-text-primary">{t('groupSettings')}</h1>
+            <h1 className="text-xl font-bold text-text-primary">
+              {t("groupSettings")}
+            </h1>
           </div>
         </div>
       </div>
@@ -459,13 +574,18 @@ export default function GroupSettingsPage({}) {
             <div className="flex justify-between items-end -mt-10 mb-4">
               <div className="w-16 h-16 rounded-xl bg-card border border-border p-1 shadow-md">
                 <div className="w-full h-full bg-primary-100 rounded-lg flex items-center justify-center text-primary-600 text-xl font-bold">
-                  {group.name?.[0] ?? t('defaultGroupAvatar')}
+                  {group.name?.[0] ?? t("defaultGroupAvatar")}
                 </div>
               </div>
 
               {!isEditing && hasAdminPermissions && (
-                <Button variant='primary' size="md" onClick={handleEdit} icon={<Edit2 className="w-4 h-4" />}>
-                  {t('edit')}
+                <Button
+                  variant="primary"
+                  size="md"
+                  onClick={handleEdit}
+                  icon={<Edit2 className="w-4 h-4" />}
+                >
+                  {t("edit")}
                 </Button>
               )}
             </div>
@@ -481,15 +601,15 @@ export default function GroupSettingsPage({}) {
                     }}
                     onBlur={() =>
                       setGroupNameError(
-                        groupName.trim() ? null : t('groupNameRequired')
+                        groupName.trim() ? null : t("groupNameRequired"),
                       )
                     }
-                    placeholder={t('groupNamePlaceholder')}
-                    label={t('groupName')}
+                    placeholder={t("groupNamePlaceholder")}
+                    label={t("groupName")}
                     required
                     error={groupNameError || undefined}
                     status={groupNameError ? "error" : "default"}
-                    variant='default'
+                    variant="default"
                   />
                 </div>
 
@@ -498,18 +618,32 @@ export default function GroupSettingsPage({}) {
                     value={groupDescription}
                     onChange={(e) => setGroupDescription(e.target.value)}
                     rows={2}
-                    placeholder={t('groupDescriptionPlaceholder')}
-                    label={t('groupDescription')}
-                    variant='default'
+                    placeholder={t("groupDescriptionPlaceholder")}
+                    label={t("groupDescription")}
+                    variant="default"
                   />
                 </div>
 
                 <div className="flex gap-3 pt-2">
-                  <Button variant='ghost' size="md" onClick={handleCancel} disabled={updateGroupMutation.isPending} loading={updateGroupMutation.isPending} icon={<X className="w-4 h-4" />}>
-                    {t('cancel')}
+                  <Button
+                    variant="ghost"
+                    size="md"
+                    onClick={handleCancel}
+                    disabled={updateGroupMutation.isPending}
+                    loading={updateGroupMutation.isPending}
+                    icon={<X className="w-4 h-4" />}
+                  >
+                    {t("cancel")}
                   </Button>
-                  <Button variant='primary' size="md" onClick={handleSave} disabled={updateGroupMutation.isPending} loading={updateGroupMutation.isPending} icon={<Save className="w-4 h-4" />}>
-                    {t('saveChanges')}
+                  <Button
+                    variant="primary"
+                    size="md"
+                    onClick={handleSave}
+                    disabled={updateGroupMutation.isPending}
+                    loading={updateGroupMutation.isPending}
+                    icon={<Save className="w-4 h-4" />}
+                  >
+                    {t("saveChanges")}
                   </Button>
                 </div>
               </div>
@@ -525,7 +659,8 @@ export default function GroupSettingsPage({}) {
                 <div className="flex items-center gap-2 pt-2 text-sm text-text-muted">
                   <Calendar size={14} />
                   <span>
-                    {t('createdAt')}{new Date(group.createdAt).toLocaleDateString("he-IL")}
+                    {t("createdAt")}
+                    {new Date(group.createdAt).toLocaleDateString("he-IL")}
                   </span>
                 </div>
               </div>
@@ -536,15 +671,23 @@ export default function GroupSettingsPage({}) {
         <div className="bg-card border border-border rounded-xl shadow-sm">
           <div className="p-6 border-b border-border flex justify-between items-center">
             <div>
-              <h2 className="text-xl font-bold text-text-primary">{t('groupMembers')}</h2>
+              <h2 className="text-xl font-bold text-text-primary">
+                {t("groupMembers")}
+              </h2>
               <p className="text-sm text-text-muted">
-                {group.members?.length ?? 0} {t('members')}
+                {group.members?.length ?? 0} {t("members")}
               </p>
             </div>
 
             {hasAdminPermissions && (
-              <Button variant='primary' size="md" onClick={handleInviteMembers} icon={<UserPlus className="w-4 h-4" />} rounded>
-                {t('inviteMembers')}
+              <Button
+                variant="primary"
+                size="md"
+                onClick={handleInviteMembers}
+                icon={<UserPlus className="w-4 h-4" />}
+                rounded
+              >
+                {t("inviteMembers")}
               </Button>
             )}
           </div>
@@ -570,15 +713,15 @@ export default function GroupSettingsPage({}) {
                     <div>
                       <div className="flex items-center gap-2">
                         <p className="font-medium text-text-primary">
-                          {isCurrentUser ? t('you') : memberName}
+                          {isCurrentUser ? t("you") : memberName}
                         </p>
                         <span
                           className={`text-xs px-2 py-0.5 rounded-full flex items-center gap-1 ${
                             currentRole === "owner"
                               ? "bg-warning-100 text-warning-700"
                               : currentRole === "admin"
-                              ? "bg-primary-100 text-primary-700"
-                              : "bg-card border border-border text-text-muted"
+                                ? "bg-primary-100 text-primary-700"
+                                : "bg-card border border-border text-text-muted"
                           }`}
                         >
                           {getRoleIcon(currentRole)}
@@ -587,15 +730,16 @@ export default function GroupSettingsPage({}) {
                       </div>
                       <span className="text-xs text-text-muted">
                         {currentRole === "owner"
-                          ? t('mainManager')
+                          ? t("mainManager")
                           : currentRole === "admin"
-                          ? t('teamManager')
-                          : t('teamMember')}
+                            ? t("teamManager")
+                            : t("teamMember")}
                       </span>
                     </div>
                   </div>
 
-                  {((isCurrentUser && currentRole !== "owner") || canManage) && (
+                  {((isCurrentUser && currentRole !== "owner") ||
+                    canManage) && (
                     <MemberActionsDropdown
                       memberId={memberUserId}
                       currentOpenId={showMemberActions}
@@ -612,14 +756,14 @@ export default function GroupSettingsPage({}) {
                                 handleChangeRole(
                                   memberUserId,
                                   "admin",
-                                  memberName
+                                  memberName,
                                 )
                               }
                               disabled={updateRoleMutation.isPending}
                               className="w-full flex items-center gap-2 px-3 py-2 text-sm text-primary-600 hover:bg-primary-50 rounded-lg transition-colors disabled:opacity-50"
                             >
                               <Shield className="w-4 h-4" />
-                              {t('makeAdmin')}
+                              {t("makeAdmin")}
                             </button>
                           )}
 
@@ -629,16 +773,15 @@ export default function GroupSettingsPage({}) {
                                 handleChangeRole(
                                   memberUserId,
                                   "member",
-                                  memberName
+                                  memberName,
                                 )
                               }
                               disabled={updateRoleMutation.isPending}
                               className="w-full flex items-center gap-2 px-3 py-2 text-sm text-text-muted hover:bg-card-hover rounded-lg transition-colors disabled:opacity-50"
                             >
                               <User className="w-4 h-4" />
-                              {t('makeMember')}
+                              {t("makeMember")}
                             </button>
-
                           )}
 
                           {canTransferOwnership() &&
@@ -651,7 +794,7 @@ export default function GroupSettingsPage({}) {
                                 className="w-full flex items-center gap-2 px-3 py-2 text-sm text-warning-700 hover:bg-warning-50 rounded-lg transition-colors disabled:opacity-50 border-t border-border mt-1 pt-2"
                               >
                                 <Crown className="w-4 h-4" />
-                                {t('transferOwnership')}
+                                {t("transferOwnership")}
                               </button>
                             )}
 
@@ -666,7 +809,7 @@ export default function GroupSettingsPage({}) {
                             className="w-full flex items-center gap-2 px-3 py-2 text-sm text-error-600 hover:bg-error-50 rounded-lg transition-colors disabled:opacity-50 border-t border-border mt-1 pt-2"
                           >
                             <UserMinus className="w-4 h-4" />
-                            {t('removeFromGroup')}
+                            {t("removeFromGroup")}
                           </button>
                         </>
                       )}
@@ -678,7 +821,7 @@ export default function GroupSettingsPage({}) {
                           className="w-full flex items-center gap-2 px-3 py-2 text-sm text-error-600 hover:bg-error-50 rounded-lg transition-colors disabled:opacity-50"
                         >
                           <UserMinus className="w-4 h-4" />
-                          {t('leaveGroup')}
+                          {t("leaveGroup")}
                         </button>
                       )}
                     </MemberActionsDropdown>
@@ -693,9 +836,11 @@ export default function GroupSettingsPage({}) {
           <div className="bg-card border border-border rounded-xl shadow-sm">
             <div className="p-6 border-b border-border flex justify-between items-center">
               <div>
-                <h2 className="text-xl font-bold text-text-primary">{t('sentInvitations')}</h2>
+                <h2 className="text-xl font-bold text-text-primary">
+                  {t("sentInvitations")}
+                </h2>
                 <p className="text-sm text-text-muted">
-                  {group.pendingInvites?.length || 0} {t('pendingInvitations')}
+                  {group.pendingInvites?.length || 0} {t("pendingInvitations")}
                 </p>
               </div>
             </div>
@@ -703,61 +848,87 @@ export default function GroupSettingsPage({}) {
             {!group.pendingInvites || group.pendingInvites.length === 0 ? (
               <div className="p-8 text-center">
                 <UserPlus className="w-12 h-12 text-text-muted mx-auto mb-3 opacity-50" />
-                <p className="text-text-muted">{t('noInvitationsSent')}</p>
+                <p className="text-text-muted">{t("noInvitationsSent")}</p>
               </div>
             ) : (
               <div className="divide-y divide-gray-100">
                 {group.pendingInvites.map((invite, index) => {
                   const displayName = getInviteDisplayName(invite);
                   const inviteIcon = getInviteDisplayIcon(invite);
-                  
+
                   return (
                     <div
-                      key={invite.code || index}
-                      className="p-4 flex items-center justify-between hover:bg-card-hover transition-colors"
+                      key={
+                        invite.code ??
+                        `${invite.type}-${invite.invitedAt ?? index}`
+                      }
+                      className="p-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between hover:bg-card-hover transition-colors"
                     >
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-600">
+                      <div className="flex items-start gap-3 min-w-0 md:items-center md:gap-4">
+                        <div className="w-10 h-10 shrink-0 rounded-full bg-primary-100 flex items-center justify-center text-primary-600">
                           {inviteIcon}
                         </div>
 
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <p className="font-medium text-text-primary">
-                              {displayName}
-                            </p>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-text-primary truncate">
+                            {displayName}
+                          </p>
+
+                          <div className="mt-1 flex flex-wrap items-center gap-2">
                             <span
-                              className={`text-xs px-2 py-0.5 rounded-full ${
+                              className={[
+                                "text-xs px-2 py-0.5 rounded-full",
                                 invite.role === "admin"
                                   ? "bg-warning-100 text-warning-700"
-                                  : "bg-primary-100 text-primary-700"
-                              }`}
+                                  : "bg-primary-100 text-primary-700",
+                              ].join(" ")}
                             >
-                              {invite.role === "admin" ? t('admin') : t('member')}
+                              {invite.role === "admin"
+                                ? t("admin")
+                                : t("member")}
                             </span>
+
                             <span
-                              className={`text-xs px-2 py-0.5 rounded-full bg-card border border-border text-text-muted ${
-                                invite.type === "in-app" ? "border-primary-200" : "border-border"
-                              }`}
+                              className={[
+                                "text-xs px-2 py-0.5 rounded-full bg-card border text-text-muted",
+                                invite.type === "in-app"
+                                  ? "border-primary-200"
+                                  : "border-border",
+                              ].join(" ")}
                             >
-                              {invite.type === "in-app" ? t('invitationTypeInApp') : t('invitationTypeEmail')}
+                              {invite.type === "in-app"
+                                ? t("invitationTypeInApp")
+                                : t("invitationTypeEmail")}
                             </span>
                           </div>
-                          <span className="text-xs text-text-muted flex items-center gap-1 mt-1">
-                            <Calendar size={12} />
-                            {t('invitationDate')}: {new Date(invite.invitedAt).toLocaleDateString("he-IL")}
-                          </span>
+
+                          <div className="mt-1 text-xs text-text-muted flex items-center gap-1">
+                            <Calendar size={12} className="shrink-0" />
+                            <span className="truncate">
+                              {t("invitationDate")}:{" "}
+                              {invite.invitedAt
+                                ? new Date(invite.invitedAt).toLocaleDateString(
+                                    "he-IL",
+                                  )
+                                : "-"}
+                            </span>
+                          </div>
                         </div>
                       </div>
 
                       <Button
-                        variant='outlineError'
+                        variant="outlineError"
                         size="sm"
-                        onClick={() => handleCancelInvitation(invite.code)}
-                        disabled={cancelInvitationMutation.isPending}
+                        onClick={() =>
+                          invite.code && handleCancelInvitation(invite.code)
+                        }
+                        disabled={
+                          !invite.code || cancelInvitationMutation.isPending
+                        }
                         icon={<XCircle className="w-4 h-4 text-error-600" />}
+                        className="w-full md:w-auto md:self-center"
                       >
-                        {t('cancelInvitation')}
+                        {t("cancelInvitation")}
                       </Button>
                     </div>
                   );
@@ -767,53 +938,356 @@ export default function GroupSettingsPage({}) {
           </div>
         )}
 
+        {hasAdminPermissions && group?.joinRequests && group.joinRequests.filter((req: JoinRequest) => req.status === 'pending').length > 0 && (
+          <div className="bg-card border border-border rounded-xl shadow-sm">
+            <div className="p-6 border-b border-border">
+              <div>
+                <h2 className="text-xl font-bold text-text-primary">
+                  {t("pendingJoinRequests")}
+                </h2>
+                <p className="text-sm text-text-muted">
+                  {group.joinRequests.filter((req: JoinRequest) => req.status === 'pending').length} {t("pendingRequests")}
+                </p>
+              </div>
+            </div>
+
+            <div className="divide-y divide-gray-100">
+              {group.joinRequests
+                .filter((req: JoinRequest) => req.status === 'pending')
+                .map((request: JoinRequest) => {
+                  const requestUserId = getJoinRequestUserId(request);
+                  const requestUserName = getJoinRequestUserName(request);
+                  const requestId = request._id || requestUserId;
+
+                  return (
+                    <div
+                      key={requestId}
+                      className="p-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between hover:bg-card-hover transition-colors"
+                    >
+                      <div className="flex items-start gap-3 min-w-0 md:items-center md:gap-4">
+                        <div className="w-10 h-10 shrink-0 rounded-full bg-warning-100 flex items-center justify-center text-warning-600">
+                          <UserPlus className="w-5 h-5" />
+                        </div>
+
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-text-primary truncate">
+                            {requestUserName}
+                          </p>
+
+                          <div className="mt-1 flex flex-wrap items-center gap-2">
+                            <span
+                              className={[
+                                "text-xs px-2 py-0.5 rounded-full",
+                                request.role === "admin"
+                                  ? "bg-warning-100 text-warning-700"
+                                  : "bg-primary-100 text-primary-700",
+                              ].join(" ")}
+                            >
+                              {request.role === "admin"
+                                ? t("admin")
+                                : t("member")}
+                            </span>
+                          </div>
+
+                          <div className="mt-1 text-xs text-text-muted flex items-center gap-1">
+                            <Calendar size={12} className="shrink-0" />
+                            <span className="truncate">
+                              {t("requestDate")}:{" "}
+                              {request.requestedAt
+                                ? new Date(request.requestedAt).toLocaleDateString(
+                                    "he-IL",
+                                  )
+                                : "-"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2 w-full md:w-auto">
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          onClick={() => handleApproveJoinRequest(requestId)}
+                          disabled={
+                            approveJoinRequestMutation.isPending ||
+                            rejectJoinRequestMutation.isPending
+                          }
+                          icon={<CheckCircle className="w-4 h-4" />}
+                          className="flex-1 md:flex-none"
+                        >
+                          {t("approve")}
+                        </Button>
+                        <Button
+                          variant="outlineError"
+                          size="sm"
+                          onClick={() => handleRejectJoinRequest(requestId)}
+                          disabled={
+                            approveJoinRequestMutation.isPending ||
+                            rejectJoinRequestMutation.isPending
+                          }
+                          icon={<XCircle className="w-4 h-4 text-error-600" />}
+                          className="flex-1 md:flex-none"
+                        >
+                          {t("reject")}
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
+        )}
+
+        {canDeleteGroup && (
+          <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+            <div className="p-6 border-b border-border">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-xl font-bold text-text-primary flex items-center gap-2">
+                    <Settings className="w-5 h-5 text-primary-600" />
+                    {t("groupSettings")}
+                  </h2>
+                  <p className="text-sm text-text-muted mt-1">
+                    {t("manageGroupSettings")}
+                  </p>
+                </div>
+
+                {!isEditingSettings && (
+                  <Button
+                    variant="primary"
+                    size="md"
+                    onClick={handleEditSettings}
+                    icon={<Edit2 className="w-4 h-4" />}
+                  >
+                    {t("edit")}
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {isEditingSettings ? (
+              <div className="p-6 space-y-6">
+                <div className="bg-primary-50/50 border border-primary-200 rounded-lg p-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-sm font-semibold text-text-primary mb-1.5">
+                        {t("allowMemberInvite")}
+                      </h3>
+                      <p className="text-xs text-text-muted leading-relaxed">
+                        {t("allowMemberInviteDescription")}
+                      </p>
+                    </div>
+                    <div className="shrink-0">
+                      <Toggle
+                        isEnabled={allowMemberInvite}
+                        onClick={() => setAllowMemberInvite(!allowMemberInvite)}
+                        variant="primary"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-primary-50/50 border border-primary-200 rounded-lg p-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-sm font-semibold text-text-primary mb-1.5">
+                        {t("requireApproval")}
+                      </h3>
+                      <p className="text-xs text-text-muted leading-relaxed">
+                        {t("requireApprovalDescription")}
+                      </p>
+                    </div>
+                    <div className="shrink-0">
+                      <Toggle
+                        isEnabled={requireApproval}
+                        onClick={() => setRequireApproval(!requireApproval)}
+                        variant="primary"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-primary-50/50 border border-primary-200 rounded-lg p-4">
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-sm font-semibold text-text-primary mb-1.5">
+                          {t("maxMembers")}
+                        </h3>
+                        <p className="text-xs text-text-muted leading-relaxed">
+                          {t("maxMembersDescription")}
+                        </p>
+                        {group?.members && (
+                          <p className="text-xs text-primary-600 mt-1.5 font-medium">
+                            {t("currentMembersCount", { count: group.members.length })}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="max-w-[200px]">
+                      <Input
+                        type="number"
+                        value={maxMembers}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value);
+                      if (!isNaN(value)) {
+                        const currentMembersCount = group?.members?.length || 0;
+                        if (value < currentMembersCount) {
+                          setMaxMembersError(t("maxMembersMinCurrent", { count: currentMembersCount }));
+                        } else {
+                          setMaxMembersError(null);
+                        }
+                        setMaxMembers(value);
+                      }
+                    }}
+                        min={Math.max(2, group?.members?.length || 2)}
+                        max={100}
+                        label={t("maxMembers")}
+                        error={maxMembersError || undefined}
+                        status={maxMembersError ? "error" : "default"}
+                        variant="default"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-2 border-t border-border">
+                  <Button
+                    variant="ghost"
+                    size="md"
+                    onClick={handleCancelSettings}
+                    disabled={updateGroupMutation.isPending}
+                    loading={updateGroupMutation.isPending}
+                    icon={<X className="w-4 h-4" />}
+                    className="flex-1"
+                  >
+                    {t("cancel")}
+                  </Button>
+                  <Button
+                    variant="primary"
+                    size="md"
+                    onClick={handleSaveSettings}
+                    disabled={updateGroupMutation.isPending}
+                    loading={updateGroupMutation.isPending}
+                    icon={<Save className="w-4 h-4" />}
+                    className="flex-1"
+                  >
+                    {t("saveChanges")}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="p-6 space-y-4">
+                <div className="flex items-start justify-between gap-4 py-3 border-b border-border last:border-0">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-semibold text-text-primary mb-1">
+                      {t("allowMemberInvite")}
+                    </h3>
+                    <p className="text-xs text-text-muted">
+                      {t("allowMemberInviteDescription")}
+                    </p>
+                  </div>
+                  <div className="shrink-0">
+                    <span className={`text-sm font-semibold px-3 py-1 rounded-full ${
+                      group.settings?.allowMemberInvite 
+                        ? "bg-success-100 text-success-700" 
+                        : "bg-gray-100 text-gray-600"
+                    }`}>
+                      {group.settings?.allowMemberInvite ? t("enabled") : t("disabled")}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-start justify-between gap-4 py-3 border-b border-border last:border-0">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-semibold text-text-primary mb-1">
+                      {t("requireApproval")}
+                    </h3>
+                    <p className="text-xs text-text-muted">
+                      {t("requireApprovalDescription")}
+                    </p>
+                  </div>
+                  <div className="shrink-0">
+                    <span className={`text-sm font-semibold px-3 py-1 rounded-full ${
+                      group.settings?.requireApproval 
+                        ? "bg-success-100 text-success-700" 
+                        : "bg-gray-100 text-gray-600"
+                    }`}>
+                      {group.settings?.requireApproval ? t("enabled") : t("disabled")}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-start justify-between gap-4 py-3">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-semibold text-text-primary mb-1">
+                      {t("maxMembers")}
+                    </h3>
+                    <p className="text-xs text-text-muted">
+                      {t("maxMembersDescription")}
+                    </p>
+                    {group?.members && (
+                      <p className="text-xs text-primary-600 mt-1.5 font-medium">
+                        {t("currentMembersCount", { count: group.members.length })}
+                      </p>
+                    )}
+                  </div>
+                  <div className="shrink-0">
+                    <span className="text-sm font-semibold px-3 py-1 bg-primary-100 text-primary-700 rounded-full">
+                      {group.settings?.maxMembers ?? 50}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
           <div className="bg-error-50/50 p-4 border-b border-error-100 flex items-center gap-2 text-error-800">
             <Trash2 size={18} />
-            <span className="font-bold text-sm">{t('dangerZone')}</span>
+            <span className="font-bold text-sm">{t("dangerZone")}</span>
           </div>
 
           <div className="divide-y divide-border">
             {currentUserMembership &&
               currentUserMembership.role !== "owner" && (
-                <div className="p-4 flex items-center justify-between hover:bg-card-hover transition-colors">
+                <div className="p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between hover:bg-card-hover transition-colors">
                   <div>
                     <h3 className="text-sm font-medium text-text-primary">
-                      {t('leaveGroup')}
+                      {t("leaveGroup")}
                     </h3>
                     <p className="text-xs text-text-muted mt-0.5">
-                      {t('leaveGroupConfirmation')}
+                      {t("leaveGroupConfirmation")}
                     </p>
                   </div>
-                  <button
-                    onClick={handleLeaveGroup}
-                    disabled={leaveGroupMutation.isPending}
-                    className="text-error-600 hover:text-error-700 hover:bg-error-50 px-4 py-2 rounded-lg text-sm font-medium transition-colors border border-transparent hover:border-error-100"
-                  >
-                    {leaveGroupMutation.isPending ? t('leavingGroup') : t('leaveGroup')}
-                  </button>
+                  <Button variant="error" size="md" onClick={handleLeaveGroup} disabled={leaveGroupMutation.isPending}>
+                  {leaveGroupMutation.isPending
+                      ? t("leavingGroup")
+                      : t("leaveGroup")}
+                  </Button>
                 </div>
               )}
 
-            {canDeleteGroup && (
-              <div className="p-4 flex items-center justify-between hover:bg-error transition-colors">
-                <div>
-                  <h3 className="text-sm font-medium text-error-600">
-                    {t('deleteGroup')}
-                  </h3>
-                  <p className="text-xs text-error-400 mt-0.5">
-                    {t('deleteGroupConfirmation')}
-                  </p>
-                </div>
-                <button
-                  onClick={handleDeleteGroup}
-                  disabled={deleteGroupMutation.isPending}
-                  className="bg-error-600 border border-error-600 text-text-primary hover:bg-error-700 px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-md shadow-error-200"
-                >
-                  {deleteGroupMutation.isPending ? t('deletingGroup') : t('deleteGroup')}
-                </button>
-              </div>
-            )}
+{canDeleteGroup && (
+  <div className="p-4 hover:bg-error transition-colors">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="min-w-0">
+        <h3 className="text-sm font-medium text-error-600">
+          {t("deleteGroup")}
+        </h3>
+        <p className="text-xs text-error-400 mt-0.5 break-words">
+          {t("deleteGroupConfirmation")}
+        </p>
+      </div>
+
+      <Button variant="error" size="md" onClick={handleDeleteGroup} disabled={deleteGroupMutation.isPending} icon={<Trash2 className="w-4 h-4" />}>
+        {deleteGroupMutation.isPending ? t("deletingGroup") : t("deleteGroup")}
+      </Button>
+    </div>
+  </div>
+)}
+
           </div>
         </div>
       </div>

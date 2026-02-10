@@ -3,7 +3,7 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderWithProviders, createMockMutationResult } from '../../test/test-utils';
 import InvitationsPage from '../../app/[locale]/invitations/page';
-import { useInvitations, useAcceptInvitation, useDeclineInvitation } from '../../hooks/useInvitations';
+import { useInvitations, useAcceptInvitation, useDeclineInvitation, useJoinRequests } from '../../hooks/useInvitations';
 
 const mockInvitations = [
   {
@@ -27,7 +27,12 @@ const mockInvitations = [
   },
 ];
 
-vi.mock('../../hooks/useInvitations');
+vi.mock('../../hooks/useInvitations', () => ({
+  useInvitations: vi.fn(),
+  useAcceptInvitation: vi.fn(),
+  useDeclineInvitation: vi.fn(),
+  useJoinRequests: vi.fn(),
+}));
 vi.mock('../../hooks/useAuthRedirect', () => ({
   useAuthRedirect: () => ({
     isAuthenticated: true,
@@ -35,11 +40,46 @@ vi.mock('../../hooks/useAuthRedirect', () => ({
   }),
 }));
 vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+    refresh: vi.fn(),
+  }),
+  usePathname: () => '/invitations',
   useParams: () => ({ locale: 'he' }),
+}));
+vi.mock('../../i18n/navigation', () => ({
+  Link: ({ children }: { children: React.ReactNode }) => <a>{children}</a>,
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+    refresh: vi.fn(),
+  }),
+  usePathname: () => '/invitations',
 }));
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
 }));
+
+const mockJoinRequests = [
+  {
+    _id: 'req1',
+    group: {
+      _id: 'group2',
+      name: 'Join Request Group',
+      description: 'Test Description',
+      membersCount: 3,
+    },
+    inviteCode: 'XYZ789',
+    role: 'member' as const,
+    requestedAt: new Date().toISOString(),
+    status: 'pending' as const,
+  },
+];
 
 describe('InvitationsPage', () => {
   beforeEach(() => {
@@ -49,6 +89,11 @@ describe('InvitationsPage', () => {
       isLoading: false,
       error: null,
     } as ReturnType<typeof useInvitations>);
+    vi.mocked(useJoinRequests).mockReturnValue({
+      data: [],
+      isLoading: false,
+      error: null,
+    } as ReturnType<typeof useJoinRequests>);
     vi.mocked(useAcceptInvitation).mockReturnValue(
       createMockMutationResult({
         mutateAsync: vi.fn().mockResolvedValue({}),
@@ -148,6 +193,44 @@ describe('InvitationsPage', () => {
     renderWithProviders(<InvitationsPage />);
     const emptyState = screen.queryByText(/no invitations|noNewInvitations|אין הזמנות/i);
     expect(emptyState || screen.queryByText(/noNewInvitations/i)).toBeTruthy();
+  });
+
+  it('should display join requests section when join requests exist', () => {
+    vi.mocked(useJoinRequests).mockReturnValue({
+      data: mockJoinRequests,
+      isLoading: false,
+      error: null,
+    } as ReturnType<typeof useJoinRequests>);
+
+    renderWithProviders(<InvitationsPage />);
+    expect(screen.getByText(mockJoinRequests[0].group.name)).toBeInTheDocument();
+    const heading = screen.getByRole('heading', { name: /pendingJoinRequests/i });
+    expect(heading).toBeInTheDocument();
+    expect(screen.getByText(/waitingForApproval/i)).toBeInTheDocument();
+  });
+
+  it('should not display join requests section when no join requests', () => {
+    vi.mocked(useJoinRequests).mockReturnValue({
+      data: [],
+      isLoading: false,
+      error: null,
+    } as ReturnType<typeof useJoinRequests>);
+
+    renderWithProviders(<InvitationsPage />);
+    const joinRequestSection = screen.queryByText(/pendingJoinRequests/i);
+    expect(joinRequestSection).not.toBeInTheDocument();
+  });
+
+  it('should show loading state for join requests', () => {
+    vi.mocked(useJoinRequests).mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      error: null,
+    } as ReturnType<typeof useJoinRequests>);
+
+    renderWithProviders(<InvitationsPage />);
+    const spinner = document.querySelector('.animate-spin');
+    expect(spinner).toBeTruthy();
   });
 });
 

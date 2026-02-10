@@ -7,6 +7,8 @@ import {
   UseMutationResult 
 } from '@tanstack/react-query';
 import { vi } from 'vitest';
+import { useAuthStore, type AuthStore } from '../store/authStore';
+import { mockUser } from '../__tests__/mocks/mockData';
 
 
 const NotificationProvider = ({ children }: { children: React.ReactNode }) => <>{children}</>;
@@ -106,6 +108,52 @@ export function createMockMutationResult<TData, TError = Error, TVariables = unk
   };
 
   return Object.assign(base, overrides) as UseMutationResult<TData, TError, TVariables, TContext>;
+}
+
+
+/**
+ * Creates a complete mock for useAuthStore with all required properties
+ */
+export function createMockAuthStore(overrides?: Partial<AuthStore>): AuthStore {
+  const overridesTyped = overrides as Partial<AuthStore> | undefined;
+  const isAuthenticated = overridesTyped?.isAuthenticated ?? !!overridesTyped?.user;
+  const authMode = overridesTyped?.authMode ?? (isAuthenticated ? 'authenticated' as const : null);
+  
+  return {
+    user: overridesTyped?.user ?? (isAuthenticated ? mockUser : null),
+    isAuthenticated,
+    authMode,
+    isInitialized: overridesTyped?.isInitialized ?? true,
+    isAuthed: () => authMode === 'authenticated' && isAuthenticated,
+    isGuest: () => authMode === 'guest' && !isAuthenticated,
+    accessToken: overridesTyped?.accessToken ?? (isAuthenticated ? 'token' : null),
+    guestId: overridesTyped?.guestId ?? null,
+    error: overridesTyped?.error ?? null,
+    lastLoginTime: overridesTyped?.lastLoginTime ?? (isAuthenticated ? Date.now() : null),
+    authReady: overridesTyped?.authReady ?? true,
+    isBootstrapping: overridesTyped?.isBootstrapping ?? false,
+    websocket: overridesTyped?.websocket ?? {
+      isConnected: false,
+      connectionError: null,
+      lastConnectedAt: null,
+      isConnecting: false,
+    },
+    setUser: vi.fn(),
+    setAccessToken: vi.fn(),
+    setGuestMode: vi.fn(),
+    clearUser: vi.fn(),
+    clearAuth: vi.fn(),
+    setIsLoading: vi.fn(),
+    setIsInitialized: vi.fn(),
+    setError: vi.fn(),
+    setAuthReady: vi.fn(),
+    bootstrapAuth: vi.fn(),
+    setWebSocketConnected: vi.fn(),
+    setWebSocketError: vi.fn(),
+    setWebSocketConnecting: vi.fn(),
+    updateWebSocketLastConnected: vi.fn(),
+    ...overrides,
+  } as AuthStore;
 }
 
 export * from '@testing-library/react';

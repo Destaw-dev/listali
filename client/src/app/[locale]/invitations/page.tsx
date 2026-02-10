@@ -8,6 +8,7 @@ import {
   useInvitations,
   useAcceptInvitation,
   useDeclineInvitation,
+  useJoinRequests,
 } from "../../../hooks/useInvitations";
 import { useAuthRedirect } from "../../../hooks/useAuthRedirect";
 
@@ -33,15 +34,34 @@ interface Invitation {
   code: string;
 }
 
+interface JoinRequest {
+  _id: string;
+  group: {
+    _id: string;
+    name: string;
+    description?: string;
+    avatar?: string;
+    membersCount: number;
+  };
+  inviteCode: string;
+  role: "admin" | "member";
+  requestedAt: string;
+  status: "pending" | "approved" | "rejected";
+}
+
 export default function InvitationsPage() {
   const [processingInvitation, setProcessingInvitation] = useState<
     string | null
   >(null);
   const t = useTranslations("Invitations");
 
-  const { data: invitations = [], isLoading, error } = useInvitations();
+  const { data: invitations = [], isLoading: invitationsLoading, error: invitationsError } = useInvitations();
+  const { data: joinRequests = [], isLoading: joinRequestsLoading } = useJoinRequests();
   const acceptInvitationMutation = useAcceptInvitation();
   const declineInvitationMutation = useDeclineInvitation();
+
+  const isLoading = invitationsLoading || joinRequestsLoading;
+  const error = invitationsError;
 
   const { isInitialized } = useAuthRedirect({
     redirectTo: '/welcome',
@@ -110,18 +130,82 @@ export default function InvitationsPage() {
           </div>
         </div>
 
-      <div className="container mx-auto px-4 py-6 bg-card rounded-lg shadow-lg">
-        {invitations.length === 0 ? (
-          <div className="text-center py-12 ">
-            <UserPlus className="w-16 h-16 mx-auto mb-4 text-text-muted" />
-            <h3 className="text-xl font-semibold text-text-primary mb-2">
-              {t("noInvitations")}
-            </h3>
-            <p className="text-secondary text-text-muted">{t("noNewInvitations")}</p>
+      <div className="container mx-auto px-4 py-6 space-y-6">
+        {joinRequests.length > 0 && (
+          <div className="bg-card rounded-lg shadow-lg p-6">
+            <h2 className="text-xl font-bold text-text-primary mb-4">
+              {t("pendingJoinRequests")}
+            </h2>
+            <div className="space-y-4">
+              {joinRequests.map((request: JoinRequest) => (
+                <div
+                  key={request._id}
+                  className="group bg-surface border border-border rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-200"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-start gap-4">
+                      <div className="h-12 w-12 rounded-full bg-warning-100 flex items-center justify-center text-warning-600 font-bold shrink-0">
+                        <UserPlus className="w-6 h-6" />
+                      </div>
+
+                      <div className="space-y-1">
+                        <h3 className="font-bold text-lg text-text-primary leading-none">
+                          {request.group?.name}
+                        </h3>
+                        <p className="text-text-muted text-sm">
+                          {t("waitingForApproval")}
+                        </p>
+
+                        <div className="flex flex-wrap items-center gap-2 mt-2">
+                          <span
+                            className={`text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full ${
+                              request.role === "admin"
+                                ? "bg-warning-100 text-warning-700 border border-warning-200"
+                                : "bg-primary-100 text-primary-700 border border-primary-200"
+                            }`}
+                          >
+                            {request.role === "admin"
+                              ? t("admin")
+                              : t("member")}
+                          </span>
+
+                          <span className="text-xs text-text-muted flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
+                            {new Date(request.requestedAt).toLocaleDateString(
+                              "he-IL"
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="shrink-0">
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-warning-100 text-warning-700 border border-warning-200">
+                        {t("pendingApproval")}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-        ) : (
-          <div className="space-y-4">
-            {invitations.map((invitation: Invitation) => (
+        )}
+
+        <div className="bg-card rounded-lg shadow-lg p-6">
+          <h2 className="text-xl font-bold text-text-primary mb-4">
+            {t("invitations")}
+          </h2>
+          {invitations.length === 0 ? (
+            <div className="text-center py-12 ">
+              <UserPlus className="w-16 h-16 mx-auto mb-4 text-text-muted" />
+              <h3 className="text-xl font-semibold text-text-primary mb-2">
+                {t("noInvitations")}
+              </h3>
+              <p className="text-secondary text-text-muted">{t("noNewInvitations")}</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {invitations.map((invitation: Invitation) => (
               <div
                 key={invitation._id}
                 className="group bg-card border border-border rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-200"
@@ -214,6 +298,7 @@ export default function InvitationsPage() {
             ))}
           </div>
         )}
+        </div>
       </div>
     </div>
   );

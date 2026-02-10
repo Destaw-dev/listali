@@ -75,9 +75,9 @@ export interface IBaseGroup {
   inviteCode: string;
   isActive: boolean;
   pendingInvites: IBasePendingInvite[];
+  joinRequests?: IJoinRequest[];
 }
 
-// Base group member interface (consistent with shared types)
 export interface IBaseGroupMember {
   id: string;
   userId: string;
@@ -104,7 +104,31 @@ export interface IBasePendingInvite {
   status: 'pending' | 'accepted' | 'declined';
 }
 
-// Base pending invitation interface (consistent with shared types)
+export interface IJoinRequest {
+  _id?: string | Types.ObjectId;
+  user: string | Types.ObjectId;
+  inviteCode: string;
+  role: 'admin' | 'member';
+  requestedAt: Date;
+  status: 'pending' | 'approved' | 'rejected';
+}
+
+export interface IUserJoinRequestWithGroup {
+  _id?: string | Types.ObjectId;
+  user: string | Types.ObjectId;
+  group: {
+    _id: string;
+    name: string;
+    description?: string;
+    avatar?: string;
+    membersCount: number;
+  };
+  inviteCode: string;
+  role: 'admin' | 'member';
+  requestedAt: Date;
+  status: 'pending' | 'approved' | 'rejected';
+}
+
 export interface IBasePendingInvitation {
   code: string;
   role: 'admin' | 'member';
@@ -112,7 +136,6 @@ export interface IBasePendingInvitation {
   status: 'pending' | 'accepted' | 'declined';
 }
 
-// Base shopping list interface (consistent with shared types)
 export interface IBaseShoppingList {
   name: string;
   description?: string;

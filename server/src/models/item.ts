@@ -315,15 +315,20 @@ itemSchema.methods.markAsPurchased = async function(
 };
 
 itemSchema.methods.markAsNotPurchased = async function(quantityToUnpurchase?: number) {
-  this.purchasedQuantity = this.purchasedQuantity - (quantityToUnpurchase !== undefined ? quantityToUnpurchase : 0);
+  if (quantityToUnpurchase === undefined) {
+    this.purchasedQuantity = 0;
+  } else {
+    this.purchasedQuantity = this.purchasedQuantity - quantityToUnpurchase;
+    if (this.purchasedQuantity < 0) {
+      this.purchasedQuantity = 0;
+    }
+  }
+
   this.quantityToPurchase = this.quantity - this.purchasedQuantity;
   this.status = this.purchasedQuantity > 0 ? 'partially_purchased' : 'pending';
-  console.log('quantityToUnpurchase', quantityToUnpurchase);
-  console.log('this.status =====>', this.status);
-  if (quantityToUnpurchase !== undefined) {
-    this.purchasedBy = null;
-    this.purchasedAt = null;
-  }
+
+  this.purchasedBy = null;
+  this.purchasedAt = null;
   
   await this.save();
   

@@ -29,6 +29,14 @@ vi.mock('../../components/auth/GoogleAuthButton', () => ({
 }));
 vi.mock('../../i18n/navigation', () => ({
   Link: ({ children }: { children: React.ReactNode }) => <a>{children}</a>,
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+    refresh: vi.fn(),
+  }),
+  usePathname: () => '/login',
 }));
 
 describe('LoginPage', () => {
@@ -77,12 +85,12 @@ describe('LoginPage', () => {
     
     if (emailInput && passwordInput) {
       await user.type(emailInput, 'test@example.com');
-      await user.type(passwordInput, 'password123');
+      await user.type(passwordInput, 'Password123');
       await user.click(submitButton);
       
       await waitFor(() => {
-        expect(mockLogin).toHaveBeenCalledWith('test@example.com', 'password123');
-      });
+        expect(mockLogin).toHaveBeenCalledWith('test@example.com', 'Password123');
+      }, { timeout: 3000 });
     }
   });
 

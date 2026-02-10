@@ -336,7 +336,7 @@ export class ApiClient {
     return response.data;
   }
 
-  async updateGroup(groupId: string, groupData: { name: string; description?: string }) {
+  async updateGroup(groupId: string, groupData: { name?: string; description?: string; settings?: { allowMemberInvite?: boolean; requireApproval?: boolean; maxMembers?: number } }) {
     const response = await this.put(`/groups/${groupId}`, groupData);
     return response.data;
   }
@@ -353,6 +353,16 @@ export class ApiClient {
 
   async getGroup(groupId: string) {
     const response = await this.get(`/groups/${groupId}`);
+    return response.data;
+  }
+
+  async approveJoinRequest(groupId: string, requestId: string) {
+    const response = await this.post(`/groups/${groupId}/join-requests/${requestId}/approve`);
+    return response.data;
+  }
+
+  async rejectJoinRequest(groupId: string, requestId: string) {
+    const response = await this.post(`/groups/${groupId}/join-requests/${requestId}/reject`);
     return response.data;
   }
 
@@ -388,6 +398,11 @@ export class ApiClient {
 
   async getMyInvitations() {
     const response = await this.get('/auth/invitations');
+    return response.data;
+  }
+
+  async getMyJoinRequests() {
+    const response = await this.get('/auth/join-requests');
     return response.data;
   }
 

@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useInvitations, useAcceptInvitation, useDeclineInvitation } from '../../../hooks/useInvitations';
+import { useInvitations, useAcceptInvitation, useDeclineInvitation, useJoinRequests } from '../../../hooks/useInvitations';
 import { apiClient } from '../../../lib/api';
 import { useAuthStore } from '../../../store/authStore';
 
@@ -27,6 +27,7 @@ const mockInvitations = [
 vi.mock('../../../lib/api', () => ({
   apiClient: {
     getMyInvitations: vi.fn(),
+    getMyJoinRequests: vi.fn(),
     acceptInvitation: vi.fn(),
     declineInvitation: vi.fn(),
   },
@@ -97,10 +98,29 @@ describe('useInvitations Hooks', () => {
   });
 
   describe('useAcceptInvitation', () => {
-    it('should accept invitation successfully', async () => {
+    it('should accept invitation successfully (immediate join)', async () => {
       vi.mocked(apiClient.acceptInvitation).mockResolvedValue({
         data: { ...mockInvitations[0], status: 'accepted' },
-      } as ReturnType<typeof useAuthStore>);
+      } as any);
+
+      const { result } = renderHook(() => useAcceptInvitation(), {
+        wrapper: createWrapper(),
+      });
+
+      result.current.mutate('inv1');
+
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true);
+      });
+
+      expect(apiClient.acceptInvitation).toHaveBeenCalledWith('inv1');
+    });
+
+    it('should handle join request creation (requireApproval=true)', async () => {
+      vi.mocked(apiClient.acceptInvitation).mockResolvedValue({
+        data: null,
+        message: 'Join request submitted',
+      } as any);
 
       const { result } = renderHook(() => useAcceptInvitation(), {
         wrapper: createWrapper(),
@@ -133,6 +153,54 @@ describe('useInvitations Hooks', () => {
       });
 
       expect(apiClient.declineInvitation).toHaveBeenCalledWith('inv1');
+    });
+  });
+
+  describe('useJoinRequests', () => {
+    const mockJoinRequests = [
+      {
+        _id: 'req1',
+        group: {
+          _id: 'group1',
+          name: 'Test Group',
+          description: 'Test Description',
+          membersCount: 5,
+        },
+        inviteCode: 'ABC123',
+        role: 'member' as const,
+        requestedAt: new Date().toISOString(),
+        status: 'pending' as const,
+      },
+    ];
+
+    it('should fetch join requests successfully', async () => {
+      vi.mocked(apiClient.getMyJoinRequests).mockResolvedValue({
+        data: mockJoinRequests,
+      } as any);
+
+      const { result } = renderHook(() => useJoinRequests(), {
+        wrapper: createWrapper(),
+      });
+
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true);
+      });
+
+      expect(result.current.data).toEqual(mockJoinRequests);
+      expect(apiClient.getMyJoinRequests).toHaveBeenCalled();
+    });
+
+    it('should not fetch when auth is not ready', () => {
+      vi.mocked(useAuthStore).mockReturnValue({
+        authReady: false,
+        accessToken: null,
+      } as ReturnType<typeof useAuthStore>);
+
+      const { result } = renderHook(() => useJoinRequests(), {
+        wrapper: createWrapper(),
+      });
+
+      expect(result.current.isFetching).toBe(false);
     });
   });
 });

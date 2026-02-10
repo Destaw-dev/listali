@@ -13,6 +13,7 @@ import {
   checkUsernameAvailability,
   checkEmailAvailability,
   getMyInvitations,
+  getMyJoinRequests,
   acceptInvitation,
   declineInvitation,
   verifyEmail,
@@ -63,6 +64,7 @@ router.post('/resend-verification', resendVerification);
 router.post('/resend-verification-login', resendVerificationForLogin);
 
 router.get('/invitations', authenticateToken, getMyInvitations);
+router.get('/join-requests', authenticateToken, getMyJoinRequests);
 router.post('/invitations/accept', authenticateToken, acceptInvitation);
 router.post('/invitations/decline', authenticateToken, declineInvitation);
 

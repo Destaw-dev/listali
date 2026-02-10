@@ -94,6 +94,11 @@ vi.mock('../../../hooks/useChat', () => ({
     mutate: vi.fn(),
     isPending: false,
   })),
+  useMarkMessagesAsReadBatch: vi.fn(() => ({
+    mutate: vi.fn(),
+    mutateAsync: vi.fn(),
+    isPending: false,
+  })),
   useChatWebSocket: vi.fn(),
   useUnreadInfo: () => mockUseUnreadInfo(),
 }));

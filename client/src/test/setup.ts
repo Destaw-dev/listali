@@ -35,6 +35,34 @@ vi.mock('next-intl', () => ({
   useLocale: () => 'en',
 }));
 
+vi.mock('next-intl/navigation', () => {
+  const useRouter = () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    prefetch: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+    refresh: vi.fn(),
+  });
+
+  const usePathname = () => '/';
+  const useSearchParams = () => new URLSearchParams();
+
+  const createNavigation = () => ({
+    Link: ({ children }: { children: React.ReactNode }) => children,
+    redirect: vi.fn(),
+    usePathname,
+    useRouter,
+  });
+
+  return {
+    useRouter,
+    usePathname,
+    useSearchParams,
+    createNavigation,
+  };
+});
+
 vi.mock('framer-motion', () => ({
   motion: {
     div: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement>) => React.createElement('div', props, children),
@@ -93,4 +121,14 @@ vi.mock('../contexts/NotificationContext', () => ({
 }));
 
 Element.prototype.scrollIntoView = vi.fn();
+
+global.IntersectionObserver = class IntersectionObserver {
+  constructor() {}
+  disconnect() {}
+  observe() {}
+  takeRecords() {
+    return [];
+  }
+  unobserve() {}
+} as any;
 

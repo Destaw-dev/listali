@@ -24,7 +24,7 @@ const getOrCreateGuestId = (): string => {
 
 export type AuthMode = 'guest' | 'authenticated' | null;
 
-interface AuthStore {
+export interface AuthStore {
   user: User | null;
   accessToken: string | null;
   isAuthenticated: boolean;

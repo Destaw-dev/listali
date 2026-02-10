@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { useParams } from "next/navigation";
 import { useRouter } from "../../../i18n/navigation";
 import {
   Users,
@@ -35,9 +34,7 @@ import { useStorageMonitor } from "../../../hooks/useStorageMonitor";
 
 export default function DashboardPage() {
   const router = useRouter();
-  const params = useParams();
   const t = useTranslations("Dashboard");
-  const locale = (params?.locale as string) || "he";
   const { user, isGuest } = useAuthStore();
   const { lists: guestLists } = useGuestListsStore();
   const { requireAuth, RequireAuthModal } = useRequireAuth();

@@ -1,7 +1,6 @@
 'use client';
 
 import { useAuthStore } from '../../store/authStore';
-import { useParams } from 'next/navigation';
 import { useRouter, usePathname } from '../../i18n/navigation';
 import { Home, Users, Settings, LogOut, UserPlus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -14,8 +13,6 @@ export function Navigation() {
   const { user, isAuthenticated } = useAuthStore();
   const router = useRouter();
   const pathname = usePathname();
-  const params = useParams();
-  const locale = params?.locale as string || 'he';
   const t = useTranslations('navigation');
   const logoutMutation = useLogout();
 

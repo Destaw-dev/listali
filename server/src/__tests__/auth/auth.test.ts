@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import { app } from '../../app';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import { IApiResponse, IAuthResponse, IUser } from '../../types';
+import User from '../../models/user';
 
 let mongoServer: MongoMemoryServer;
 
@@ -213,5 +214,124 @@ describe('🔐 Auth API', () => {
     const body = res.body as IApiResponse<{ available: boolean }>;
     expect(body.data).toBeDefined();
     expect(body.data?.available).toBe(false);
+  });
+
+  test('GET /api/auth/invitations → should get user invitations', async () => {
+    const inviterUser = {
+      firstName: 'Inviter',
+      lastName: 'User',
+      username: 'inviteruser',
+      email: 'inviter@example.com',
+      password: 'Password123'
+    };
+
+    await request(app).post('/api/auth/register').send(inviterUser);
+    await verifyUserEmail(inviterUser.email);
+
+    const inviterLoginRes = await request(app).post('/api/auth/login').send({
+      email: inviterUser.email,
+      password: inviterUser.password
+    });
+    const inviterLoginBody = inviterLoginRes.body as IApiResponse<IAuthResponse>;
+    const inviterToken = inviterLoginBody.data?.accessToken || '';
+
+    const groupRes = await request(app)
+      .post('/api/groups')
+      .set('Authorization', `Bearer ${inviterToken}`)
+      .send({ name: 'Test Group', description: 'Test' });
+
+    const groupBody = groupRes.body as IApiResponse<any>;
+    const groupId = groupBody.data?._id;
+
+    await request(app).post('/api/auth/register').send(user);
+    await verifyUserEmail(user.email);
+    
+    const loginRes = await request(app).post('/api/auth/login').send({
+      email: user.email,
+      password: user.password
+    });
+    const loginBody = loginRes.body as IApiResponse<IAuthResponse>;
+    const token = loginBody.data?.accessToken || '';
+
+    await request(app)
+      .post(`/api/groups/${groupId}/invite`)
+      .set('Authorization', `Bearer ${inviterToken}`)
+      .send({ email: user.email });
+
+    const res = await request(app)
+      .get('/api/auth/invitations')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    const body = res.body as IApiResponse<any[]>;
+    expect(Array.isArray(body.data)).toBe(true);
+    expect(body.data?.length).toBeGreaterThan(0);
+  });
+
+  test('GET /api/auth/join-requests → should get user join requests', async () => {
+    const ownerUser = {
+      firstName: 'Owner',
+      lastName: 'User',
+      username: 'owneruser',
+      email: 'owner@example.com',
+      password: 'Password123'
+    };
+
+    await request(app).post('/api/auth/register').send(ownerUser);
+    await verifyUserEmail(ownerUser.email);
+
+    const ownerLoginRes = await request(app).post('/api/auth/login').send({
+      email: ownerUser.email,
+      password: ownerUser.password
+    });
+    const ownerLoginBody = ownerLoginRes.body as IApiResponse<IAuthResponse>;
+    const ownerToken = ownerLoginBody.data?.accessToken || '';
+
+    const groupRes = await request(app)
+      .post('/api/groups')
+      .set('Authorization', `Bearer ${ownerToken}`)
+      .send({
+        name: 'Approval Group',
+        settings: { requireApproval: true }
+      });
+
+    const groupBody = groupRes.body as IApiResponse<any>;
+    const groupId = groupBody.data?._id;
+
+    await request(app).post('/api/auth/register').send(user);
+    await verifyUserEmail(user.email);
+    
+    const loginRes = await request(app).post('/api/auth/login').send({
+      email: user.email,
+      password: user.password
+    });
+    const loginBody = loginRes.body as IApiResponse<IAuthResponse>;
+    const token = loginBody.data?.accessToken || '';
+
+    await request(app)
+      .post(`/api/groups/${groupId}/invite`)
+      .set('Authorization', `Bearer ${ownerToken}`)
+      .send({ email: user.email });
+
+    const userDoc = await User.findOne({ email: user.email });
+    const invitation = userDoc?.pendingInvitations.find(inv => inv.group.toString() === groupId);
+    
+    if (invitation) {
+      await request(app)
+        .post('/api/auth/invitations/accept')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ invitationId: invitation.code });
+    }
+
+    const res = await request(app)
+      .get('/api/auth/join-requests')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    const body = res.body as IApiResponse<any[]>;
+    expect(Array.isArray(body.data)).toBe(true);
+    const joinRequest = body.data?.find(req => req.group._id === groupId);
+    expect(joinRequest).toBeDefined();
+    expect(joinRequest?.status).toBe('pending');
   });
 });

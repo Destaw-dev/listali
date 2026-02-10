@@ -31,6 +31,9 @@ export type PushNotificationKey =
   | 'groupJoined'
   | 'groupLeft'
   | 'listCreated'
+  | 'joinRequestReceived'
+  | 'joinRequestApproved'
+  | 'joinRequestRejected'
   | 'test';
 
 export interface PushVars {
@@ -306,6 +309,15 @@ export async function sendLocalizedPushToUser(
         break;
       case 'groupJoined':
         title = locale === 'he' ? 'הצטרפות לקבוצה' : 'Member Joined';
+        break;
+      case 'joinRequestReceived':
+        title = locale === 'he' ? 'בקשת הצטרפות חדשה' : 'New Join Request';
+        break;
+      case 'joinRequestApproved':
+        title = locale === 'he' ? 'בקשת הצטרפות אושרה' : 'Join Request Approved';
+        break;
+      case 'joinRequestRejected':
+        title = locale === 'he' ? 'בקשת הצטרפות נדחתה' : 'Join Request Rejected';
         break;
       case 'groupLeft':
         title = locale === 'he' ? 'עזיבת קבוצה' : 'Member Left';

@@ -31,12 +31,20 @@ export const useAcceptInvitation = () => {
   return useMutation({
     mutationFn: async (invitationId: string) => {
       const response = await apiClient.acceptInvitation(invitationId);
-      return response.data;
+      return response;
     },
-    onSuccess: () => {
+    onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: invitationKeys.lists() });
       queryClient.invalidateQueries({ queryKey: ['groups'] });
-      showSuccess('invitations.acceptSuccess');
+      queryClient.invalidateQueries({ queryKey: ['invitations', 'join-requests'] });
+
+      const apiResponse = response as { data?: unknown; message?: string };
+
+      if (apiResponse?.data) {
+        showSuccess('invitations.acceptSuccess');
+      } else {
+        showSuccess('groups.joinRequestPending');
+      }
     },
     onError: (error: Error) => {
       handleApiError(error);
@@ -60,5 +68,20 @@ export const useDeclineInvitation = () => {
     onError: (error: Error) => {
       handleApiError(error);
     },
+  });
+};
+
+export const useJoinRequests = () => {
+  const { authReady, accessToken } = useAuthStore();
+  
+  return useQuery({
+    queryKey: [...invitationKeys.all, 'join-requests'],
+    queryFn: async () => {
+      const response = await apiClient.getMyJoinRequests();
+      return response.data || [];
+    },
+    staleTime: 1 * 60 * 1000,
+    retry: 1,
+    enabled: authReady && !!accessToken,
   });
 }; 

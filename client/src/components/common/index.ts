@@ -21,3 +21,5 @@ export { ArrowIcon } from './Arrow';
 export { MetricCard } from './MetricCard';
 
 export { Modal } from './Modal';
+
+export { Toggle } from './Toggle';

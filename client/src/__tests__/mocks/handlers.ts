@@ -44,5 +44,15 @@ export const handlers = [
       data: mockCategories,
     });
   }),
+
+  http.get('*/api/messages/group/:groupId/unread-info', ({ params }) => {
+    return HttpResponse.json({
+      success: true,
+      data: {
+        unreadCount: 0,
+        lastReadMessage: null,
+      },
+    });
+  }),
 ];
 

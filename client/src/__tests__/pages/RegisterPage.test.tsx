@@ -30,6 +30,14 @@ vi.mock('../../components/auth/GoogleAuthButton', () => ({
 }));
 vi.mock('../../i18n/navigation', () => ({
   Link: ({ children }: { children: React.ReactNode }) => <a>{children}</a>,
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+    refresh: vi.fn(),
+  }),
+  usePathname: () => '/register',
 }));
 
 describe('RegisterPage', () => {
@@ -90,16 +98,14 @@ describe('RegisterPage', () => {
     if (lastNameInput) await user.type(lastNameInput, 'User');
     if (usernameInput) await user.type(usernameInput, 'testuser');
     if (emailInput) await user.type(emailInput, 'test@example.com');
-    if (passwordInput) await user.type(passwordInput, 'password123');
-    if (confirmPasswordInput) await user.type(confirmPasswordInput, 'password123');
+    if (passwordInput) await user.type(passwordInput, 'Password123');
+    if (confirmPasswordInput) await user.type(confirmPasswordInput, 'Password123');
     
     const submitButton = screen.getByRole('button', { name: /register|הרשמה/i });
     await user.click(submitButton);
     
     await waitFor(() => {
-      const validationErrors = screen.queryAllByText(/required|invalid/i);
-      const wasCalled = mockRegister.mock.calls.length > 0;
-      expect(wasCalled || validationErrors.length > 0).toBe(true);
+      expect(mockRegister).toHaveBeenCalled();
     }, { timeout: 3000 });
   });
 

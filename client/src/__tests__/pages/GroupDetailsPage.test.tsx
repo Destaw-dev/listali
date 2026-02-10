@@ -15,11 +15,49 @@ vi.mock('../../hooks/useAuthRedirect', () => ({
     isInitialized: true,
   }),
 }));
-vi.mock('../../store/authStore', () => ({
-  useAuthStore: () => ({
+vi.mock('../../store/authStore', () => {
+  const mockAuthStore = {
     user: { _id: 'user1' },
-  }),
-}));
+    isAuthenticated: true,
+    authMode: 'authenticated' as const,
+    isInitialized: true,
+    isAuthed: () => true,
+    isGuest: () => false,
+    accessToken: 'token',
+    guestId: null,
+    error: null,
+    lastLoginTime: Date.now(),
+    authReady: true,
+    isBootstrapping: false,
+    websocket: {
+      isConnected: false,
+      connectionError: null,
+      lastConnectedAt: null,
+      isConnecting: false,
+    },
+    setUser: vi.fn(),
+    setAccessToken: vi.fn(),
+    setGuestMode: vi.fn(),
+    clearUser: vi.fn(),
+    clearAuth: vi.fn(),
+    setIsLoading: vi.fn(),
+    setIsInitialized: vi.fn(),
+    setError: vi.fn(),
+    setAuthReady: vi.fn(),
+    bootstrapAuth: vi.fn(),
+    setWebSocketConnected: vi.fn(),
+    setWebSocketError: vi.fn(),
+    setWebSocketConnecting: vi.fn(),
+    updateWebSocketLastConnected: vi.fn(),
+  };
+  
+  const mockUseAuthStore = () => mockAuthStore;
+  mockUseAuthStore.getState = () => mockAuthStore;
+  
+  return {
+    useAuthStore: mockUseAuthStore,
+  };
+});
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
     push: vi.fn(),

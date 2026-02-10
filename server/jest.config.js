@@ -10,6 +10,7 @@ export default {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
+  setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup/emailMock.ts'],
   maxWorkers: '50%',
   testTimeout: 30000,
   testPathIgnorePatterns: [
@@ -18,6 +19,7 @@ export default {
     '/src/__tests__/utils/factories.ts',
     '/src/__tests__/utils/testHelpers.ts',
     '/src/__tests__/setup/testEnv.ts',
+    '/src/__tests__/setup/emailMock.ts',
     '/src/__tests__/factories/userFactory.ts',
   ],
 };

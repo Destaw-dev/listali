@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
+import { renderWithProviders } from '../../../test/test-utils';
 import { ShoppingListItems } from '../../../components/shoppingList/ShoppingListItems';
 import { mockItems, mockCategories } from '../../mocks/mockData';
 import { IItem } from '../../../types';
@@ -40,6 +41,13 @@ vi.mock('../../../hooks/useItems', () => ({
     error: null,
   })),
 }));
+vi.mock('../../../hooks/usePurchaseAllItems', () => ({
+  usePurchaseAllItems: vi.fn(() => ({
+    mutateAsync: vi.fn(),
+    isPending: false,
+    variables: undefined,
+  })),
+}));
 vi.mock('../../../components/shoppingList/items/CategorySection', () => ({
   CategorySection: ({ title, groups }: { title: string; groups: CategoryGroup[] }) => (
     <div>
@@ -71,7 +79,7 @@ describe('ShoppingListItems', () => {
   });
 
   it('should render loading state', () => {
-    render(
+    renderWithProviders(
       <ShoppingListItems
         items={[]}
         listId="list1"
@@ -87,7 +95,7 @@ describe('ShoppingListItems', () => {
   });
 
   it('should render empty state when no items', () => {
-    render(
+    renderWithProviders(
       <ShoppingListItems
         items={[]}
         listId="list1"
@@ -102,7 +110,7 @@ describe('ShoppingListItems', () => {
   });
 
   it('should render items list', () => {
-    render(
+    renderWithProviders(
       <ShoppingListItems
         items={mockItems}
         listId="list1"
@@ -117,7 +125,7 @@ describe('ShoppingListItems', () => {
   });
 
   it('should display items count', () => {
-    render(
+    renderWithProviders(
       <ShoppingListItems
         items={mockItems}
         listId="list1"
@@ -133,7 +141,7 @@ describe('ShoppingListItems', () => {
   });
 
   it('should group items by category', () => {
-    render(
+    renderWithProviders(
       <ShoppingListItems
         items={mockItems}
         listId="list1"
@@ -150,7 +158,7 @@ describe('ShoppingListItems', () => {
   it('should show unpurchased items section', () => {
     const unpurchasedItems = mockItems.filter(item => !item.isPurchased);
     
-    render(
+    renderWithProviders(
       <ShoppingListItems
         items={unpurchasedItems}
         listId="list1"
@@ -168,7 +176,7 @@ describe('ShoppingListItems', () => {
     const purchasedItems = mockItems.filter(item => item.isPurchased);
     
     if (purchasedItems.length > 0) {
-      render(
+      renderWithProviders(
         <ShoppingListItems
           items={purchasedItems}
           listId="list1"

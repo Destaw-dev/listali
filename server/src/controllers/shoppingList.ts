@@ -528,7 +528,6 @@ export const migrateGuestLists = async (
   }
 
   try {
-    // Find or create a default personal group for the user
     let userGroup = await Group.findOne({
       owner: userId,
       name: MIGRATION_CONSTANTS.DEFAULT_GROUP_NAME,
@@ -540,7 +539,7 @@ export const migrateGuestLists = async (
         description: MIGRATION_CONSTANTS.DEFAULT_GROUP_DESCRIPTION,
         owner: userId,
         settings: {
-          allowMemberInvite: false,
+          allowMemberInvite: true,
           requireApproval: false,
           maxMembers: 20,
         },
@@ -552,23 +551,20 @@ export const migrateGuestLists = async (
             canCreateLists: true,
             canEditLists: true,
             canDeleteLists: true,
-            canInviteMembers: false,
-            canManageMembers: false,
+            canInviteMembers: true,
+            canManageMembers: true,
           },
         }],
       });
 
-      // Add group to user's groups array
       await User.findByIdAndUpdate(userId, { $push: { groups: userGroup._id } });
     }
 
     let totalListsCreated = 0;
     let totalItemsCreated = 0;
 
-    // Migrate each guest list
     for (const guestList of guestLists) {
       try {
-        // Create shopping list using data from client
         const shoppingList = await ShoppingList.create({
           name: guestList.title,
           description: guestList.description,
@@ -579,16 +575,13 @@ export const migrateGuestLists = async (
           status: guestList.status,
         });
 
-        // Add list to group
         userGroup.shoppingLists.push(shoppingList._id);
         totalListsCreated++;
 
-        // Migrate items using data from client only
         if (guestList.items && Array.isArray(guestList.items) && guestList.items.length > 0) {
           const itemsToCreate = [];
           
           for (const guestItem of guestList.items) {
-            // All required data must come from client
             if (!guestItem.name) {
               console.warn(`Skipping item without name in list ${guestList.id}`);
               continue;
@@ -604,7 +597,6 @@ export const migrateGuestLists = async (
               continue;
             }
             
-            // Validate category exists
             const category = await Category.findById(guestItem.categoryId);
             if (!category) {
               console.warn(`Category ${guestItem.categoryId} not found for item ${guestItem.name}`);
@@ -612,7 +604,6 @@ export const migrateGuestLists = async (
             }
             console.log('guestItem', guestItem);  
 
-            // Safely parse numeric values with defaults
             const quantity = Number(guestItem.quantity) || 1;
             const purchasedQuantity = Number(guestItem.purchasedQuantity) || 0;
             const quantityToPurchase = Math.max(0, quantity - purchasedQuantity);
@@ -667,11 +658,9 @@ export const migrateGuestLists = async (
         }
       } catch (error) {
         console.error(`Error migrating guest list ${guestList.id}:`, error);
-        // Continue with next list even if one fails
       }
     }
 
-    // Save group updates
     await userGroup.save();
 
     res.status(200).json(

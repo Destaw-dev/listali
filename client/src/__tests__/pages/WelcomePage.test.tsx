@@ -17,6 +17,14 @@ vi.mock('next-intl', () => ({
 }));
 vi.mock('../../i18n/navigation', () => ({
   Link: ({ children, href }: { children: React.ReactNode; href: string }) => <a href={href}>{children}</a>,
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+    refresh: vi.fn(),
+  }),
+  usePathname: () => '/welcome',
 }));
 
 describe('WelcomePage', () => {

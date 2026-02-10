@@ -3,7 +3,7 @@ import { validationResult } from 'express-validator';
 import crypto from 'crypto';
 import User from '../models/user';
 import { asyncHandler, AppError, validationErrorResponse, successResponse } from '../middleware/handlers';
-import { IApiResponse, IAuthRequest, IRegisterRequest, IAuthResponse, UserDocument, IBasePendingInvite, IGroupMember, IUser, IPendingInvitation, Language } from '../types';
+import { IApiResponse, IAuthRequest, IRegisterRequest, IAuthResponse, UserDocument, IBasePendingInvite, IGroupMember, IUser, IPendingInvitation, Language, IJoinRequest, IUserJoinRequestWithGroup } from '../types';
 import { sendEmailVerification } from '../utils/email';
 import { signAccessToken, signRefreshToken, hashToken, verifyRefreshToken } from '../utils/tokens';
 
@@ -594,6 +594,69 @@ export const getMyInvitations = asyncHandler(async (req: Request, res: Response<
   res.status(200).json(successResponse(pendingInvitations, 'Invitations retrieved successfully'));
 });
 
+export const getMyJoinRequests = asyncHandler(async (req: Request, res: Response<IApiResponse<IUserJoinRequestWithGroup[]>>) => {
+  const userId = req.userId!;
+  const Group = (await import('../models/group')).default;
+  
+  const groups = await Group.find({
+    'joinRequests.user': userId,
+    'joinRequests.status': 'pending',
+    isActive: true
+  })
+    .select('name description avatar membersCount joinRequests')
+    .populate('joinRequests.user', 'username firstName lastName avatar');
+  
+  if (!groups || groups.length === 0) {
+    return res.status(200).json(successResponse([], 'No join requests found'));
+  }
+  
+  const userJoinRequests: IUserJoinRequestWithGroup[] = [];
+  
+  for (const group of groups) {
+    if (!group.joinRequests) continue;
+    
+    const userRequests = (group.joinRequests as IJoinRequest[]).filter((req) => {
+      const requestUser: any = req.user as any;
+      const requestUserId =
+        requestUser && requestUser._id ? requestUser._id.toString() : requestUser.toString();
+      return requestUserId === userId && req.status === 'pending';
+    });
+
+    for (const request of userRequests) {
+      const groupInfo: IUserJoinRequestWithGroup['group'] = {
+        _id: group._id.toString(),
+        name: group.name,
+        membersCount: group.members?.length || 0,
+      };
+
+      if (group.description) {
+        groupInfo.description = group.description;
+      }
+
+      if (group.avatar) {
+        groupInfo.avatar = group.avatar;
+      }
+
+      const dto: IUserJoinRequestWithGroup = {
+        user: request.user,
+        group: groupInfo,
+        inviteCode: request.inviteCode,
+        role: request.role,
+        requestedAt: request.requestedAt,
+        status: request.status,
+      };
+
+      if (request._id) {
+        dto._id = request._id;
+      }
+
+      userJoinRequests.push(dto);
+    }
+  }
+  
+ return res.status(200).json(successResponse(userJoinRequests, 'Join requests retrieved successfully'));
+});
+
 export const acceptInvitation = asyncHandler(async (req: Request, res: Response<IApiResponse<null>>) => {
   const { invitationId } = req.body;
   const userId = req.userId!;
@@ -623,6 +686,32 @@ export const acceptInvitation = asyncHandler(async (req: Request, res: Response<
     throw new AppError('You are already a member of this group', 400);
   }
 
+  if (group.settings.requireApproval) {
+    if (!group.joinRequests) {
+      group.joinRequests = [];
+    }
+
+    const existingRequest = group.joinRequests.find(
+      (req: any) => req.user.toString() === userId && req.inviteCode === invitationId && req.status === 'pending'
+    );
+
+    if (existingRequest) {
+      throw new AppError('You already have a pending join request for this group', 400);
+    }
+
+    group.joinRequests.push({
+      user: userId,
+      inviteCode: invitationId,
+      role: invite.role,
+      requestedAt: new Date(),
+      status: 'pending',
+    });
+
+    await group.save();
+
+    return res.status(200).json(successResponse(null, 'Join request submitted. Waiting for admin approval.'));
+  }
+
   await group.addMember(userId, invite.role);
 
   group.pendingInvites = group.pendingInvites.filter(i => i.code !== invitationId);
@@ -634,7 +723,7 @@ export const acceptInvitation = asyncHandler(async (req: Request, res: Response<
 
   await User.findByIdAndUpdate(userId, { $push: { groups: invitation.group } });
 
-  res.status(200).json(successResponse(null, 'Invitation accepted successfully'));
+ return res.status(200).json(successResponse(null, 'Invitation accepted successfully'));
 });
 
 export const declineInvitation = asyncHandler(async (req: Request, res: Response<IApiResponse<null>>) => {
@@ -672,7 +761,7 @@ export const declineInvitation = asyncHandler(async (req: Request, res: Response
   invitation.status = 'declined';
   await user.save();
 
-  res.status(200).json(successResponse(null, 'Invitation declined successfully'));
+ return res.status(200).json(successResponse(null, 'Invitation declined successfully'));
 });
 
 export const verifyEmail = asyncHandler(async (req: Request, res: Response<IApiResponse<{
