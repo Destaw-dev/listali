@@ -1,6 +1,7 @@
 import React from 'react';
 import { ButtonProps as IButtonProps } from '../../types';
 import { cn } from '../../lib/utils';
+import { gradients } from '../../lib/gradients';
 
 interface ButtonProps extends Omit<IButtonProps, 'variant'> {
   children?: React.ReactNode;
@@ -46,16 +47,16 @@ export function Button({
   
   const variantClasses: Record<string, string> = {
     primary: cn(
-      'bg-gradient-to-br from-primary-500 to-primary-600 text-text-primary',
-      'focus:ring-primary shadow-lg hover:shadow-xl'
+      gradients.primary,
+      'text-text-primary focus:ring-primary shadow-lg hover:shadow-xl'
     ),
     secondary: cn(
-      'bg-gradient-to-br from-secondary-500 to-secondary-700 text-text-primary hover:bg-secondary/90',
-      'focus:ring-secondary shadow-lg hover:shadow-xl'
+      gradients.secondary,
+      'text-text-primary hover:bg-secondary/90 focus:ring-secondary shadow-lg hover:shadow-xl'
     ),
     accent: cn(
-      'bg-gradient-to-br from-accent-500 to-accent-700 text-text-primary hover:bg-accent/90',
-      'focus:ring-accent shadow-lg hover:shadow-xl'
+      gradients.accent,
+      'text-text-primary hover:bg-accent/90 focus:ring-accent shadow-lg hover:shadow-xl'
     ),
     outlineBlue: cn(
       'border border-primary text-text-primary',
@@ -82,12 +83,12 @@ export function Button({
       'focus:ring-error shadow-lg hover:shadow-xl'
     ),
     success: cn(
-      'bg-gradient-to-br from-success-500 to-success-700 text-text-primary hover:bg-success/90',
-      'focus:ring-success shadow-lg hover:shadow-xl'
+      gradients.success,
+      'text-text-primary hover:bg-success/90 focus:ring-success shadow-lg hover:shadow-xl'
     ),
     warning: cn(
-      'bg-gradient-to-br from-warning-500 to-warning-700 text-text-primary hover:bg-warning/90',
-      'focus:ring-warning shadow-lg hover:shadow-xl'
+      gradients.warning,
+      'text-text-primary hover:bg-warning/90 focus:ring-warning shadow-lg hover:shadow-xl'
     ),
     outlineError: cn(
       'border border-error text-error',
@@ -95,8 +96,8 @@ export function Button({
       'bg-transparent shadow-lg hover:shadow-xl'
     ),
     error: cn(
-      'bg-gradient-to-br from-error-500 to-error-700 text-text-primary hover:bg-error/90',
-      'focus:ring-error shadow-lg hover:shadow-xl'
+      gradients.error,
+      'text-text-primary hover:bg-error/90 focus:ring-error shadow-lg hover:shadow-xl'
     ),
     checkbox: cn(
       'flex items-center justify-center rounded-full border-2 transition-all',

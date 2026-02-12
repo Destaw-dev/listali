@@ -8,6 +8,7 @@ import LanguageSwitcher from '../common/LanguageSwitcher';
 import { useLogout } from '../../hooks/useSettings';
 import { Button } from '../common';
 import Image from 'next/image';
+import { iconSizes } from '../../lib/iconSizes';
 
 export function Navigation() {
   const { user, isAuthenticated } = useAuthStore();
@@ -76,7 +77,7 @@ export function Navigation() {
                     variant={item.active ? 'primary' : 'ghost'}
                     key={item.href}
                     onClick={() => router.push(item.href)}
-                    icon={<Icon className="w-5 h-5" />}
+                    icon={<Icon className={iconSizes.md} />}
                   >
                     <span className="text-sm font-medium">{item.label}</span>
                   </Button>
@@ -118,9 +119,9 @@ export function Navigation() {
                 rounded={true}
               >
                 {logoutMutation.isPending ? (
-                  <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  <div className={`${iconSizes.md} border-2 border-current border-t-transparent rounded-full animate-spin`} />
                 ) : (
-                  <LogOut className="w-5 h-5" />
+                  <LogOut className={iconSizes.md} />
                 )}
               </Button>
             </div>
@@ -143,7 +144,7 @@ export function Navigation() {
                     >
                       <div className="flex items-center flex-col">
 
-                    <Icon className="w-5 h-5" />
+                    <Icon className={iconSizes.md} />
                     <p className="text-xs font-medium">{item.label}</p>
                       </div>
                   </Button>
@@ -176,7 +177,7 @@ export function Navigation() {
                 size='xs'
                 rounded={true}
                 >
-                <LogOut className="w-5 h-5" />
+                <LogOut className={iconSizes.md} />
               </Button>
             </div>
           </div>

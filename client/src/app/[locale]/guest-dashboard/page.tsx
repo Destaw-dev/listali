@@ -8,7 +8,7 @@ import { useStorageMonitor } from '../../../hooks/useStorageMonitor';
 import { useRequireAuth } from '../../../hooks/useRequireAuth';
 import { CreateGuestListModal } from '../../../components/guestList/CreateGuestListModal';
 import { StorageWarningModal } from '../../../components/guestList/StorageWarningModal';
-import { Card, CardBody, CardHeader, Button, Badge } from '../../../components/common';
+import { Card, CardBody, CardHeader, Button, Badge, SkeletonCard } from '../../../components/common';
 import { ShoppingCart, Activity } from 'lucide-react';
 import { useRouter } from '../../../i18n/navigation';
 import { useAuthRedirect } from '../../../hooks/useAuthRedirect';
@@ -30,8 +30,23 @@ export default function GuestDashboardPage() {
 
   if (!safeToShow) {
     return (
-      <div className="min-h-screen bg-surface flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-2 border-primary border-t-transparent" />
+      <div className="min-h-screen bg-surface">
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-7xl mx-auto space-y-8">
+            {/* Hero card skeleton */}
+            <SkeletonCard />
+
+            {/* Metric cards skeleton */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <SkeletonCard />
+              <SkeletonCard />
+              <SkeletonCard />
+            </div>
+
+            {/* Lists section skeleton */}
+            <SkeletonCard />
+          </div>
+        </div>
       </div>
     );
   }

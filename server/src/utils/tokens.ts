@@ -31,7 +31,7 @@ export const signRefreshToken = (userId: string, sessionId: string): string => {
   const payload = {
     sub: userId,
     sid: sessionId,
-    rnd: Math.random().toString(36).substring(2, 15),
+    rnd: crypto.randomBytes(16).toString('hex'),
   };
 
   const expireDays = parseInt(process.env.JWT_REFRESH_EXPIRE_DAYS || '30', 10);

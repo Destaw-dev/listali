@@ -211,6 +211,59 @@
         "description": "Get instant updates on changes to shopping lists"
       }
     },
+    "whyChoose": {
+      "title": "Why Listali?",
+      "subtitle": "The smartest and easiest way to manage shopping with family and friends"
+    },
+    "benefits": {
+      "fast": {
+        "title": "Fast & Easy",
+        "desc": "Simple and friendly interface that everyone can use"
+      },
+      "secure": {
+        "title": "Completely Secure",
+        "desc": "Your data is protected and encrypted at the highest level"
+      },
+      "smart": {
+        "title": "Smart & Efficient",
+        "desc": "Smart suggestions and automatic management that saves you time"
+      },
+      "anywhere": {
+        "title": "Anywhere",
+        "desc": "Access from any device, anytime - always synced"
+      },
+      "free": "Completely Free",
+      "noCard": "No Credit Card Required",
+      "instant": "Instant Setup"
+    },
+    "howItWorks": {
+      "title": "How It Works?"
+    },
+    "steps": {
+      "create": {
+        "title": "Create a List",
+        "desc": "Start a new shopping list with one click"
+      },
+      "invite": {
+        "title": "Invite Friends",
+        "desc": "Share your list with family and friends"
+      },
+      "shop": {
+        "title": "Shop Together",
+        "desc": "Real-time updates for all group members"
+      }
+    },
+    "stats": {
+      "users": "Happy Users",
+      "lists": "Active Lists",
+      "items": "Items Added",
+      "satisfaction": "Satisfaction"
+    },
+    "finalCTA": {
+      "title": "Ready to Start?",
+      "subtitle": "Join thousands of families already managing their shopping the smartest way"
+    },
+    "getStartedFree": "Get Started Free",
     "loginButton": "Login to existing account",
     "registerButton": "Create new account",
     "or": "or",

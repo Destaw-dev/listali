@@ -391,7 +391,7 @@ export function ChatComponent({ groupId, groupName }: ChatComponentProps ) {
     <div className="flex flex-col h-full bg-surface rounded-lg overflow-hidden shadow-sm">
       <div className="flex items-center justify-between p-4 bg-card border-b border-border">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-primary-700 to-primary-700 rounded-full flex items-center justify-center">
+          <div className="w-10 h-10 bg-primary-700 rounded-full flex items-center justify-center">
             <span className="text-text-primary font-medium text-sm">
               {groupName.charAt(0).toUpperCase()}
             </span>
@@ -484,7 +484,7 @@ export function ChatComponent({ groupId, groupName }: ChatComponentProps ) {
                         <div
                           className={`px-4 py-2 rounded-2xl shadow-sm transition-all duration-200 hover:shadow-md ${
                             isMyMessage
-                              ? 'bg-gradient-to-r from-primary-700 to-primary-700 text-text-primary hover:from-primary-700 hover:to-primary-700'
+                              ? 'bg-primary-700 text-text-primary hover:bg-primary-700'
                               : 'bg-accent-300 hover:bg-accent-600'
                           }`}
                         >

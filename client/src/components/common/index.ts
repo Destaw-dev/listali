@@ -23,3 +23,11 @@ export { MetricCard } from './MetricCard';
 export { Modal } from './Modal';
 
 export { Toggle } from './Toggle';
+
+export { Skeleton, SkeletonCard, SkeletonListItem, SkeletonAvatar, SkeletonText } from './Skeleton';
+
+export { ConfirmDialog } from './ConfirmDialog';
+export type { ConfirmDialogProps } from './ConfirmDialog';
+
+export { Tooltip, TooltipIconButton } from './Tooltip';
+export type { TooltipProps } from './Tooltip';
