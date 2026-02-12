@@ -138,18 +138,9 @@ export class ApiClient {
         if (axios.isAxiosError(error) && error.response?.status === 401) {
           const authStore = useAuthStore.getState();
           if (authStore.isGuest()) {
-            // On 401, set guest mode (NO redirect)
             authStore.setGuestMode();
-          }else if (authStore.authReady) {
+          } else if (authStore.authReady) {
             authStore.clearAuth();
-            if (typeof window !== 'undefined') {
-              const path = window.location.pathname;
-              const localeMatch = path.match(/^\/([a-z]{2})\//);
-              const locale = localeMatch ? localeMatch[1] : 'he';
-              if (!path.includes('/welcome') && !path.includes('/auth/login')) {
-                window.location.href = `/${locale}/welcome`;
-              }
-              }
           }
         }
         throw error;
@@ -164,31 +155,16 @@ export class ApiClient {
 
   private async handleAuthError() {
     const authStore = useAuthStore.getState();
-    
+
     if (!authStore.authReady) {
       return;
     }
-    
+
     if (authStore.isGuest()) {
-    // Set guest mode instead of redirecting
-    authStore.setGuestMode();
-    return;
+      authStore.setGuestMode();
+      return;
     }
     authStore.clearAuth();
-
-      await this.client.post('/auth/logout');
-
-      setTimeout(() => {
-        if (typeof window !== 'undefined') {
-          const path = window.location.pathname;
-          const localeMatch = path.match(/^\/([a-z]{2})\//);
-          const locale = localeMatch ? localeMatch[1] : 'he';
-          
-          if (!path.includes('/welcome') && !path.includes('/auth/login')) {
-            window.location.href = `/${locale}/welcome`;
-          }
-        }
-      }, 100);
   }
 
   async get(url: string, config?: AxiosRequestConfig) {
@@ -258,7 +234,6 @@ export class ApiClient {
       return false;
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 401) {
-        console.log('401 error', useAuthStore.getState());
         return false;
       }
       console.error('Error refreshing token:', error);

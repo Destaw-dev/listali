@@ -35,7 +35,7 @@ import { useNotification } from "../../../contexts/NotificationContext";
 import { Theme } from "../../../types";
 
 export default function SettingsPage() {
-  const { user, isAuthenticated, isInitialized, } = useAuthStore();
+  const { user, isAuthenticated, authReady } = useAuthStore();
   const router = useRouter();
   const params = useParams();
   const pathname = usePathname();
@@ -58,7 +58,7 @@ export default function SettingsPage() {
 
   const handleLogout = async () => {
     logoutMutation.mutate();
-    router.push('/auth/welcome');
+    router.push('/welcome');
   };
 
   const handleDeleteAccount = async () => {
@@ -102,12 +102,12 @@ export default function SettingsPage() {
   };
 
   useEffect(() => {
-    if (isInitialized && !isAuthenticated) {
+    if (authReady && !isAuthenticated) {
       router.push('/welcome');
     }
-  }, [isAuthenticated, isInitialized, router]);
+  }, [isAuthenticated, authReady, router]);
 
-  if (!isInitialized) {
+  if (!authReady) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Card variant="glass" className="bg-white/80 shadow-2xl max-w-md">

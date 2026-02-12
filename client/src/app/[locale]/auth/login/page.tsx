@@ -25,7 +25,7 @@ export default function LoginPage() {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const router = useRouter();
   const params = useParams();
-  const { setUser, isAuthenticated, isInitialized } = useAuthStore();
+  const { setUser, isAuthenticated, authReady } = useAuthStore();
   const { showSuccess, handleApiError } = useNotification();
   const t = useTranslations('auth');
   const locale = params?.locale as string || 'he';
@@ -42,12 +42,12 @@ export default function LoginPage() {
   });
 
   useEffect(() => {
-    if (isInitialized && isAuthenticated) {
+    if (authReady && isAuthenticated) {
       router.push('/dashboard');
     }
-  }, [isAuthenticated, isInitialized, locale, router]);
+  }, [isAuthenticated, authReady, locale, router]);
 
-  if (!isInitialized) {
+  if (!authReady) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">

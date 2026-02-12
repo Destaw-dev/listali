@@ -27,7 +27,7 @@ export default function GuestListPage() {
   const { isGuest } = useAuthStore();
   const { getList, addItem, removeItem, purchaseItem, unpurchaseItem, purchaseAllItems, undoPurchaseAll } = useGuestListsStore();
   
-  const { isInitialized } = useAuthRedirect({
+  const { safeToShow } = useAuthRedirect({
     redirectTo: '/welcome',
     requireAuth: false
   });
@@ -114,12 +114,12 @@ export default function GuestListPage() {
   }, [guestList?.items, categories]);
 
   useEffect(() => {
-    if (isInitialized && (!isGuest() || !guestList)) {
+    if (safeToShow && (!isGuest() || !guestList)) {
       router.push('/dashboard');
     }
-  }, [isInitialized, isGuest, guestList, locale, router]);
+  }, [safeToShow, isGuest, guestList, locale, router]);
 
-  if (!isInitialized) {
+  if (!safeToShow) {
     return (
       <div className="min-h-screen bg-surface flex items-center justify-center">
         <LoadingSpinner />

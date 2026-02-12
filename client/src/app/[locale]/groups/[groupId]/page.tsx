@@ -33,7 +33,7 @@ export default function GroupDetailsPage() {
   const groupId = params?.groupId as string;
   const { user } = useAuthStore();
   
-  const { isInitialized } = useAuthRedirect({
+  const { safeToShow } = useAuthRedirect({
     redirectTo: '/welcome',
     requireAuth: true
   });
@@ -96,7 +96,7 @@ export default function GroupDetailsPage() {
     }
   }, [error, router]);
 
-  if (!isInitialized) {
+  if (!safeToShow) {
     return (
       <div className="min-h-screen bg-surface flex items-center justify-center">
         <LoadingSpinner />

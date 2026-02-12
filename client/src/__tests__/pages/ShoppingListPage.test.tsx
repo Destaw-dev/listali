@@ -42,7 +42,8 @@ vi.mock('../../hooks/useItems', () => ({
 vi.mock('../../hooks/useAuthRedirect', () => ({
   useAuthRedirect: () => ({
     isAuthenticated: true,
-    isInitialized: true,
+    isReady: true,
+    safeToShow: true,
   }),
 }));
 vi.mock('../../store/authStore', () => ({

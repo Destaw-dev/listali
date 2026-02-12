@@ -23,7 +23,8 @@ vi.mock('../../hooks/useSettings');
 vi.mock('../../hooks/useAuthRedirect', () => ({
   useAuthRedirect: () => ({
     isAuthenticated: true,
-    isInitialized: true,
+    isReady: true,
+    safeToShow: true,
   }),
 }));
 vi.mock('next/navigation', () => ({

@@ -49,7 +49,8 @@ vi.mock('../../store/authStore');
 vi.mock('../../hooks/useDashboard');
 const mockUseAuthRedirect = vi.fn(() => ({
   isAuthenticated: true,
-  isInitialized: true,
+  isReady: true,
+  safeToShow: true,
 }));
 
 vi.mock('../../hooks/useAuthRedirect', () => ({
@@ -183,7 +184,8 @@ describe('DashboardPage', () => {
     vi.mock('../../hooks/useAuthRedirect', () => ({
       useAuthRedirect: () => ({
         isAuthenticated: false,
-        isInitialized: false,
+        isReady: false,
+        safeToShow: false,
       }),
     }));
 

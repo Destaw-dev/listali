@@ -26,7 +26,7 @@ export default function RegisterPage() {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const router = useRouter();
   const params = useParams();
-  const { isAuthenticated, isInitialized, setUser } = useAuthStore();
+  const { isAuthenticated, authReady, setUser } = useAuthStore();
   const { showSuccess, showWarning, handleApiError } = useNotification();
   const t = useTranslations('auth');
   const locale = params?.locale as string || 'he';
@@ -42,7 +42,7 @@ export default function RegisterPage() {
     resolver: zodResolver(registerSchema),
   });
 
-  if (!isInitialized) {
+  if (!authReady) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">

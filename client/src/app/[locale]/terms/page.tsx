@@ -1,14 +1,12 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
-import { useParams } from 'next/navigation';
+import { useTranslations, useLocale } from 'next-intl';
 import { FileText, Calendar, Shield, AlertCircle, ArrowLeft, ArrowRight } from 'lucide-react';
-import Link from 'next/link';
+import { Link } from '../../../i18n/navigation';
 
 
 export default function TermsPage() {
-  const params = useParams();
-  const locale = params.locale as string;
+  const locale = useLocale();
   const t = useTranslations('terms');
 
   return (
@@ -17,7 +15,7 @@ export default function TermsPage() {
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center gap-3">
             <Link
-              href={`/${locale}`}
+              href="/"
               className="cursor-pointer"
             >
               {locale !== 'he' ? <ArrowLeft className="w-4 h-4 text-text-primary" /> : <ArrowRight className="w-4 h-4 text-text-primary" />}

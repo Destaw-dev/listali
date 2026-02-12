@@ -63,7 +63,7 @@ export default function InvitationsPage() {
   const isLoading = invitationsLoading || joinRequestsLoading;
   const error = invitationsError;
 
-  const { isInitialized } = useAuthRedirect({
+  const { safeToShow } = useAuthRedirect({
     redirectTo: '/welcome',
     requireAuth: true,
   });
@@ -80,9 +80,9 @@ export default function InvitationsPage() {
     setProcessingInvitation(null);
   };
 
-  if (!isInitialized) {
+  if (!safeToShow) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-surface">
+      <div className="min-h-screen flex items-center justify-center">
         <LoadingSpinner />
       </div>
     );

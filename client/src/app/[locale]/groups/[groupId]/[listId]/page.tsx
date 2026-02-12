@@ -32,7 +32,7 @@ export default function ShoppingListPage() {
 
   useShoppingListItemsWebSocket(groupId, listId)
 
-  const { isInitialized } = useAuthRedirect({
+  const { safeToShow } = useAuthRedirect({
     redirectTo: '/welcome',
     requireAuth: true
   });
@@ -176,7 +176,7 @@ export default function ShoppingListPage() {
   }, [currentUserMembership]);
 
 
-  if (!isInitialized || isLoading) {
+  if (!safeToShow || isLoading) {
     return (
       <div className="flex min-h-screen bg-surface items-center justify-center">
         <LoadingSpinner />

@@ -1,13 +1,11 @@
 'use client';
 import { Info, Users, ShoppingCart, Zap, Shield, Heart, ArrowLeft, ArrowRight } from 'lucide-react';
-import { useParams } from 'next/navigation';
-import Link from 'next/link';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
+import { Link } from '../../../i18n/navigation';
 
 
 export default function AboutPage() {
-  const params = useParams();
-  const locale = params?.locale as string || 'he';
+  const locale = useLocale();
   const t = useTranslations('about');
 
   return (
@@ -16,7 +14,7 @@ export default function AboutPage() {
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center gap-3">
             <Link
-              href={`/${locale}`}
+              href="/"
               className="cursor-pointer"
             >
               {locale !== 'he' ? <ArrowLeft className="w-4 h-4 text-text-primary" /> : <ArrowRight className="w-4 h-4 text-text-primary" />}

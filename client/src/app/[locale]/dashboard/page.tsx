@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "../../../i18n/navigation";
 import {
@@ -16,7 +15,6 @@ import {
 } from "lucide-react";
 import { useAuthRedirect } from "../../../hooks/useAuthRedirect";
 import { useAuthStore } from "../../../store/authStore";
-import { useGuestListsStore } from "../../../store/guestListsStore";
 import { useDashboard } from "../../../hooks/useDashboard";
 import {
   Card,
@@ -27,36 +25,21 @@ import {
 } from "../../../components/common";
 import { ArrowIcon } from "../../../components/common/Arrow";
 import { IAchievement } from "../../../types";
-import { useRequireAuth } from "../../../hooks/useRequireAuth";
-import { CreateGuestListModal } from "../../../components/guestList/CreateGuestListModal";
-import { StorageWarningModal } from "../../../components/guestList/StorageWarningModal";
-import { useStorageMonitor } from "../../../hooks/useStorageMonitor";
 
 export default function DashboardPage() {
   const router = useRouter();
   const t = useTranslations("Dashboard");
-  const { user, isGuest } = useAuthStore();
-  const { lists: guestLists } = useGuestListsStore();
-  const { requireAuth, RequireAuthModal } = useRequireAuth();
-  const [showCreateGuestListModal, setShowCreateGuestListModal] =
-    useState(false);
-  const { shouldWarn, checkStorage } = useStorageMonitor();
-  const [showStorageWarning, setShowStorageWarning] = useState(false);
+  const { user } = useAuthStore();
 
-  const { isInitialized } = useAuthRedirect({
+  const { safeToShow } = useAuthRedirect({
     redirectTo: '/welcome',
     requireAuth: true,
   });
 
   const { data: dashboardData } = useDashboard();
 
-  useEffect(() => {
-    if (shouldWarn && !showStorageWarning) {
-      setShowStorageWarning(true);
-    }
-  }, [shouldWarn, showStorageWarning]);
 
-  if (!isInitialized) {
+  if (!safeToShow) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary-50 via-secondary-50 to-accent-50  flex items-center justify-center">
         <div className="text-center">
@@ -67,192 +50,6 @@ export default function DashboardPage() {
           <p className="text-lg font-medium text-text-primary animate-pulse">
             {t("loading")}
           </p>
-        </div>
-      </div>
-    );
-  }
-
-  if (isGuest()) {
-    const totalGuestItems = guestLists.reduce(
-      (sum, list) => sum + list.items.length,
-      0
-    );
-    const checkedGuestItems = guestLists.reduce(
-      (sum, list) => sum + list.items.filter((item) => item.checked).length,
-      0
-    );
-
-    return (
-      <div className="min-h-screen bg-surface">
-        {RequireAuthModal}
-        <CreateGuestListModal
-          isOpen={showCreateGuestListModal}
-          onClose={() => setShowCreateGuestListModal(false)}
-        />
-        <StorageWarningModal
-          isOpen={showStorageWarning}
-          onClose={() => {
-            setShowStorageWarning(false);
-            checkStorage();
-          }}
-        />
-        <div className="container mx-auto px-4 py-8 relative z-10">
-          <div className="max-w-7xl mx-auto space-y-8">
-            <Card variant="glass" className="shadow-2xl bg-card">
-              <CardBody className="p-1 sm:p-8">
-                <div className="flex sm:items-center justify-between flex-col md:flex-row gap-3">
-                  <div>
-                    <h1 className="text-4xl font-bold text-text-primary mb-2">
-                      {t("welcome")} 🎉
-                    </h1>
-                    <p className="text-xl text-secondary font-medium mb-1">
-                      {t("guestMode") || "מצב אורח"}
-                    </p>
-                    <p className="text-sm text-text-muted">
-                      {t("guestModeDesc") ||
-                        "רשימות מקומיות - התחבר כדי לשמור ולשתף"}
-                    </p>
-                  </div>
-                  <Button
-                    variant="primary"
-                    onClick={() => {
-                      if (!requireAuth("login")) {
-                      }
-                    }}
-                  >
-                    {t("login") || "התחבר"}
-                  </Button>
-                </div>
-              </CardBody>
-            </Card>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <Card hover className="bg-card">
-                <CardBody className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="p-3 bg-gradient-to-br from-secondary-700 to-secondary-700 rounded-2xl shadow-lg">
-                      <ShoppingCart className="w-6 h-6 text-text-primary" />
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-medium text-text-muted">
-                        {t("totalLists")}
-                      </p>
-                      <p className="text-2xl font-bold text-secondary">
-                        {guestLists.length}
-                      </p>
-                    </div>
-                  </div>
-                </CardBody>
-              </Card>
-
-              <Card hover className="bg-card">
-                <CardBody className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="p-3 bg-gradient-to-br from-success-400 to-success-600 rounded-2xl shadow-lg">
-                      <Activity className="w-6 h-6 text-text-primary" />
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-medium text-text-muted">
-                        {t("checkedItems") || "פריטים מסומנים"}
-                      </p>
-                      <p className="text-2xl font-bold text-success">
-                        {checkedGuestItems}
-                      </p>
-                    </div>
-                  </div>
-                </CardBody>
-              </Card>
-
-              <Card hover className="bg-card">
-                <CardBody className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="p-3 bg-gradient-to-br from-info-400 to-info-600 rounded-2xl shadow-lg">
-                      <ShoppingCart className="w-6 h-6 text-text-primary" />
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-medium text-text-muted">
-                        {t("totalItems")}
-                      </p>
-                      <p className="text-2xl font-bold text-info-600">
-                        {totalGuestItems}
-                      </p>
-                    </div>
-                  </div>
-                </CardBody>
-              </Card>
-            </div>
-
-            <Card variant="glass" className="bg-surface/80 shadow-2xl">
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-lg">
-                    <ShoppingCart className="w-5 h-5 text-text-primary" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-bold text-text-primary">
-                      {t("myLists") || "הרשימות שלי"}
-                    </h2>
-                    <p className="text-text-muted">
-                      {t("guestListsDesc") ||
-                        "רשימות מקומיות - יישמרו רק במכשיר זה"}
-                    </p>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardBody>
-                {guestLists.length === 0 ? (
-                  <div className="text-center py-8">
-                    <div className="p-4 bg-gradient-to-br from-primary-100 to-primary-200 rounded-2xl mx-auto w-fit mb-4">
-                      <ShoppingCart className="w-8 h-8 text-primary-600" />
-                    </div>
-                    <p className="text-text-muted mb-4">
-                      {t("noGuestLists") ||
-                        "אין לך רשימות מקומיות. התחבר כדי ליצור רשימות משותפות!"}
-                    </p>
-                    <Button
-                      variant="primary"
-                      onClick={() => setShowCreateGuestListModal(true)}
-                      className="mx-auto"
-                    >
-                      {t("createList") || "צור רשימה"}
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {guestLists.map((list) => (
-                      <Card
-                        key={list.id}
-                        variant="glass"
-                        hover
-                        className="cursor-pointer shadow-lg hover:shadow-xl transition-all duration-300"
-                        onClick={() =>
-                          router.push(`/guest-lists/${list.id}`)
-                        }
-                      >
-                        <CardBody className="p-4">
-                          <h3 className="text-lg font-semibold text-text-primary mb-2">
-                            {list.title}
-                          </h3>
-                          <p className="text-sm text-text-muted mb-4">
-                            {list.items.length} {t("items") || "פריטים"}
-                          </p>
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-text-muted">
-                              {list.items.filter((i) => i.checked).length}/
-                              {list.items.length} {t("checked") || "מסומן"}
-                            </span>
-                            <Badge variant="secondary" size="sm">
-                              {t("local") || "מקומי"}
-                            </Badge>
-                          </div>
-                        </CardBody>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </CardBody>
-            </Card>
-          </div>
         </div>
       </div>
     );
@@ -282,15 +79,6 @@ export default function DashboardPage() {
   };
 
   const quickActions = [
-    // {
-    //   title: t('createGroup'),
-    //   description: t('createGroupDesc'),
-    //   icon: Users,
-    //   action: () => router.push(`/${locale}/groups`),
-    //   variant: 'primary' as const,
-    //   gradient: 'from-primary-500 to-primary-600',
-    //   bgGradient: 'from-primary-50 to-primary-100'
-    // },
     {
       title: `צור/${t("joinGroup")}`,
       description: t("joinGroupDesc"),

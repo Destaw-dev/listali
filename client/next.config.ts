@@ -4,13 +4,6 @@ const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Redirect root to default locale so https://app.listali.co.il/ always works
-  async redirects() {
-    return [
-      { source: '/', destination: '/he', permanent: false },
-    ];
-  },
-  // Reduces "missing a sourcemap" noise in dev when using Turbopack (optional)
   productionBrowserSourceMaps: false,
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5000',

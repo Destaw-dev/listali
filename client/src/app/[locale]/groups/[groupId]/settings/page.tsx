@@ -156,7 +156,7 @@ export default function GroupSettingsPage({}) {
   const memberActionsRef = useRef<HTMLDivElement>(null);
   const { user } = useAuthStore();
 
-  const { isInitialized } = useAuthRedirect({
+  const { safeToShow } = useAuthRedirect({
     redirectTo: "/welcome",
     requireAuth: true,
   });
@@ -503,7 +503,7 @@ export default function GroupSettingsPage({}) {
     }
   };
 
-  if (!isInitialized || isGroupLoading) {
+  if (!safeToShow || isGroupLoading) {
     return (
       <div className="min-h-screen bg-surface flex items-center justify-center">
         <LoadingSpinner />

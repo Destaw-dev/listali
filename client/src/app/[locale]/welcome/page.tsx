@@ -1,32 +1,34 @@
 'use client';
 
-import { useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { useParams } from 'next/navigation';
 import { useRouter } from '../../../i18n/navigation';
 import { useAuthStore } from '../../../store/authStore';
 import { ShoppingCart, Users, Zap, User } from 'lucide-react';
 import { Button } from '../../../components/common/Button';
+import { useAuthRedirect } from '@/hooks/useAuthRedirect';
 
 export default function WelcomePage() {
   const t = useTranslations();
   const router = useRouter();
-  const params = useParams();
-  const { isAuthenticated, isInitialized, setGuestMode } = useAuthStore();
-  const locale = params?.locale as string || 'he';
+  const { isAuthenticated, setGuestMode } = useAuthStore();
+
+  const { safeToShow } = useAuthRedirect({
+    redirectTo: '/dashboard',
+    requireAuth: false,
+  });
 
   const handleContinueAsGuest = () => {
     setGuestMode();
-    router.push('/dashboard');
+    router.push('/guest-dashboard');
   };
 
-  useEffect(() => {
-    if (isInitialized && isAuthenticated) {
-      router.push('/dashboard');
-    }
-  }, [isAuthenticated, isInitialized, router, locale]);
+  // useEffect(() => {
+  //   if (authReady && isAuthenticated) {
+  //     router.push('/dashboard');
+  //   }
+  // }, [isAuthenticated, authReady, router, locale]);
 
-  if (!isInitialized) {
+  if (!safeToShow) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">

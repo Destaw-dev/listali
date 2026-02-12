@@ -33,13 +33,16 @@ describe('useAuthRedirect Hook', () => {
     });
   });
 
-  it('should return auth state when initialized', () => {
-    vi.mocked(useAuthStore).mockReturnValue(createMockAuthStore({ isAuthenticated: true, isInitialized: true }));
+  it('should return auth state when initialized', async () => {
+    vi.mocked(useAuthStore).mockReturnValue(createMockAuthStore({ isAuthenticated: true, authReady: true, isGuest: () => false }));
 
     const { result } = renderHook(() => useAuthRedirect());
 
     expect(result.current.isAuthenticated).toBe(true);
-    expect(result.current.isInitialized).toBe(true);
+    expect(result.current.isReady).toBe(true);
+    await waitFor(() => {
+      expect(result.current.safeToShow).toBe(true);
+    });
   });
 
   it('should redirect when requireAuth is true and user is not authenticated', async () => {

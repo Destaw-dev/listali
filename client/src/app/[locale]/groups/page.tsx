@@ -37,7 +37,7 @@ export default function GroupsPage() {
   const createGroupMutation = useCreateGroup();
   const joinGroupMutation = useJoinGroup();
 
-  const { isInitialized } = useAuthRedirect({
+  const { safeToShow } = useAuthRedirect({
     redirectTo: '/welcome',
     requireAuth: true,
   });
@@ -65,9 +65,9 @@ export default function GroupsPage() {
       group.description?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (!isInitialized) {
+  if (!safeToShow) {
     return (
-      <div className="min-h-screen bg-surface flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <LoadingSpinner />
       </div>
     );
