@@ -44,7 +44,7 @@ export default function LanguageSwitcher() {
         <Globe className="w-5 h-5 text-text-primary" />
       </Button>
       
-      <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 text-text-primary text-xs rounded-full flex items-center justify-center">
+      <div className="absolute -top-1 -inset-inline-end-1 w-4 h-4 bg-[var(--color-icon-primary-fg)] text-text-on-primary text-xs rounded-full flex items-center justify-center">
         {locale === 'he' ? t('hebrew') : t('english')}
       </div>
     </div>

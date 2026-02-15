@@ -11,7 +11,7 @@ export const createUserAndAuth = async () => {
     lastName: faker.person.lastName(),
     username: `testuser_${uniqueId}`,
     email: `test_${uniqueId}@example.com`,
-    password: 'Password123'
+    password: 'NewPasswordSafe123!'
   };
 
   const registerRes = await request(app).post('/api/auth/register').send(userData);

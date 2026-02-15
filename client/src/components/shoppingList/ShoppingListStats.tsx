@@ -46,7 +46,7 @@ export function ShoppingListStats({
             cx={radius}
             cy={radius}
             strokeDasharray="4 4"   
-            className="text-neutral-300"
+            className="text-border"
           />
   
           <circle
@@ -58,7 +58,7 @@ export function ShoppingListStats({
             cy={radius}
             strokeDasharray={circumference}
             strokeDashoffset={offset}
-            className="text-accent-500 transition-all duration-700"
+            className="text-accent transition-all duration-700"
           />
         </svg>
   
@@ -75,28 +75,28 @@ export function ShoppingListStats({
       label: t("stats.purchased"),
       value: purchasedItems,
       icon: CheckCircle,
-      accent: "text-success-600 bg-success-50",
+      accent: "text-success bg-[var(--color-status-success-soft)]",
     },
     {
       id: "remaining",
       label: t("stats.remaining"),
       value: remainingItems,
       icon: ShoppingBag,
-      accent: "text-primary-600 bg-primary-50",
+      accent: "text-[var(--color-icon-primary-fg)] bg-[var(--color-icon-primary-bg)]",
     },
     {
       id: "active",
       label: t("stats.activeShoppers"),
       value: activeShoppers,
       icon: Users,
-      accent: "text-secondary-600 bg-secondary-50",
+      accent: "text-[var(--color-icon-secondary-fg)] bg-[var(--color-icon-secondary-bg)]",
     },
     {
       id: "progress",
       label: t("stats.progress"),
       value: <ProgressRing progress={progress} />,
       icon: Clock,
-      accent: "text-secondary-600 bg-secondary-50",
+      accent: "text-[var(--color-icon-info-fg)] bg-[var(--color-icon-info-bg)]",
     }
   ] as const;
   
@@ -106,17 +106,17 @@ export function ShoppingListStats({
       {cards.map(({ id, label, value, icon: Icon, accent }) => (
         <article
           key={id}
-          className="flex flex-col justify-between rounded-2xl bg-card p-4 shadow-lg backdrop-blur-sm transition hover:-translate-y-0.5 hover:shadow-xl"
+          className="group flex flex-col justify-between rounded-2xl bg-card p-5 shadow-lg backdrop-blur-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-xl border border-border/30 hover:border-border/60"
         >
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-3">
             <span className="text-sm font-medium text-text-muted">{label}</span>
             <span
-              className={`flex h-9 w-9 items-center justify-center rounded-2xl ${accent}`}
+              className={`flex h-10 w-10 items-center justify-center rounded-xl ${accent} transition-transform duration-200 group-hover:scale-110 shadow-sm`}
             >
-              <Icon className="h-4 w-4" />
+              <Icon className="h-5 w-5" />
             </span>
           </div>
-          <div className="text-2xl font-semibold text-text-primary">
+          <div className="text-3xl font-bold text-text-primary">
             {value}
           </div>
         </article>

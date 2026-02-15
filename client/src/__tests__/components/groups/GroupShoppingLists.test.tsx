@@ -93,8 +93,8 @@ describe('GroupShoppingLists', () => {
     } as ReturnType<typeof useGroup>);
 
     renderWithProviders(<GroupShoppingLists />);
-    const spinner = document.querySelector('.animate-spin');
-    expect(spinner).toBeTruthy();
+    const skeleton = document.querySelector('.animate-pulse');
+    expect(skeleton).toBeTruthy();
   });
 
   it('should show empty state when no lists', () => {
@@ -110,4 +110,3 @@ describe('GroupShoppingLists', () => {
     expect(emptyText || buttons.length > 0).toBeTruthy();
   });
 });
-

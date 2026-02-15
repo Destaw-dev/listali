@@ -3,6 +3,7 @@ import rateLimit from 'express-rate-limit';
 import { authenticateToken, optionalAuth } from '../middleware/auth';
 import {
   register,
+  getCsrfToken,
   login,
   logout,
   getMe,
@@ -48,6 +49,7 @@ const registerLimiter = rateLimit({
 router.post('/google', googleAuth);
 router.get('/google/url', googleUrl);
 router.get('/google/callback', googleCallback);
+router.get('/csrf-token', getCsrfToken);
 router.post('/register', registerLimiter, registerValidation, register);
 router.post('/login', authLimiter, loginValidation, login);
 router.post('/logout', optionalAuth, logout);

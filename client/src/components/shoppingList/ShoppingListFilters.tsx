@@ -103,7 +103,7 @@ export function ShoppingListFilters({
                   className={cn(
                     "ms-2 rounded-full px-2 py-0.5 text-xs",
                     isActive
-                      ? "bg-background-100 text-text-primary-700"
+                      ? "bg-surface-hover text-text-primary"
                       : "bg-card text-text-muted"
                   )}
                 >
@@ -132,4 +132,3 @@ export function ShoppingListFilters({
     </div>
   );
 }
-

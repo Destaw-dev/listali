@@ -46,6 +46,7 @@ describe('RegisterPage', () => {
     vi.mocked(useAuthStore).mockReturnValue({
       user: null,
       isAuthenticated: false,
+      authReady: true,
       isInitialized: true,
       setUser: vi.fn(),
     } as ReturnType<typeof useAuthStore>);
@@ -98,8 +99,8 @@ describe('RegisterPage', () => {
     if (lastNameInput) await user.type(lastNameInput, 'User');
     if (usernameInput) await user.type(usernameInput, 'testuser');
     if (emailInput) await user.type(emailInput, 'test@example.com');
-    if (passwordInput) await user.type(passwordInput, 'Password123');
-    if (confirmPasswordInput) await user.type(confirmPasswordInput, 'Password123');
+    if (passwordInput) await user.type(passwordInput, 'Password123!');
+    if (confirmPasswordInput) await user.type(confirmPasswordInput, 'Password123!');
     
     const submitButton = screen.getByRole('button', { name: /register|הרשמה/i });
     await user.click(submitButton);
@@ -139,6 +140,7 @@ describe('RegisterPage', () => {
     vi.mocked(useAuthStore).mockReturnValue({
       user: mockUser,
       isAuthenticated: true,
+      authReady: true,
       isInitialized: true,
       setUser: vi.fn(),
     } as ReturnType<typeof useAuthStore>);
@@ -151,7 +153,8 @@ describe('RegisterPage', () => {
     vi.mocked(useAuthStore).mockReturnValue({
       user: null,
       isAuthenticated: false,
-      isInitialized: false,
+      authReady: false,
+      isInitialized: true,
       setUser: vi.fn(),
     } as ReturnType<typeof useAuthStore>);
 
@@ -159,4 +162,3 @@ describe('RegisterPage', () => {
     expect(screen.getByText(/loading/i)).toBeInTheDocument();
   });
 });
-

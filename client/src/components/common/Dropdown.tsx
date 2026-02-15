@@ -65,9 +65,9 @@ const sizeClasses = {
 };
 
 const variantClasses = {
-  default: "bg-card shadow-sm border border-border hover:bg-background text-text-primary",
-  outlined: "bg-transparent border border-border hover:bg-background text-text-primary",
-  ghost: "bg-transparent hover:bg-background text-text-primary",
+  default: "bg-card shadow-sm border border-border hover:bg-surface-hover text-text-primary",
+  outlined: "bg-transparent border border-border hover:bg-surface-hover text-text-primary",
+  ghost: "bg-transparent hover:bg-surface-hover text-text-primary",
 };
 
 interface DropdownTriggerProps {
@@ -196,7 +196,7 @@ function DropdownMenu({
         "absolute z-50 min-w-full",
         alignClasses[align],
         positionClasses[position],
-        "bg-background rounded-lg shadow-xl border border-border text-text-primary",
+        "bg-card rounded-lg shadow-xl border border-border text-text-primary",
         "overflow-hidden",
         menuClassName
       )}
@@ -243,11 +243,11 @@ function DropdownMenu({
                 "w-full flex items-center justify-between gap-2 px-4 py-2", 
                 "transition-colors duration-150",
                 "focus:outline-none",
-                isFocused && !isDisabled && "bg-background-100",
-                isSelected && !isDisabled && "bg-background-200 font-medium",
+                isFocused && !isDisabled && "bg-surface-hover",
+                isSelected && !isDisabled && "bg-[var(--color-icon-primary-bg)] font-medium",
                 isDisabled
                   ? "opacity-50 cursor-not-allowed text-text-muted"
-                  : "hover:bg-background-50 cursor-pointer",
+                  : "hover:bg-surface-hover cursor-pointer",
                 optionClassName
               )}
             >
@@ -265,7 +265,7 @@ function DropdownMenu({
         })}
       </div>
       {footer && (
-        <div className="border-t border-border p-2 bg-background">
+        <div className="border-t border-border p-2 bg-surface">
           {footer}
         </div>
       )}

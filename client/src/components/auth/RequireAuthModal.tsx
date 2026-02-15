@@ -8,6 +8,7 @@ import { Lock, Mail } from 'lucide-react';
 import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
 import { GoogleAuthButton } from './GoogleAuthButton';
+import { useNotification } from '../../contexts/NotificationContext';
 
 interface RequireAuthModalProps {
   isOpen: boolean;
@@ -20,8 +21,9 @@ export function RequireAuthModal({ isOpen, onClose, actionName }: RequireAuthMod
   const params = useParams();
   const locale = params.locale as string || 'he';
   const t = useTranslations('auth.RequireAuthModal');
+  const { showError } = useNotification();
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const actionNameText = actionName as 'register' | 'login' ? "register" : "register";
+  const actionNameText: 'register' | 'login' = actionName === 'login' ? 'login' : 'register';
 
   const handleGoogleAuth = async () => {
     setIsGoogleLoading(true);
@@ -32,11 +34,12 @@ export function RequireAuthModal({ isOpen, onClose, actionName }: RequireAuthMod
       if (data.success && data.data.url) {
         window.location.href = data.data.url;
       } else {
-        throw new Error(data.message || 'Failed to get Google OAuth URL');
+        throw new Error(data.message || 'Google authentication error');
       }
     } catch (error) {
       console.error('Google auth error:', error);
-      alert('שגיאה בהתחברות עם Google. אנא נסה שוב.');
+      showError('auth.googleAuthError');
+    } finally {
       setIsGoogleLoading(false);
     }
   };

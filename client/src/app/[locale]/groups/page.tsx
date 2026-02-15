@@ -19,7 +19,8 @@ import {
   CardFooter,
   Button,
   Input,
-  LoadingSpinner
+  LoadingState,
+  SkeletonCard
 } from "../../../components/common";
 import { useGroups, useCreateGroup, useJoinGroup } from "../../../hooks/useGroups";
 import { useAuthRedirect } from "../../../hooks/useAuthRedirect";
@@ -66,17 +67,21 @@ export default function GroupsPage() {
   );
 
   if (!safeToShow) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <LoadingSpinner />
-      </div>
-    );
+    return <LoadingState variant="page" />;
   }
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-surface">
-        <LoadingSpinner />
+      <div className="min-h-screen bg-surface">
+        <div className="container mx-auto px-4 py-4">
+          <div className="max-w-6xl mx-auto space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <SkeletonCard key={i} />
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -108,8 +113,8 @@ export default function GroupsPage() {
         <div className="max-w-6xl mx-auto space-y-4">
           <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl">
-                <Users className="w-5 h-5" />
+              <div className="p-2 bg-[var(--color-icon-primary-bg)] rounded-xl">
+                <Users className="w-5 h-5 text-[var(--color-icon-primary-fg)]" />
               </div>
               <div>
                 <h1 className="text-xl font-bold text-text-primary">
@@ -170,7 +175,7 @@ export default function GroupsPage() {
           {filteredGroups.length === 0 ? (
             <Card  className="shadow-2xl">
               <CardBody className="p-8 text-center">
-                <Users className="w-12 h-12 text-muted mx-auto mb-4" />
+                <Users className="w-12 h-12 text-text-muted mx-auto mb-4" />
                 <h3 className="text-lg font-bold text-text-primary mb-2">
                   {searchTerm ? t("noResults") : t("noGroups")}
                 </h3>
@@ -245,19 +250,19 @@ export default function GroupsPage() {
                         .map((member: IGroupMember, i: number) => (
                           <div
                             key={i}
-                            className="h-6 w-6 rounded-full ring-2 ring-accent-50 bg-primary-500 flex items-center justify-center text-[10px] text-text-muted font-medium"
+                            className="h-6 w-6 rounded-full ring-2 ring-accent/20 bg-primary flex items-center justify-center text-[10px] text-text-muted font-medium"
                           >
                             {member.user.firstName?.[0]}
                             {member.user.lastName?.[0]}
                           </div>
                         ))}
 
-                      <div className="h-6 w-6 rounded-full ring-2 ring-accent-50 bg-primary-500 flex items-center justify-center text-[10px] text-text-muted font-medium">
+                      <div className="h-6 w-6 rounded-full ring-2 ring-accent/20 bg-primary flex items-center justify-center text-[10px] text-text-muted font-medium">
                         +{group.members?.length || 0}
                       </div>
                     </div>
 
-                    <div className="flex items-center text-[11px] md:text-xs font-medium text-text-on-primary bg-primary-500 px-2 py-1 rounded-full">
+                    <div className="flex items-center text-[11px] md:text-xs font-medium text-text-on-primary bg-primary px-2 py-1 rounded-full">
                       {group.shoppingLists?.length || 0} {t("lists")}
                     </div>
                   </CardFooter>
@@ -269,7 +274,7 @@ export default function GroupsPage() {
                 size='xl'
                 onClick={() => setShowCreateModal(true)}
               >
-                <div className="h-12 w-12 rounded-full bg-primary-500 flex items-center justify-center mb-3">
+                <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center mb-3">
                   <Plus className="h-6 w-6 text-text-primary" />
                 </div>
                 <span className="text-sm font-medium text-text-primary">{t("createGroup")}</span>

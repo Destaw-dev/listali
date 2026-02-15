@@ -28,12 +28,12 @@ export default function TermsPage() {
       <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
         {/* Header Section */}
         <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
-          <div className="h-16 bg-gradient-to-l from-primary-500 to-primary-600" />
+          <div className="h-16 bg-surface-hover" />
           <div className="px-6 pb-6 relative">
             <div className="flex justify-between items-end -mt-10 mb-4">
               <div className="w-16 h-16 rounded-xl bg-card border border-border p-1 shadow-md">
-                <div className="w-full h-full bg-primary-100 rounded-lg flex items-center justify-center text-primary-600 text-xl font-bold">
-                  <FileText className="w-8 h-8" />
+                <div className="w-full h-full bg-[var(--color-icon-primary-bg)] rounded-lg flex items-center justify-center text-[var(--color-icon-primary-fg)] text-xl font-bold">
+                  <FileText className="w-8 h-8 text-[var(--color-icon-primary-fg)]" />
                 </div>
               </div>
             </div>
@@ -61,7 +61,7 @@ export default function TermsPage() {
           {/* Acceptance */}
           <div className="bg-card border border-border rounded-xl shadow-sm p-6">
             <h2 className="text-xl font-bold text-text-primary mb-4 flex items-center gap-2">
-              <Shield className="w-5 h-5 text-primary-600" />
+              <Shield className="w-5 h-5 text-primary" />
               {t('sections.acceptance.title')}
             </h2>
             <p className="text-text-muted leading-relaxed mb-3">
@@ -120,7 +120,7 @@ export default function TermsPage() {
           {/* Limitation of Liability */}
           <div className="bg-card border border-border rounded-xl shadow-sm p-6">
             <h2 className="text-xl font-bold text-text-primary mb-4 flex items-center gap-2">
-              <AlertCircle className="w-5 h-5 text-warning-600" />
+              <AlertCircle className="w-5 h-5 text-warning" />
               {t('sections.liability.title')}
             </h2>
             <p className="text-text-muted leading-relaxed">

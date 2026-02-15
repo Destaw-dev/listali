@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import { useRouter } from '../../../../../i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { useQueryClient } from '@tanstack/react-query';
-import { Button, LoadingSpinner } from '../../../../../components/common';
+import { Button, SkeletonCard } from '../../../../../components/common';
 import { ShoppingListHeaderBar } from '../../../../../components/shoppingList/ShoppingListHeaderBar';
 import { ShoppingListStats } from '../../../../../components/shoppingList/ShoppingListStats';
 import { ShoppingListFilters, ShoppingStatusFilter } from '../../../../../components/shoppingList/ShoppingListFilters';
@@ -29,6 +29,7 @@ export default function ShoppingListPage() {
   const groupId = params?.groupId as string;
   const listId = params?.listId as string;
   const t = useTranslations('ShoppingListPage');
+  const tItems = useTranslations('ShoppingListItems');
 
   useShoppingListItemsWebSocket(groupId, listId)
 
@@ -107,7 +108,7 @@ export default function ShoppingListPage() {
       } else {
         categoryId = 'no-category';
       }
-      const categoryName = categories.find((c: ICategory) => c._id === categoryId)?.name || 'No Category';
+      const categoryName = categories.find((c: ICategory) => c._id === categoryId)?.name || tItems('noCategory');
       
       const categoryKey = String(categoryId);
       
@@ -122,7 +123,7 @@ export default function ShoppingListPage() {
     });
 
     return Object.values(stats);
-  }, [items, categories]);
+  }, [items, categories, tItems]);
 
   const purchasedCount = useMemo(() => {
     return items?.filter((item: IItem) => item.isPurchased || item.status === 'purchased').length || 0;
@@ -178,8 +179,12 @@ export default function ShoppingListPage() {
 
   if (!safeToShow || isLoading) {
     return (
-      <div className="flex min-h-screen bg-surface items-center justify-center">
-        <LoadingSpinner />
+      <div className="min-h-screen bg-surface">
+        <div className="mx-auto max-w-7xl space-y-6 p-4 sm:p-6 lg:p-8">
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+        </div>
       </div>
     );
   }

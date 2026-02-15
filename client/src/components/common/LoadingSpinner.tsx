@@ -16,8 +16,8 @@ export function LoadingSpinner({ message, size = 'md' }: LoadingSpinnerProps) {
     <div className="flex flex-col items-center justify-center gap-3">
       <div className={`animate-spin rounded-full border-2 border-primary border-t-transparent ${sizeClasses[size]}`} />
       {message && (
-        <p className="text-text-primary text-sm">{message}</p>
+        <p className="text-text-muted text-sm">{message}</p>
       )}
     </div>
   );
-} 
+}

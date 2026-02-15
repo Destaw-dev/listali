@@ -22,9 +22,11 @@ import {
   CardBody,
   Button,
   Badge,
+  LoadingState,
 } from "../../../components/common";
 import { ArrowIcon } from "../../../components/common/Arrow";
 import { IAchievement } from "../../../types";
+import { colorRoleClasses } from "../../../lib/colorRoles";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -40,19 +42,7 @@ export default function DashboardPage() {
 
 
   if (!safeToShow) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-50 via-secondary-50 to-accent-50  flex items-center justify-center">
-        <div className="text-center">
-          <div className="relative">
-            <div className="animate-spin rounded-full h-16 w-16 border-4 border-primary border-t-transparent mx-auto mb-6"></div>
-            <div className="absolute inset-0 rounded-full border-4 border-secondary/30 animate-pulse"></div>
-          </div>
-          <p className="text-lg font-medium text-text-primary animate-pulse">
-            {t("loading")}
-          </p>
-        </div>
-      </div>
-    );
+    return <LoadingState variant="page" size="lg" message={t("loading")} />;
   }
 
   const stats = dashboardData?.stats || {
@@ -74,19 +64,19 @@ export default function DashboardPage() {
 
   const achievements = dashboardData?.achievements || [];
   const userInfo = dashboardData?.user || {
-    lastActive: "לא ידוע",
+    lastActive: t("unknown"),
     online: false,
   };
 
   const quickActions = [
     {
-      title: `צור/${t("joinGroup")}`,
+      title: `${t("createGroup")} / ${t("joinGroup")}`,
       description: t("joinGroupDesc"),
       icon: Plus,
       action: () => router.push('/groups'),
       variant: "secondary" as const,
-      gradient: "from-secondary-500 to-secondary-600",
-      bgGradient: "from-secondary-300 to-secondary-400",
+      iconContainer: "bg-[var(--color-icon-secondary-bg)]",
+      iconColor: "text-[var(--color-icon-secondary-fg)]",
     },
     {
       title: t("viewInvitations"),
@@ -94,8 +84,8 @@ export default function DashboardPage() {
       icon: Bell,
       action: () => router.push('/invitations'),
       variant: "accent" as const,
-      gradient: "from-accent-500 to-accent-600",
-      bgGradient: "from-accent-300 to-accent-400",
+      iconContainer: "bg-[var(--color-icon-accent-bg)]",
+      iconColor: "text-[var(--color-icon-accent-fg)]",
     },
   ];
 
@@ -106,7 +96,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen  bg-surface">
+    <div className="min-h-screen bg-surface">
       <div className="container mx-auto px-4 py-8 relative z-10">
         <div className="max-w-7xl mx-auto space-y-8">
           <Card variant="glass" className="shadow-2xl bg-card">
@@ -121,17 +111,17 @@ export default function DashboardPage() {
                         width="100%"
                         height={"100%"}
                         loading="lazy"
-                        className="w-14 h-14 sm:w-24 sm:h-24 rounded-full border-4 border-white shadow-xl object-cover"
+                        className="w-14 h-14 sm:w-24 sm:h-24 rounded-full border-4 border-border shadow-xl object-cover"
                       />
                     </div>
                   )}
                   <div>
-                    <div className="flex items-center gap-3 mb-3 bg-gradient-to-br from-primary-600 to-secondary-600 rounded-lg p-2">
-                      <h1 className="text-4xl font-bold  text-text-primary">
-                        {t("welcome")} 🎉
+                    <div className="flex items-center gap-3 mb-3 bg-[var(--color-icon-primary-bg)] rounded-lg p-2">
+                      <h1 className="text-4xl font-bold text-[var(--color-icon-primary-fg)]">
+                        {t("welcome")}
                       </h1>
                     </div>
-                    <p className="text-xl text-secondary font-medium mb-1">
+                    <p className="text-xl text-text-secondary font-medium mb-1">
                       {user?.username || user?.firstName + " " + user?.lastName}
                     </p>
                     <div className="text-sm text-text-muted flex items-center gap-2">
@@ -156,10 +146,10 @@ export default function DashboardPage() {
             <Card hover className="bg-card">
               <CardBody className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-gradient-to-br from-primary-400 to-primary-600 rounded-2xl shadow-lg">
-                    <Users className="w-6 h-6 text-text-primary" />
+                  <div className="p-3 bg-[var(--color-icon-primary-bg)] rounded-2xl shadow-sm">
+                    <Users className="w-6 h-6 text-[var(--color-icon-primary-fg)]" />
                   </div>
-                  <div className="text-right">
+                  <div className="text-end">
                     <p className="text-sm font-medium text-text-muted">
                       {t("totalGroups")}
                     </p>
@@ -185,10 +175,10 @@ export default function DashboardPage() {
             <Card hover className="bg-card">
               <CardBody className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-gradient-to-br from-secondary-700 to-secondary-700 rounded-2xl shadow-lg">
-                    <ShoppingCart className="w-6 h-6 text-text-primary" />
+                  <div className="p-3 bg-[var(--color-icon-secondary-bg)] rounded-2xl shadow-sm">
+                    <ShoppingCart className="w-6 h-6 text-[var(--color-icon-secondary-fg)]" />
                   </div>
-                  <div className="text-right">
+                  <div className="text-end">
                     <p className="text-sm font-medium text-text-muted">
                       {t("totalLists")}
                     </p>
@@ -212,10 +202,10 @@ export default function DashboardPage() {
             <Card hover className="bg-card">
               <CardBody className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-gradient-to-br from-accent-700 to-accent-700 rounded-2xl shadow-lg">
-                    <Target className="w-6 h-6 text-text-primary" />
+                  <div className="p-3 bg-[var(--color-icon-accent-bg)] rounded-2xl shadow-sm">
+                    <Target className="w-6 h-6 text-[var(--color-icon-accent-fg)]" />
                   </div>
-                  <div className="text-right">
+                  <div className="text-end">
                     <p className="text-sm font-medium text-text-muted">
                       {t("completedLists")}
                     </p>
@@ -243,10 +233,10 @@ export default function DashboardPage() {
             <Card hover className="bg-card">
               <CardBody className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-gradient-to-br from-warning-400 to-warning-600 rounded-2xl shadow-lg">
-                    <ShoppingCart className="w-6 h-6 text-text-primary" />
+                  <div className="p-3 bg-[var(--color-icon-warning-bg)] rounded-2xl shadow-sm">
+                    <ShoppingCart className="w-6 h-6 text-[var(--color-icon-warning-fg)]" />
                   </div>
-                  <div className="text-right">
+                  <div className="text-end">
                     <p className="text-sm font-medium text-text-muted">
                       {t("purchasedItems")}
                     </p>
@@ -274,10 +264,10 @@ export default function DashboardPage() {
             <Card hover className="bg-card">
               <CardBody className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-gradient-to-br from-success-400 to-success-600 rounded-2xl shadow-lg">
-                    <Activity className="w-6 h-6 text-text-primary" />
+                  <div className="p-3 bg-[var(--color-icon-success-bg)] rounded-2xl shadow-sm">
+                    <Activity className="w-6 h-6 text-[var(--color-icon-success-fg)]" />
                   </div>
-                  <div className="text-right">
+                  <div className="text-end">
                     <p className="text-sm font-medium text-text-muted">
                       {t("remainingItems")}
                     </p>
@@ -286,9 +276,9 @@ export default function DashboardPage() {
                     </p>
                   </div>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                  <div className="w-full bg-border-light rounded-full h-2 mb-2">
                   <div
-                    className="bg-gradient-to-r from-success-400 to-success-600 h-2 rounded-full"
+                    className="bg-success h-2 rounded-full"
                     style={{
                       width: `${
                         stats.totalItems > 0
@@ -309,21 +299,21 @@ export default function DashboardPage() {
             <Card hover>
               <CardBody className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-gradient-to-br from-info-400 to-info-600 rounded-2xl shadow-lg">
-                    <ShoppingCart className="w-6 h-6 text-text-primary" />
+                  <div className="p-3 bg-[var(--color-icon-info-bg)] rounded-2xl shadow-sm">
+                    <ShoppingCart className="w-6 h-6 text-[var(--color-icon-info-fg)]" />
                   </div>
-                  <div className="text-right">
+                  <div className="text-end">
                     <p className="text-sm font-medium text-text-muted">
                       {t("totalItems")}
                     </p>
-                    <p className="text-2xl font-bold text-info-600">
+                    <p className="text-2xl font-bold text-info">
                       {stats.totalItems}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-info-600" />
-                  <span className="text-sm font-medium text-info-600">
+                  <Sparkles className="w-4 h-4 text-info" />
+                  <span className="text-sm font-medium text-info">
                     {t("totalItemsLabel")}
                   </span>
                 </div>
@@ -336,8 +326,8 @@ export default function DashboardPage() {
               <Card variant="glass" className="bg-surface/80 shadow-2xl">
                 <CardHeader>
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-lg">
-                      <Sparkles className="w-5 h-5 text-text-primary" />
+                    <div className="p-2 bg-[var(--color-icon-primary-bg)] rounded-lg">
+                      <Sparkles className="w-5 h-5 text-[var(--color-icon-primary-fg)]" />
                     </div>
                     <div>
                       <h2 className="text-xl font-bold text-text-primary">
@@ -361,9 +351,9 @@ export default function DashboardPage() {
                         >
                           <CardBody className="p-6 text-center">
                             <div
-                              className={`p-4 rounded-2xl mb-4 inline-block bg-gradient-to-br ${action.bgGradient} shadow-lg`}
+                              className={`p-4 rounded-2xl mb-4 inline-block ${action.iconContainer} shadow-sm`}
                             >
-                              <Icon className={`w-8 h-8 text-text-primary`} />
+                              <Icon className={`w-8 h-8 ${action.iconColor}`} />
                             </div>
                             <h3 className="text-lg font-semibold text-text-primary mb-2">
                               {action.title}
@@ -392,8 +382,8 @@ export default function DashboardPage() {
               <Card variant="glass" className="bg-surface/80 shadow-2xl">
                 <CardHeader>
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-lg">
-                      <Award className="w-5 h-5 text-text-primary" />
+                    <div className="p-2 bg-[var(--color-icon-warning-bg)] rounded-lg">
+                      <Award className="w-5 h-5 text-[var(--color-icon-warning-fg)]" />
                     </div>
                     <div>
                       <h2 className="text-xl font-bold text-text-primary">
@@ -414,13 +404,13 @@ export default function DashboardPage() {
                         return (
                           <div
                             key={index}
-                            className="flex items-center gap-4 p-4 bg-gradient-to-r from-surface/50 to-surface/30 rounded-xl"
+                            className="flex items-center gap-4 p-4 bg-surface rounded-xl"
                           >
-                            <div className="p-2 bg-surface-50 rounded-lg">
+                            <div className="p-2 bg-surface-hover rounded-lg">
                               <Icon
                                 className={`w-5 h-5 ${
                                   achievement.unlocked
-                                    ? "text-warning-500"
+                                    ? "text-warning"
                                     : "text-text-muted"
                                 }`}
                               />
@@ -433,9 +423,9 @@ export default function DashboardPage() {
                                 {achievement.description}
                               </p>
                               <div className="mt-2">
-                                <div className="w-full bg-info-100 rounded-full h-2">
+                                <div className="w-full bg-border-light rounded-full h-2">
                                   <div
-                                    className="bg-gradient-to-r from-yellow-400 to-orange-400 h-2 rounded-full transition-all duration-300"
+                                    className="bg-warning h-2 rounded-full transition-all duration-300"
                                     style={{
                                       width: `${
                                         (achievement.progress /
@@ -452,7 +442,7 @@ export default function DashboardPage() {
                               </div>
                             </div>
                             {achievement.unlocked && (
-                              <div className="w-3 h-3 bg-gradient-to-r from-warning-500 to-warning-600 rounded-full"></div>
+                              <div className="w-3 h-3 bg-warning rounded-full"></div>
                             )}
                           </div>
                         );
@@ -464,11 +454,11 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <Card variant="glass" className="bg-white/80 shadow-2xl">
+          <Card variant="glass" className="bg-surface/80 shadow-2xl">
             <CardHeader>
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-gradient-to-r from-accent-500 to-purple-500 rounded-lg">
-                  <Activity className="w-5 h-5 text-text-primary" />
+                <div className="p-2 bg-[var(--color-icon-accent-bg)] rounded-lg">
+                  <Activity className="w-5 h-5 text-[var(--color-icon-accent-fg)]" />
                 </div>
                 <div>
                   <h2 className="text-xl font-bold text-text-primary">
@@ -482,8 +472,8 @@ export default function DashboardPage() {
               <div className="space-y-4">
                 {stats.groups === 0 ? (
                   <div className="text-center py-8">
-                    <div className="p-4 bg-gradient-to-br from-primary-100 to-primary-200 rounded-2xl mx-auto w-fit mb-4">
-                      <Users className="w-8 h-8 text-text-primary-600" />
+                    <div className="p-4 bg-[var(--color-icon-primary-bg)] rounded-2xl mx-auto w-fit mb-4">
+                      <Users className="w-8 h-8 text-[var(--color-icon-primary-fg)]" />
                     </div>
                     <p className="text-text-muted mb-4">{t("noGroups")}</p>
                     <Button
@@ -497,9 +487,9 @@ export default function DashboardPage() {
                 ) : (
                   <>
                     {stats.pendingTasks > 0 && (
-                      <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-warning-50/50 to-warning-100/30 rounded-xl">
-                        <div className="p-2 bg-gradient-to-br from-warning-400 to-warning-600 rounded-lg shadow-lg">
-                          <Bell className="w-5 h-5 text-text-primary" />
+                      <div className={`flex items-center gap-4 p-4 ${colorRoleClasses.statusWarningSoft} rounded-xl`}>
+                        <div className="p-2 bg-[var(--color-icon-warning-bg)] rounded-lg shadow-sm">
+                          <Bell className="w-5 h-5 text-[var(--color-icon-warning-fg)]" />
                         </div>
                         <div className="flex-1">
                           <p className="font-medium text-text-primary">
@@ -509,7 +499,7 @@ export default function DashboardPage() {
                             {stats.pendingTasks} {t("invitations")}
                           </p>
                         </div>
-                        <div className="text-right">
+                        <div className="text-end">
                           <Button
                             variant="warning"
                             size="sm"
@@ -524,20 +514,20 @@ export default function DashboardPage() {
                     )}
 
                     {stats.lists > 0 && (
-                      <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-success-400 to-success-400/30 rounded-xl">
-                        <div className="p-2 bg-gradient-to-br from-success-400 to-success-600 rounded-lg shadow-lg">
-                          <ShoppingCart className="w-5 h-5 text-text-primary" />
+                      <div className={`flex items-center gap-4 p-4 ${colorRoleClasses.statusSuccessSoft} rounded-xl`}>
+                        <div className="p-2 bg-[var(--color-icon-success-bg)] rounded-lg shadow-sm">
+                          <ShoppingCart className="w-5 h-5 text-[var(--color-icon-success-fg)]" />
                         </div>
                         <div className="flex-1">
                           <p className="font-medium text-text-primary">
                             {t("totalLists")}
                           </p>
-                          <p className="text-sm text-text-on-primary">
+                          <p className="text-sm text-text-muted">
                             {stats.lists} {t("lists")}
                           </p>
                         </div>
-                        <div className="text-right">
-                          <span className="text-sm text-text-on-primary">
+                        <div className="text-end">
+                          <span className="text-sm text-text-muted">
                             {stats.completedLists} {t("completed")}
                           </span>
                         </div>
@@ -545,19 +535,19 @@ export default function DashboardPage() {
                     )}
 
                     {stats.groups > 0 && (
-                      <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-secondary-50 to-secondary-100/30 rounded-xl">
-                        <div className="p-2 bg-gradient-to-br from-secondary-400 to-secondary-600 rounded-lg shadow-lg">
-                          <Users className="w-5 h-5 text-text-primary" />
+                      <div className={`flex items-center gap-4 p-4 ${colorRoleClasses.statusSecondarySoft} rounded-xl`}>
+                        <div className="p-2 bg-[var(--color-icon-secondary-bg)] rounded-lg shadow-sm">
+                          <Users className="w-5 h-5 text-[var(--color-icon-secondary-fg)]" />
                         </div>
                         <div className="flex-1">
                           <p className="font-medium text-text-primary">
                             {t("totalGroups")}
                           </p>
-                          <p className="text-sm text-text-on-primary">
+                          <p className="text-sm text-text-muted">
                             {stats.groups} {t("groups")}
                           </p>
                         </div>
-                        <div className="text-right">
+                        <div className="text-end">
                           <Button
                             variant="secondary"
                             size="sm"

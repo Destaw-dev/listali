@@ -132,7 +132,7 @@ export default function AddItemsModal({
         <div className="border-b border-border flex-shrink-0">
           <div className="flex items-center justify-between p-3 sm:p-4">
             <div className="flex items-center gap-2 sm:gap-3">
-              <div className="p-1.5 sm:p-2 bg-background-hover rounded-lg">
+              <div className="p-1.5 sm:p-2 bg-surface-hover rounded-lg">
                 <Package className="w-4 h-4 sm:w-5 sm:h-5 text-text-primary" />
               </div>
               <div>

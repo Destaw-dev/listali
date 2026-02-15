@@ -87,8 +87,8 @@ export function MenuButton({
   };
 
   const alignClasses = {
-    start: 'left-0',
-    end: 'right-0',
+    start: 'inset-inline-start-0',
+    end: 'inset-inline-end-0',
     center: 'left-1/2 -translate-x-1/2',
   };
 
@@ -132,12 +132,12 @@ export function MenuButton({
               disabled={option.disabled}
               className={cn(
                 'w-full flex items-center gap-2 px-3 py-2 text-sm',
-                'focus:outline-none focus:bg-background-hover',
+                'focus:outline-none focus:bg-surface-hover',
                 option.disabled
-                  ? 'opacity-50 cursor-not-allowed text-muted'
+                  ? 'opacity-50 cursor-not-allowed text-text-muted'
                   : option.variant === 'danger'
                   ? 'text-error-600 hover:bg-error-50 cursor-pointer'
-                  : 'text-primary-700 hover:bg-background-50 cursor-pointer'
+                  : 'text-text-primary hover:bg-surface-hover cursor-pointer'
               )}
             >
               {option.icon && (
@@ -151,4 +151,3 @@ export function MenuButton({
     </div>
   );
 }
-

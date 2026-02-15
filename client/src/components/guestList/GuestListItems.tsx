@@ -170,7 +170,7 @@ export const GuestListItems = memo(function GuestListItems({
 
     const getCategoryName = (categoryId: string): string => {
       const category = categories.find((c) => c._id === categoryId);
-      return category?.name || "No Category";
+      return category?.name || tItems("noCategory");
     };
 
     const unpurchasedGroups = [
@@ -178,7 +178,7 @@ export const GuestListItems = memo(function GuestListItems({
         ? [
             {
               categoryId: "uncategorized",
-              categoryName: tItems("uncategorized") || "Uncategorized",
+              categoryName: tItems("noCategory"),
               items: unpurchasedUncategorized.map((item) => convertGuestItemToIItem(item, categories)),
             },
           ]
@@ -195,7 +195,7 @@ export const GuestListItems = memo(function GuestListItems({
         ? [
             {
               categoryId: "uncategorized",
-              categoryName: tItems("uncategorized") || "Uncategorized",
+              categoryName: tItems("noCategory"),
               items: purchasedUncategorized.map((item) => convertGuestItemToIItem(item, categories)),
             },
           ]
@@ -217,7 +217,7 @@ export const GuestListItems = memo(function GuestListItems({
         <h3 className="mb-2 text-lg font-semibold text-text-primary">
           {tItems("noItems")}
         </h3>
-        <p className="text-text-muted">{tItems("addItemsMessage") || "Add items to get started"}</p>
+        <p className="text-text-muted">{tItems("addItemsMessage")}</p>
       </div>
     );
   }
@@ -244,7 +244,7 @@ export const GuestListItems = memo(function GuestListItems({
         <div>
           {groupedItems.unpurchasedGroups.length > 0 && (
             <CategorySection
-              title={tItems("unpurchasedItems") || "Unpurchased Items"}
+              title={tItems("unpurchasedItems")}
               icon={<ShoppingBag className="h-5 w-5 text-primary-500" />}
               groups={groupedItems.unpurchasedGroups}
               onOpenPurchaseModal={handleOpenPurchaseModal}
@@ -260,7 +260,7 @@ export const GuestListItems = memo(function GuestListItems({
 
           {groupedItems.purchasedGroups.length > 0 && (
             <CategorySection
-              title={tItems("purchasedItems") || "Purchased Items"}
+              title={tItems("purchasedItems")}
               icon={<CheckCircle className="h-5 w-5 text-success-600" />}
               groups={groupedItems.purchasedGroups}
               onOpenPurchaseModal={handleOpenPurchaseModal}

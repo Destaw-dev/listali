@@ -50,7 +50,7 @@ const user = {
   lastName: 'user',
   username: 'testuser',
   email: 'test@example.com',
-  password: 'Password123'
+  password: 'NewPasswordSafe123!'
 };
 
 const verifyUserEmail = async (email: string) => {

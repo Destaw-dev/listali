@@ -64,8 +64,8 @@ export function JoinGroupModal({
       title={t("joinGroup")}
       onClose={handleClose}
       iconHeader={
-        <div className="p-2 bg-gradient-to-br from-secondary-400 to-secondary-600 rounded-xl">
-          <UserPlus className="w-5 h-5 text-text-primary" />
+        <div className="p-2 bg-[var(--color-icon-secondary-bg)] rounded-xl">
+          <UserPlus className="w-5 h-5 text-[var(--color-icon-secondary-fg)]" />
         </div>
       }
       subtitle={t("joinGroupDescription")}
@@ -84,7 +84,7 @@ export function JoinGroupModal({
           autoComplete="off"
         />
 
-        <div className="bg-background/5 border border-primary/10 rounded-lg p-4">
+        <div className="bg-surface border border-border rounded-lg p-4">
           <h4 className="font-medium text-text-primary mb-2">
             {t("howToJoinGroup")}
           </h4>

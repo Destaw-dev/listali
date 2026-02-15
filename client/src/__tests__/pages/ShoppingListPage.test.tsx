@@ -95,7 +95,7 @@ describe('ShoppingListPage', () => {
 
   it('should display shopping list items', () => {
     renderWithProviders(<ShoppingListPage />);
-    expect(screen.getByText(mockItems[0].name)).toBeInTheDocument();
+    expect(screen.getAllByText(mockItems[0].name).length).toBeGreaterThan(0);
   });
 
   it('should show loading state', () => {
@@ -110,8 +110,8 @@ describe('ShoppingListPage', () => {
     });
 
     renderWithProviders(<ShoppingListPage />);
-    const spinner = document.querySelector('.animate-spin');
-    expect(spinner).toBeTruthy();
+    const skeleton = document.querySelector('.animate-pulse');
+    expect(skeleton).toBeTruthy();
   });
 
   it('should display stats', () => {
@@ -120,4 +120,3 @@ describe('ShoppingListPage', () => {
     expect(statsTexts.length).toBeGreaterThan(0);
   });
 });
-

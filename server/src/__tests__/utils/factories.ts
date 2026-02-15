@@ -6,7 +6,7 @@ export const createUser = async (overrides = {}) => {
   const user = await User.create({
     username: 'testuser' + Math.random().toString(36).substring(7),
     email: 'test' + Date.now() + '@mail.com',
-    password: 'Pass1234',
+    password: 'NewPasswordSafe123!',
     firstName: 'Test',
     lastName: 'User',
     ...overrides

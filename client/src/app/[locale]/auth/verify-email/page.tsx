@@ -10,6 +10,7 @@ import { apiClient } from '../../../../lib/api';
 import { useAuthStore } from '../../../../store/authStore';
 import { mapInviteErrorToTranslationKey } from '../../../../lib/utils';
 import { useNotification } from '../../../../contexts/NotificationContext';
+import { colorRoleClasses } from '../../../../lib/colorRoles';
 
 function VerifyEmailContent() {
 
@@ -117,21 +118,21 @@ function VerifyEmailContent() {
           <div className="text-center">
             <LoadingSpinner size="lg" />
             <h2 className="text-xl font-semibold mt-4">{t('verifyingEmail')}</h2>
-            <p className="text-gray-600 mt-2">{t('pleaseWait')}</p>
+            <p className="text-text-secondary mt-2">{t('pleaseWait')}</p>
           </div>
         );
 
       case 'success':
         return (
           <div className="text-center">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className={`w-16 h-16 ${colorRoleClasses.statusSuccessSoft} rounded-full flex items-center justify-center mx-auto mb-4`}>
+              <svg className="w-8 h-8 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold text-green-600 mb-2">{t('emailVerified')}</h2>
-            <p className="text-gray-600 mb-4">{t('verificationSuccess')}</p>
-            <p className="text-sm text-gray-500">
+            <h2 className="text-2xl font-bold text-success mb-2">{t('emailVerified')}</h2>
+            <p className="text-text-secondary mb-4">{t('verificationSuccess')}</p>
+            <p className="text-sm text-text-muted">
               {t('redirectingIn')} {countdown} {t('seconds')}
             </p>
             <Button 
@@ -146,14 +147,14 @@ function VerifyEmailContent() {
       case 'expired':
         return (
           <div className="text-center">
-            <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className={`w-16 h-16 ${colorRoleClasses.statusWarningSoft} rounded-full flex items-center justify-center mx-auto mb-4`}>
+              <svg className="w-8 h-8 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold text-yellow-600 mb-2">{t('verificationExpired')}</h2>
-            {!verificationSent ? <p className="text-gray-600 mb-4">{t('verificationExpiredMessage')}</p> : (
-              <p className="text-gray-600 mb-4">{t('verificationEmailSent')}</p>
+            <h2 className="text-2xl font-bold text-warning mb-2">{t('verificationExpired')}</h2>
+            {!verificationSent ? <p className="text-text-secondary mb-4">{t('verificationExpiredMessage')}</p> : (
+              <p className="text-text-secondary mb-4">{t('verificationEmailSent')}</p>
             )}
             <Button 
               onClick={resendVerification}
@@ -168,14 +169,14 @@ function VerifyEmailContent() {
       case 'error':
         return (
           <div className="text-center">
-            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className={`w-16 h-16 ${colorRoleClasses.statusErrorSoft} rounded-full flex items-center justify-center mx-auto mb-4`}>
+              <svg className="w-8 h-8 text-error" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold text-red-600 mb-2">{t('verificationFailed')}</h2>
-            {!verificationSent ? <p className="text-gray-600 mb-4">{t('verificationFailedMessage')}</p> : (
-              <p className="text-gray-600 mb-4">{t('verificationEmailSent')}</p>
+            <h2 className="text-2xl font-bold text-error mb-2">{t('verificationFailed')}</h2>
+            {!verificationSent ? <p className="text-text-secondary mb-4">{t('verificationFailedMessage')}</p> : (
+              <p className="text-text-secondary mb-4">{t('verificationEmailSent')}</p>
             )}
             <Button 
               onClick={resendVerification}
@@ -190,13 +191,13 @@ function VerifyEmailContent() {
       case 'alreadyVerified':
         return (
           <div className="text-center">
-            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className={`w-16 h-16 ${colorRoleClasses.statusSecondarySoft} rounded-full flex items-center justify-center mx-auto mb-4`}>
+              <svg className="w-8 h-8 text-info" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7V3l-9 10z" />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold text-blue-600 mb-2">{t('emailAlreadyVerified')}</h2>
-            <p className="text-gray-600 mb-4">{t('emailAlreadyVerifiedMessage')}</p>
+            <h2 className="text-2xl font-bold text-info mb-2">{t('emailAlreadyVerified')}</h2>
+            <p className="text-text-secondary mb-4">{t('emailAlreadyVerifiedMessage')}</p>
             <Button 
               onClick={() => router.push('/auth/login')}
             >
@@ -220,13 +221,13 @@ function VerifyEmailContent() {
         
         return (
           <div className="text-center">
-            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className={`w-16 h-16 ${colorRoleClasses.statusErrorSoft} rounded-full flex items-center justify-center mx-auto mb-4`}>
+              <svg className="w-8 h-8 text-error" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold text-red-600 mb-2">{t('inviteError')}</h2>
-            <p className="text-gray-600 mb-4">{errorMessage}</p>
+            <h2 className="text-2xl font-bold text-error mb-2">{t('inviteError')}</h2>
+            <p className="text-text-secondary mb-4">{errorMessage}</p>
             <p className="text-text-primary mb-4">{t('pleaseCheckYourEmail')}</p>
             <Button 
               onClick={resendVerification}
@@ -242,8 +243,8 @@ function VerifyEmailContent() {
       case 'emailNotVerified':
         return (
           <div className="text-center">
-            <h2 className="text-2xl font-bold text-red-600 mb-2">{t('emailNotVerified')}</h2>
-            <p className="text-gray-600 mb-4">{t('emailNotVerifiedMessage')}</p>
+            <h2 className="text-2xl font-bold text-error mb-2">{t('emailNotVerified')}</h2>
+            <p className="text-text-secondary mb-4">{t('emailNotVerifiedMessage')}</p>
             <Button 
               onClick={resendVerification}
               disabled={isResending}
@@ -257,8 +258,8 @@ function VerifyEmailContent() {
       default:
         return (
           <div className="text-center flex flex-col items-center justify-center gap-4">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-              <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className={`w-16 h-16 ${colorRoleClasses.statusSuccessSoft} rounded-full flex items-center justify-center`}>
+              <svg className="w-8 h-8 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
@@ -278,26 +279,26 @@ function VerifyEmailContent() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-surface py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-3xl font-bold text-text-primary mb-2">
             {t('emailVerification')}
           </h1>
-          <p className="text-gray-600">
+          <p className="text-text-secondary">
             {t('emailVerificationSubtitle')}
           </p>
         </div>
 
-        <div className="bg-white py-8 px-6 shadow rounded-lg">
+        <div className="bg-card border border-border py-8 px-6 shadow rounded-lg">
           {renderContent()}
         </div>
 
-        <div className="text-center text-sm text-gray-500">
+        <div className="text-center text-sm text-text-muted">
           <p>{t('verificationHelp')}</p>
           <p className="mt-1">
             {t('contactSupport')}{' '}
-            <a href="mailto:support@listali.co.il" className="text-blue-600 hover:text-blue-500">
+            <a href="mailto:support@listali.co.il" className="text-info hover:text-info/80">
               support@listali.co.il
             </a>
           </p>

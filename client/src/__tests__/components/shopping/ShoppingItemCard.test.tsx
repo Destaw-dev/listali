@@ -29,7 +29,7 @@ describe('ShoppingItemCard', () => {
         onPreview={mockOnPreview}
       />
     );
-    expect(screen.getByText(mockItems[0].name)).toBeInTheDocument();
+    expect(screen.getAllByText(mockItems[0].name).length).toBeGreaterThan(0);
   });
 
   it('should display item quantity', () => {
@@ -42,7 +42,7 @@ describe('ShoppingItemCard', () => {
         onPreview={mockOnPreview}
       />
     );
-    expect(screen.getByText(new RegExp(mockItems[0].quantity.toString()))).toBeInTheDocument();
+    expect(screen.getAllByText(new RegExp(mockItems[0].quantity.toString())).length).toBeGreaterThan(0);
   });
 
   it('should call onOpenPurchaseModal when clicking purchase button for unpurchased item', async () => {
@@ -99,7 +99,7 @@ describe('ShoppingItemCard', () => {
       />
     );
     
-    const itemName = screen.getByText(mockItems[0].name);
+    const itemName = screen.getAllByText(mockItems[0].name)[0];
     await user.click(itemName);
     
     expect(mockOnPreview).toHaveBeenCalledWith(mockItems[0]);
@@ -196,4 +196,3 @@ describe('ShoppingItemCard', () => {
     expect(quantityTexts.length > 0 || screen.getByText(partiallyPurchasedItem.name)).toBeTruthy();
   });
 });
-

@@ -171,8 +171,9 @@ describe('ChatComponent', () => {
     renderWithProviders(
       <ChatComponent groupId="group1" groupName="Test Group" />
     );
-    
-    expect(screen.getByText(/loading/i)).toBeInTheDocument();
+
+    const skeleton = document.querySelector('.animate-pulse');
+    expect(skeleton).toBeTruthy();
   });
 
   it('should display connection status', () => {
@@ -193,4 +194,3 @@ describe('ChatComponent', () => {
     expect(textareas.length).toBeGreaterThan(0);
   });
 });
-

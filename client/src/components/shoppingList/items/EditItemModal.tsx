@@ -147,8 +147,8 @@ export const EditItemModal = memo(function EditItemModal({
     <Modal
       title={tItems("editItem")}
       onClose={onClose}
-      iconHeader={<div className=" p-2 bg-primary-500 rounded-full">
-        <Edit className="w-5 h-5 text-text-primary" />
+      iconHeader={<div className="p-2 rounded-full bg-[var(--color-icon-primary-bg)]">
+        <Edit className="w-5 h-5 text-[var(--color-icon-primary-fg)]" />
       </div>}
       size="md"
       isLoading={isLoading}
@@ -157,29 +157,29 @@ export const EditItemModal = memo(function EditItemModal({
           {isFromCatalog && (
             <div className="mb-4 p-3 bg-warning-50 border border-warning-200 rounded-lg">
               <p className="text-sm text-warning">
-                {tItems("catalogItemEditNote") || "זהו מוצר מהקטלוג. ניתן לערוך רק כמות, עדיפות והערות."}
+                {tItems("catalogItemEditNote")}
               </p>
             </div>
           )}
 
           {isPartiallyPurchased && (
-            <div className="mb-4 p-3 bg-warning-50 dark:bg-warning-900/20 rounded-lg border border-warning-100 dark:border-warning-800 space-y-2">
-              <p className="text-sm font-medium text-warning dark:text-warningT-100">
-                {tItems("partiallyPurchasedEditTitle") || "מוצר זה נקנה חלקית"}
+            <div className="mb-4 p-3 rounded-lg border border-warning-200 bg-[var(--color-status-warning-soft)] space-y-2">
+              <p className="text-sm font-medium text-warning-700">
+                {tItems("partiallyPurchasedEditTitle")}
               </p>
-              <div className="text-sm text-warning dark:text-warningT-200 space-y-1">
+              <div className="text-sm text-warning-700 space-y-1">
                 <p>
                   {tItems("purchasedQuantityLabel", { 
                     purchased: purchasedQty, 
                     total: item.quantity, 
                     unit: unitLabel 
-                  }) || `נקנה: ${purchasedQty}/${item.quantity} ${unitLabel}`}
+                  })}
                 </p>
                 <p>
                   {tItems("remainingQuantityLabel", { 
                     remaining: item.quantity - purchasedQty, 
                     unit: unitLabel 
-                  }) || `נותר: ${item.quantity - purchasedQty} ${unitLabel}`}
+                  })}
                 </p>
               </div>
               {currentQuantity < purchasedQty && (
@@ -187,7 +187,7 @@ export const EditItemModal = memo(function EditItemModal({
                   {tItems("quantityWarning", { 
                     newQuantity: currentQuantity, 
                     purchasedQuantity: purchasedQty 
-                  }) || t('quantityWarning', { newQuantity: currentQuantity, purchasedQuantity: purchasedQty })}
+                  })}
                 </p>
               )}
             </div>
@@ -219,7 +219,7 @@ export const EditItemModal = memo(function EditItemModal({
                         {tItems("purchasedInfo", { 
                           purchased: purchasedQty, 
                           unit: unitLabel 
-                        }) || `נקנה כבר: ${purchasedQty} ${unitLabel}`}
+                        })}
                       </p>
                     )}
                   <Dropdown
@@ -251,8 +251,8 @@ export const EditItemModal = memo(function EditItemModal({
 
                 <Input
                   {...register("brand")}
-                  label={tItems("brandLabel") || "מותג"}
-                  placeholder={tItems("brandLabel") || "מותג"}
+                  label={tItems("brandLabel")}
+                  placeholder={tItems("brandLabel")}
                   error={errors.brand?.message}
                   disabled={isFromCatalog || isLoading}
                 />
@@ -292,16 +292,15 @@ export const EditItemModal = memo(function EditItemModal({
             </Button>
             <Button
               type="submit"
-              variant="primary"
+              variant="secondary"
               size="md"
               fullWidth
               disabled={isLoading}
             >
-              {isLoading ? (tItems("updating") || "מעדכן...") : (tItems("update") || "עדכן")}
+              {isLoading ? tItems("updating") : tItems("update")}
             </Button>
           </div>
         </form>
       </Modal>
   );
 });
-

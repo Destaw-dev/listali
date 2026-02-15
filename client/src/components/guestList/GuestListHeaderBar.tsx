@@ -22,6 +22,7 @@ export function GuestListHeaderBar({
 }: GuestListHeaderBarProps) {
   const router = useRouter();
   const t = useTranslations("ShoppingList");
+  const tNavigation = useTranslations("navigation");
   const { requireAuth, RequireAuthModal } = useRequireAuth();
 
   const formattedDate = new Intl.DateTimeFormat(locale ?? "he-IL", {
@@ -41,7 +42,7 @@ export function GuestListHeaderBar({
             variant="surface"
             size="md"
             rounded
-            aria-label="Back to dashboard"
+            aria-label={tNavigation("back")}
           >
             <ArrowIcon className="text-text-primary" />
           </Button>
@@ -59,10 +60,10 @@ export function GuestListHeaderBar({
                   )}
                 >
                   {guestList.priority === "high"
-                    ? "גבוהה"
+                    ? t("priority.high")
                     : guestList.priority === "medium"
-                    ? "בינונית"
-                    : "נמוכה"}
+                    ? t("priority.medium")
+                    : t("priority.low")}
                 </span>
               )}
             </div>
@@ -83,7 +84,7 @@ export function GuestListHeaderBar({
               }
             }}
           >
-            {t("login") || "התחבר"}
+            {t("login")}
           </Button>
         </div>
 
@@ -91,7 +92,7 @@ export function GuestListHeaderBar({
           <Button
             onClick={onAddItems}
             icon={<Plus className="h-5 w-5" />}
-            className="bg-gradient-to-r from-primary-500 to-secondary-500 px-5 py-2.5 text-text-on-primary shadow-xl transition hover:shadow-2xl"
+            className="bg-primary-600 px-5 py-2.5 text-text-on-primary shadow-lg transition hover:bg-primary-700 hover:shadow-xl"
           >
             {t("addItem")}
           </Button>
@@ -103,7 +104,7 @@ export function GuestListHeaderBar({
           onClick={onAddItems}
           fullWidth
           icon={<Plus className="h-5 w-5" />}
-          className="bg-gradient-to-r from-primary-500 to-secondary-500 py-3 text-text-on-primary shadow-xl transition hover:shadow-2xl"
+          className="bg-primary-600 py-3 text-text-on-primary shadow-lg transition hover:bg-primary-700 hover:shadow-xl"
         >
           {t("addItem")}
         </Button>

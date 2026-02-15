@@ -1,15 +1,16 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslations } from "next-intl";
 import { ShoppingCart } from "lucide-react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useModalScrollLock } from "../../hooks/useModalScrollLock";
-import { Button, Dropdown, Input, TextArea, Modal } from "../common";
+import { Button, ConfirmDialog, Dropdown, Input, TextArea, Modal } from "../common";
 import { useGuestListsStore } from "../../store/guestListsStore";
 import { GUEST_LIMITS } from "../../constants/guestLimits";
+import { useNotification } from "../../contexts/NotificationContext";
 
 const createGuestListSchema = z.object({
   title: z.string().min(1).max(100),
@@ -33,7 +34,32 @@ export function CreateGuestListModal({
 }: CreateGuestListModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const t = useTranslations("CreateGuestListModal");
+  const tCommon = useTranslations("common");
   const { createList, getListsCount } = useGuestListsStore();
+  const { showError, showWarning } = useNotification();
+  const [confirmDialog, setConfirmDialog] = useState<{
+    title: string;
+    message: string;
+    confirmText?: string;
+  } | null>(null);
+  const confirmResolverRef = useRef<((value: boolean) => void) | null>(null);
+
+  const requestConfirmation = useCallback(
+    (options: { title: string; message: string; confirmText?: string }) =>
+      new Promise<boolean>((resolve) => {
+        confirmResolverRef.current = resolve;
+        setConfirmDialog(options);
+      }),
+    []
+  );
+
+  const closeConfirmation = useCallback((result: boolean) => {
+    if (confirmResolverRef.current) {
+      confirmResolverRef.current(result);
+      confirmResolverRef.current = null;
+    }
+    setConfirmDialog(null);
+  }, []);
 
   const {
     register,
@@ -58,15 +84,19 @@ export function CreateGuestListModal({
       
       // Check limits
       if (getListsCount() >= GUEST_LIMITS.MAX_LISTS) {
-        alert(`מקסימום ${GUEST_LIMITS.MAX_LISTS} רשימות במצב אורח`);
+        showWarning("CreateGuestListModal.maxListsReached", {
+          count: `${GUEST_LIMITS.MAX_LISTS}`,
+        });
         return;
       }
       
       if (getListsCount() >= GUEST_LIMITS.MAX_LIST_WARNING) {
-        const confirm = window.confirm(
-          `אתה קרוב למגבלה! מקסימום ${GUEST_LIMITS.MAX_LISTS} רשימות. האם להמשיך?`
-        );
-        if (!confirm) return;
+        const shouldContinue = await requestConfirmation({
+          title: tCommon("confirm"),
+          message: t("maxListsWarning", { count: GUEST_LIMITS.MAX_LISTS }),
+          confirmText: tCommon("confirm"),
+        });
+        if (!shouldContinue) return;
       }
       
       createList({
@@ -82,7 +112,9 @@ export function CreateGuestListModal({
     } catch (error) {
       console.error("Error creating guest list:", error);
       if (error instanceof Error) {
-        alert(error.message);
+        showError(error.message);
+      } else {
+        showError("notifications.unknownError");
       }
     } finally {
       setIsSubmitting(false);
@@ -101,49 +133,50 @@ export function CreateGuestListModal({
   if (!isOpen) return null;
 
   return (
-    <Modal
-      title={t("newGuestList") || "רשימה חדשה"}
-      onClose={handleClose}
-      iconHeader={
-        <div className="p-2 bg-primary-500 rounded-full">
-          <ShoppingCart className="w-5 h-5 text-text-primary" />
-        </div>
-      }
-      subtitle={t("willBeSavedLocally") || "רשימה מקומית - יישמר רק במכשיר זה"}
-      size="md"
-      isLoading={isSubmitting}
-    >
-      <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
+    <>
+      <Modal
+        title={t("newGuestList")}
+        onClose={handleClose}
+        iconHeader={
+          <div className="p-2 bg-primary-500 rounded-full">
+            <ShoppingCart className="w-5 h-5 text-text-primary" />
+          </div>
+        }
+        subtitle={t("willBeSavedLocally")}
+        size="md"
+        isLoading={isSubmitting}
+      >
+        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
         <Input
           {...register("title", {
-            required: t("titleRequired") || "שם הרשימה נדרש",
+            required: t("titleRequired"),
             maxLength: {
               value: 100,
-              message: t("titleMaxLength") || "שם הרשימה לא יכול להיות יותר מ-100 תווים",
+              message: t("titleMaxLength"),
             },
           })}
           type="text"
-          placeholder={t("listNamePlaceholder") || "לדוגמה: קניות שבוע"}
+          placeholder={t("listNamePlaceholder")}
           error={errors.title?.message}
-          label={`${t("listName") || "שם הרשימה"} *`}
+          label={`${t("listName")} *`}
         />
 
         <TextArea
           {...register("description")}
-          placeholder={t("descriptionPlaceholder") || "תיאור (אופציונלי)"}
+          placeholder={t("descriptionPlaceholder")}
           error={errors.description?.message}
-          label={t("description") || "תיאור"}
+          label={t("description")}
           rows={3}
         />
 
         <div className="grid grid-cols-2 gap-4">
           <Dropdown
             {...register("priority")}
-            label={t("priority") || "עדיפות"}
+            label={t("priority")}
             options={[
-              { value: "low", label: t("priorityLow") || "נמוכה" },
-              { value: "medium", label: t("priorityMedium") || "בינונית" },
-              { value: "high", label: t("priorityHigh") || "גבוהה" },
+              { value: "low", label: t("priorityLow") },
+              { value: "medium", label: t("priorityMedium") },
+              { value: "high", label: t("priorityHigh") },
             ]}
             value={watch("priority") || "medium"}
             onSelect={(value) => setValue("priority", value as "low" | "medium" | "high")}
@@ -151,11 +184,11 @@ export function CreateGuestListModal({
 
           <Dropdown
             {...register("status")}
-            label={t("status") || "סטטוס"}
+            label={t("status")}
             options={[
-              { value: "active", label: t("statusActive") || "פעיל" },
-              { value: "completed", label: t("statusCompleted") || "הושלם" },
-              { value: "archived", label: t("statusArchived") || "בארכיון" },
+              { value: "active", label: t("statusActive") },
+              { value: "completed", label: t("statusCompleted") },
+              { value: "archived", label: t("statusArchived") },
             ]}
             value={watch("status") || "active"}
             onSelect={(value) => setValue("status", value as "active" | "completed" | "archived")}
@@ -171,7 +204,7 @@ export function CreateGuestListModal({
             disabled={isSubmitting}
             fullWidth
           >
-            {t("cancel") || "ביטול"}
+            {t("cancel")}
           </Button>
           <Button
             type="submit"
@@ -180,10 +213,22 @@ export function CreateGuestListModal({
             disabled={isSubmitting}
             fullWidth
           >
-            {isSubmitting ? t("creating") || "יוצר..." : t("createList") || "צור רשימה"}
+            {isSubmitting ? t("creating") : t("createList")}
           </Button>
         </div>
-      </form>
-    </Modal>
+        </form>
+      </Modal>
+
+      <ConfirmDialog
+        isOpen={Boolean(confirmDialog)}
+        onClose={() => closeConfirmation(false)}
+        onConfirm={() => closeConfirmation(true)}
+        title={confirmDialog?.title || ""}
+        message={confirmDialog?.message || ""}
+        confirmText={confirmDialog?.confirmText || tCommon("confirm")}
+        cancelText={tCommon("cancel")}
+        variant="warning"
+      />
+    </>
   );
 }

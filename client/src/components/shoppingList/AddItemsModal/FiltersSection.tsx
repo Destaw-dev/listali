@@ -234,7 +234,7 @@ export const FiltersSection = memo(({
         value={searchQuery}
         onChange={onSearchChange}
         placeholder={t('searchPlaceholder')}
-        icon={<Search className="text-gray-400 w-5 h-5" />}
+        icon={<Search className="text-text-muted w-5 h-5" />}
         variant="default"
         size="md"
         fullWidth
@@ -307,7 +307,7 @@ export const FiltersSection = memo(({
 
     {activeFilters.length > 0 && (
       <div className="mb-3 flex flex-wrap items-center gap-2">
-        <span className="text-xs text-gray-600">{t('activeFilters')}</span>
+        <span className="text-xs text-text-secondary">{t('activeFilters')}</span>
         {activeFilters.map((filter) => (
           <span
             key={`${filter.type}-${filter.value}`}
@@ -326,4 +326,3 @@ export const FiltersSection = memo(({
 });
 
 FiltersSection.displayName = 'FiltersSection';
-

@@ -30,6 +30,12 @@ interface SkeletonProps {
    * @default true
    */
   animate?: boolean;
+
+  /**
+   * Optional accessible label for screen readers.
+   * If omitted, skeleton is hidden from screen readers.
+   */
+  ariaLabel?: string;
 }
 
 /**
@@ -48,8 +54,9 @@ export function Skeleton({
   height = 'h-4',
   className = '',
   animate = true,
+  ariaLabel,
 }: SkeletonProps) {
-  const baseClasses = 'bg-neutral-200 dark:bg-neutral-700';
+  const baseClasses = 'bg-surface-hover';
   const animateClasses = animate ? 'animate-pulse' : '';
 
   const variantClasses = {
@@ -67,9 +74,10 @@ export function Skeleton({
         variantClasses[variant],
         className
       )}
-      aria-label="Loading..."
-      role="status"
-      aria-live="polite"
+      aria-label={ariaLabel}
+      role={ariaLabel ? 'status' : undefined}
+      aria-live={ariaLabel ? 'polite' : undefined}
+      aria-hidden={ariaLabel ? undefined : true}
     />
   );
 }

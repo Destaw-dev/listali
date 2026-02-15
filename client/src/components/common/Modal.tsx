@@ -18,7 +18,7 @@ export function Modal({ children, onClose, title, iconHeader, subtitle, size = "
   const sizeClasses = {
     sm: "max-w-sm max-h-[90vh] overflow-y-auto",
     md: "max-w-md max-h-[90vh] overflow-y-auto",
-    lg: "max-w-lg max-h-lg overflow-y-auto",
+    lg: "max-w-lg max-h-[95vh] overflow-y-auto",
     xl: "max-w-xl max-h-full overflow-y-auto",
     full: "max-w-full max-h-full overflow-y-auto",
   };

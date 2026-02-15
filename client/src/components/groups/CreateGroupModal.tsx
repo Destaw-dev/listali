@@ -65,8 +65,8 @@ export function CreateGroupModal({
       title={t("createNewGroup")}
       onClose={handleClose}
       iconHeader={
-        <div className="p-2 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl">
-          <Users className="w-5 h-5 text-text-primary" />
+        <div className="p-2 bg-[var(--color-icon-primary-bg)] rounded-xl">
+          <Users className="w-5 h-5 text-[var(--color-icon-primary-fg)]" />
         </div>
       }
       subtitle={t("createNewGroupDescription")}
@@ -81,7 +81,7 @@ export function CreateGroupModal({
           type="text"
           id="name"
           placeholder={t("groupNamePlaceholder")}
-          icon={<Group className="w-5 h-5 text-muted" />}
+          icon={<Group className="w-5 h-5 text-text-muted" />}
         />
 
         <TextArea
@@ -93,7 +93,7 @@ export function CreateGroupModal({
           fullWidth
         />
 
-        <div className="bg-background/5 border border-primary/10 rounded-lg p-4">
+        <div className="bg-surface border border-border rounded-lg p-4">
           <h4 className="font-medium text-text-primary mb-2">
             {t("whatHappensAfter")}
           </h4>

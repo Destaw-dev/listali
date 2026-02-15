@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { useAuthStore } from '../../store/authStore';
-import { LoadingSpinner } from '../../components/common/LoadingSpinner';
+import { LoadingState } from '../../components/common/LoadingState';
 import websocketService from '../../services/websocket';
 
 interface AuthBootstrapProviderProps {
@@ -25,13 +25,8 @@ export function AuthBootstrapProvider({ children }: AuthBootstrapProviderProps) 
   }, [authReady, isAuthenticated]);
 
   if (!authReady) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <LoadingSpinner />
-      </div>
-    );
+    return <LoadingState variant="page" />;
   }
 
   return <>{children}</>;
 }
-

@@ -21,7 +21,7 @@ const userData = {
   lastName: 'user',
   username: 'testuser',
   email: 'test@example.com',
-  password: 'Password123'
+  password: 'NewPasswordSafe123!'
 };
 
 beforeAll(async () => {
@@ -107,7 +107,7 @@ describe('👥 Group API', () => {
       lastName: 'User',
       username: 'seconduser',
       email: 'second@example.com',
-      password: 'Password123'
+      password: 'NewPasswordSafe123!'
     });
 
     await mongoose.connection.db?.collection('users').updateOne(
@@ -138,7 +138,7 @@ describe('👥 Group API', () => {
     
     const loginRes = await request(app)
       .post('/api/auth/login')
-      .send({ email: 'second@example.com', password: 'Password123' });
+      .send({ email: 'second@example.com', password: 'NewPasswordSafe123!' });
     const secondToken = getAccessToken(loginRes);
 
     const res = await request(app)
@@ -171,7 +171,7 @@ describe('👥 Group API', () => {
       lastName: 'User',
       username: 'inviteduser',
       email: 'invited@example.com',
-      password: 'Password123'
+      password: 'NewPasswordSafe123!'
     });
 
     const res = await request(app)
@@ -190,7 +190,7 @@ describe('👥 Group API', () => {
       lastName: 'Role',
       username: 'changerole',
       email: 'changerole@example.com',
-      password: 'Password123'
+      password: 'NewPasswordSafe123!'
     });
 
     const newUser = await User.findOne({ email: 'changerole@example.com' });
@@ -212,7 +212,7 @@ describe('👥 Group API', () => {
 
     const loginRes = await request(app)
       .post('/api/auth/login')
-      .send({ email: 'changerole@example.com', password: 'Password123' });
+      .send({ email: 'changerole@example.com', password: 'NewPasswordSafe123!' });
     const newToken = getAccessToken(loginRes);
     
     const acceptRes = await request(app)
@@ -262,7 +262,7 @@ describe('👥 Group API', () => {
         );
         const loginRes = await request(app)
           .post('/api/auth/login')
-          .send({ email: 'invited@example.com', password: 'Password123' });
+          .send({ email: 'invited@example.com', password: 'NewPasswordSafe123!' });
         await request(app)
           .post('/api/auth/invitations/accept')
           .set('Authorization', `Bearer ${getAccessToken(loginRes)}`)
@@ -305,7 +305,7 @@ describe('👥 Group API', () => {
 
     const loginRes = await request(app)
       .post('/api/auth/login')
-      .send({ email: 'second@example.com', password: 'Password123' });
+      .send({ email: 'second@example.com', password: 'NewPasswordSafe123!' });
     const secondToken = getAccessToken(loginRes);
 
     const res = await request(app)
@@ -436,7 +436,7 @@ describe('👥 Group API', () => {
         lastName: 'User',
         username: 'memberuser',
         email: 'member@example.com',
-        password: 'Password123'
+        password: 'NewPasswordSafe123!'
       });
 
       await mongoose.connection.db?.collection('users').updateOne(
@@ -455,7 +455,7 @@ describe('👥 Group API', () => {
       if (invitation) {
         const loginRes = await request(app)
           .post('/api/auth/login')
-          .send({ email: 'member@example.com', password: 'Password123' });
+          .send({ email: 'member@example.com', password: 'NewPasswordSafe123!' });
         const memberToken = getAccessToken(loginRes);
 
         await request(app)
@@ -497,7 +497,7 @@ describe('👥 Group API', () => {
         lastName: 'User',
         username: 'requestuser',
         email: 'request@example.com',
-        password: 'Password123'
+        password: 'NewPasswordSafe123!'
       });
 
       await mongoose.connection.db?.collection('users').updateOne(
@@ -519,7 +519,7 @@ describe('👥 Group API', () => {
 
       const loginRes = await request(app)
         .post('/api/auth/login')
-        .send({ email: 'request@example.com', password: 'Password123' });
+        .send({ email: 'request@example.com', password: 'NewPasswordSafe123!' });
       const requestToken = getAccessToken(loginRes);
 
       const joinRes = await request(app)
@@ -559,7 +559,7 @@ describe('👥 Group API', () => {
         lastName: 'User',
         username: 'acceptuser',
         email: 'accept@example.com',
-        password: 'Password123'
+        password: 'NewPasswordSafe123!'
       });
 
       await mongoose.connection.db?.collection('users').updateOne(
@@ -581,7 +581,7 @@ describe('👥 Group API', () => {
 
       const loginRes = await request(app)
         .post('/api/auth/login')
-        .send({ email: 'accept@example.com', password: 'Password123' });
+        .send({ email: 'accept@example.com', password: 'NewPasswordSafe123!' });
       const acceptToken = getAccessToken(loginRes);
 
       const acceptRes = await request(app)
@@ -627,7 +627,7 @@ describe('👥 Group API', () => {
         lastName: 'User',
         username: 'requestinguser',
         email: 'requesting@example.com',
-        password: 'Password123'
+        password: 'NewPasswordSafe123!'
       });
 
       await mongoose.connection.db?.collection('users').updateOne(
@@ -652,7 +652,7 @@ describe('👥 Group API', () => {
 
       const loginRes = await request(app)
         .post('/api/auth/login')
-        .send({ email: 'requesting@example.com', password: 'Password123' });
+        .send({ email: 'requesting@example.com', password: 'NewPasswordSafe123!' });
       requestingUserToken = getAccessToken(loginRes);
 
       const joinRes = await request(app)
@@ -701,7 +701,7 @@ describe('👥 Group API', () => {
         lastName: 'User',
         username: 'rejectuser',
         email: 'reject@example.com',
-        password: 'Password123'
+        password: 'NewPasswordSafe123!'
       });
 
       await mongoose.connection.db?.collection('users').updateOne(
@@ -726,7 +726,7 @@ describe('👥 Group API', () => {
 
       const loginRes = await request(app)
         .post('/api/auth/login')
-        .send({ email: 'reject@example.com', password: 'Password123' });
+        .send({ email: 'reject@example.com', password: 'NewPasswordSafe123!' });
       const rejectToken = getAccessToken(loginRes);
 
       await request(app)
@@ -789,7 +789,7 @@ describe('👥 Group API', () => {
         lastName: 'Member',
         username: 'regularmember',
         email: 'regular@example.com',
-        password: 'Password123'
+        password: 'NewPasswordSafe123!'
       });
 
       await mongoose.connection.db?.collection('users').updateOne(
@@ -808,7 +808,7 @@ describe('👥 Group API', () => {
       if (invitation) {
         const loginRes = await request(app)
           .post('/api/auth/login')
-          .send({ email: 'regular@example.com', password: 'Password123' });
+          .send({ email: 'regular@example.com', password: 'NewPasswordSafe123!' });
         const regularToken = getAccessToken(loginRes);
 
         await request(app)
@@ -822,12 +822,12 @@ describe('👥 Group API', () => {
         lastName: 'User',
         username: 'newuser',
         email: 'new@example.com',
-        password: 'Password123'
+        password: 'NewPasswordSafe123!'
       });
 
       const regularLoginRes = await request(app)
         .post('/api/auth/login')
-        .send({ email: 'regular@example.com', password: 'Password123' });
+        .send({ email: 'regular@example.com', password: 'NewPasswordSafe123!' });
       const regularMemberToken = getAccessToken(regularLoginRes);
 
       const inviteRes = await request(app)

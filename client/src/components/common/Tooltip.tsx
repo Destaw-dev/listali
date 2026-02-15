@@ -17,61 +17,14 @@ import {
 } from '@floating-ui/react';
 
 export interface TooltipProps {
-  /**
-   * The tooltip content to display
-   */
   content: string;
-
-  /**
-   * The element that triggers the tooltip
-   * Must be a single React element that accepts ref and event handlers
-   */
   children: React.ReactElement;
-
-  /**
-   * Placement of the tooltip relative to the trigger
-   * @default 'top'
-   */
   placement?: Placement;
-
-  /**
-   * Delay before showing tooltip (in ms)
-   * @default 300
-   */
   delayShow?: number;
-
-  /**
-   * Delay before hiding tooltip (in ms)
-   * @default 0
-   */
   delayHide?: number;
-
-  /**
-   * Whether the tooltip is disabled
-   * @default false
-   */
   disabled?: boolean;
 }
 
-/**
- * Tooltip component for displaying contextual information
- *
- * @example
- * ```tsx
- * <Tooltip content="Delete item">
- *   <button>
- *     <Trash className="w-5 h-5" />
- *   </button>
- * </Tooltip>
- * ```
- *
- * @example
- * ```tsx
- * <Tooltip content="Settings" placement="right">
- *   <IconButton icon={<Settings />} />
- * </Tooltip>
- * ```
- */
 export function Tooltip({
   content,
   children,
@@ -116,12 +69,10 @@ export function Tooltip({
     role,
   ]);
 
-  // Clone the child element and add ref + event handlers
   const trigger = cloneElement(
     children,
     getReferenceProps({
       ref: refs.setReference,
-      ...children.props,
     })
   );
 
@@ -134,7 +85,7 @@ export function Tooltip({
             ref={refs.setFloating}
             style={floatingStyles}
             {...getFloatingProps()}
-            className="z-[9999] px-3 py-2 text-sm text-white bg-neutral-900 dark:bg-neutral-700 rounded-lg shadow-lg max-w-xs animate-fade-in"
+            className="z-[9999] px-3 py-2 text-sm rounded-lg shadow-lg max-w-xs animate-fade-in bg-[var(--color-tooltip-bg)] text-[var(--color-tooltip-fg)]"
           >
             {content}
             {/* Optional arrow could be added here */}
@@ -145,16 +96,6 @@ export function Tooltip({
   );
 }
 
-/**
- * Convenience component for icon buttons with tooltips
- *
- * @example
- * ```tsx
- * <TooltipIconButton content="Delete" onClick={handleDelete}>
- *   <Trash className="w-5 h-5" />
- * </TooltipIconButton>
- * ```
- */
 export function TooltipIconButton({
   content,
   children,
@@ -176,7 +117,7 @@ export function TooltipIconButton({
         type="button"
         onClick={onClick}
         disabled={disabled}
-        className={`p-2 rounded-lg hover:bg-background-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+        className={`p-2 rounded-lg hover:bg-surface-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
       >
         {children}
       </button>

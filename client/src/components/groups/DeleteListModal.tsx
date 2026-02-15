@@ -12,8 +12,8 @@ export function DeleteListModal({ isOpen, onClose, onDelete, isDeleting, listNam
       onDelete();
   };
   return (
-    <Modal title={t('deleteList')} onClose={onClose} iconHeader={<div className="p-2 bg-gradient-to-br from-error-400 to-error-600 rounded-xl">
-      <Trash className="w-5 h-5 text-text-primary" />
+    <Modal title={t('deleteList')} onClose={onClose} iconHeader={<div className="p-2 bg-[var(--color-status-error-soft)] rounded-xl">
+      <Trash className="w-5 h-5 text-error-600" />
     </div>} subtitle={listName} size="md" isLoading={isDeleting}>
       <p>{t('deleteListDescription')}</p>
       <div className="flex items-center gap-2 mt-5">

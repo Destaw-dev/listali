@@ -46,11 +46,11 @@ export function GoogleAuthButton({ type, onGoogleAuth, isLoading = false, disabl
       disabled={disabled || isLoading}
     >
       {isLoading ? (
-        <span className="text-secondary">{t('auth.loading')}</span>
+        <span className="text-text-secondary">{t('auth.loading')}</span>
       ) : (
-        <span className="text-secondary">
-          {type === 'login' 
-            ? t('auth.loginWithGoogle') 
+        <span className="text-text-secondary">
+          {type === 'login'
+            ? t('auth.loginWithGoogle')
             : t('auth.registerWithGoogle')
           }
         </span>

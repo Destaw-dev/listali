@@ -2,6 +2,7 @@
 
 import { io, Socket } from "socket.io-client";
 import { useAuthStore } from "../store/authStore";
+import { readCsrfTokenFromCookie } from "../lib/csrf";
 import type { 
   IWebSocketEvents, 
   IItem, 
@@ -39,10 +40,14 @@ class WebSocketService {
       try {
         const axios = (await import('axios')).default;
         const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+        const csrfToken = readCsrfTokenFromCookie();
         const response = await axios.post(
           `${baseURL}/api/auth/refresh`,
           {},
-          { withCredentials: true }
+          {
+            withCredentials: true,
+            headers: csrfToken ? { 'x-csrf-token': csrfToken } : undefined,
+          }
         );
 
         if (response.data.success && response.data.data?.accessToken) {
@@ -278,7 +283,6 @@ function createService() {
   return new WebSocketService();
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const websocketService: WebSocketService =
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (globalThis as any)[WS_SINGLETON_KEY] ||

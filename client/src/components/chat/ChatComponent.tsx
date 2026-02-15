@@ -16,7 +16,7 @@ import {
   useUnreadInfo
 } from '../../hooks/useChat';
 import { SystemMessage } from './SystemMessage';
-import { MenuButton, TextArea } from '../common';
+import { ConfirmDialog, MenuButton, Skeleton, TextArea } from '../common';
 
 interface Message {
   _id: string;
@@ -99,6 +99,7 @@ export function ChatComponent({ groupId, groupName }: ChatComponentProps ) {
   const [newMessage, setNewMessage] = useState('');
   const [editingMessage, setEditingMessage] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
+  const [messageIdToDelete, setMessageIdToDelete] = useState<string | null>(null);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -288,10 +289,18 @@ export function ChatComponent({ groupId, groupName }: ChatComponentProps ) {
     );
   };
 
-  const deleteMessage = async (messageId: string) => {
-    if (!confirm(t('deleteConfirm'))) return;
+  const deleteMessage = (messageId: string) => {
+    setMessageIdToDelete(messageId);
+  };
 
-    deleteMessageMutation.mutate({ messageId, groupId });
+  const handleConfirmDeleteMessage = () => {
+    if (!messageIdToDelete) return;
+    deleteMessageMutation.mutate(
+      { messageId: messageIdToDelete, groupId },
+      {
+        onSettled: () => setMessageIdToDelete(null),
+      }
+    );
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -357,7 +366,7 @@ export function ChatComponent({ groupId, groupName }: ChatComponentProps ) {
       case 'delivered':
         return <Check className="w-3 h-3 opacity-70" />;
       case 'read':
-        return <CheckCheck className="w-3 h-3 text-blue-500" />;
+        return <CheckCheck className="w-3 h-3 text-[var(--color-icon-info-fg)]" />;
       default:
         return null;
     }
@@ -378,10 +387,12 @@ export function ChatComponent({ groupId, groupName }: ChatComponentProps ) {
 
   if (isLoading) {
     return (
-      <div className="flex items-center bg-surface justify-center h-64">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
-          <p className="text-text-muted">{t('loading')}</p>
+      <div className="flex items-center bg-surface justify-center h-64 p-4">
+        <div className="w-full max-w-xl space-y-3">
+          <Skeleton variant="line" height="h-4" width="w-1/3" />
+          <Skeleton variant="line" height="h-12" width="w-full" />
+          <Skeleton variant="line" height="h-12" width="w-5/6" />
+          <Skeleton variant="line" height="h-12" width="w-2/3" />
         </div>
       </div>
     );
@@ -427,7 +438,7 @@ export function ChatComponent({ groupId, groupName }: ChatComponentProps ) {
       >
         {messages.length === 0 ? (
           <div className="text-center text-text-muted py-12 animate-fade-in">
-            <div className="w-16 h-16 bg-background-hover rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-surface-hover rounded-full flex items-center justify-center mx-auto mb-4">
               <MessageCircle className="w-8 h-8 text-text-muted" />
             </div>
             <p className="text-lg font-medium mb-2">{t('noMessages')}</p>
@@ -446,8 +457,8 @@ export function ChatComponent({ groupId, groupName }: ChatComponentProps ) {
               <React.Fragment key={message._id}>
                 {showUnreadDivider && (
                   <div className="flex items-center justify-center my-6 animate-fade-in">
-                    <div className="flex items-center gap-2 px-4 py-2 bg-background-50 text-text-primary-700 rounded-full text-xs font-medium border border-primary-100 shadow-sm">
-                      <div className="w-2 h-2 bg-background-700 rounded-full animate-pulse text-text-primary"></div>
+                    <div className="flex items-center gap-2 px-4 py-2 bg-[var(--color-icon-primary-bg)] text-[var(--color-icon-primary-fg)] rounded-full text-xs font-medium border border-border shadow-sm">
+                      <div className="w-2 h-2 bg-primary-500 rounded-full animate-pulse"></div>
                       <span className="text-text-primary">{t('newMessages')}</span>
                     </div>
                   </div>
@@ -469,8 +480,8 @@ export function ChatComponent({ groupId, groupName }: ChatComponentProps ) {
                     <div className={`max-w-xs lg:max-w-md ${isMyMessage ? 'order-2' : 'order-1'}`}>
                       {!isMyMessage && (
                         <div className="flex items-center gap-2 mb-1 animate-fade-in">
-                          <div className="w-6 h-6 bg-gradient-to-br from-neutral-400 to-neutral-600 rounded-full flex items-center justify-center shadow-sm">
-                            <span className="text-text-primary text-xs font-medium">
+                          <div className="w-6 h-6 bg-surface-hover rounded-full flex items-center justify-center shadow-sm">
+                            <span className="text-text-secondary text-xs font-medium">
                               {message.sender.firstName?.[0]}{message.sender.lastName?.[0]}
                             </span>
                           </div>
@@ -484,8 +495,8 @@ export function ChatComponent({ groupId, groupName }: ChatComponentProps ) {
                         <div
                           className={`px-4 py-2 rounded-2xl shadow-sm transition-all duration-200 hover:shadow-md ${
                             isMyMessage
-                              ? 'bg-primary-700 text-text-primary hover:bg-primary-700'
-                              : 'bg-accent-300 hover:bg-accent-600'
+                              ? 'bg-primary-600 text-text-on-primary hover:bg-primary-700'
+                              : 'bg-surface-hover text-text-primary hover:bg-card'
                           }`}
                         >
                           <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{message.content}</p>
@@ -511,7 +522,7 @@ export function ChatComponent({ groupId, groupName }: ChatComponentProps ) {
                                     deleteMessage(message._id);
                                   },
                                   variant: 'danger' as const,
-                                  icon: <Trash2 className="w-3 h-3 text-danger" />
+                                  icon: <Trash2 className="w-3 h-3 text-error-600" />
                                 }] : [])
                               ]} 
                               align='start' 
@@ -590,7 +601,7 @@ export function ChatComponent({ groupId, groupName }: ChatComponentProps ) {
                 onKeyPress={handleKeyPress}
                 placeholder={t('typeMessagePlaceholder')}
                 disabled={sendMessageMutation.isPending}
-                icon={<Send className="w-5 h-5 text-muted" />}
+                icon={<Send className="w-5 h-5 text-text-muted" />}
                 fullWidth
               />
             </div>
@@ -606,6 +617,18 @@ export function ChatComponent({ groupId, groupName }: ChatComponentProps ) {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        isOpen={Boolean(messageIdToDelete)}
+        onClose={() => !deleteMessageMutation.isPending && setMessageIdToDelete(null)}
+        onConfirm={handleConfirmDeleteMessage}
+        title={t('delete')}
+        message={t('deleteConfirm')}
+        confirmText={t('delete')}
+        cancelText={t('cancel')}
+        variant="danger"
+        isLoading={deleteMessageMutation.isPending}
+      />
     </div>
   );
 }

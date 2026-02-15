@@ -130,7 +130,7 @@ export function BarcodeScannerModal({
           : t('errorAccessingCamera')
       );
     }
-  }, [possibleFormats, onDetected, onClose]);
+  }, [possibleFormats, onDetected, onClose, t]);
 
   useEffect(() => {
     if (open) {
@@ -174,10 +174,10 @@ export function BarcodeScannerModal({
 
           <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
             <div className="relative h-40 w-72 rounded-xl border-2 border-surface-hover shadow-sm">
-               <div className="absolute -left-1 -top-1 h-6 w-6 border-l-4 border-t-4 border-primary" />
-               <div className="absolute -right-1 -top-1 h-6 w-6 border-r-4 border-t-4 border-primary" />
-               <div className="absolute -left-1 -bottom-1 h-6 w-6 border-l-4 border-b-4 border-primary" />
-               <div className="absolute -right-1 -bottom-1 h-6 w-6 border-r-4 border-b-4 border-primary" />
+               <div className="absolute -inset-inline-start-1 -top-1 h-6 w-6 border-s-4 border-t-4 border-primary" />
+               <div className="absolute -inset-inline-end-1 -top-1 h-6 w-6 border-e-4 border-t-4 border-primary" />
+               <div className="absolute -inset-inline-start-1 -bottom-1 h-6 w-6 border-s-4 border-b-4 border-primary" />
+               <div className="absolute -inset-inline-end-1 -bottom-1 h-6 w-6 border-e-4 border-b-4 border-primary" />
                
                {state === 'scanning' && (
                  <div className="absolute left-0 top-0 h-1 w-full animate-scan-line bg-primary/80 shadow-[0_0_15px_rgba(59,130,246,0.8)]" />

@@ -57,7 +57,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const onChange = () => {
       if (theme === 'system') {
-        document.documentElement.setAttribute('data-theme', resolveTheme('system'));
+        const resolved = resolveTheme('system');
+        const root = document.documentElement;
+        root.setAttribute('data-theme', resolved);
       }
     };
 

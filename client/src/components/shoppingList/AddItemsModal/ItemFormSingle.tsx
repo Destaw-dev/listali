@@ -104,30 +104,27 @@ export const ItemFormSingle = memo(({
 
   return (
     <div className={`rounded-lg p-3 sm:p-4 space-y-3 sm:space-y-4 shadow-sm ${
-      isDuplicate 
-        ? 'bg-warning-50/30 border border-warning-200 dark:bg-warning-900/20 dark:border-warning-800' 
+      isDuplicate
+        ? 'bg-[var(--color-status-warning-soft)] border border-warning/20'
         : 'bg-card'
     }`}>
       {isDuplicate && (
-        <div className="mb-2 p-2 bg-warning-100 rounded-lg border border-warning-200">
+        <div className="mb-2 p-2 bg-[var(--color-status-warning-soft)] rounded-lg border border-warning/20">
           <div className="flex items-center gap-2 mb-2">
-            <AlertCircle className="w-4 h-4 text-warning-600" />
+            <AlertCircle className="w-4 h-4 text-warning" />
             <Badge variant="warning" size="sm" className="text-xs">
-              {tForm('alreadyInList') || 'קיים ברשימה'}
+              {tForm('alreadyInList')}
             </Badge>
           </div>
-          <div className="text-xs text-warning-800 space-y-1">
+          <div className="text-xs text-warning space-y-1">
             <p>
-              {tForm('existingQuantity', { quantity: existingQuantity, unit: item?.unit || 'piece' }) || 
-               `כמות קיימת: ${existingQuantity} ${item?.unit || 'piece'}`}
+              {tForm('existingQuantity', { quantity: existingQuantity, unit: item?.unit || 'piece' })}
             </p>
             <p>
-              {tForm('newQuantity', { quantity: newQuantity, unit: item?.unit || 'piece' }) || 
-               `כמות חדשה: ${newQuantity} ${item?.unit || 'piece'}`}
+              {tForm('newQuantity', { quantity: newQuantity, unit: item?.unit || 'piece' })}
             </p>
             <p className="font-medium">
-              {tForm('mergedQuantity', { quantity: mergedQuantity, unit: item?.unit || 'piece' }) || 
-               `סה"כ אחרי מיזוג: ${mergedQuantity} ${item?.unit || 'piece'}`}
+              {tForm('mergedQuantity', { quantity: mergedQuantity, unit: item?.unit || 'piece' })}
             </p>
           </div>
           <div className="flex gap-2 mt-3">
@@ -140,7 +137,7 @@ export const ItemFormSingle = memo(({
                 icon={<GitMerge className="w-3 h-3" />}
                 className="flex-1"
               >
-                {tForm('merge') || 'מזג'}
+                {tForm('merge')}
               </Button>
             )}
             {canRemove && (
@@ -150,7 +147,7 @@ export const ItemFormSingle = memo(({
                 onClick={onRemove}
                 icon={<Trash2 className="w-3 h-3 text-error-500" />}
               >
-                {tForm('remove') || 'הסר'}
+                {tForm('remove')}
               </Button>
             )}
           </div>
@@ -267,4 +264,3 @@ export const ItemFormSingle = memo(({
 });
 
 ItemFormSingle.displayName = 'ItemFormSingle';
-

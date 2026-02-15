@@ -111,12 +111,12 @@ export function AddItemProductList({ products, onSelect, isLoading, hasNext, isF
                     <button
                       type="button"
                       onClick={() => onSelect(product)}
-                      className={`w-full p-3 sm:p-3 border border-border hover:border-primary-500 bg-card rounded-lg cursor-pointer transition-all duration-200 text-start relative shadow-sm text-text-primary ${
-                        isSelected 
-                          ? 'border-2 border-primary-500 bg-primary-50/30 shadow-md hover:shadow-lg' 
+                      className={`w-full p-3 sm:p-3 border border-border hover:border-primary bg-card rounded-lg cursor-pointer transition-all duration-200 text-start relative shadow-sm text-text-primary ${
+                        isSelected
+                          ? 'border-2 border-primary bg-primary/10 shadow-md hover:shadow-lg'
                           : existingItem
-                          ? 'border border-warning-300 bg-warning-50/30 hover:bg-warning-50/50'
-                          : 'hover:bg-background-50 hover:shadow-md'
+                          ? 'border border-warning bg-warning/10 hover:bg-warning/20'
+                          : 'hover:bg-surface-hover hover:shadow-md'
                       }`}
                     >
                     <div className="flex items-center space-x-2 sm:space-x-3 space-x-reverse">
@@ -139,8 +139,8 @@ export function AddItemProductList({ products, onSelect, isLoading, hasNext, isF
                           <Package className='w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-lg border border-border'/>
                         )}
                         {!product.image && (
-                          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 rounded-lg border border-border flex items-center justify-center">
-                            <ImageIcon className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" />
+                          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-surface rounded-lg border border-border flex items-center justify-center">
+                            <ImageIcon className="w-6 h-6 sm:w-8 sm:h-8 text-text-muted" />
                           </div>
                         )}
                         {isSelected && (
@@ -149,8 +149,8 @@ export function AddItemProductList({ products, onSelect, isLoading, hasNext, isF
                           </div>
                         )}
                         {existingItem && !isSelected && (
-                          <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-warning-500 rounded-full flex items-center justify-center border-2 border-white shadow-lg">
-                            <AlertCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-text-primary" />
+                          <div className="absolute -top-1 -inset-inline-end-1 w-4 h-4 sm:w-5 sm:h-5 bg-warning rounded-full flex items-center justify-center border-2 border-white shadow-lg">
+                            <AlertCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-text-on-primary" />
                           </div>
                         )}
                       </div>
@@ -160,7 +160,7 @@ export function AddItemProductList({ products, onSelect, isLoading, hasNext, isF
                           <h3 className="text-sm sm:text-base font-medium text-text-primary whitespace-normal break-words">{extractNameFromProduct(product)}</h3>
                           {existingItem && (
                             <Badge variant="warning" size="sm" className="text-xs flex-shrink-0">
-                              {t('alreadyInList') || 'קיים ברשימה'}
+                              {t('alreadyInList')}
                             </Badge>
                           )}
                         </div>
@@ -191,9 +191,9 @@ export function AddItemProductList({ products, onSelect, isLoading, hasNext, isF
 
       {!isLoading && products.length === 0 && debouncedSearchQuery.length >= 2 && (
         <div className="text-center py-12">
-          <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <Search className="w-16 h-16 text-border mx-auto mb-4" />
           <p className="text-secondary font-medium mb-1">{t('noResults')}</p>
-          <p className="text-muted text-sm mb-6">{t('noResultsDescription')}</p>
+          <p className="text-text-muted text-sm mb-6">{t('noResultsDescription')}</p>
           {showAddManualButton && (
 
             <Button variant="primary" size="lg" onClick={onAddManual} aria-label={t('addManualItem')}>{t('addManualItem')}</Button>
@@ -203,9 +203,9 @@ export function AddItemProductList({ products, onSelect, isLoading, hasNext, isF
 
       {!isLoading && products.length === 0 && selectedCategoryId && debouncedSearchQuery.length < 2 && (
         <div className="text-center py-12">
-          <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <Package className="w-16 h-16 text-border mx-auto mb-4" />
           <p className="text-secondary font-medium mb-1">{t('noProductsInCategory')}</p>
-          <p className="text-muted text-sm mb-6">{t('noProductsInCategoryDescription')}</p>
+          <p className="text-text-muted text-sm mb-6">{t('noProductsInCategoryDescription')}</p>
           {showAddManualButton && (
             <Button variant="primary" size="lg" onClick={onAddManual} aria-label={t('addManualItem')}>
               {t('addManualItem')}
@@ -216,4 +216,3 @@ export function AddItemProductList({ products, onSelect, isLoading, hasNext, isF
     </div>
   );
 }
-

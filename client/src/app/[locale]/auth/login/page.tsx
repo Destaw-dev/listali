@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from '../../../../i18n/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Eye, EyeOff,  } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useAuthStore } from '../../../../store/authStore';
 import { useGuestListsStore } from '../../../../store/guestListsStore';
@@ -15,9 +15,10 @@ import { useNotification } from '../../../../contexts/NotificationContext';
 import { Link as IntlLink } from '../../../../i18n/navigation';
 import { GoogleAuthButton } from '../../../../components/auth/GoogleAuthButton';
 import { useParams } from 'next/navigation';
-import { Button, Input } from '../../../../components/common';
+import { Button, Input, LoadingState } from '../../../../components/common';
 import { ArrowIcon } from '../../../../components/common/Arrow';
 import { createLoginSchema } from '../../../../lib/schemas';
+import { useAuthRedirect } from '@/hooks/useAuthRedirect';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -33,6 +34,11 @@ export default function LoginPage() {
   const loginSchema = createLoginSchema(t);
   type LoginForm = z.infer<typeof loginSchema>;
 
+    useAuthRedirect({
+      redirectTo: '/dashboard',
+      requireAuth: false,
+    });
+
   const {
     register,
     handleSubmit,
@@ -41,21 +47,8 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
   });
 
-  useEffect(() => {
-    if (authReady && isAuthenticated) {
-      router.push('/dashboard');
-    }
-  }, [isAuthenticated, authReady, locale, router]);
-
   if (!authReady) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-secondary">{t('auth.loading')}</p>
-        </div>
-      </div>
-    );
+    return <LoadingState variant="page" size="lg" message={t('loading')} />;
   }
 
   if (isAuthenticated) {
@@ -93,7 +86,7 @@ export default function LoginPage() {
       if (error instanceof Error) {
         handleApiError(error);
       } else {
-        handleApiError(new Error('Login failed'));
+        handleApiError(new Error(t('loginError')));
       }
     } finally {
       setIsLoading(false);
@@ -109,13 +102,13 @@ export default function LoginPage() {
       if (data.success && data.data.url) {
         window.location.href = data.data.url;
       } else {
-        throw new Error(data.message || 'Failed to get Google OAuth URL');
+        throw new Error(data.message || t('googleAuthError'));
       }
     } catch (error) {
       if (error instanceof Error) {
         handleApiError(error);
       } else {
-        handleApiError(new Error('Failed to get Google OAuth URL'));
+        handleApiError(new Error(t('googleAuthError')));
       }
     } finally {
       setIsGoogleLoading(false);
@@ -123,29 +116,44 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-25px)] bg-card flex justify-center items-center p-4 pt-5 text-text-primary">
-      <div className="w-full max-w-md">
-        <div className="flex items-center justify-start gap-10 sm:gap-30 ">
-          <IntlLink
-            href={`/welcome`}
-            className="inline-flex items-center text-text-primary hover:text-text-secondary mb-6 transition-colors"
-          >
-            <ArrowIcon className="w-5 h-5 mx-2" />
-          </IntlLink>
-          <div>
-            <h1 className="text-3xl font-bold text-text-primary mb-3">{t('auth.login')}</h1>
-            <p className="text-text-secondary text-lg">{t('auth.loginToAccount')}</p>
-          </div>
-        </div>
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-[var(--color-surface)] via-[var(--color-background)] to-[var(--color-status-secondary-soft)]">
+      {/* Animated Background Orbs */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 inset-inline-start-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-pulse-soft" />
+        <div className="absolute bottom-20 inset-inline-end-10 w-96 h-96 bg-secondary/10 rounded-full blur-3xl animate-pulse-soft" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-accent/5 rounded-full blur-3xl animate-pulse-soft" style={{ animationDelay: '2s' }} />
+      </div>
 
-        <div className="mobile-card">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <div className="relative container mx-auto px-4 py-8 flex justify-center items-center min-h-screen">
+        <div className="w-full max-w-md">
+          {/* Back Button & Header */}
+          <div className="mb-8">
+            <IntlLink
+              href="/welcome"
+              className="inline-flex items-center text-text-primary hover:text-primary transition-all duration-200 hover:gap-3 gap-2"
+            >
+              <ArrowIcon className="w-5 h-5" />
+              <span className="text-sm font-medium">{t('navigation.back')}</span>
+            </IntlLink>
+            <div className="text-center">
+              <h1 className="text-4xl font-bold text-text-primary">
+                {t('login')}
+              </h1>
+              <p className="text-text-muted text-lg">{t('loginToAccount')}</p>
+            </div>
+          </div>
+
+          {/* Glass Card */}
+          <div className="bg-card/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-border/50 p-8 animate-fade-in-up">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                 <Input
                   {...register('email')}
                   type="email"
                   id="email"
-                  placeholder={t('auth.emailPlaceholder')}
-                  label={t('auth.email')}
+                  placeholder={t('emailPlaceholder')}
+                  label={t('email')}
+                  variant="outlined"
+                  className="h-12"
                   error={errors.email?.message}
               />
 
@@ -153,16 +161,19 @@ export default function LoginPage() {
                   {...register('password')}
                   type={showPassword ? 'text' : 'password'}
                   id="password"
-                  placeholder={t('auth.passwordPlaceholder')}
-                  label={t('auth.password')}
+                  placeholder={t('passwordPlaceholder')}
+                  label={t('password')}
                   error={errors.password?.message}
+                  variant="outlined"
+                  className="h-12"
                   iconTwo={
-                  <span
+                  <button
+                    type="button"
+                    aria-label={showPassword ? t('hidePassword') : t('showPassword')}
                     onClick={() => setShowPassword(!showPassword)}
-                    className="text-text-muted hover:text-text-secondary transition-colors"
                   >
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                  </span>
+                  </button>
                   }/>
             <Button
               variant="primary"
@@ -171,15 +182,16 @@ export default function LoginPage() {
               fullWidth
               loading={isLoading}
               type="submit"
+              className="shadow-lg hover:shadow-xl transition-all duration-200"
             >
-              {isLoading ? t('auth.loading') : t('auth.loginButton')}
+              {isLoading ? t('loading') : t('loginButton')}
             </Button>
           </form>
 
-          <div className="my-5 flex items-center">
-            <div className="flex-1 border-t border-border-light"></div>
-            <span className="px-4 text-sm text-muted">{t('welcome.or')}</span>
-            <div className="flex-1 border-t border-border-light"></div>
+          <div className="my-3 flex items-center">
+            <div className="flex-1 border-t border-border/30"></div>
+            <span className="px-4 text-sm text-text-muted font-medium">{t('welcome.or')}</span>
+            <div className="flex-1 border-t border-border/30"></div>
           </div>
 
           <GoogleAuthButton 
@@ -189,13 +201,14 @@ export default function LoginPage() {
             isLoading={isGoogleLoading}
           />
 
-          <div className="text-center mt-5">
-            <p className='text-text-secondary'>
-              {t('auth.noAccount')}{' '}
-              <IntlLink href="/auth/register" className="text-text-primary-600 hover:text-text-primary-700 font-semibold transition-colors">
-                {t('auth.createAccount')}
+          <div className="text-center mt-6">
+            <p className="text-text-muted">
+              {t('noAccount')}{' '}
+              <IntlLink href="/auth/register" className="text-primary hover:text-secondary font-semibold transition-all duration-200">
+                {t('createAccount')}
               </IntlLink>
             </p>
+          </div>
           </div>
         </div>
       </div>

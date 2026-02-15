@@ -62,10 +62,10 @@ export const PurchaseAllButton = memo(function PurchaseAllButton({
           onClick={onUndo}
           className="text-sm"
         >
-          {t("undoPurchaseAll") || "בטל"}
+          {t("undoPurchaseAll")}
         </Button>
         <span className="text-sm text-text-muted">
-          {t("purchaseAllSuccess", { count: unpurchasedCount }) || `${unpurchasedCount} פריטים סומנו`}
+          {t("purchaseAllSuccess", { count: unpurchasedCount })}
         </span>
       </div>
     );
@@ -84,7 +84,7 @@ export const PurchaseAllButton = memo(function PurchaseAllButton({
           disabled={isLoading}
           loading={isLoading}
         >
-          {t("confirm") || "אישור"}
+          {t("confirm")}
         </Button>
         <Button
           variant="outline"
@@ -92,7 +92,7 @@ export const PurchaseAllButton = memo(function PurchaseAllButton({
           onClick={handleCancel}
           disabled={isLoading}
         >
-          {t("cancel") || "ביטול"}
+          {t("cancel")}
         </Button>
       </div>
     );
@@ -106,7 +106,7 @@ export const PurchaseAllButton = memo(function PurchaseAllButton({
       disabled={isLoading || unpurchasedCount === 0}
       icon={<CheckCircle2 className="h-4 w-4" />}
     >
-      {t("purchaseAll") || "קניתי הכל"}
+      {t("purchaseAll")}
     </Button>
   );
 });

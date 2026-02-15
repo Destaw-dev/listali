@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../lib/api';
 import { useAuthStore } from '../store/authStore';
 import { useNotification } from '../contexts/NotificationContext';
+import { useMutationFactory } from './useMutationFactory';
 
 export const settingsKeys = {
   all: ['settings'] as const,
@@ -84,35 +85,31 @@ export const useUpdateProfile = () => {
 
 export const useUpdateEmail = () => {
   const queryClient = useQueryClient();
-  const { showSuccess, handleApiError } = useNotification();
 
-  return useMutation({
-    mutationFn: async (emailData: { email: string }) => {
+  return useMutationFactory<unknown, { email: string }>({
+    mutationFn: async (emailData) => {
       const response = await apiClient.updateEmail(emailData);
       return response.data;
     },
-      onSuccess: (data) => {
-        if (data) {
-          queryClient.setQueryData(settingsKeys.profile(), data);
-        }
-        showSuccess('notifications.emailUpdated');
-      },
-    onError: (error: Error) => {
-      handleApiError(error);
+    successMessage: 'notifications.emailUpdated',
+    onSuccess: (data) => {
+      if (data) {
+        queryClient.setQueryData(settingsKeys.profile(), data);
+      }
     },
   });
 };
 
 export const useUpdatePreferences = () => {
   const queryClient = useQueryClient();
-  const { handleApiError } = useNotification();
   const { setUser, user: currentUser } = useAuthStore();
 
-  return useMutation({
-    mutationFn: async (preferencesData: { language: string; theme: string }) => {
+  return useMutationFactory<unknown, { language: string; theme: string }>({
+    mutationFn: async (preferencesData) => {
       const response = await apiClient.updatePreferences(preferencesData);
       return response.data;
     },
+    invalidateQueries: [settingsKeys.preferences()],
     onSuccess: (data) => {
       queryClient.setQueryData(settingsKeys.preferences(), data);
       if (currentUser && data) {
@@ -125,44 +122,41 @@ export const useUpdatePreferences = () => {
         });
       }
     },
-    onError: (error: Error) => {
-      handleApiError(error);
-    },
   });
 };
 
 export const useUpdateNotificationSettings = () => {
   const queryClient = useQueryClient();
-  const { showSuccess, handleApiError } = useNotification();
   const { setUser, user: currentUser } = useAuthStore();
 
-  return useMutation({
-    mutationFn: async (settings: {
+  return useMutationFactory<
+    unknown,
+    {
       pushNotifications: boolean;
       emailNotifications: boolean;
       newMessageNotifications: boolean;
       shoppingListUpdates: boolean;
       groupInvitations: boolean;
-    }) => {
+    }
+  >({
+    mutationFn: async (settings) => {
       const response = await apiClient.updateNotificationSettings(settings);
       return response.data;
     },
-      onSuccess: (data) => {
-        queryClient.setQueryData(settingsKeys.notifications(), data);
-        queryClient.setQueryData(settingsKeys.preferences(), data);
-        if (currentUser && data) {
-          setUser({
-            ...currentUser,
-            preferences: {
-              ...currentUser.preferences,
-              ...data,
-            },
-          });
-        }
-        showSuccess('settings.notificationSettingsUpdateSuccess');
-      },
-    onError: (error: Error) => {
-      handleApiError(error);
+    successMessage: 'settings.notificationSettingsUpdateSuccess',
+    invalidateQueries: [settingsKeys.notifications(), settingsKeys.preferences()],
+    onSuccess: (data) => {
+      queryClient.setQueryData(settingsKeys.notifications(), data);
+      queryClient.setQueryData(settingsKeys.preferences(), data);
+      if (currentUser && data) {
+        setUser({
+          ...currentUser,
+          preferences: {
+            ...currentUser.preferences,
+            ...data,
+          },
+        });
+      }
     },
   });
 };

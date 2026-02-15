@@ -180,8 +180,8 @@ describe('InvitationsPage', () => {
     } as ReturnType<typeof useInvitations>);
 
     renderWithProviders(<InvitationsPage />);
-    const spinner = document.querySelector('.animate-spin');
-    expect(spinner).toBeTruthy();
+    const skeleton = document.querySelector('.animate-pulse');
+    expect(skeleton).toBeTruthy();
   });
 
   it('should show empty state when no invitations', () => {
@@ -230,8 +230,7 @@ describe('InvitationsPage', () => {
     } as ReturnType<typeof useJoinRequests>);
 
     renderWithProviders(<InvitationsPage />);
-    const spinner = document.querySelector('.animate-spin');
-    expect(spinner).toBeTruthy();
+    const skeleton = document.querySelector('.animate-pulse');
+    expect(skeleton).toBeTruthy();
   });
 });
-

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Check, X, UserPlus, Calendar } from "lucide-react";
-import { LoadingSpinner, Button } from "../../../components/common";
+import { LoadingSpinner, Button, LoadingState, Skeleton, SkeletonCard } from "../../../components/common";
 import {
   useInvitations,
   useAcceptInvitation,
@@ -81,17 +81,17 @@ export default function InvitationsPage() {
   };
 
   if (!safeToShow) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <LoadingSpinner />
-      </div>
-    );
+    return <LoadingState variant="page" />;
   }
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-surface">
-        <LoadingSpinner />
+      <div className="min-h-screen bg-surface">
+        <div className="container mx-auto px-4 py-4 space-y-6">
+          <Skeleton variant="line" height="h-8" width="w-56" />
+          <SkeletonCard />
+          <SkeletonCard />
+        </div>
       </div>
     );
   }
@@ -144,7 +144,7 @@ export default function InvitationsPage() {
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex items-start gap-4">
-                      <div className="h-12 w-12 rounded-full bg-warning-100 flex items-center justify-center text-warning-600 font-bold shrink-0">
+                      <div className="h-12 w-12 rounded-full bg-[var(--color-icon-warning-bg)] flex items-center justify-center text-[var(--color-icon-warning-fg)] font-bold shrink-0">
                         <UserPlus className="w-6 h-6" />
                       </div>
 
@@ -160,8 +160,8 @@ export default function InvitationsPage() {
                           <span
                             className={`text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full ${
                               request.role === "admin"
-                                ? "bg-warning-100 text-warning-700 border border-warning-200"
-                                : "bg-primary-100 text-primary-700 border border-primary-200"
+                                ? "bg-[var(--color-status-warning-soft)] text-warning border border-warning/20"
+                                : "bg-[var(--color-icon-info-bg)] text-[var(--color-icon-info-fg)] border border-info/20"
                             }`}
                           >
                             {request.role === "admin"
@@ -180,7 +180,7 @@ export default function InvitationsPage() {
                     </div>
 
                     <div className="shrink-0">
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-warning-100 text-warning-700 border border-warning-200">
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-[var(--color-status-warning-soft)] text-warning border border-warning/20">
                         {t("pendingApproval")}
                       </span>
                     </div>

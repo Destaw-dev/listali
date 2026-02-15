@@ -48,47 +48,47 @@ export function Button({
   const variantClasses: Record<string, string> = {
     primary: cn(
       gradients.primary,
-      'text-text-primary focus:ring-primary shadow-lg hover:shadow-xl'
+      'text-text-on-primary focus:ring-primary shadow-lg hover:shadow-xl'
     ),
     secondary: cn(
       gradients.secondary,
-      'text-text-primary hover:bg-secondary/90 focus:ring-secondary shadow-lg hover:shadow-xl'
+      'text-text-on-primary hover:bg-secondary/90 focus:ring-secondary shadow-lg hover:shadow-xl'
     ),
     accent: cn(
       gradients.accent,
-      'text-text-primary hover:bg-accent/90 focus:ring-accent shadow-lg hover:shadow-xl'
+      'text-text-on-primary hover:bg-accent/90 focus:ring-accent shadow-lg hover:shadow-xl'
     ),
     outlineBlue: cn(
-      'border border-primary text-text-primary',
-      'hover:bg-background-50 focus:ring-primary',
+      'border border-primary text-primary-600',
+      'hover:bg-[var(--color-icon-primary-bg)] focus:ring-primary',
       'bg-transparent shadow-lg hover:shadow-xl'
     ),
     outline: cn(
-      'border border-border text-text-primary',
-      'hover:bg-background-hover focus:ring-primary',
-      'bg-transparent shadow-lg hover:shadow-xl'
+      'border border-border text-text-primary font-semibold',
+      'hover:bg-surface-hover focus:ring-primary',
+      'bg-transparent shadow-lg hover:shadow-xl hover:scale-105',
     ),
     dashed: cn(
       'border border-dashed border-border text-text-primary',
-      'hover:bg-background-hover focus:ring-primary',
+      'hover:bg-surface-hover focus:ring-primary',
       'bg-transparent shadow-lg hover:shadow-xl'
     ),
     ghost: cn(
-      'text-text-primary hover:bg-background-50',
+      'text-text-primary hover:bg-surface-hover',
       'focus:ring-primary bg-transparent shadow-lg',
       'shadow-sm hover:shadow-md'
     ),
     destructive: cn(
-      'bg-error text-text-primary hover:bg-error/90',
+      'bg-error text-text-on-primary hover:bg-error/90',
       'focus:ring-error shadow-lg hover:shadow-xl'
     ),
     success: cn(
       gradients.success,
-      'text-text-primary hover:bg-success/90 focus:ring-success shadow-lg hover:shadow-xl'
+      'text-text-on-primary hover:bg-success/90 focus:ring-success shadow-lg hover:shadow-xl'
     ),
     warning: cn(
       gradients.warning,
-      'text-text-primary hover:bg-warning/90 focus:ring-warning shadow-lg hover:shadow-xl'
+      'text-text-on-primary hover:bg-warning/90 focus:ring-warning shadow-lg hover:shadow-xl'
     ),
     outlineError: cn(
       'border border-error text-error',
@@ -97,22 +97,23 @@ export function Button({
     ),
     error: cn(
       gradients.error,
-      'text-text-primary hover:bg-error/90 focus:ring-error shadow-lg hover:shadow-xl'
+      'text-text-on-primary hover:bg-error/90 focus:ring-error shadow-lg hover:shadow-xl'
     ),
     checkbox: cn(
       'flex items-center justify-center rounded-full border-2 transition-all',
       'size-6 shrink-0',
       checked
-        ? 'bg-emerald-500 border-emerald-500 text-text-primary'
-        : 'border-slate-200 bg-white hover:border-slate-300'
+        ? 'bg-success-500 border-success-500 text-text-on-primary'
+        : 'border-border bg-card hover:border-border-light'
     ),
     white: cn(
-      'bg-background text-text-primary hover:bg-gray-50',
+      'bg-background text-text-primary hover:bg-surface-hover',
       'focus:ring-primary shadow-lg hover:shadow-xl',
       'shadow-sm hover:shadow-md'
     ),
     ghostSurface: cn(
       'text-text-primary bg-surface',
+      'hover:bg-surface-hover',
       'focus:ring-primary shadow-lg',
       'shadow-sm hover:shadow-md'
     ),
@@ -189,13 +190,13 @@ export function Button({
       {!isCheckbox && (
         <>
           {!loading && icon && iconPosition === 'left' && (
-            <span className="flex-shrink-0 text-text-primary">{icon}</span>
+            <span className="flex-shrink-0 text-current">{icon}</span>
           )}
           
           {children && <span className="flex-shrink-0">{children}</span>}
           
           {!loading && icon && iconPosition === 'right' && (
-            <span className="flex-shrink-0 text-text-primary">{icon}</span>
+            <span className="flex-shrink-0 text-current">{icon}</span>
           )}
         </>
       )}

@@ -1,12 +1,15 @@
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { IRegisterRequest } from '../types';
 import { useAuthStore } from '../store/authStore';
+import { readCsrfTokenFromCookie } from './csrf';
 
 export class ApiClient {
   private baseURL: string;
   private client: AxiosInstance;
   private isRefreshing = false;
   private refreshPromise: Promise<string> | null = null;
+  private csrfToken: string | null = null;
+  private csrfPromise: Promise<string | null> | null = null;
 
   constructor(baseURL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5000') {
     this.baseURL = baseURL;
@@ -23,10 +26,20 @@ export class ApiClient {
 
   private setupInterceptors() {
     this.client.interceptors.request.use(
-      (config: InternalAxiosRequestConfig) => {
+      async (config: InternalAxiosRequestConfig) => {
         const accessToken = useAuthStore.getState().accessToken;
         if (accessToken) {
           config.headers.Authorization = `Bearer ${accessToken}`;
+        }
+
+        const method = (config.method || 'get').toUpperCase();
+        const isUnsafeMethod = !['GET', 'HEAD', 'OPTIONS'].includes(method);
+
+        if (isUnsafeMethod) {
+          const csrfToken = await this.ensureCsrfToken();
+          if (csrfToken) {
+            config.headers['x-csrf-token'] = csrfToken;
+          }
         }
         return config;
       },
@@ -115,6 +128,37 @@ export class ApiClient {
         return Promise.reject(error);
       }
     );
+  }
+
+  private async ensureCsrfToken(): Promise<string | null> {
+    if (typeof window === 'undefined') return null;
+
+    const cookieToken = readCsrfTokenFromCookie();
+    if (cookieToken) {
+      this.csrfToken = cookieToken;
+      return cookieToken;
+    }
+
+    if (this.csrfPromise) {
+      return this.csrfPromise;
+    }
+
+    this.csrfPromise = (async () => {
+      try {
+        const response = await this.client.get('/auth/csrf-token');
+        const serverToken = response.data?.data?.csrfToken as string | undefined;
+        const freshCookieToken = readCsrfTokenFromCookie();
+        this.csrfToken = freshCookieToken || serverToken || null;
+        return this.csrfToken;
+      } catch {
+        this.csrfToken = null;
+        return null;
+      } finally {
+        this.csrfPromise = null;
+      }
+    })();
+
+    return this.csrfPromise;
   }
 
   private async refreshAccessToken(): Promise<string> {

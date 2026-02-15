@@ -168,8 +168,8 @@ export default function NotificationModal({
     <Modal
       title={t("notificationSettings")}
       onClose={onClose}
-      iconHeader={<div className=" p-2 bg-accent-500 rounded-full">
-        <Bell className="w-5 h-5 text-text-primary" />
+      iconHeader={<div className="p-2 rounded-full bg-[var(--color-icon-accent-bg)]">
+        <Bell className="w-5 h-5 text-[var(--color-icon-accent-fg)]" />
       </div>}
       subtitle={t("controlYourNotifications")}
       size="md"
@@ -185,19 +185,19 @@ export default function NotificationModal({
                 return (
                   <div
                     key={type.id}
-                    className={`p-4 rounded-xl border-1 transition-all duration-200 ${
+                    className={`p-4 rounded-xl border transition-all duration-200 ${
                       isEnabled
-                        ? 'border-border '
-                        : 'border-border bg-background-hover'
+                        ? 'border-border bg-card'
+                        : 'border-border bg-surface'
                     }`}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className={`p-2 rounded-lg ${
-                          isEnabled ? 'bg-accent/20' : 'bg-gray-100'
+                          isEnabled ? 'bg-[var(--color-icon-accent-bg)]' : 'bg-surface-hover'
                         }`}>
                           <Icon className={`w-4 h-4 ${
-                            isEnabled ? 'text-accent' : 'text-text-muted'
+                            isEnabled ? 'text-[var(--color-icon-accent-fg)]' : 'text-text-muted'
                           }`} />
                         </div>
                         <div>

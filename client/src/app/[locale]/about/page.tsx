@@ -26,12 +26,12 @@ export default function AboutPage() {
 
       <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
         <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
-          <div className="h-16 bg-gradient-to-l from-primary-500 to-primary-600" />
+          <div className="h-16 bg-surface-hover" />
           <div className="px-6 pb-6 relative">
             <div className="flex justify-between items-end -mt-10 mb-4">
               <div className="w-16 h-16 rounded-xl bg-card border border-border p-1 shadow-md">
-                <div className="w-full h-full bg-primary-100 rounded-lg flex items-center justify-center text-primary-600 text-xl font-bold">
-                  <Info className="w-8 h-8 text-primary-600" />
+                <div className="w-full h-full bg-[var(--color-icon-primary-bg)] rounded-lg flex items-center justify-center text-[var(--color-icon-primary-fg)] text-xl font-bold">
+                  <Info className="w-8 h-8 text-[var(--color-icon-primary-fg)]" />
                 </div>
               </div>
             </div>
@@ -48,7 +48,7 @@ export default function AboutPage() {
 
         <div className="bg-card border border-border rounded-xl shadow-sm p-6">
           <h2 className="text-xl font-bold text-text-primary mb-4 flex items-center gap-2">
-            <Heart className="w-5 h-5 text-primary-600" />
+            <Heart className="w-5 h-5 text-primary" />
             {t('mission.title')}
           </h2>
           <p className="text-text-muted leading-relaxed">
@@ -58,13 +58,13 @@ export default function AboutPage() {
 
         <div className="bg-card border border-border rounded-xl shadow-sm p-6">
           <h2 className="text-xl font-bold text-text-primary mb-6 flex items-center gap-2">
-            <Zap className="w-5 h-5 text-primary-600" />
+            <Zap className="w-5 h-5 text-primary" />
             {t('features.title')}
           </h2>
           <div className="grid md:grid-cols-2 gap-4">
             <div className="p-4 bg-surface rounded-lg border border-border">
               <div className="flex items-center gap-3 mb-2">
-                <Users className="w-5 h-5 text-primary-600" />
+                <Users className="w-5 h-5 text-primary" />
                 <h3 className="font-semibold text-text-primary">{t('features.groups.title')}</h3>
               </div>
               <p className="text-sm text-text-muted">{t('features.groups.description')}</p>
@@ -72,7 +72,7 @@ export default function AboutPage() {
 
             <div className="p-4 bg-surface rounded-lg border border-border">
               <div className="flex items-center gap-3 mb-2">
-                <ShoppingCart className="w-5 h-5 text-primary-600" />
+                <ShoppingCart className="w-5 h-5 text-primary" />
                 <h3 className="font-semibold text-text-primary">{t('features.lists.title')}</h3>
               </div>
               <p className="text-sm text-text-muted">{t('features.lists.description')}</p>
@@ -80,7 +80,7 @@ export default function AboutPage() {
 
             <div className="p-4 bg-surface rounded-lg border border-border">
               <div className="flex items-center gap-3 mb-2">
-                <Zap className="w-5 h-5 text-primary-600" />
+                <Zap className="w-5 h-5 text-primary" />
                 <h3 className="font-semibold text-text-primary">{t('features.realtime.title')}</h3>
               </div>
               <p className="text-sm text-text-muted">{t('features.realtime.description')}</p>
@@ -88,7 +88,7 @@ export default function AboutPage() {
 
             <div className="p-4 bg-surface rounded-lg border border-border">
               <div className="flex items-center gap-3 mb-2">
-                <Shield className="w-5 h-5 text-primary-600" />
+                <Shield className="w-5 h-5 text-primary" />
                 <h3 className="font-semibold text-text-primary">{t('features.privacy.title')}</h3>
               </div>
               <p className="text-sm text-text-muted">{t('features.privacy.description')}</p>
@@ -102,7 +102,7 @@ export default function AboutPage() {
               <h3 className="font-semibold text-text-primary mb-1">{t('version.title')}</h3>
               <p className="text-sm text-text-muted">{t('version.number')}</p>
             </div>
-            <div className="text-right">
+            <div className="text-end">
               <p className="text-sm text-text-muted">{t('version.lastUpdated')}</p>
               <p className="text-sm font-medium text-text-primary">{t('version.date')}</p>
             </div>

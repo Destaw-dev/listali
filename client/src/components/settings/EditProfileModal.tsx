@@ -141,8 +141,8 @@ export default function EditProfileModal({
     <Modal
       title={t("editProfile")}
       onClose={onClose}
-      iconHeader={<div className=" bg-background-500 rounded-full">
-        <User className="w-5 h-5" />
+      iconHeader={<div className="bg-[var(--color-icon-primary-bg)] rounded-full p-2">
+        <User className="w-5 h-5 text-[var(--color-icon-primary-fg)]" />
       </div>}
       subtitle={t("editProfileDescription")}
       size="md"

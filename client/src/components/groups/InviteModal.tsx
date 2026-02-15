@@ -61,8 +61,8 @@ export function InviteModal({ isOpen, onClose, onInvite, groupName }: InviteModa
   if (!isOpen) return null;
 
   return (
-    <Modal title={t('inviteFriends')} onClose={handleClose} iconHeader={ <div className="p-2 bg-gradient-to-br from-accent-400 to-accent-600 rounded-xl">
-      <UserPlus className="w-5 h-5 text-text-primary" />
+    <Modal title={t('inviteFriends')} onClose={handleClose} iconHeader={ <div className="p-2 bg-[var(--color-icon-accent-bg)] rounded-xl">
+      <UserPlus className="w-5 h-5 text-[var(--color-icon-accent-fg)]" />
     </div>} subtitle={t('inviteFriendsToGroup', { groupName })} size="md" isLoading={isLoading}>
        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
            <Input
@@ -94,7 +94,7 @@ export function InviteModal({ isOpen, onClose, onInvite, groupName }: InviteModa
           </div>
 
           {/* Role Info */}
-          <div className="bg-background-50 border border-primary-100 rounded-lg p-4">
+          <div className="bg-surface border border-border rounded-lg p-4">
             <h4 className="font-medium text-text-primary mb-2">{t('groupRoles')}:</h4>
             <div className="space-y-2 text-sm text-text-secondary">
               <div className="flex items-start gap-2">
@@ -109,11 +109,11 @@ export function InviteModal({ isOpen, onClose, onInvite, groupName }: InviteModa
           </div>
 
           {/* Invite Method Info */}
-          <div className="bg-background-50 border border-primary-100 rounded-lg p-4">
+          <div className="bg-surface border border-border rounded-lg p-4">
             <h4 className="font-medium text-text-primary mb-2">{t('howInviteWillBeSent')}</h4>
             <div className="space-y-3">
               <div className="flex items-start gap-3">
-                <div className="bg-background-100 p-2 rounded-lg">
+                <div className="bg-surface-hover p-2 rounded-lg">
                   <Bell className="w-4 h-4 text-text-primary" />
                 </div>
                 <div>
@@ -122,7 +122,7 @@ export function InviteModal({ isOpen, onClose, onInvite, groupName }: InviteModa
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <div className="bg-background-100 p-2 rounded-lg">
+                <div className="bg-surface-hover p-2 rounded-lg">
                   <Mail className="w-4 h-4 text-text-primary" />
                 </div>
                 <div>

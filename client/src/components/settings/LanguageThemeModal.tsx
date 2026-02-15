@@ -85,8 +85,8 @@ export default function LanguageThemeModal({
     <Modal
       title={t("languageAndTheme")}
       onClose={onClose}
-      iconHeader={<div className=" p-2 bg-background-500 rounded-full">
-        <Globe className="w-5 h-5 text-text-primary" />
+      iconHeader={<div className=" p-2 bg-[var(--color-icon-primary-bg)] rounded-full">
+        <Globe className="w-5 h-5 text-[var(--color-icon-primary-fg)]" />
       </div>}
       subtitle={t("customizeYourExperience")}
       size="md"
@@ -158,7 +158,7 @@ export default function LanguageThemeModal({
               </div>
             </div>
 
-            <div className=" w-full h-1 bg-gradient-to-r from-primary-100 to-primary-200" />
+            <div className="w-full h-px bg-border" />
 
             <div className="flex gap-3 pt-4">
               <Button

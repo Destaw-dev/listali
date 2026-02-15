@@ -53,7 +53,7 @@ export const ProductDetailsModal = memo(function ProductDetailsModal({
     <Modal
       title={title}
       onClose={onClose}
-      iconHeader={<div className=" p-2 bg-info-500 rounded-full">
+      iconHeader={<div className=" p-2 bg-info rounded-full">
         <Package className="w-5 h-5 text-text-primary" />
       </div>}
       subtitle={brand}

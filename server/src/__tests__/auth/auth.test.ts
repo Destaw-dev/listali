@@ -35,7 +35,7 @@ const user = {
   lastName: 'user',
   username: 'testuser',
   email: 'test@example.com',
-  password: 'Password123'
+  password: 'NewPasswordSafe123!'
 };
 
 const verifyUserEmail = async (email: string) => {
@@ -129,7 +129,7 @@ describe('🔐 Auth API', () => {
       .set('Authorization', `Bearer ${loginBody.data?.accessToken || ''}`)
       .send({
         currentPassword: user.password,
-        newPassword: 'NewPassword123'
+        newPassword: 'NewPasswordSafe123!'
       });
 
     expect(res.status).toBe(200);
@@ -138,7 +138,7 @@ describe('🔐 Auth API', () => {
 
     const loginRes2 = await request(app).post('/api/auth/login').send({
       email: user.email,
-      password: 'NewPassword123'
+      password: 'NewPasswordSafe123!'
     });
     expect(loginRes2.status).toBe(200);
   });
@@ -207,13 +207,13 @@ describe('🔐 Auth API', () => {
     expect(body.data?.available).toBe(false);
   });
 
-  test('GET /api/auth/check-email/:email → check if email is taken', async () => {
+  test('GET /api/auth/check-email/:email → should not reveal if email is taken', async () => {
     await request(app).post('/api/auth/register').send(user);
     const res = await request(app).get(`/api/auth/check-email/${user.email}`);
     expect(res.status).toBe(200);
     const body = res.body as IApiResponse<{ available: boolean }>;
     expect(body.data).toBeDefined();
-    expect(body.data?.available).toBe(false);
+    expect(body.data?.available).toBe(true);
   });
 
   test('GET /api/auth/invitations → should get user invitations', async () => {
@@ -222,7 +222,7 @@ describe('🔐 Auth API', () => {
       lastName: 'User',
       username: 'inviteruser',
       email: 'inviter@example.com',
-      password: 'Password123'
+      password: 'NewPasswordSafe123!'
     };
 
     await request(app).post('/api/auth/register').send(inviterUser);
@@ -274,7 +274,7 @@ describe('🔐 Auth API', () => {
       lastName: 'User',
       username: 'owneruser',
       email: 'owner@example.com',
-      password: 'Password123'
+      password: 'NewPasswordSafe123!'
     };
 
     await request(app).post('/api/auth/register').send(ownerUser);

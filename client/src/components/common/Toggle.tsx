@@ -19,7 +19,7 @@ export function Toggle({ isEnabled, onClick, className, variant = 'accent' }: To
     const variantColor = isEnabled ? variant : 'ghost';
   return (
     <Button type='button' variant={variantColor} onClick={onClick} className={baseClasses}>
-      <div className={`w-5 h-5 rounded-full bg-gray-300 transition-all duration-200 transform ${
+      <div className={`w-5 h-5 rounded-full bg-border transition-all duration-200 transform ${
         isEnabled ? 'translate-x-3' : '-translate-x-3'
       }`} />
     </Button>

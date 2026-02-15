@@ -1,12 +1,13 @@
 'use client';
 
+import { useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { useRouter, usePathname } from '../../i18n/navigation';
 import { Home, Users, Settings, LogOut, UserPlus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import LanguageSwitcher from '../common/LanguageSwitcher';
 import { useLogout } from '../../hooks/useSettings';
-import { Button } from '../common';
+import { Button, ConfirmDialog } from '../common';
 import Image from 'next/image';
 import { iconSizes } from '../../lib/iconSizes';
 
@@ -15,12 +16,18 @@ export function Navigation() {
   const router = useRouter();
   const pathname = usePathname();
   const t = useTranslations('navigation');
+  const tCommon = useTranslations('common');
   const logoutMutation = useLogout();
+  const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
 
-  const handleLogout = async () => {
-    if (confirm(t('logoutConfirmation'))) {
-      logoutMutation.mutate();
-    }
+  const handleLogout = () => {
+    setIsLogoutDialogOpen(true);
+  };
+
+  const handleConfirmLogout = () => {
+    logoutMutation.mutate(undefined, {
+      onSettled: () => setIsLogoutDialogOpen(false),
+    });
   };
 
   if (!isAuthenticated) {
@@ -101,8 +108,8 @@ export function Navigation() {
                   />
                 </div>
               ) : (
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 border-2 border-primary/30 flex items-center justify-center shadow-lg">
-                  <span className="text-primary font-bold text-sm">
+                <div className="w-10 h-10 rounded-full bg-[var(--color-icon-primary-bg)] border-2 border-border flex items-center justify-center shadow-sm">
+                  <span className="text-[var(--color-icon-primary-fg)] font-bold text-sm">
                     {(user?.firstName?.[0] || user?.username?.[0] || 'U').toUpperCase()}
                   </span>
                 </div>
@@ -114,23 +121,20 @@ export function Navigation() {
               <Button
                 onClick={handleLogout}
                 disabled={logoutMutation.isPending}
+                loading={logoutMutation.isPending}
                 variant="ghost"
                 size="sm"
                 rounded={true}
               >
-                {logoutMutation.isPending ? (
-                  <div className={`${iconSizes.md} border-2 border-current border-t-transparent rounded-full animate-spin`} />
-                ) : (
-                  <LogOut className={iconSizes.md} />
-                )}
+                <LogOut className={iconSizes.md} />
               </Button>
             </div>
           </div>
       </nav>
 
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background shadow-2xl">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-around py-3">
+      <nav className="md:hidden fixed bottom-0 inset-inline-0 z-50 bg-background shadow-2xl rounded-t-3xl w-full">
+        <div className="mx-auto container px-4">
+          <div className="flex items-center gap-3 py-3">
             <div className="flex items-center gap-1">
               {navItems.map((item) => {
                 if (!item.showOnMobile) return null;
@@ -152,7 +156,7 @@ export function Navigation() {
               })}
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center">
               {user?.avatar ? (
                 <Image
                   loading="lazy"
@@ -163,14 +167,14 @@ export function Navigation() {
                   className="rounded-full border-2 border-primary/30 shadow-md"
                 />
               ) : (
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 border-2 border-text-primary flex items-center justify-center">
-                  <span className="text-text-primary font-bold text-xs">
+                <div className="w-8 h-8 rounded-full bg-[var(--color-icon-primary-bg)] border-2 border-border flex items-center justify-center">
+                  <span className="text-[var(--color-icon-primary-fg)] font-bold text-xs">
                     {(user?.firstName?.[0] || user?.username?.[0] || 'U').toUpperCase()}
                   </span>
                 </div>
               )}
 
-              <Button
+              {/* <Button
                 onClick={handleLogout}
                 disabled={logoutMutation.isPending}
                 variant="ghost"
@@ -178,11 +182,23 @@ export function Navigation() {
                 rounded={true}
                 >
                 <LogOut className={iconSizes.md} />
-              </Button>
+              </Button> */}
             </div>
           </div>
         </div>
       </nav>
+
+      <ConfirmDialog
+        isOpen={isLogoutDialogOpen}
+        onClose={() => !logoutMutation.isPending && setIsLogoutDialogOpen(false)}
+        onConfirm={handleConfirmLogout}
+        title={t('logout')}
+        message={t('logoutConfirmation')}
+        confirmText={t('logout')}
+        cancelText={tCommon('cancel')}
+        variant="warning"
+        isLoading={logoutMutation.isPending}
+      />
     </>
   );
 } 

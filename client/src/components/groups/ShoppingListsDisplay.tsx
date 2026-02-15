@@ -48,7 +48,7 @@ export function ShoppingListsDisplay({
     return (
       <Card className="shadow-lg">
         <CardBody className="p-8 text-center">
-          <ShoppingCart className="w-12 h-12 text-muted mx-auto mb-4" />
+          <ShoppingCart className="w-12 h-12 text-text-muted mx-auto mb-4" />
           <h3 className="text-lg font-bold text-text-primary mb-2">
             {searchTerm || activeFiltersCount > 0 ? t("lists.noResults") : t("lists.noLists")}
           </h3>
@@ -270,7 +270,7 @@ function ShoppingListCard({
         {list.metadata?.itemsCount > 0 && (
           <div className="w-full bg-info rounded-full h-1.5">
             <div
-              className="bg-gradient-to-r from-primary to-secondary h-1.5 rounded-full transition-all"
+              className="bg-primary-500 h-1.5 rounded-full transition-all"
               style={{ width: `${completionPercent}%` }}
             />
           </div>

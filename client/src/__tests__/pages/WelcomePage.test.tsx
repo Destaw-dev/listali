@@ -3,9 +3,11 @@ import { screen } from '@testing-library/react';
 import { renderWithProviders } from '../../test/test-utils';
 import WelcomePage from '../../app/[locale]/welcome/page';
 import { useAuthStore } from '../../store/authStore';
+import { useAuthRedirect } from '../../hooks/useAuthRedirect';
 import { mockUser } from '../mocks/mockData';
 
 vi.mock('../../store/authStore');
+vi.mock('../../hooks/useAuthRedirect');
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
     push: vi.fn(),
@@ -30,12 +32,18 @@ vi.mock('../../i18n/navigation', () => ({
 describe('WelcomePage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(useAuthRedirect).mockReturnValue({
+      isAuthenticated: false,
+      isReady: true,
+      safeToShow: true,
+    });
   });
 
   it('should render welcome page when not authenticated', () => {
     vi.mocked(useAuthStore).mockReturnValue({
       user: null,
       isAuthenticated: false,
+      setGuestMode: vi.fn(),
       isInitialized: true,
     } as ReturnType<typeof useAuthStore>);
 
@@ -48,6 +56,7 @@ describe('WelcomePage', () => {
     vi.mocked(useAuthStore).mockReturnValue({
       user: mockUser,
       isAuthenticated: true,
+      setGuestMode: vi.fn(),
       isInitialized: true,
     } as ReturnType<typeof useAuthStore>);
 
@@ -56,20 +65,29 @@ describe('WelcomePage', () => {
   });
 
   it('should show loading state', () => {
+    vi.mocked(useAuthRedirect).mockReturnValue({
+      isAuthenticated: false,
+      isReady: true,
+      safeToShow: false,
+    });
+
     vi.mocked(useAuthStore).mockReturnValue({
       user: null,
       isAuthenticated: false,
-      isInitialized: false,
+      setGuestMode: vi.fn(),
+      isInitialized: true,
     } as ReturnType<typeof useAuthStore>);
 
     renderWithProviders(<WelcomePage />);
-    expect(screen.getByText(/loading/i)).toBeInTheDocument();
+    const skeleton = document.querySelector('.animate-pulse');
+    expect(skeleton).toBeTruthy();
   });
 
   it('should show login and register links', () => {
     vi.mocked(useAuthStore).mockReturnValue({
       user: null,
       isAuthenticated: false,
+      setGuestMode: vi.fn(),
       isInitialized: true,
     } as ReturnType<typeof useAuthStore>);
 
@@ -81,4 +99,3 @@ describe('WelcomePage', () => {
     expect(loginButton || registerButton).toBeDefined();
   });
 });
-

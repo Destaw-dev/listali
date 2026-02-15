@@ -68,27 +68,34 @@ export const PurchaseQuantityModal = memo(function PurchaseQuantityModal({
     <Modal
       title={tItems("selectQuantityTitle")}
       onClose={onClose}
-      iconHeader={<div className=" p-2 bg-primary-500 rounded-full">
+      iconHeader={<div className=" p-2 bg-primary rounded-full">
         <Package className="w-5 h-5 text-text-primary" />
       </div>}
       isLoading={isLoading}
     >
-      <div
+      <div className="space-y-3"
       >
-        <p className="text-sm text-text-muted">
-          {extractNameFromProduct(item)}
-        </p>
-        {isPartiallyPurchased && (
-          <p className="mt-1 text-xs text-text-muted">
-            {tItems("alreadyPurchased", { 
-              purchased: purchasedQty, 
-              total: totalQty, 
-              unit: item.unit 
-            }) || `נקנה כבר: ${purchasedQty}/${totalQty} ${item.unit}`}
+        <div className="text-center p-3 bg-surface rounded-xl border border-border/30">
+          <p className="text-base font-semibold text-text-primary">
+            {extractNameFromProduct(item)}
           </p>
+          {item.brand && (
+            <p className="text-xs text-text-muted mt-1">{item.brand}</p>
+          )}
+        </div>
+        {isPartiallyPurchased && (
+          <div className="p-2 bg-[var(--color-status-info-soft)] rounded-lg border border-info/20">
+            <p className="text-xs text-info font-medium">
+              {tItems("alreadyPurchased", {
+                purchased: purchasedQty,
+                total: totalQty,
+                unit: item.unit
+              }) || `נקנה כבר: ${purchasedQty}/${totalQty} ${item.unit}`}
+            </p>
+          </div>
         )}
-        <p className="mt-1 text-sm text-text-muted">
-          {isPartiallyPurchased 
+        <p className="text-sm text-text-muted text-center">
+          {isPartiallyPurchased
             ? (tItems("remainingQuantity", { remaining: remainingQty, unit: item.unit }) || `נותר: ${remainingQty} ${item.unit}`)
             : `${tItems("totalQuantity")}: ${totalQty} ${item.unit}`
           }
@@ -99,23 +106,23 @@ export const PurchaseQuantityModal = memo(function PurchaseQuantityModal({
             type="button"
             onClick={handleDecrement}
             disabled={quantity <= 0}
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-background text-text-primary transition hover:bg-background-hover disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex h-12 w-12 items-center justify-center rounded-xl border-2 border-border bg-surface text-text-primary transition-all duration-200 hover:bg-surface-hover hover:border-primary hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100 shadow-sm"
           >
-            <Minus className="h-4 w-4" />
+            <Minus className="h-5 w-5" />
           </button>
-          <div className="text-center">
-            <div className="text-4xl font-bold text-text-primary">
+          <div className="text-center min-w-[100px] px-4 py-3 rounded-xl bg-surface border border-border/50">
+            <div className="text-5xl font-bold text-primary">
               {quantity}
             </div>
-            <div className="text-sm text-text-muted">{item.unit}</div>
+            <div className="text-sm font-medium text-text-muted mt-1">{item.unit}</div>
           </div>
           <button
             type="button"
             onClick={handleIncrement}
             disabled={quantity >= maxQuantity}
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-background text-text-primary transition hover:bg-background-hover disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex h-12 w-12 items-center justify-center rounded-xl border-2 border-border bg-surface text-text-primary transition-all duration-200 hover:bg-surface-hover hover:border-primary hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100 shadow-sm"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-5 w-5" />
           </button>
         </div>
 
@@ -149,4 +156,3 @@ export const PurchaseQuantityModal = memo(function PurchaseQuantityModal({
   );
 
 });
-

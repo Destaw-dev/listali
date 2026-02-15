@@ -73,11 +73,11 @@ export class ErrorBoundary extends Component<Props, State> {
       const t = this.getTranslations();
       
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-          <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6 text-center">
-            <div className="text-red-500 text-6xl mb-4">🚨</div>
-            <h1 className="text-xl font-bold text-gray-900 mb-2">{t.title}</h1>
-            <p className="text-gray-600 mb-4">
+        <div className="min-h-screen flex items-center justify-center bg-surface px-4">
+          <div className="max-w-md w-full bg-card border border-border rounded-xl shadow-lg p-6 text-center">
+            <div className="text-error text-6xl mb-4">🚨</div>
+            <h1 className="text-xl font-bold text-text-primary mb-2">{t.title}</h1>
+            <p className="text-text-muted mb-4">
               {t.message}
             </p>
             
@@ -89,10 +89,10 @@ export class ErrorBoundary extends Component<Props, State> {
 
             {process.env.NODE_ENV === 'development' && this.state.error && (
               <details className="mt-4 text-left">
-                <summary className="cursor-pointer text-sm text-gray-500 hover:text-gray-700">
+                <summary className="cursor-pointer text-sm text-text-muted hover:text-text-secondary">
                   {t.errorDetails}
                 </summary>
-                <div className="mt-2 p-3 bg-gray-100 rounded text-xs font-mono text-gray-800 overflow-auto">
+                <div className="mt-2 p-3 bg-surface rounded text-xs font-mono text-text-secondary overflow-auto border border-border-light">
                   <div><strong>{t.error}:</strong> {this.state.error.message}</div>
                   <div><strong>{t.stack}:</strong> {this.state.error.stack}</div>
                   {this.state.errorInfo && (

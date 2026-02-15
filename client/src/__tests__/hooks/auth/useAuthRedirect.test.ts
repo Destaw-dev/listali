@@ -82,7 +82,9 @@ describe('useAuthRedirect Hook', () => {
   });
 
   it('should not redirect when not initialized', () => {
-    vi.mocked(useAuthStore).mockReturnValue(createMockAuthStore({ isAuthenticated: false, isInitialized: false }));
+    vi.mocked(useAuthStore).mockReturnValue(
+      createMockAuthStore({ isAuthenticated: false, isInitialized: false, authReady: false })
+    );
 
     renderHook(() => useAuthRedirect({
       redirectTo: '/welcome',
@@ -92,4 +94,3 @@ describe('useAuthRedirect Hook', () => {
     expect(mockPush).not.toHaveBeenCalled();
   });
 });
-

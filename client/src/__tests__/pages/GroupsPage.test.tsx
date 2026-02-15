@@ -101,8 +101,8 @@ describe('GroupsPage', () => {
     } as ReturnType<typeof useGroups>);
 
     renderWithProviders(<GroupsPage />);
-    const spinner = document.querySelector('.animate-spin');
-    expect(spinner).toBeTruthy();
+    const skeleton = document.querySelector('.animate-pulse');
+    expect(skeleton).toBeTruthy();
   });
 
   it('should show error state', () => {
@@ -132,4 +132,3 @@ describe('GroupsPage', () => {
     expect(createButton || buttons.length > 0).toBeTruthy();
   });
 });
-

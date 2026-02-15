@@ -27,6 +27,7 @@ export function ShoppingItemCard({
   canEdit = false,
   canDelete = false,
 }: ShoppingItemCardProps) {
+  const tCommon = useTranslations("common");
   const tItems = useTranslations("ShoppingListItems");
   const product = item.product;
   const productBrand = typeof product === 'object' && product !== null && 'brand' in product ? (product as { brand?: string }).brand : undefined;
@@ -50,131 +51,177 @@ export function ShoppingItemCard({
   const getQuantityDisplay = () => {
     if (isPartiallyPurchased) {
       return (
-        <div className="flex sm:items-end sm:flex-row flex-col sm:gap-1 text-[12px] text-text-primary">
-        <div className="flex flex-col gap-0.5">
-          <span className="font-medium text-[12px] text-text-primary">
-            {tItems("purchasedQuantityLabel", { 
-              purchased: purchasedQty, 
-              total: item.quantity, 
-              unit: unitLabel 
-            }) || `${purchasedQty}/${item.quantity} ${unitLabel}`}
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[var(--color-status-warning-soft)] border border-warning/20">
+            <span className="text-xs font-bold text-warning">
+              {purchasedQty}/{item.quantity} {unitLabel}
+            </span>
+          </div>
+          <span className="text-xs text-text-muted">
+            {tItems("remainingQuantityLabel", { remaining: remainingQty, unit: unitLabel })}
           </span>
-          <span className="text-[11px] text-text-primary">
-            {tItems("remainingQuantityLabel", { 
-              remaining: remainingQty, 
-              unit: unitLabel 
-            }) || `נותר: ${remainingQty} ${unitLabel}`}
-          </span>
-        </div>
-        {brand && <span className="truncate opacity-70">• {brand}</span>}
-        <div className="hidden sm:block">
-    {!item?.isPurchased  && item.priority && (
-        getPriorityBadge()
-        )}
-      </div>
+          {brand && (
+            <span className="text-xs text-text-muted/70 px-2 py-0.5 rounded bg-surface-hover">
+              {brand}
+            </span>
+          )}
         </div>
       );
     }
     return (
-    <div className="flex sm:items-center sm:flex-row flex-col sm:gap-1 text-[12px] text-text-primary">
-    <span className="font-medium text-text-primary">{item.quantity} {unitLabel}</span>
-    {brand && <span className="truncate opacity-70">• {brand}</span>}
-    <div className="hidden sm:block">
-    {!item?.isPurchased &&  item.priority && (
-        getPriorityBadge()
+      <div className="flex items-center gap-2 flex-wrap">
+        <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[var(--color-icon-primary-bg)] border border-primary/20">
+          <span className="text-xs font-bold text-[var(--color-icon-primary-fg)]">
+            {item.quantity} {unitLabel}
+          </span>
+        </div>
+        {brand && (
+          <span className="text-xs text-text-muted/70 px-2 py-0.5 rounded bg-surface-hover">
+            {brand}
+          </span>
         )}
-      </div>
       </div>
     );
   };
 
   return (
     <article className={cn(
-      "flex flex-col sm:flex-row sm:items-center gap-2 bg-card py-4 pl-2 pr-1 active:bg-card/80 transition-colors hover:bg-surface cursor-pointer border-2 border-border rounded-lg p-2 mt-2",
+      "group relative bg-gradient-to-br from-card to-surface/30 rounded-xl overflow-hidden transition-all duration-300 mt-3",
+      "border border-border/50 hover:border-primary/30",
+      "shadow-md hover:shadow-lg",
+      item?.isPurchased && "opacity-70"
     )}>
-      <div className="flex items-center gap-2">
-      <Button
-      variant="checkbox"
-      checked={item?.isPurchased}
-      onClick={() => {
-        if (item?.isPurchased ) {
-          onUnpurchase(item);
-        } else {
-          onOpenPurchaseModal(item);
-        }
-      }}
-      disabled={isLoading}
-      />
+      {/* סרגל צבעוני עליון */}
+      <div className={cn(
+        "absolute top-0 inset-x-0 h-1 transition-all duration-300",
+        item?.isPurchased
+          ? "bg-gradient-to-l from-success/50 to-success/70"
+          : "bg-gradient-to-l from-primary/50 via-accent/50 to-secondary/50"
+      )} />
 
-      <div className="size-30 shrink-0 overflow-hidden rounded-lg" onClick={() => onPreview(item)}>
-        {extractImageUrl(item.image) ? (
-          <img src={extractImageUrl(item.image)} alt={item.name} className="h-full w-full object-contain p-1" />
-        ) : typeof item?.product === 'object' && item.product.image ? (
-          <img src={extractImageUrl(item.product.image)} alt={item.name} className="h-full w-full object-contain p-1" />
-        ) : (
-          <div className="grid h-full w-full place-items-center"><Package className="h-4 w-4 text-border" /></div>
-        )}
-      </div>
-      </div>
-      <div className="flex min-w-0 flex-1 flex-col" onClick={() => onPreview(item)}>
-        <div className="flex items-center gap-1.5">
-          <h3 className={cn(
-            "truncate text-[15px] font-semibold text-text-primary",
-            item?.isPurchased && !isPartiallyPurchased && "line-through text-muted font-normal"
-          )}>
-            {extractNameFromProduct(item)}
-          </h3>
-
-        </div>
-        {getQuantityDisplay()}
-              <div className="block sm:hidden">
-        {!item?.isPurchased  && item.priority && (
-            getPriorityBadge()
-        )}
-      </div>
-      </div>
-
-
-      <div className="flex shrink-0 items-center gap-1">
-        {!item?.isPurchased && (
-          <>
-          {canEdit && (
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 pt-4">
+        <div className="flex items-center gap-3">
+          {/* Checkbox */}
+          <div className="flex-shrink-0">
             <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => onEdit?.(item)}
-              aria-label="עריכה"
+              variant="checkbox"
+              checked={item?.isPurchased}
+              onClick={() => {
+                if (item?.isPurchased) {
+                  onUnpurchase(item);
+                } else {
+                  onOpenPurchaseModal(item);
+                }
+              }}
               disabled={isLoading}
-            >
-              <Edit className="h-4 w-4 text-white" />
-            </Button>
-          )}
-          {canDelete && (
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={() => onDelete?.(item._id)}
-              aria-label="מחיקה"
-              disabled={isLoading}
-            >
-              <Trash2 className="h-4 w-4 text-white" />
-            </Button>
-          )}
-          </>
-        )}
-        {item?.isPurchased && (
-           <Button
-            variant="primary"
-            size="sm"
+            />
+          </div>
+
+          {/* תמונת המוצר */}
+          <div
+            className="relative size-16 sm:size-18 shrink-0 overflow-hidden rounded-xl bg-gradient-to-br from-surface to-surface-hover border border-border/40 shadow-sm transition-all duration-200 hover:scale-105 cursor-pointer"
             onClick={() => onPreview(item)}
-            rounded={true}
-            aria-label="מידע"
           >
-            <Info className="h-4 w-4 text-muted" />
-          </Button>
-        )}
+            {extractImageUrl(item.image) ? (
+              <img src={extractImageUrl(item.image)} alt={item.name} className="h-full w-full object-contain p-1.5" />
+            ) : typeof item?.product === 'object' && item.product.image ? (
+              <img src={extractImageUrl(item.product.image)} alt={item.name} className="h-full w-full object-contain p-1.5" />
+            ) : (
+              <div className="grid h-full w-full place-items-center bg-surface-hover">
+                <Package className="h-6 w-6 text-text-muted/50" />
+              </div>
+            )}
+
+            {/* אינדיקטור סטטוס */}
+            {item?.isPurchased && (
+              <div className="absolute -top-1 -end-1 size-6 bg-gradient-to-br from-success to-success/80 rounded-full flex items-center justify-center shadow-md border-2 border-card">
+                <span className="text-white text-xs font-bold">✓</span>
+              </div>
+            )}
+          </div>
+
+          {/* תוכן המוצר - מובייל */}
+          <div className="flex-1 min-w-0 sm:hidden cursor-pointer" onClick={() => onPreview(item)}>
+            <h3 className={cn(
+              "text-sm font-bold text-text-primary mb-1 leading-tight line-clamp-2",
+              item?.isPurchased && !isPartiallyPurchased && "line-through text-text-muted/70"
+            )}>
+              {extractNameFromProduct(item)}
+            </h3>
+          </div>
+        </div>
+
+        {/* תוכן המוצר - דסקטופ */}
+        <div className="flex-1 min-w-0 hidden sm:block cursor-pointer" onClick={() => onPreview(item)}>
+          <div className="flex items-start justify-between gap-2 mb-1">
+            <h3 className={cn(
+              "text-base font-bold text-text-primary leading-tight",
+              item?.isPurchased && !isPartiallyPurchased && "line-through text-text-muted/70"
+            )}>
+              {extractNameFromProduct(item)}
+            </h3>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            {getQuantityDisplay()}
+            {!item?.isPurchased && item.priority && (
+              <>
+                {getPriorityBadge()}
+              </>
+            )}
+          </div>
+        </div>
+
       </div>
 
+      <div className="sm:hidden px-3 pb-3 space-y-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          {getQuantityDisplay()}
+        {!item?.isPurchased && item.priority && (
+          <>
+            {getPriorityBadge()}
+            </>
+        )}
+        </div>
+      </div>
+        <div className="flex items-center gap-2 justify-end  pe-3 pb-3">
+          {!item?.isPurchased && (
+            <>
+              {canEdit && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => onEdit?.(item)}
+                  aria-label={tCommon("edit")}
+                  disabled={isLoading}
+                >
+                  <Edit className="h-3.5 w-3.5" />
+                </Button>
+              )}
+              {canDelete && (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => onDelete?.(item._id)}
+                  aria-label={tCommon("delete")}
+                  disabled={isLoading}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              )}
+            </>
+          )}
+          {item?.isPurchased && (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => onPreview(item)}
+              aria-label={tItems("viewDetails")}
+            >
+              <Info className="h-3.5 w-3.5" />
+            </Button>
+          )}
+        </div>
     </article>
   );
 }

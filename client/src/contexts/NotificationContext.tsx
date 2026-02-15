@@ -46,12 +46,12 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       position: 'top-center' as const,
       style: {
         background: getToastColor(type),
-        color: '#fff',
+        color: 'var(--color-text-on-primary)',
         fontWeight: '500',
         borderRadius: '12px',
         padding: '12px 16px',
         fontSize: '14px',
-        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+        boxShadow: 'var(--shadow-md)',
       },
     };
 
@@ -180,19 +180,19 @@ export function useNotification() {
 function getToastColor(type: NotificationType): string {
   switch (type) {
     case NotificationType.SUCCESS:
-      return '#10b981';
+      return 'var(--color-success-600)';
     case NotificationType.ERROR:
-      return '#ef4444';
+      return 'var(--color-error-600)';
     case NotificationType.NETWORK:
     case NotificationType.SERVER:
     case NotificationType.CLIENT:
-      return '#ef4444';
+      return 'var(--color-error-600)';
     case NotificationType.WARNING:
-      return '#f59e0b';
+      return 'var(--color-warning-600)';
     case NotificationType.INFO:
-      return '#3b82f6';
+      return 'var(--color-info-600)';
     default:
-      return '#6b7280';
+      return 'var(--color-neutral-600)';
   }
 }
 

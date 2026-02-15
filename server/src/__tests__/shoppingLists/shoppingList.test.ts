@@ -27,7 +27,7 @@ beforeAll(async () => {
   await request(app).post('/api/auth/register').send({
     username: 'listuser',
     email: 'list@example.com',
-    password: 'Password123',
+    password: 'NewPasswordSafe123!',
     firstName: 'List',
     lastName: 'User'
   });
@@ -39,7 +39,7 @@ beforeAll(async () => {
 
   const loginRes = await request(app).post('/api/auth/login').send({
     email: 'list@example.com',
-    password: 'Password123'
+    password: 'NewPasswordSafe123!'
   });
 
   token = getAccessToken(loginRes);
@@ -111,7 +111,7 @@ describe('📝 Shopping List API', () => {
     const newUserRes = await request(app).post('/api/auth/register').send({
       username: 'assignUser',
       email: 'assign@example.com',
-      password: 'Password123',
+      password: 'NewPasswordSafe123!',
       firstName: 'Assign',
       lastName: 'User',
     });
@@ -130,7 +130,7 @@ describe('📝 Shopping List API', () => {
   
     const newUserLogin = await request(app).post('/api/auth/login').send({
       email: 'assign@example.com',
-      password: 'Password123'
+      password: 'NewPasswordSafe123!'
     });
     const newUser = await User.findOne({ email: 'assign@example.com' });
     const invitation = newUser?.pendingInvitations.find(inv => inv.group.toString() === groupId);

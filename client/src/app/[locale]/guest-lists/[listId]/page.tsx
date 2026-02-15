@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { useRouter } from '../../../../i18n/navigation';
 import { useTranslations } from 'next-intl';
-import { LoadingSpinner } from '../../../../components/common';
+import { ConfirmDialog, LoadingState } from '../../../../components/common';
 import { useGuestListsStore } from '../../../../store/guestListsStore';
 import { useAuthStore } from '../../../../store/authStore';
 import { useAuthRedirect } from '../../../../hooks/useAuthRedirect';
@@ -16,11 +16,14 @@ import { GuestListHeaderBar } from '../../../../components/guestList/GuestListHe
 import { ShoppingListStats } from '../../../../components/shoppingList/ShoppingListStats';
 import { ShoppingListFilters, ShoppingStatusFilter } from '../../../../components/shoppingList/ShoppingListFilters';
 import { GuestListItems } from '../../../../components/guestList/GuestListItems';
+import { useNotification } from '../../../../contexts/NotificationContext';
 
 export default function GuestListPage() {
   const params = useParams();
   const router = useRouter();
   const t = useTranslations('GuestListPage');
+  const tCommon = useTranslations('common');
+  const { showError, showWarning } = useNotification();
   const locale = params?.locale as string || 'he';
   const listId = params?.listId as string;
   
@@ -38,6 +41,35 @@ export default function GuestListPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddItemsModal, setShowAddItemsModal] = useState(false);
   const [categories, setCategories] = useState<ICategory[]>([]);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    title: string;
+    message: string;
+    confirmText?: string;
+    variant?: 'danger' | 'warning' | 'info';
+  } | null>(null);
+  const confirmResolverRef = useRef<((value: boolean) => void) | null>(null);
+
+  const requestConfirmation = useCallback(
+    (options: {
+      title: string;
+      message: string;
+      confirmText?: string;
+      variant?: 'danger' | 'warning' | 'info';
+    }) =>
+      new Promise<boolean>((resolve) => {
+        confirmResolverRef.current = resolve;
+        setConfirmDialog(options);
+      }),
+    []
+  );
+
+  const closeConfirmation = useCallback((result: boolean) => {
+    if (confirmResolverRef.current) {
+      confirmResolverRef.current(result);
+      confirmResolverRef.current = null;
+    }
+    setConfirmDialog(null);
+  }, []);
 
   useEffect(() => {
     const loadCategories = async () => {
@@ -96,7 +128,7 @@ export default function GuestListPage() {
     guestList.items.forEach((item: GuestItem) => {
       if (item.categoryId) {
         const category = categories.find((c: ICategory) => c._id === item.categoryId);
-        const categoryName = category?.name || 'No Category';
+        const categoryName = category?.name || t('noCategory');
         const categoryKey = item.categoryId;
         
         if (!stats[categoryKey]) {
@@ -111,7 +143,7 @@ export default function GuestListPage() {
     });
 
     return Object.values(stats);
-  }, [guestList?.items, categories]);
+  }, [guestList?.items, categories, t]);
 
   useEffect(() => {
     if (safeToShow && (!isGuest() || !guestList)) {
@@ -120,11 +152,7 @@ export default function GuestListPage() {
   }, [safeToShow, isGuest, guestList, locale, router]);
 
   if (!safeToShow) {
-    return (
-      <div className="min-h-screen bg-surface flex items-center justify-center">
-        <LoadingSpinner />
-      </div>
-    );
+    return <LoadingState variant="page" />;
   }
 
   if (!isGuest() || !guestList) {
@@ -139,15 +167,19 @@ export default function GuestListPage() {
     const newItemsCount = itemsData.length;
     
     if (itemsCount + newItemsCount > GUEST_LIMITS.MAX_ITEMS_PER_LIST) {
-      alert(t('maxItemsPerList', { count: GUEST_LIMITS.MAX_ITEMS_PER_LIST }) || `מקסימום ${GUEST_LIMITS.MAX_ITEMS_PER_LIST} פריטים לרשימה`);
+      showWarning('GuestListPage.maxItemsPerList', { count: `${GUEST_LIMITS.MAX_ITEMS_PER_LIST}` });
       return false;
     }
     
     if (itemsCount + newItemsCount >= GUEST_LIMITS.MAX_ITEMS_WARNING) {
-      const confirm = window.confirm(
-        t('maxItemsPerListWarning', { count: GUEST_LIMITS.MAX_ITEMS_PER_LIST }) || `אתה קרוב למגבלה! מקסימום ${GUEST_LIMITS.MAX_ITEMS_PER_LIST} פריטים. האם להמשיך?`
-      );
-      if (!confirm) return false;
+      const shouldContinue = await requestConfirmation({
+        title: tCommon('confirm'),
+        message:
+          t('maxItemsPerListWarning', { count: GUEST_LIMITS.MAX_ITEMS_PER_LIST }),
+        confirmText: tCommon('confirm'),
+        variant: 'warning',
+      });
+      if (!shouldContinue) return false;
     }
     
     try {
@@ -172,13 +204,15 @@ export default function GuestListPage() {
         });
 
         if (existingItem) {
-          const shouldMerge = window.confirm(
-            t('duplicateItemFound', { name: item.name }) || `הפריט "${item.name}" כבר קיים ברשימה. האם להוסיף בכל זאת?`
-          );
+          const shouldMerge = await requestConfirmation({
+            title: tCommon('confirm'),
+            message: t('duplicateItemFound', { name: item.name }),
+            confirmText: tCommon('confirm'),
+            variant: 'warning',
+          });
           if (!shouldMerge) continue;
         }
 
-        console.log('item', item);
         addItem(
           listId,
           item.name.trim(),
@@ -195,7 +229,9 @@ export default function GuestListPage() {
       return true;
     } catch (error) {
       if (error instanceof Error) {
-        alert(error.message);
+        showError(error.message);
+      } else {
+        showError('notifications.unknownError');
       }
       return false;
     }
@@ -209,8 +245,14 @@ export default function GuestListPage() {
     unpurchaseItem(listId, itemId, quantity);
   };
 
-  const handleDeleteItem = (itemId: string) => {
-    if (confirm(t('deleteItemConfirmation') || 'האם אתה בטוח שברצונך למחוק את הפריט?')) {
+  const handleDeleteItem = async (itemId: string) => {
+    const confirmed = await requestConfirmation({
+      title: t('delete'),
+      message: t('deleteItemConfirmation'),
+      confirmText: t('delete'),
+      variant: 'danger',
+    });
+    if (confirmed) {
       removeItem(listId, itemId);
     }
   };
@@ -259,6 +301,17 @@ export default function GuestListPage() {
           onClose={() => setShowAddItemsModal(false)}
           onSubmit={handleAddItems}
           listId={listId}
+        />
+
+        <ConfirmDialog
+          isOpen={Boolean(confirmDialog)}
+          onClose={() => closeConfirmation(false)}
+          onConfirm={() => closeConfirmation(true)}
+          title={confirmDialog?.title || ''}
+          message={confirmDialog?.message || ''}
+          confirmText={confirmDialog?.confirmText || tCommon('confirm')}
+          cancelText={tCommon('cancel')}
+          variant={confirmDialog?.variant || 'warning'}
         />
       </div>
     </div>

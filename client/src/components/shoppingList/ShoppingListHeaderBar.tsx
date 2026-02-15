@@ -23,6 +23,7 @@ export function ShoppingListHeaderBar({
 }: ShoppingListHeaderBarProps) {
   const router = useRouter();
   const t = useTranslations("ShoppingList");
+  const tNavigation = useTranslations("navigation");
 
   const formattedDate = new Intl.DateTimeFormat(locale ?? "he-IL", {
     day: "2-digit",
@@ -39,7 +40,7 @@ export function ShoppingListHeaderBar({
             variant='surface'
             size='md'
             rounded
-            aria-label="Back to lists"
+            aria-label={tNavigation("back")}
           >
             <ArrowIcon className="text-text-primary"/>
           </Button>
@@ -53,7 +54,7 @@ export function ShoppingListHeaderBar({
                 <span
                   className={cn(
                     "rounded-full px-3 py-1 text-xs font-medium",
-                    "bg-primary-500 text-text-on-primary"
+                    "bg-primary text-text-on-primary"
                   )}
                 >
                   {shoppingList.priority}
@@ -74,7 +75,6 @@ export function ShoppingListHeaderBar({
           <Button
             onClick={onAddItems}
             icon={<Plus className="h-5 w-5" />}
-            className="bg-gradient-to-r from-primary-500 to-secondary-500 px-5 py-2.5 text-text-on-primary shadow-xl transition hover:shadow-2xl"
           >
             {t("addItem")}
           </Button>
@@ -86,7 +86,7 @@ export function ShoppingListHeaderBar({
           onClick={onAddItems}
           fullWidth
           icon={<Plus className="h-5 w-5" />}
-          className="bg-gradient-to-r from-primary-500 to-secondary-500 py-3 text-text-on-primary shadow-xl transition hover:shadow-2xl"
+          className="bg-primary py-3 text-text-on-primary shadow-lg transition hover:bg-primary/90 hover:shadow-xl"
         >
           {t("addItem")}
         </Button>
@@ -94,4 +94,3 @@ export function ShoppingListHeaderBar({
     </header>
   );
 }
-

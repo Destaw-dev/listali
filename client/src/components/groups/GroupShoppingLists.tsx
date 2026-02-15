@@ -20,8 +20,7 @@ import {
   useDeleteShoppingList,
 } from "../../hooks/useShoppingLists";
 import { useGroup } from "../../hooks/useGroups";
-import { LoadingSpinner } from "../../components/common/LoadingSpinner";
-import { Card, CardBody, Input, Button } from "../../components/common";
+import { Card, CardBody, Input, Button, SkeletonCard } from "../../components/common";
 import { CreateShoppingListModal } from "../shoppingList/CreateShoppingListModal";
 import { useAuthRedirect } from "../../hooks/useAuthRedirect";
 import { MetricCard } from "../../components/common/MetricCard";
@@ -128,8 +127,14 @@ export function GroupShoppingLists() {
 
   if (groupLoading || listsLoading) {
     return (
-      <div className="min-h-screen bg-surface flex items-center justify-center">
-        <LoadingSpinner />
+      <div className="min-h-screen bg-surface">
+        <div className="max-w-7xl mx-auto space-y-3 pb-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <SkeletonCard key={i} />
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -165,6 +170,7 @@ export function GroupShoppingLists() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             fullWidth
+            variant="outlined"
             icon={<Search className="w-4 h-4" />}
           />
           <div className="gap-1 hidden sm:flex">
@@ -326,4 +332,3 @@ const MetricsBar = ({
   </div>
 );
 }
-

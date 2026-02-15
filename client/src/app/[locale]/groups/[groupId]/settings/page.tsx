@@ -22,11 +22,12 @@ import {
   CheckCircle,
 } from "lucide-react";
 import {
-  LoadingSpinner,
+  LoadingState,
   Button,
   Input,
   TextArea,
   Toggle,
+  ConfirmDialog,
 } from "../../../../../components/common";
 import {
   useGroup,
@@ -46,6 +47,7 @@ import { useAuthRedirect } from "../../../../../hooks/useAuthRedirect";
 import { useAuthStore } from "../../../../../store/authStore";
 import { InviteModal } from "../../../../../components/groups/InviteModal";
 import { ArrowIcon } from "../../../../../components/common/Arrow";
+import { colorRoleClasses } from "../../../../../lib/colorRoles";
 
 type MemberRole = "owner" | "admin" | "member";
 
@@ -78,6 +80,12 @@ interface JoinRequest {
   requestedAt: string | Date;
   status: "pending" | "approved" | "rejected";
 }
+
+type ConfirmActionState =
+  | { type: "delete-group" }
+  | { type: "remove-member"; memberId: string; memberName: string }
+  | { type: "cancel-invitation"; inviteCode: string }
+  | null;
 
 interface Group {
   _id: string;
@@ -124,7 +132,7 @@ const MemberActionsDropdown: React.FC<MemberActionsDropdownProps> = ({
       </Button>
 
       {isOpen && (
-        <div className="absolute left-0 top-full mt-2 bg-card border border-border rounded-lg shadow-sm z-20 min-w-[200px] overflow-hidden">
+        <div className="absolute start-0 top-full mt-2 bg-card border border-border rounded-lg shadow-sm z-20 min-w-[200px] overflow-hidden">
           <div className="p-1">{children}</div>
         </div>
       )}
@@ -147,8 +155,10 @@ export default function GroupSettingsPage({}) {
   const [requireApproval, setRequireApproval] = useState(false);
   const [maxMembers, setMaxMembers] = useState(50);
   const [maxMembersError, setMaxMembersError] = useState<string | null>(null);
+  const [confirmAction, setConfirmAction] = useState<ConfirmActionState>(null);
 
   const t = useTranslations("groups.settings");
+  const tCommon = useTranslations("common");
 
   const router = useRouter();
   const params = useParams();
@@ -199,11 +209,11 @@ export default function GroupSettingsPage({}) {
   const getRoleIcon = (role: MemberRole) => {
     switch (role) {
       case "owner":
-        return <Crown className="w-4 h-4 text-yellow-500" />;
+        return <Crown className="w-4 h-4 text-warning" />;
       case "admin":
-        return <Shield className="w-4 h-4 text-blue-500" />;
+        return <Shield className="w-4 h-4 text-info" />;
       default:
-        return <User className="w-4 h-4 text-gray-500" />;
+        return <User className="w-4 h-4 text-text-muted" />;
     }
   };
 
@@ -311,33 +321,13 @@ export default function GroupSettingsPage({}) {
     }
   };
 
-  const handleDeleteGroup = async () => {
-    const confirmed = window.confirm(t("deleteGroupConfirmation"));
-    if (!confirmed) return;
-
-    try {
-      await deleteGroupMutation.mutateAsync(groupId);
-      router.push("/groups");
-    } catch (err) {
-      console.error("Failed to delete group", err);
-    }
+  const handleDeleteGroup = () => {
+    setConfirmAction({ type: "delete-group" });
   };
 
-  const handleRemoveMember = async (memberId: string, memberName: string) => {
-    const confirmed = window.confirm(
-      t("removeMemberConfirmation", { memberName }),
-    );
-    if (!confirmed) return;
-
-    try {
-      setIsRemovingMember(memberId);
-      await removeMemberMutation.mutateAsync({ groupId, memberId });
-      setShowMemberActions(null);
-    } catch (err) {
-      console.error("Failed to remove member", err);
-    } finally {
-      setIsRemovingMember(null);
-    }
+  const handleRemoveMember = (memberId: string, memberName: string) => {
+    setConfirmAction({ type: "remove-member", memberId, memberName });
+    setShowMemberActions(null);
   };
 
   const handleChangeRole = async (
@@ -376,16 +366,87 @@ export default function GroupSettingsPage({}) {
     }
   };
 
-  const handleCancelInvitation = async (inviteCode: string) => {
-    const confirmed = window.confirm(t("cancelInvitationConfirm"));
-    if (!confirmed) return;
+  const handleCancelInvitation = (inviteCode: string) => {
+    setConfirmAction({ type: "cancel-invitation", inviteCode });
+  };
+
+  const handleConfirmAction = async () => {
+    if (!confirmAction) return;
+
+    if (confirmAction.type === "delete-group") {
+      try {
+        await deleteGroupMutation.mutateAsync(groupId);
+        setConfirmAction(null);
+        router.push("/groups");
+      } catch (err) {
+        console.error("Failed to delete group", err);
+      }
+      return;
+    }
+
+    if (confirmAction.type === "remove-member") {
+      try {
+        setIsRemovingMember(confirmAction.memberId);
+        await removeMemberMutation.mutateAsync({
+          groupId,
+          memberId: confirmAction.memberId,
+        });
+        setConfirmAction(null);
+      } catch (err) {
+        console.error("Failed to remove member", err);
+      } finally {
+        setIsRemovingMember(null);
+      }
+      return;
+    }
 
     try {
-      await cancelInvitationMutation.mutateAsync({ groupId, inviteCode });
+      await cancelInvitationMutation.mutateAsync({
+        groupId,
+        inviteCode: confirmAction.inviteCode,
+      });
+      setConfirmAction(null);
     } catch (err) {
       console.error(t("failedToCancelInvitation"), err);
     }
   };
+
+  const confirmDialogConfig = useMemo(() => {
+    if (!confirmAction) return null;
+    if (confirmAction.type === "delete-group") {
+      return {
+        title: t("deleteGroup"),
+        message: t("deleteGroupConfirmation"),
+        confirmText: t("deleteGroup"),
+        variant: "danger" as const,
+        isLoading: deleteGroupMutation.isPending,
+      };
+    }
+    if (confirmAction.type === "remove-member") {
+      return {
+        title: t("removeFromGroup"),
+        message: t("removeMemberConfirmation", {
+          memberName: confirmAction.memberName,
+        }),
+        confirmText: t("removeFromGroup"),
+        variant: "warning" as const,
+        isLoading: removeMemberMutation.isPending,
+      };
+    }
+    return {
+      title: t("cancelInvitation"),
+      message: t("cancelInvitationConfirm"),
+      confirmText: t("cancelInvitation"),
+      variant: "warning" as const,
+      isLoading: cancelInvitationMutation.isPending,
+    };
+  }, [
+    cancelInvitationMutation.isPending,
+    confirmAction,
+    deleteGroupMutation.isPending,
+    removeMemberMutation.isPending,
+    t,
+  ]);
 
   const getInviteDisplayName = (invite: PendingInvite): string => {
     if (invite.user) {
@@ -504,11 +565,7 @@ export default function GroupSettingsPage({}) {
   };
 
   if (!safeToShow || isGroupLoading) {
-    return (
-      <div className="min-h-screen bg-surface flex items-center justify-center">
-        <LoadingSpinner />
-      </div>
-    );
+    return <LoadingState variant="page" />;
   }
 
   if (error || !group) {
@@ -537,7 +594,7 @@ export default function GroupSettingsPage({}) {
           <h3 className="text-xl font-semibold text-text-primary mb-2">
             {t("noPermission")}
           </h3>
-          <p className="text-secondary mb-6">{t("notAMember")}</p>
+          <p className="text-text-muted mb-6">{t("notAMember")}</p>
           <Button onClick={navigateBack} variant="primary" size="md">
             {t("backToGroup")}
           </Button>
@@ -568,12 +625,12 @@ export default function GroupSettingsPage({}) {
 
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
         <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
-          <div className="h-16 bg-gradient-to-l from-primary-500 to-primary-600" />
+          <div className="h-16 bg-surface-hover" />
 
           <div className="px-6 pb-6 relative">
             <div className="flex justify-between items-end -mt-10 mb-4">
               <div className="w-16 h-16 rounded-xl bg-card border border-border p-1 shadow-md">
-                <div className="w-full h-full bg-primary-100 rounded-lg flex items-center justify-center text-primary-600 text-xl font-bold">
+                <div className="w-full h-full bg-[var(--color-icon-primary-bg)] rounded-lg flex items-center justify-center text-[var(--color-icon-primary-fg)] text-xl font-bold">
                   {group.name?.[0] ?? t("defaultGroupAvatar")}
                 </div>
               </div>
@@ -692,7 +749,7 @@ export default function GroupSettingsPage({}) {
             )}
           </div>
 
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-border">
             {group.members?.map((member) => {
               const memberUserId = getMemberUserId(member);
               const memberName = getMemberName(member);
@@ -703,10 +760,10 @@ export default function GroupSettingsPage({}) {
               return (
                 <div
                   key={memberUserId}
-                  className="p-4 flex items-center justify-between hover:bg-card-hover transition-colors"
+                  className="p-4 flex items-center justify-between hover:bg-surface-hover transition-colors"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 text-sm font-medium">
+                    <div className="w-10 h-10 rounded-full bg-[var(--color-icon-primary-bg)] flex items-center justify-center text-[var(--color-icon-primary-fg)] text-sm font-medium">
                       {memberName[0] ?? "👤"}
                     </div>
 
@@ -718,9 +775,9 @@ export default function GroupSettingsPage({}) {
                         <span
                           className={`text-xs px-2 py-0.5 rounded-full flex items-center gap-1 ${
                             currentRole === "owner"
-                              ? "bg-warning-100 text-warning-700"
+                              ? "bg-[var(--color-status-warning-soft)] text-warning-700"
                               : currentRole === "admin"
-                                ? "bg-primary-100 text-primary-700"
+                                ? "bg-[var(--color-icon-primary-bg)] text-[var(--color-icon-primary-fg)]"
                                 : "bg-card border border-border text-text-muted"
                           }`}
                         >
@@ -760,7 +817,7 @@ export default function GroupSettingsPage({}) {
                                 )
                               }
                               disabled={updateRoleMutation.isPending}
-                              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-primary-600 hover:bg-primary-50 rounded-lg transition-colors disabled:opacity-50"
+                              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-primary-600 hover:bg-surface-hover rounded-lg transition-colors disabled:opacity-50"
                             >
                               <Shield className="w-4 h-4" />
                               {t("makeAdmin")}
@@ -777,7 +834,7 @@ export default function GroupSettingsPage({}) {
                                 )
                               }
                               disabled={updateRoleMutation.isPending}
-                              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-text-muted hover:bg-card-hover rounded-lg transition-colors disabled:opacity-50"
+                              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-text-muted hover:bg-surface-hover rounded-lg transition-colors disabled:opacity-50"
                             >
                               <User className="w-4 h-4" />
                               {t("makeMember")}
@@ -791,7 +848,7 @@ export default function GroupSettingsPage({}) {
                                   handleTransferOwnership(memberUserId)
                                 }
                                 disabled={transferOwnershipMutation.isPending}
-                                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-warning-700 hover:bg-warning-50 rounded-lg transition-colors disabled:opacity-50 border-t border-border mt-1 pt-2"
+                                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-warning-700 hover:bg-surface-hover rounded-lg transition-colors disabled:opacity-50 border-t border-border mt-1 pt-2"
                               >
                                 <Crown className="w-4 h-4" />
                                 {t("transferOwnership")}
@@ -806,7 +863,7 @@ export default function GroupSettingsPage({}) {
                               removeMemberMutation.isPending ||
                               isRemovingMember === memberUserId
                             }
-                            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-error-600 hover:bg-error-50 rounded-lg transition-colors disabled:opacity-50 border-t border-border mt-1 pt-2"
+                            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-error-600 hover:bg-surface-hover rounded-lg transition-colors disabled:opacity-50 border-t border-border mt-1 pt-2"
                           >
                             <UserMinus className="w-4 h-4" />
                             {t("removeFromGroup")}
@@ -818,7 +875,7 @@ export default function GroupSettingsPage({}) {
                         <button
                           onClick={handleLeaveGroup}
                           disabled={leaveGroupMutation.isPending}
-                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-error-600 hover:bg-error-50 rounded-lg transition-colors disabled:opacity-50"
+                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-error-600 hover:bg-surface-hover rounded-lg transition-colors disabled:opacity-50"
                         >
                           <UserMinus className="w-4 h-4" />
                           {t("leaveGroup")}
@@ -851,7 +908,7 @@ export default function GroupSettingsPage({}) {
                 <p className="text-text-muted">{t("noInvitationsSent")}</p>
               </div>
             ) : (
-              <div className="divide-y divide-gray-100">
+              <div className="divide-y divide-border">
                 {group.pendingInvites.map((invite, index) => {
                   const displayName = getInviteDisplayName(invite);
                   const inviteIcon = getInviteDisplayIcon(invite);
@@ -862,10 +919,10 @@ export default function GroupSettingsPage({}) {
                         invite.code ??
                         `${invite.type}-${invite.invitedAt ?? index}`
                       }
-                      className="p-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between hover:bg-card-hover transition-colors"
+                      className="p-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between hover:bg-surface-hover transition-colors"
                     >
                       <div className="flex items-start gap-3 min-w-0 md:items-center md:gap-4">
-                        <div className="w-10 h-10 shrink-0 rounded-full bg-primary-100 flex items-center justify-center text-primary-600">
+                        <div className="w-10 h-10 shrink-0 rounded-full bg-[var(--color-icon-primary-bg)] flex items-center justify-center text-[var(--color-icon-primary-fg)]">
                           {inviteIcon}
                         </div>
 
@@ -879,8 +936,8 @@ export default function GroupSettingsPage({}) {
                               className={[
                                 "text-xs px-2 py-0.5 rounded-full",
                                 invite.role === "admin"
-                                  ? "bg-warning-100 text-warning-700"
-                                  : "bg-primary-100 text-primary-700",
+                                  ? "bg-[var(--color-status-warning-soft)] text-warning-700"
+                                  : "bg-[var(--color-icon-primary-bg)] text-[var(--color-icon-primary-fg)]",
                               ].join(" ")}
                             >
                               {invite.role === "admin"
@@ -892,7 +949,7 @@ export default function GroupSettingsPage({}) {
                               className={[
                                 "text-xs px-2 py-0.5 rounded-full bg-card border text-text-muted",
                                 invite.type === "in-app"
-                                  ? "border-primary-200"
+                                  ? "border-border"
                                   : "border-border",
                               ].join(" ")}
                             >
@@ -951,7 +1008,7 @@ export default function GroupSettingsPage({}) {
               </div>
             </div>
 
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-border">
               {group.joinRequests
                 .filter((req: JoinRequest) => req.status === 'pending')
                 .map((request: JoinRequest) => {
@@ -962,10 +1019,10 @@ export default function GroupSettingsPage({}) {
                   return (
                     <div
                       key={requestId}
-                      className="p-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between hover:bg-card-hover transition-colors"
+                      className="p-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between hover:bg-surface-hover transition-colors"
                     >
                       <div className="flex items-start gap-3 min-w-0 md:items-center md:gap-4">
-                        <div className="w-10 h-10 shrink-0 rounded-full bg-warning-100 flex items-center justify-center text-warning-600">
+                        <div className="w-10 h-10 shrink-0 rounded-full bg-[var(--color-status-warning-soft)] flex items-center justify-center text-warning-700">
                           <UserPlus className="w-5 h-5" />
                         </div>
 
@@ -979,8 +1036,8 @@ export default function GroupSettingsPage({}) {
                               className={[
                                 "text-xs px-2 py-0.5 rounded-full",
                                 request.role === "admin"
-                                  ? "bg-warning-100 text-warning-700"
-                                  : "bg-primary-100 text-primary-700",
+                                  ? "bg-[var(--color-status-warning-soft)] text-warning-700"
+                                  : "bg-[var(--color-icon-primary-bg)] text-[var(--color-icon-primary-fg)]",
                               ].join(" ")}
                             >
                               {request.role === "admin"
@@ -1044,7 +1101,7 @@ export default function GroupSettingsPage({}) {
               <div className="flex justify-between items-center">
                 <div>
                   <h2 className="text-xl font-bold text-text-primary flex items-center gap-2">
-                    <Settings className="w-5 h-5 text-primary-600" />
+                    <Settings className="w-5 h-5 text-[var(--color-icon-primary-fg)]" />
                     {t("groupSettings")}
                   </h2>
                   <p className="text-sm text-text-muted mt-1">
@@ -1067,7 +1124,7 @@ export default function GroupSettingsPage({}) {
 
             {isEditingSettings ? (
               <div className="p-6 space-y-6">
-                <div className="bg-primary-50/50 border border-primary-200 rounded-lg p-4">
+                <div className="bg-surface border border-border rounded-lg p-4">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
                       <h3 className="text-sm font-semibold text-text-primary mb-1.5">
@@ -1087,7 +1144,7 @@ export default function GroupSettingsPage({}) {
                   </div>
                 </div>
 
-                <div className="bg-primary-50/50 border border-primary-200 rounded-lg p-4">
+                <div className="bg-surface border border-border rounded-lg p-4">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
                       <h3 className="text-sm font-semibold text-text-primary mb-1.5">
@@ -1107,7 +1164,7 @@ export default function GroupSettingsPage({}) {
                   </div>
                 </div>
 
-                <div className="bg-primary-50/50 border border-primary-200 rounded-lg p-4">
+                <div className="bg-surface border border-border rounded-lg p-4">
                   <div className="space-y-3">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
@@ -1118,7 +1175,7 @@ export default function GroupSettingsPage({}) {
                           {t("maxMembersDescription")}
                         </p>
                         {group?.members && (
-                          <p className="text-xs text-primary-600 mt-1.5 font-medium">
+                          <p className="text-xs text-[var(--color-icon-primary-fg)] mt-1.5 font-medium">
                             {t("currentMembersCount", { count: group.members.length })}
                           </p>
                         )}
@@ -1180,9 +1237,9 @@ export default function GroupSettingsPage({}) {
               <div className="p-6 space-y-4">
                 <div className="flex items-start justify-between gap-4 py-3 border-b border-border last:border-0">
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-semibold text-text-primary mb-1">
-                      {t("allowMemberInvite")}
-                    </h3>
+                      <h3 className="text-sm font-semibold text-text-primary mb-1">
+                        {t("allowMemberInvite")}
+                      </h3>
                     <p className="text-xs text-text-muted">
                       {t("allowMemberInviteDescription")}
                     </p>
@@ -1190,8 +1247,8 @@ export default function GroupSettingsPage({}) {
                   <div className="shrink-0">
                     <span className={`text-sm font-semibold px-3 py-1 rounded-full ${
                       group.settings?.allowMemberInvite 
-                        ? "bg-success-100 text-success-700" 
-                        : "bg-gray-100 text-gray-600"
+                        ? `${colorRoleClasses.statusSuccessSoft} text-success-700`
+                        : "bg-surface text-text-secondary"
                     }`}>
                       {group.settings?.allowMemberInvite ? t("enabled") : t("disabled")}
                     </span>
@@ -1210,8 +1267,8 @@ export default function GroupSettingsPage({}) {
                   <div className="shrink-0">
                     <span className={`text-sm font-semibold px-3 py-1 rounded-full ${
                       group.settings?.requireApproval 
-                        ? "bg-success-100 text-success-700" 
-                        : "bg-gray-100 text-gray-600"
+                        ? `${colorRoleClasses.statusSuccessSoft} text-success-700`
+                        : "bg-surface text-text-secondary"
                     }`}>
                       {group.settings?.requireApproval ? t("enabled") : t("disabled")}
                     </span>
@@ -1227,13 +1284,13 @@ export default function GroupSettingsPage({}) {
                       {t("maxMembersDescription")}
                     </p>
                     {group?.members && (
-                      <p className="text-xs text-primary-600 mt-1.5 font-medium">
+                      <p className="text-xs text-[var(--color-icon-primary-fg)] mt-1.5 font-medium">
                         {t("currentMembersCount", { count: group.members.length })}
                       </p>
                     )}
                   </div>
                   <div className="shrink-0">
-                    <span className="text-sm font-semibold px-3 py-1 bg-primary-100 text-primary-700 rounded-full">
+                    <span className="text-sm font-semibold px-3 py-1 bg-[var(--color-icon-primary-bg)] text-[var(--color-icon-primary-fg)] rounded-full">
                       {group.settings?.maxMembers ?? 50}
                     </span>
                   </div>
@@ -1244,7 +1301,7 @@ export default function GroupSettingsPage({}) {
         )}
 
         <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
-          <div className="bg-error-50/50 p-4 border-b border-error-100 flex items-center gap-2 text-error-800">
+          <div className={`${colorRoleClasses.statusErrorSoft} p-4 border-b border-[var(--color-error-200)] flex items-center gap-2 text-error-700`}>
             <Trash2 size={18} />
             <span className="font-bold text-sm">{t("dangerZone")}</span>
           </div>
@@ -1252,7 +1309,7 @@ export default function GroupSettingsPage({}) {
           <div className="divide-y divide-border">
             {currentUserMembership &&
               currentUserMembership.role !== "owner" && (
-                <div className="p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between hover:bg-card-hover transition-colors">
+                <div className="p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between hover:bg-surface-hover transition-colors">
                   <div>
                     <h3 className="text-sm font-medium text-text-primary">
                       {t("leaveGroup")}
@@ -1270,13 +1327,13 @@ export default function GroupSettingsPage({}) {
               )}
 
 {canDeleteGroup && (
-  <div className="p-4 hover:bg-error transition-colors">
+  <div className="p-4 hover:bg-[var(--color-status-error-soft)] transition-colors">
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0">
         <h3 className="text-sm font-medium text-error-600">
           {t("deleteGroup")}
         </h3>
-        <p className="text-xs text-error-400 mt-0.5 break-words">
+        <p className="text-xs text-error-500 mt-0.5 break-words">
           {t("deleteGroupConfirmation")}
         </p>
       </div>
@@ -1300,6 +1357,22 @@ export default function GroupSettingsPage({}) {
           groupName={group?.name || ""}
         />
       )}
+
+      <ConfirmDialog
+        isOpen={Boolean(confirmAction && confirmDialogConfig)}
+        onClose={() => {
+          if (!confirmDialogConfig?.isLoading) {
+            setConfirmAction(null);
+          }
+        }}
+        onConfirm={handleConfirmAction}
+        title={confirmDialogConfig?.title || ""}
+        message={confirmDialogConfig?.message || ""}
+        confirmText={confirmDialogConfig?.confirmText || tCommon("confirm")}
+        cancelText={tCommon("cancel")}
+        variant={confirmDialogConfig?.variant || "danger"}
+        isLoading={confirmDialogConfig?.isLoading || false}
+      />
     </div>
   );
 }

@@ -234,17 +234,35 @@
   --color-info: #3b82f6;
 
   /* Light Mode Colors - Clean and Simple */
-  --color-background: rgb(255 255 255);
-  --color-surface: rgb(248 250 252);
-  --color-surface-hover: rgb(241 245 249);
-  --color-card: rgb(248, 248, 248);
-  --color-border: rgb(226 232 240);
-  --color-border-light: rgb(241 245 249);
+  --color-background: #f8fafc;
+  --color-surface: #ffffff;
+  --color-surface-hover: #f1f5f9;
+  --color-card: #ffffff;
+  --color-border: #e2e8f0;
+  --color-border-light: #f1f5f9;
+  --color-status-success-soft: #f0fdf4;
+  --color-status-warning-soft: #fffbeb;
+  --color-status-error-soft: #fef2f2;
+  --color-status-secondary-soft: #f8fafc;
+  --color-tooltip-bg: #111827;
+  --color-tooltip-fg: #f8fafc;
+  --color-icon-primary-bg: #dbeafe;
+  --color-icon-primary-fg: #93c5fd;
+  --color-icon-secondary-bg: #f3e8ff;
+  --color-icon-secondary-fg: #9333ea;
+  --color-icon-accent-bg: #d1fae5;
+  --color-icon-accent-fg: #059669;
+  --color-icon-success-bg: #dcfce7;
+  --color-icon-success-fg: #16a34a;
+  --color-icon-warning-bg: #fef3c7;
+  --color-icon-warning-fg: #d97706;
+  --color-icon-info-bg: #dbeafe;
+  --color-icon-info-fg: #2563eb;
 
   /* Text Colors */
   --color-text-primary: rgb(15 23 42);
-  --color-text-secondary: rgb(71 85 105);
-  --color-text-muted: rgb(148 163 184);
+  --color-text-secondary: #475569;
+  --color-text-muted: #64748b;
   --color-text-on-primary: rgb(255 255 255);
   --color-text-on-secondary: rgb(255 255 255);
 
@@ -291,21 +309,39 @@
      - surface קצת יותר בהיר
      - card עוד טיפה יותר בהיר כדי שיהיה "elevation"
   ========================= */
-  --color-background: rgb(11 16 24);      /* deep navy */
-  --color-surface: rgb(16 23 35);         /* elevated surface */
-  --color-surface-hover: rgb(22 32 48);   /* hover */
-  --color-card: rgb(18 27 42);            /* cards/modals */
+  --color-background: #0b1220;
+  --color-surface: #111827;
+  --color-surface-hover: #253042;
+  --color-card: #1b2433;
 
   /* Borders */
-  --color-border: rgb(46 62 88);          /* soft blue-gray */
-  --color-border-light: rgb(62 82 112);
+  --color-border: #334155;
+  --color-border-light: #475569;
+  --color-status-success-soft: #123026;
+  --color-status-warning-soft: #3a2f10;
+  --color-status-error-soft: #3c1717;
+  --color-status-secondary-soft: #1f2a3b;
+  --color-tooltip-bg: #1f2937;
+  --color-tooltip-fg: #e5e7eb;
+  --color-icon-primary-bg: #1e3a8a;
+  --color-icon-primary-fg: #2563eb;
+  --color-icon-secondary-bg: #4c1d95;
+  --color-icon-secondary-fg: #d8b4fe;
+  --color-icon-accent-bg: #064e3b;
+  --color-icon-accent-fg: #6ee7b7;
+  --color-icon-success-bg: #14532d;
+  --color-icon-success-fg: #86efac;
+  --color-icon-warning-bg: #78350f;
+  --color-icon-warning-fg: #fcd34d;
+  --color-icon-info-bg: #1e3a8a;
+  --color-icon-info-fg: #93c5fd;
 
   /* =========================
      Text (less harsh than pure white)
   ========================= */
   --color-text-primary: rgb(236 242 250);   /* off-white */
-  --color-text-secondary: rgb(190 203 224); /* readable */
-  --color-text-muted: rgb(144 160 188);     /* muted */
+  --color-text-secondary: #b8c5da;
+  --color-text-muted: #8ea0bc;
 
   --color-text-on-primary: rgb(240 247 255);
   --color-text-on-secondary: rgb(240 247 255);

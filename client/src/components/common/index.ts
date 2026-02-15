@@ -7,6 +7,7 @@ export { Badge, NotificationBadge, StatusBadge } from './Badge';
 export { Input, TextArea } from './Input';
 
 export { LoadingSpinner } from './LoadingSpinner';
+export { LoadingState } from './LoadingState';
 
 export { ErrorBoundary } from './ErrorBoundary';
 

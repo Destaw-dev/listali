@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useEffect } from "react";
+import { memo, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
@@ -10,6 +10,7 @@ import { Button, Input, TextArea, Dropdown, Modal } from "../common";
 import { useModalScrollLock } from "../../hooks/useModalScrollLock";
 import { GuestItem, ICategory } from "../../types";
 import { useGuestListsStore } from "../../store/guestListsStore";
+import { useNotification } from "../../contexts/NotificationContext";
 
 interface EditGuestItemModalProps {
   item: GuestItem | null;
@@ -18,16 +19,14 @@ interface EditGuestItemModalProps {
   categories?: ICategory[];
 }
 
-const editGuestItemSchema = z.object({
-  name: z.string().min(1, "שם הפריט נדרש").max(100, "שם הפריט לא יכול להיות יותר מ-100 תווים"),
-  quantity: z.number().min(1, "כמות חייבת להיות לפחות 1").max(999, "כמות לא יכולה להיות יותר מ-999"),
-  unit: z.string().optional(),
-  categoryId: z.string().optional(),
-  notes: z.string().optional(),
-  brand: z.string().optional(),
-});
-
-type EditGuestItemFormData = z.infer<typeof editGuestItemSchema>;
+type EditGuestItemFormData = {
+  name: string;
+  quantity: number;
+  unit?: string;
+  categoryId?: string;
+  notes?: string;
+  brand?: string;
+};
 
 export const EditGuestItemModal = memo(function EditGuestItemModal({
   item,
@@ -38,8 +37,25 @@ export const EditGuestItemModal = memo(function EditGuestItemModal({
   const t = useTranslations("AddItemModal");
   const tItems = useTranslations("ShoppingListItems");
   const { updateItem } = useGuestListsStore();
+  const { showError } = useNotification();
 
   useModalScrollLock(!!item);
+
+  const editGuestItemSchema = useMemo(
+    () =>
+      z.object({
+        name: z.string().min(1, t("nameRequired")).max(100, t("nameMaxLength")),
+        quantity: z
+          .number()
+          .min(1, t("quantityMin"))
+          .max(999, t("quantityMaxGuest")),
+        unit: z.string().optional(),
+        categoryId: z.string().optional(),
+        notes: z.string().optional(),
+        brand: z.string().optional(),
+      }),
+    [t]
+  );
 
   const {
     register,
@@ -89,7 +105,9 @@ export const EditGuestItemModal = memo(function EditGuestItemModal({
     } catch (error) {
       console.error("Error updating guest item:", error);
       if (error instanceof Error) {
-        alert(error.message);
+        showError(error.message);
+      } else {
+        showError("notifications.unknownError");
       }
     }
   };
@@ -98,7 +116,7 @@ export const EditGuestItemModal = memo(function EditGuestItemModal({
 
   return (
     <Modal
-      title={tItems("editItem") || "ערוך פריט"}
+      title={tItems("editItem")}
       onClose={onClose}
       iconHeader={
         <div className="p-2 bg-primary-500 rounded-full">
@@ -110,9 +128,9 @@ export const EditGuestItemModal = memo(function EditGuestItemModal({
         <Input
           {...register("name")}
           type="text"
-          placeholder={t("itemName") || "שם הפריט"}
+          placeholder={t("itemName")}
           error={errors.name?.message}
-          label={t("itemName") || "שם הפריט"}
+          label={t("itemName")}
         />
 
         <div className="grid grid-cols-2 gap-4">
@@ -121,19 +139,19 @@ export const EditGuestItemModal = memo(function EditGuestItemModal({
             type="number"
             placeholder="1"
             error={errors.quantity?.message}
-            label={t("quantity") || "כמות"}
+            label={t("quantity")}
             min={1}
           />
           <Dropdown
             {...register("unit")}
-            label={t("unit") || "יחידה"}
+            label={t("unit")}
             options={[
-              { value: "piece", label: tItems("piece") || "יחידה" },
-              { value: "kg", label: tItems("kg") || "ק\"ג" },
-              { value: "g", label: tItems("g") || "גרם" },
-              { value: "l", label: tItems("l") || "ליטר" },
-              { value: "ml", label: tItems("ml") || "מ\"ל" },
-              { value: "package", label: tItems("package") || "חבילה" },
+              { value: "piece", label: tItems("piece") },
+              { value: "kg", label: tItems("kg") },
+              { value: "g", label: tItems("g") },
+              { value: "l", label: tItems("l") },
+              { value: "ml", label: tItems("ml") },
+              { value: "package", label: tItems("package") },
             ]}
             value={watch("unit") || "piece"}
             onSelect={(value) => setValue("unit", value as string)}
@@ -143,9 +161,9 @@ export const EditGuestItemModal = memo(function EditGuestItemModal({
         {categories.length > 0 && (
           <Dropdown
             {...register("categoryId")}
-            label={t("category") || "קטגוריה"}
+            label={t("category")}
             options={[
-              { value: "", label: t("noCategory") || "ללא קטגוריה" },
+              { value: "", label: t("noCategory") },
               ...categories.map((cat) => ({
                 value: cat._id || "",
                 label: cat.name || "",
@@ -159,16 +177,16 @@ export const EditGuestItemModal = memo(function EditGuestItemModal({
         <Input
           {...register("brand")}
           type="text"
-          placeholder={t("brand") || "מותג (אופציונלי)"}
+          placeholder={t("brand")}
           error={errors.brand?.message}
-          label={t("brand") || "מותג"}
+          label={t("brand")}
         />
 
         <TextArea
           {...register("notes")}
-          placeholder={t("notes") || "הערות (אופציונלי)"}
+          placeholder={t("notes")}
           error={errors.notes?.message}
-          label={t("notes") || "הערות"}
+          label={t("notes")}
           rows={3}
         />
 
@@ -179,14 +197,14 @@ export const EditGuestItemModal = memo(function EditGuestItemModal({
             onClick={onClose}
             fullWidth
           >
-            {t("cancel") || "ביטול"}
+            {t("cancel")}
           </Button>
           <Button
             type="submit"
             variant="primary"
             fullWidth
           >
-            {t("save") || "שמור"}
+            {t("save")}
           </Button>
         </div>
       </form>

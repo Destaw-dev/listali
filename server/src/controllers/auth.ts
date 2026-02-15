@@ -6,6 +6,10 @@ import { asyncHandler, AppError, validationErrorResponse, successResponse } from
 import { IApiResponse, IAuthRequest, IRegisterRequest, IAuthResponse, UserDocument, IBasePendingInvite, IGroupMember, IUser, IPendingInvitation, Language, IJoinRequest, IUserJoinRequestWithGroup } from '../types';
 import { sendEmailVerification } from '../utils/email';
 import { signAccessToken, signRefreshToken, hashToken, verifyRefreshToken } from '../utils/tokens';
+import { getOrCreateCsrfToken } from '../middleware/csrf';
+
+const GENERIC_AUTH_FAILURE_MESSAGE = 'Invalid email or password';
+const GENERIC_VERIFICATION_MESSAGE = 'If the account exists and requires verification, an email has been sent.';
 
 export const isMobileClient = (req: Request): boolean => {
   return req.headers['x-client'] === 'mobile';
@@ -230,6 +234,11 @@ if (!user.isEmailVerified && !groupJoined) {
   ));
 });
 
+export const getCsrfToken = asyncHandler(async (req: Request, res: Response<IApiResponse<{ csrfToken: string }>>) => {
+  const csrfToken = getOrCreateCsrfToken(req, res);
+  res.status(200).json(successResponse({ csrfToken }, 'CSRF token generated'));
+});
+
 export const login = asyncHandler(async (req: Request, res: Response<IApiResponse<IAuthResponse | void>>) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -241,7 +250,7 @@ export const login = asyncHandler(async (req: Request, res: Response<IApiRespons
     const user = await User.findByCredentials(email, password) as UserDocument;
 
     if (!user.isEmailVerified) {
-      throw new AppError('Please verify your email address before logging in. Check your email for verification link.', 403, false);
+      throw new AppError(GENERIC_AUTH_FAILURE_MESSAGE, 401);
     }
     
     const sessionId = crypto.randomUUID();
@@ -301,11 +310,8 @@ export const login = asyncHandler(async (req: Request, res: Response<IApiRespons
     };
     
     res.status(200).json(successResponse<IAuthResponse>(responseData, 'Login successful'));
-  } catch (error) {
-    if (error instanceof AppError) {
-      throw error;
-    }
-    throw new AppError('Invalid credentials', 400, true);
+  } catch (_error) {
+    throw new AppError(GENERIC_AUTH_FAILURE_MESSAGE, 401);
   }
 });
 
@@ -573,8 +579,7 @@ export const checkUsernameAvailability = asyncHandler(async (req: Request, res: 
 export const checkEmailAvailability = asyncHandler(async (req: Request, res: Response<IApiResponse<{ available: boolean }>>) => {
   const { email } = req.params;
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new AppError('Invalid email format', 400);
-  const isAvailable = await User.isEmailAvailable(email);
-  res.status(200).json(successResponse({ available: isAvailable }, isAvailable ? 'Email is available' : 'Email is already registered'));
+  res.status(200).json(successResponse({ available: true }, 'If the email is eligible, you can proceed with registration.'));
 });
 
 export const getMyInvitations = asyncHandler(async (req: Request, res: Response<IApiResponse<IPendingInvitation[]>>) => {
@@ -816,68 +821,10 @@ export const resendVerification = asyncHandler(async (req: Request, res: Respons
     throw new AppError('Email is required', 400);
   }
 
-  const user = await User.findOne({ email });
-  if (!user) {
-    throw new AppError('User not found', 404);
-  }
+  const normalizedEmail = email.toLowerCase();
+  const user = await User.findOne({ email: normalizedEmail });
 
-  if (user.isEmailVerified) {
-    throw new AppError('Email is already verified', 400);
-  }
-
-  const verificationToken = crypto.randomBytes(32).toString('hex');
-  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
-
-  user.emailVerification = {
-    token: verificationToken,
-    expiresAt
-  };
-  await user.save();
-
-  try {
-    const newUser = await User.findById(user._id);
-    const language = newUser?.preferences?.language || 'he';
-    await sendEmailVerification(email, verificationToken, user.username, language as Language);
-    res.status(200).json(successResponse(null, 'Verification email sent successfully'));
-  } catch (emailError) {
-    console.error('Failed to send verification email:', emailError);
-    res.status(500).json({
-      success: false,
-      message: 'Verification token generated but failed to send email'
-    });
-  }
-});
-
-export const resendVerificationForLogin = asyncHandler(async (req: Request, res: Response<IApiResponse<null>>) => {
-  const { email } = req.body;
-  
-  if (!email) {
-    throw new AppError('Email is required', 400);
-  }
-
-  const user = await User.findOne({ email });
-  if (!user) {
-    throw new AppError('User not found', 404);
-  }
-
-  if (user.isEmailVerified) {
-    throw new AppError('Email is already verified', 400);
-  }
-
-  if (user.emailVerification && user.emailVerification.expiresAt > new Date()) {
-    try {
-      const newUser = await User.findById(user._id);
-      const language = newUser?.preferences?.language || 'he';
-      await sendEmailVerification(email, user.emailVerification.token, user.username, language as Language);
-      res.status(200).json(successResponse(null, 'Verification email resent successfully'));
-    } catch (emailError) {
-      console.error('Failed to resend verification email:', emailError);
-      res.status(500).json({
-        success: false,
-        message: 'Failed to resend verification email'
-      });
-    }
-  } else {
+  if (user && !user.isEmailVerified) {
     const verificationToken = crypto.randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
@@ -890,14 +837,47 @@ export const resendVerificationForLogin = asyncHandler(async (req: Request, res:
     try {
       const newUser = await User.findById(user._id);
       const language = newUser?.preferences?.language || 'he';
-      await sendEmailVerification(email, verificationToken, user.username, language as Language);
-      res.status(200).json(successResponse(null, 'New verification email sent successfully'));
+      await sendEmailVerification(normalizedEmail, verificationToken, user.username, language as Language);
     } catch (emailError) {
       console.error('Failed to send verification email:', emailError);
-      res.status(500).json({
-        success: false,
-        message: 'Verification token generated but failed to send email'
-      });
     }
   }
+
+  res.status(200).json(successResponse(null, GENERIC_VERIFICATION_MESSAGE));
+});
+
+export const resendVerificationForLogin = asyncHandler(async (req: Request, res: Response<IApiResponse<null>>) => {
+  const { email } = req.body;
+  
+  if (!email) {
+    throw new AppError('Email is required', 400);
+  }
+
+  const normalizedEmail = email.toLowerCase();
+  const user = await User.findOne({ email: normalizedEmail });
+
+  if (user && !user.isEmailVerified) {
+    let tokenToSend = user.emailVerification?.token;
+
+    if (!user.emailVerification || user.emailVerification.expiresAt <= new Date()) {
+      tokenToSend = crypto.randomBytes(32).toString('hex');
+      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+      user.emailVerification = {
+        token: tokenToSend,
+        expiresAt
+      };
+      await user.save();
+    }
+
+    try {
+      const newUser = await User.findById(user._id);
+      const language = newUser?.preferences?.language || 'he';
+      await sendEmailVerification(normalizedEmail, tokenToSend || '', user.username, language as Language);
+    } catch (emailError) {
+      console.error('Failed to send verification email:', emailError);
+    }
+  }
+
+  res.status(200).json(successResponse(null, GENERIC_VERIFICATION_MESSAGE));
 });

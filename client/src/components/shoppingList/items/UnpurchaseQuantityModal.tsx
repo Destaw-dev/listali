@@ -69,7 +69,7 @@ export const UnpurchaseQuantityModal = memo(function UnpurchaseQuantityModal({
     <Modal
       title={tItems("unpurchaseQuantityTitle")}
       onClose={onClose}
-      iconHeader={<div className=" p-2 bg-primary-500 rounded-full">
+      iconHeader={<div className=" p-2 bg-primary rounded-full">
         <Package className="w-5 h-5 text-text-primary" />
       </div>}
       isLoading={isLoading}
@@ -91,7 +91,7 @@ export const UnpurchaseQuantityModal = memo(function UnpurchaseQuantityModal({
             type="button"
             onClick={handleDecrement}
             disabled={quantity <= 0}
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-background text-text-primary transition hover:bg-background-hover disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-background text-text-primary transition hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-40"
           >
             <Minus className="h-4 w-4" />
           </button>
@@ -105,7 +105,7 @@ export const UnpurchaseQuantityModal = memo(function UnpurchaseQuantityModal({
             type="button"
             onClick={handleIncrement}
             disabled={quantity >= maxQuantity}
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-background text-text-primary transition hover:bg-background-hover disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-background text-text-primary transition hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-40"
           >
             <Plus className="h-4 w-4" />
           </button>
@@ -141,4 +141,3 @@ export const UnpurchaseQuantityModal = memo(function UnpurchaseQuantityModal({
   );
 
 });
-

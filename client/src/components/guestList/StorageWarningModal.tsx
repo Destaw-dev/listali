@@ -23,40 +23,40 @@ export function StorageWarningModal({ isOpen, onClose }: StorageWarningModalProp
   return (
     <Modal
       onClose={onClose}
-      title={t('title') || 'אזהרת אחסון'}
+      title={t('title')}
       iconHeader={<AlertTriangle className="w-5 h-5 text-warning" />}
-      subtitle={t('subtitle') || 'נשאר מעט מקום ב-localStorage'}
+      subtitle={t('subtitle')}
       size="md"
     >
       <div className="p-6 space-y-4" dir="rtl">
         <div className="bg-warning-50 border border-warning-200 rounded-lg p-4">
           <p className="text-sm text-text-primary mb-2">
-            {t('description') || 'נשאר פחות מ-20% מקום פנוי ב-localStorage. כדי להמשיך להשתמש באפליקציה, נא למחוק רשימות ישנות או להתחבר כדי לסנכרן לענן.'}
+            {t('description')}
           </p>
         </div>
 
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
-            <span className="text-text-muted">{t('used') || 'משומש'}:</span>
+            <span className="text-text-muted">{t('used')}:</span>
             <span className="text-text-primary font-medium">
               {formatBytes(storageInfo.used)} ({percentageUsed}%)
             </span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-text-muted">{t('available') || 'פנוי'}:</span>
+            <span className="text-text-muted">{t('available')}:</span>
             <span className="text-text-primary font-medium">
               {formatBytes(storageInfo.available)} ({percentageRemaining}%)
             </span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-text-muted">{t('total') || 'סה"כ'}:</span>
+            <span className="text-text-muted">{t('total')}:</span>
             <span className="text-text-primary font-medium">
               {formatBytes(storageInfo.total)}
             </span>
           </div>
         </div>
 
-        <div className="w-full bg-gray-200 rounded-full h-2.5 mt-4">
+        <div className="w-full bg-border-light rounded-full h-2.5 mt-4">
           <div
             className={`h-2.5 rounded-full transition-all ${
               percentageUsed >= 80 ? 'bg-error' : 
@@ -73,7 +73,7 @@ export function StorageWarningModal({ isOpen, onClose }: StorageWarningModalProp
             onClick={onClose}
             fullWidth
           >
-            {t('understood') || 'הבנתי'}
+            {t('understood')}
           </Button>
         </div>
       </div>

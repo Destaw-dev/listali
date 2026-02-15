@@ -125,8 +125,8 @@ describe('GroupDetailsPage', () => {
     } as ReturnType<typeof useGroup>);
 
     renderWithProviders(<GroupDetailsPage />);
-    const spinner = document.querySelector('.animate-spin');
-    expect(spinner).toBeTruthy();
+    const skeleton = document.querySelector('.animate-pulse');
+    expect(skeleton).toBeTruthy();
   });
 
   it('should display shopping lists', () => {
@@ -142,4 +142,3 @@ describe('GroupDetailsPage', () => {
     expect(tabs.length).toBeGreaterThan(0);
   });
 });
-

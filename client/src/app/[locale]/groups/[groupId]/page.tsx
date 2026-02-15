@@ -6,7 +6,7 @@ import { useParams, useSearchParams } from 'next/navigation';
 import { useRouter, usePathname } from '../../../../i18n/navigation';
 import { Plus, Settings, ShoppingCart, MessageCircle, BarChart3, ChartArea, UserPlus } from 'lucide-react';
 import { GroupShoppingLists } from '../../../../components/groups/GroupShoppingLists';
-import { LoadingSpinner, Button } from '../../../../components/common';
+import { Button, LoadingState, Skeleton, SkeletonCard } from '../../../../components/common';
 import { useGroup, useInviteToGroup, useGroupMemberRoleWebSocket } from '../../../../hooks/useGroups';
 import { useCreateShoppingList, useGroupShoppingLists } from '../../../../hooks/useShoppingLists';
 import { useAuthRedirect } from '../../../../hooks/useAuthRedirect';
@@ -18,6 +18,7 @@ import {CreateShoppingListModal} from '../../../../components/shoppingList/Creat
 import { IShoppingList, IGroupMember, ICreateListFormData, getCreatedByDisplayName } from '../../../../types';
 import { useShoppingListWebSocket } from '../../../../hooks/useShoppingListWebSocket';
 import { useChatWebSocket, useUnreadInfo } from '../../../../hooks/useChat';
+import { colorRoleClasses } from '../../../../lib/colorRoles';
 
 type TabType = 'overview' | 'lists' | 'chat' | 'stats';
 
@@ -97,17 +98,24 @@ export default function GroupDetailsPage() {
   }, [error, router]);
 
   if (!safeToShow) {
-    return (
-      <div className="min-h-screen bg-surface flex items-center justify-center">
-        <LoadingSpinner />
-      </div>
-    );
+    return <LoadingState variant="page" />;
   }
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-surface flex items-center justify-center">
-        <LoadingSpinner />
+      <div className="min-h-screen bg-surface">
+        <div className="container mx-auto px-4 py-4 space-y-6">
+          <Skeleton variant="line" height="h-8" width="w-64" />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 space-y-6">
+              <SkeletonCard />
+              <SkeletonCard />
+            </div>
+            <div className="space-y-6">
+              <SkeletonCard />
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -117,12 +125,7 @@ export default function GroupDetailsPage() {
     
     if (is403Error) {
       return (
-        <div className="min-h-screen bg-surface flex items-center justify-center">
-          <div className="text-center">
-            <LoadingSpinner />
-            <p className="text-secondary mt-4">{t('redirectingToGroups')}</p>
-          </div>
-        </div>
+        <LoadingState variant="page" message={t('redirectingToGroups')} />
       );
     }
     
@@ -162,14 +165,14 @@ export default function GroupDetailsPage() {
       label: t('lists'),
       icon: ShoppingCart,
       count: shoppingLists?.length || 0,
-      countColor: 'bg-primary-400'
+      countColor: 'bg-primary-500 text-[var(--color-text-on-primary)]'
     },
     {
       id: 'chat' as TabType,
       label: t('chat'),
       icon: MessageCircle,
       count: unreadInfo?.unreadCount || 0,
-      countColor: 'bg-success-400'
+      countColor: 'bg-accent-500 text-[var(--color-text-on-primary)]'
     },
     {
       id: 'stats' as TabType,
@@ -198,9 +201,9 @@ export default function GroupDetailsPage() {
               <div className="divide-y divide-border">
                 {
                   shoppingLists?.map((list: IShoppingList) => (
-                    <div key={list._id} className="p-4 hover:bg-background transition-colors flex items-center justify-between group cursor-pointer" onClick={() => router.push(`/groups/${groupId}/${list._id}`)}>
+                    <div key={list._id} className="p-4 hover:bg-surface-hover transition-colors flex items-center justify-between group cursor-pointer" onClick={() => router.push(`/groups/${groupId}/${list._id}`)}>
                     <div className="flex items-center gap-4">
-                      <div className="h-10 w-10 rounded-lg bg-background-100 flex items-center justify-center text-text-primary-600">
+                      <div className="h-10 w-10 rounded-lg bg-surface-hover flex items-center justify-center text-text-primary">
                         <ShoppingCart className="h-5 w-5" />
                       </div>
                       <div>
@@ -209,7 +212,11 @@ export default function GroupDetailsPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                       <span className="text-xs font-medium bg-success-100 text-success-700 px-2 py-1 rounded-full">{list.status === 'active' ? t('active') : list.status === 'completed' ? t('completed') : t('archived')}</span>
+                       <span className={`text-xs font-medium px-2 py-1 rounded-full ${list.status === 'active'
+                         ? `${colorRoleClasses.statusSuccessSoft} text-success-700`
+                         : list.status === 'completed'
+                           ? `${colorRoleClasses.statusSecondarySoft} text-text-secondary`
+                           : `${colorRoleClasses.statusWarningSoft} text-warning-700`}`}>{list.status === 'active' ? t('active') : list.status === 'completed' ? t('completed') : t('archived')}</span>
                     </div>
                  </div>
                   ))
@@ -272,7 +279,7 @@ export default function GroupDetailsPage() {
               <h3 className="text-lg font-semibold text-text-secondary mb-4">{t('groupStats')}</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-text-primary-700">{group.membersCount || 0}</div>
+                  <div className="text-2xl font-bold text-text-primary">{group.membersCount || 0}</div>
                   <div className="text-sm text-text-muted">{t('members')}</div>
                 </div>
                 <div className="text-center">
@@ -333,10 +340,10 @@ export default function GroupDetailsPage() {
                     : 'border-transparent text-text-muted hover:text-text-primary hover:border-border'
                 }`}
               >
-                <tab.icon className="w-4 h-4 text-text-primary" />
-                <span className="font-medium text-text-primary">{tab.label}</span>
+                <tab.icon className={`w-4 h-4 ${activeTab === tab.id ? 'text-primary-600' : 'text-text-muted'}`} />
+                <span className={`font-medium ${activeTab === tab.id ? 'text-primary-600' : 'text-text-muted'}`}>{tab.label}</span>
                 {tab.count !== null && tab.count > 0 && (
-                  <span className={`${tab.countColor} text-text-primary text-xs rounded-full px-2 py-1 min-w-[20px] text-center`}>
+                  <span className={`${tab.countColor} text-xs rounded-full px-2 py-1 min-w-[20px] text-center`}>
                     {tab.count}
                   </span>
                 )}
@@ -351,19 +358,19 @@ export default function GroupDetailsPage() {
                 onClick={() => handleTabChange(tab.id)}
                 className={`flex flex-col items-center gap-1 py-3 px-3 border-b-2 transition-all duration-200 min-w-[80px] ${
                   activeTab === tab.id
-                    ? 'border-primary-500 text-primary-600'
+                    ? 'border-primary text-primary'
                     : 'border-transparent text-text-muted hover:text-text-primary hover:border-border'
                 }`}
               >
                 <div className="relative">
-                  <tab.icon className="w-5 h-5 text-text-primary" />
+                  <tab.icon className={`w-5 h-5 ${activeTab === tab.id ? 'text-primary' : 'text-text-muted'}`} />
                   {tab.count !== null && tab.count > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-error-500 text-text-primary text-xs rounded-full px-1.5 py-0.5 min-w-[16px] text-center">
+                    <span className={`absolute -top-1 -inset-inline-end-1 ${tab.countColor} text-xs rounded-full px-1.5 py-0.5 min-w-[16px] text-center`}>
                       {tab.count}
                     </span>
                   )}
                 </div>
-                <span className="text-xs font-medium text-center leading-tight text-text-primary">
+                <span className={`text-xs font-medium text-center leading-tight ${activeTab === tab.id ? 'text-primary' : 'text-text-muted'}`}>
                   {tab.label}
                 </span>
               </button>
@@ -408,7 +415,11 @@ const MemberItem = ({ name, role, email, initial, color }: { name: string, role:
       </div>
     </div>
     <div className="flex items-center gap-2">
-      <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${role === 'owner' ? 'bg-primary-100 text-primary-700' : 'bg-secondary-100 text-secondary-600'}`}>
+      <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${role === 'owner'
+        ? `${colorRoleClasses.statusWarningSoft} text-warning-700`
+        : role === 'admin'
+          ? `${colorRoleClasses.statusSecondarySoft} text-secondary-600`
+          : `${colorRoleClasses.statusSuccessSoft} text-success-700`}`}>
         {role === 'owner' ? 'בעלים' : role === 'admin' ? 'מנהל' : 'חבר'}
       </span>
     </div>

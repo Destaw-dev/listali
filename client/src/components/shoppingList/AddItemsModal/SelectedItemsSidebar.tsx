@@ -297,8 +297,8 @@ export const SelectedItemsSidebar = memo(({
         </Button>
         
         {hasUntreatedDuplicates && (
-          <p className="text-xs text-warning-600 text-center mt-1">
-            {tForm('hasUntreatedDuplicates') || 'יש מוצרים קיימים ברשימה. אנא מזג או הסר אותם לפני הוספה'}
+          <p className="text-xs text-warning text-center mt-1">
+            {tForm('hasUntreatedDuplicates')}
           </p>
         )}
 

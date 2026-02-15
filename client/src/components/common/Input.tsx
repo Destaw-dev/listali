@@ -66,7 +66,7 @@ const iconSizeBy: Record<Size, string> = {
 
 const variantBase: Record<Variant, string> = {
   default: "bg-surface shadow-sm",
-  outlined: "bg-transparent border border-border",
+  outlined: "border border-border bg-background/80 border-border/70 focus:border-primary",
   filled: "bg-background",
 };
 
@@ -137,10 +137,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       sizePad[size],
       radiusBy[size],
       finalStatus !== "default" && statusBorder[finalStatus],
-      iconPosition === 'left' && iconPadLeft[size],
-      iconPosition === 'right' && iconPadRight[size],
-      iconTwoPosition === 'left' && iconPadLeft[size],
-      iconTwoPosition === 'right' && iconPadRight[size],
+      icon && iconPosition === 'left' && iconPadLeft[size],
+      icon && iconPosition === 'right' && iconPadRight[size],
+      iconTwo && iconTwoPosition === 'left' && iconPadLeft[size],
+      iconTwo && iconTwoPosition === 'right' && iconPadRight[size],
       floatingLabel && "peer placeholder-transparent",
       className,
     );

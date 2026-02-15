@@ -179,8 +179,10 @@
     "verificationHelp": "Having trouble with verification?",
     "contactSupport": "Contact support at:",
     "emailInvalid": "Invalid email address",
-    "passwordMinLength": "Password must contain at least 8 characters",
+    "passwordRequired": "Password is required",
+    "passwordMinLength": "Password must contain at least 12 characters",
     "passwordUppercase": "Password must contain at least one uppercase letter",
+    "passwordComplexity": "Password must contain uppercase, lowercase, number, and special character",
     "firstNameMinLength": "First name must contain at least 2 characters",
     "lastNameMinLength": "Last name must contain at least 2 characters",
     "usernameMinLength": "Username must contain at least 3 characters",
@@ -216,6 +218,10 @@
       "subtitle": "The smartest and easiest way to manage shopping with family and friends"
     },
     "benefits": {
+      "products": {
+        "title": "Massive Catalog",
+        "desc": "Over 11,000 products ready to use"
+      },
       "fast": {
         "title": "Fast & Easy",
         "desc": "Simple and friendly interface that everyone can use"
@@ -240,7 +246,11 @@
       "title": "How It Works?"
     },
     "steps": {
-      "create": {
+      "createGroup": {
+        "title": "Create a Group",
+        "desc": "Start a new group with one click"
+      },
+      "createList": {
         "title": "Create a List",
         "desc": "Start a new shopping list with one click"
       },
@@ -260,8 +270,8 @@
       "satisfaction": "Satisfaction"
     },
     "finalCTA": {
-      "title": "Ready to Start?",
-      "subtitle": "Join thousands of families already managing their shopping the smartest way"
+      "title": "Ready to get started?",
+      "subtitle": "Start managing your shopping lists in a simple, organized, and smarter way"
     },
     "getStartedFree": "Get Started Free",
     "loginButton": "Login to existing account",
@@ -773,6 +783,7 @@
     "nameMaxLength": "Item name cannot exceed 100 characters",
     "quantityMin": "Quantity must be greater than 0",
     "quantityMax": "Quantity cannot exceed 10,000",
+    "quantityMaxGuest": "Quantity cannot exceed 999",
     "unitRequired": "Unit is required",
     "unitMaxLength": "Unit cannot exceed 20 characters",
     "notesMaxLength": "Notes cannot exceed 500 characters",
@@ -857,6 +868,8 @@
   "CreateGuestListModal": {
     "newGuestList": "New List",
     "willBeSavedLocally": "Local list - will be saved on this device only",
+    "maxListsReached": "Maximum {count} lists in guest mode",
+    "maxListsWarning": "You're close to the limit! Maximum {count} lists. Continue?",
     "titleRequired": "List name is required",
     "titleMaxLength": "List name cannot exceed 100 characters",
     "listName": "List Name",

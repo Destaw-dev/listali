@@ -10,7 +10,7 @@ import {
   useDeleteItem,
 } from "../../hooks/useItems";
 import { CheckCircle, ShoppingBag } from "lucide-react";
-import { LoadingSpinner } from "../common";
+import { ConfirmDialog, LoadingSpinner } from "../common";
 import { CategorySection } from "./items/CategorySection";
 import { PurchaseQuantityModal } from "./items/PurchaseQuantityModal";
 import { ProductDetailsModal } from "./items/ProductDetailsModal";
@@ -51,6 +51,7 @@ export const ShoppingListItems = memo(function ShoppingListItems({
   const [unpurchaseModalItem, setUnpurchaseModalItem] = useState<IItem | null>(null);
   const [productPreview, setProductPreview] = useState<IItem | null>(null);
   const [editModalItem, setEditModalItem] = useState<IItem | null>(null);
+  const [itemIdToDelete, setItemIdToDelete] = useState<string | null>(null);
   const [undoState, setUndoState] = useState<Array<{ itemId: string; purchasedQuantity: number; checked: boolean }> | null>(null);
 
   const isItemLoading = useCallback(
@@ -145,17 +146,24 @@ export const ShoppingListItems = memo(function ShoppingListItems({
   );
 
   const handleDeleteItem = useCallback(
-    async (itemId: string) => {
-      if (!confirm(tItems("deleteConfirm") || "האם אתה בטוח שברצונך למחוק את הפריט?")) {
-        return;
-      }
-      
-      await deleteItemMutation.mutateAsync({
-        itemId,
-        shoppingListId: listId,
-      });
+    (itemId: string) => {
+      setItemIdToDelete(itemId);
     },
-    [deleteItemMutation, listId, tItems]
+    []
+  );
+
+  const handleConfirmDeleteItem = useCallback(() => {
+    if (!itemIdToDelete) return;
+    deleteItemMutation.mutate(
+      {
+        itemId: itemIdToDelete,
+        shoppingListId: listId,
+      },
+      {
+        onSettled: () => setItemIdToDelete(null),
+      }
+    );
+  }, [deleteItemMutation, itemIdToDelete, listId]
   );
 
   const handlePurchaseAll = useCallback(async () => {
@@ -292,7 +300,7 @@ export const ShoppingListItems = memo(function ShoppingListItems({
           {groupedItems.unpurchased.length > 0 && (
             <CategorySection
               title={tItems("unpurchasedItems")}
-              icon={<ShoppingBag className="h-5 w-5 text-primary-500" />}
+              icon={<ShoppingBag className="h-5 w-5 text-primary" />}
               groups={groupedItems.unpurchased}
               onOpenPurchaseModal={(item) => setPurchaseModalItem(item)}
               onUnpurchase={(item) => setUnpurchaseModalItem(item)}
@@ -308,7 +316,7 @@ export const ShoppingListItems = memo(function ShoppingListItems({
           {groupedItems.purchased.length > 0 && (
             <CategorySection
               title={tItems("purchasedItems")}
-              icon={<CheckCircle className="h-5 w-5 text-success-600" />}
+              icon={<CheckCircle className="h-5 w-5 text-success" />}
               groups={groupedItems.purchased}
               onOpenPurchaseModal={(item) => setPurchaseModalItem(item)}
               onUnpurchase={(item) => setUnpurchaseModalItem(item)}
@@ -362,7 +370,18 @@ export const ShoppingListItems = memo(function ShoppingListItems({
         onSubmit={handleUpdateItem}
         isLoading={updateItemMutation.isPending}
       />
+
+      <ConfirmDialog
+        isOpen={Boolean(itemIdToDelete)}
+        onClose={() => !deleteItemMutation.isPending && setItemIdToDelete(null)}
+        onConfirm={handleConfirmDeleteItem}
+        title={tCommon("delete")}
+        message={tItems("deleteConfirm")}
+        confirmText={tCommon("delete")}
+        cancelText={tCommon("cancel")}
+        variant="danger"
+        isLoading={deleteItemMutation.isPending}
+      />
       </>
     );
   });
-

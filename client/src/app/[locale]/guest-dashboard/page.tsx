@@ -85,7 +85,7 @@ export default function GuestDashboardPage() {
                 <div className="flex sm:items-center justify-between flex-col md:flex-row gap-3">
                   <div>
                     <h1 className="text-4xl font-bold text-text-primary mb-2">
-                      {t('Dashboard.welcome')} 🎉
+                      {t('Dashboard.welcome')}
                     </h1>
                     <p className="text-xl text-secondary font-medium mb-1">
                       {t('Dashboard.guestMode')}
@@ -111,10 +111,10 @@ export default function GuestDashboardPage() {
               <Card hover className="bg-card">
                 <CardBody className="p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="p-3 bg-gradient-to-br from-secondary-700 to-secondary-700 rounded-2xl shadow-lg">
-                      <ShoppingCart className="w-6 h-6 text-text-primary" />
+                    <div className="p-3 bg-[var(--color-icon-secondary-bg)] rounded-2xl shadow-sm">
+                      <ShoppingCart className="w-6 h-6 text-[var(--color-icon-secondary-fg)]" />
                     </div>
-                    <div className="text-right">
+                    <div className="text-end">
                       <p className="text-sm font-medium text-text-muted">
                         {t('Dashboard.totalLists')}
                       </p>
@@ -129,10 +129,10 @@ export default function GuestDashboardPage() {
               <Card hover className="bg-card">
                 <CardBody className="p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="p-3 bg-gradient-to-br from-success-400 to-success-600 rounded-2xl shadow-lg">
-                      <Activity className="w-6 h-6 text-text-primary" />
+                    <div className="p-3 bg-[var(--color-icon-success-bg)] rounded-2xl shadow-sm">
+                      <Activity className="w-6 h-6 text-[var(--color-icon-success-fg)]" />
                     </div>
-                    <div className="text-right">
+                    <div className="text-end">
                       <p className="text-sm font-medium text-text-muted">
                         {t('Dashboard.checkedItems')}
                       </p>
@@ -147,14 +147,14 @@ export default function GuestDashboardPage() {
               <Card hover className="bg-card">
                 <CardBody className="p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="p-3 bg-gradient-to-br from-info-400 to-info-600 rounded-2xl shadow-lg">
-                      <ShoppingCart className="w-6 h-6 text-text-primary" />
+                    <div className="p-3 bg-[var(--color-icon-info-bg)] rounded-2xl shadow-sm">
+                      <ShoppingCart className="w-6 h-6 text-[var(--color-icon-info-fg)]" />
                     </div>
-                    <div className="text-right">
+                    <div className="text-end">
                       <p className="text-sm font-medium text-text-muted">
                         {t('Dashboard.totalItems')}
                       </p>
-                      <p className="text-2xl font-bold text-info-600">
+                      <p className="text-2xl font-bold text-info">
                         {totalGuestItems}
                       </p>
                     </div>
@@ -166,8 +166,8 @@ export default function GuestDashboardPage() {
             <Card variant="glass" className="bg-surface/80 shadow-2xl">
               <CardHeader>
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-lg">
-                    <ShoppingCart className="w-5 h-5 text-text-primary" />
+                  <div className="p-2 bg-[var(--color-icon-primary-bg)] rounded-lg">
+                    <ShoppingCart className="w-5 h-5 text-[var(--color-icon-primary-fg)]" />
                   </div>
                   <div>
                     <h2 className="text-xl font-bold text-text-primary">
@@ -182,8 +182,8 @@ export default function GuestDashboardPage() {
               <CardBody>
                 {guestLists.length === 0 ? (
                   <div className="text-center py-8">
-                    <div className="p-4 bg-gradient-to-br from-primary-100 to-primary-200 rounded-2xl mx-auto w-fit mb-4">
-                      <ShoppingCart className="w-8 h-8 text-primary-600" />
+                    <div className="p-4 bg-[var(--color-icon-primary-bg)] rounded-2xl mx-auto w-fit mb-4">
+                      <ShoppingCart className="w-8 h-8 text-[var(--color-icon-primary-fg)]" />
                     </div>
                     <p className="text-text-muted mb-4">
                       {t('Dashboard.noGuestLists')}

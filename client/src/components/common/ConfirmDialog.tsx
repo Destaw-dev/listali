@@ -92,20 +92,20 @@ export function ConfirmDialog({
   const variantConfig = {
     danger: {
       icon: AlertTriangle,
-      iconBg: 'bg-error/10 dark:bg-error/20',
+      iconBg: 'bg-[var(--color-status-error-soft)]',
       iconColor: 'text-error',
       buttonVariant: 'destructive' as const,
     },
     warning: {
       icon: AlertCircle,
-      iconBg: 'bg-warning/10 dark:bg-warning/20',
+      iconBg: 'bg-[var(--color-status-warning-soft)]',
       iconColor: 'text-warning',
       buttonVariant: 'warning' as const,
     },
     info: {
       icon: Info,
-      iconBg: 'bg-primary/10 dark:bg-primary/20',
-      iconColor: 'text-primary',
+      iconBg: 'bg-[var(--color-icon-primary-bg)]',
+      iconColor: 'text-text-primary',
       buttonVariant: 'primary' as const,
     },
   };
@@ -122,17 +122,11 @@ export function ConfirmDialog({
     if (!isOpen) return null;
 
   return (
-    <Modal onClose={onClose} size="sm">
+    <Modal onClose={onClose} size="sm" title={title} isLoading={isLoading} iconHeader={<Icon className={`${iconSizes.lg} ${config.iconColor}`} />}>
       <div className="space-y-4">
         {/* Icon and Title */}
         <div className="flex items-start gap-4">
-          <div className={`p-3 rounded-full ${config.iconBg} flex-shrink-0`}>
-            <Icon className={`${iconSizes.lg} ${config.iconColor}`} />
-          </div>
           <div className="flex-1 pt-1">
-            <h3 className="text-lg font-semibold text-text-primary mb-2">
-              {title}
-            </h3>
             <p className="text-sm text-text-muted leading-relaxed">
               {message}
             </p>

@@ -78,7 +78,7 @@ export function CreateShoppingListModal({
       title={t("newShoppingList")}
       onClose={handleClose}
       iconHeader={
-        <div className=" p-2 bg-primary-500 rounded-full">
+        <div className=" p-2 bg-primary rounded-full">
           <Calendar className="w-5 h-5 text-text-primary" />
         </div>
       }
@@ -88,8 +88,8 @@ export function CreateShoppingListModal({
     >
       {" "}
       {groupName && (
-        <div className="mb-4 p-3 bg-primary-50 border border-primary-200 rounded-lg">
-          <p className="text-sm text-primary-600">
+        <div className="mb-4 p-3 bg-[var(--color-status-info-soft)] border border-primary/20 rounded-lg">
+          <p className="text-sm text-primary">
             {t("willBeCreatedForGroup")}: <strong>{groupName}</strong>
           </p>
         </div>

@@ -6,6 +6,7 @@ import websocketService from '../services/websocket';
 import { IGroup, IGroupMember, IWebSocketEvents } from '../types';
 import { useAuthStore } from '../store/authStore';
 import { AxiosError } from 'axios';
+import { useMutationFactory } from './useMutationFactory';
 
 export const groupKeys = {
   all: ['groups'] as const,
@@ -55,68 +56,46 @@ export const useGroup = (groupId: string) => {
 };
 
 export const useCreateGroup = () => {
-  const queryClient = useQueryClient();
-  const { showSuccess, handleApiError } = useNotification();
-
-  return useMutation({
-    mutationFn: async (groupData: { name: string; description?: string }) => {
+  return useMutationFactory<unknown, { name: string; description?: string }>({
+    mutationFn: async (groupData) => {
       const response = await apiClient.createGroup(groupData);
       return response.data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: groupKeys.lists() });
-      showSuccess('groups.createSuccess');
-    },
-    onError: (error: Error) => {
-      handleApiError(error);
-    },
+    successMessage: 'groups.createSuccess',
+    invalidateQueries: [groupKeys.lists()],
   });
 };
 
 export const useUpdateGroup = () => {
-  const queryClient = useQueryClient();
-  const { showSuccess, handleApiError } = useNotification();
-
-  return useMutation({
-    mutationFn: async ({ groupId, groupData }: { groupId: string; groupData: { name?: string; description?: string; settings?: { allowMemberInvite?: boolean; requireApproval?: boolean; maxMembers?: number } } }) => {
+  return useMutationFactory<
+    unknown,
+    { groupId: string; groupData: { name?: string; description?: string; settings?: { allowMemberInvite?: boolean; requireApproval?: boolean; maxMembers?: number } } }
+  >({
+    mutationFn: async ({ groupId, groupData }) => {
       const response = await apiClient.updateGroup(groupId, groupData);
       return response.data;
     },
-    onSuccess: (_, { groupId }) => {
-      queryClient.invalidateQueries({ queryKey: groupKeys.detail(groupId) });
-      queryClient.invalidateQueries({ queryKey: groupKeys.lists() });
-      showSuccess('groups.updateSuccess');
-    },
-    onError: (error: Error) => {
-      handleApiError(error);
-    },
+    successMessage: 'groups.updateSuccess',
+    invalidateQueries: (_data, { groupId }) => [groupKeys.detail(groupId), groupKeys.lists()],
   });
 };
 
 export const useDeleteGroup = () => {
-  const queryClient = useQueryClient();
-  const { showSuccess, handleApiError } = useNotification();
-
-  return useMutation({
+  return useMutationFactory<unknown, string>({
     mutationFn: async (groupId: string) => {
       const response = await apiClient.deleteGroup(groupId);
       return response.data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: groupKeys.lists() });
-      showSuccess('groups.deleteSuccess');
-    },
-    onError: (error: Error) => {
-      handleApiError(error);
-    },
+    successMessage: 'groups.deleteSuccess',
+    invalidateQueries: [groupKeys.lists()],
   });
 };
 
 export const useJoinGroup = () => {
   const queryClient = useQueryClient();
-  const { showSuccess, handleApiError } = useNotification();
+  const { showSuccess } = useNotification();
 
-  return useMutation({
+  return useMutationFactory<unknown, string>({
     mutationFn: async (inviteCode: string) => {
       const response = await apiClient.joinGroup(inviteCode);
       return response.data;
@@ -129,107 +108,64 @@ export const useJoinGroup = () => {
         showSuccess('groups.joinRequestPending');
       }
     },
-    onError: (error: Error) => {
-      handleApiError(error);
-    },
   });
 };
 
 export const useInviteToGroup = () => {
-  const queryClient = useQueryClient();
-  const { showSuccess, handleApiError } = useNotification();
-
-  return useMutation({
-    mutationFn: async ({ groupId, inviteData }: { groupId: string; inviteData: { email: string; role: 'member' | 'admin' } }) => {
+  return useMutationFactory<
+    unknown,
+    { groupId: string; inviteData: { email: string; role: 'member' | 'admin' } }
+  >({
+    mutationFn: async ({ groupId, inviteData }) => {
       const response = await apiClient.inviteToGroup(groupId, inviteData);
       return response.data;
     },
-    onSuccess: (_, { groupId }) => {
-      queryClient.invalidateQueries({ queryKey: groupKeys.detail(groupId) });
-      showSuccess('groups.inviteSuccess');
-    },
-    onError: (error: Error) => {
-      handleApiError(error);
-    },
+    successMessage: 'groups.inviteSuccess',
+    invalidateQueries: (_data, { groupId }) => [groupKeys.detail(groupId)],
   });
 };
 
 export const useCancelGroupInvitation = () => {
-  const queryClient = useQueryClient();
-  const { showSuccess, handleApiError } = useNotification();
-
-  return useMutation({
-    mutationFn: async ({ groupId, inviteCode }: { groupId: string; inviteCode: string }) => {
+  return useMutationFactory<unknown, { groupId: string; inviteCode: string }>({
+    mutationFn: async ({ groupId, inviteCode }) => {
       const response = await apiClient.cancelGroupInvitation(groupId, inviteCode);
       return response.data;
     },
-    onSuccess: (_, { groupId }) => {
-      queryClient.invalidateQueries({ queryKey: groupKeys.detail(groupId) });
-      showSuccess('groups.settings.invitationCancelled');
-    },
-    onError: (error: Error) => {
-      handleApiError(error);
-    },
+    successMessage: 'groups.settings.invitationCancelled',
+    invalidateQueries: (_data, { groupId }) => [groupKeys.detail(groupId)],
   });
 };
 
 export const useRemoveGroupMember = () => {
-  const queryClient = useQueryClient();
-  const { showSuccess, handleApiError } = useNotification();
-
-  return useMutation({
-    mutationFn: async ({ groupId, memberId }: { groupId: string; memberId: string }) => {
+  return useMutationFactory<unknown, { groupId: string; memberId: string }>({
+    mutationFn: async ({ groupId, memberId }) => {
       const response = await apiClient.removeGroupMember(groupId, memberId);
       return response.data;
     },
-    onSuccess: (_, { groupId }) => {
-      queryClient.invalidateQueries({ queryKey: groupKeys.detail(groupId) });
-      queryClient.invalidateQueries({ queryKey: groupKeys.lists() });
-      showSuccess('groups.removeMemberSuccess');
-    },
-    onError: (error: Error) => {
-      handleApiError(error);
-    },
+    successMessage: 'groups.removeMemberSuccess',
+    invalidateQueries: (_data, { groupId }) => [groupKeys.detail(groupId), groupKeys.lists()],
   });
 };
 
 export const useUpdateMemberRole = () => {
-  const queryClient = useQueryClient();
-  const { showSuccess, handleApiError } = useNotification();
-
-  return useMutation({
-    mutationFn: async ({ groupId, memberId, newRole }: { groupId: string; memberId: string; newRole: 'admin' | 'member' }) => {
+  return useMutationFactory<unknown, { groupId: string; memberId: string; newRole: 'admin' | 'member' }>({
+    mutationFn: async ({ groupId, memberId, newRole }) => {
       const response = await apiClient.updateMemberRole(groupId, memberId, newRole);
       return response.data;
     },
-    onSuccess: (_, { groupId }) => {
-      queryClient.invalidateQueries({ queryKey: groupKeys.detail(groupId) });
-      queryClient.invalidateQueries({ queryKey: groupKeys.lists() });
-      showSuccess('groups.updateRoleSuccess');
-    },
-    onError: (error: Error) => {
-      handleApiError(error);
-    },
+    successMessage: 'groups.updateRoleSuccess',
+    invalidateQueries: (_data, { groupId }) => [groupKeys.detail(groupId), groupKeys.lists()],
   });
 };
 
 export const useTransferOwnership = () => {
-  const queryClient = useQueryClient();
-  const { showSuccess, handleApiError } = useNotification();
-
-  return useMutation({
-    mutationFn: async ({ groupId, newOwnerId }: { groupId: string; newOwnerId: string }) => {
+  return useMutationFactory<unknown, { groupId: string; newOwnerId: string }>({
+    mutationFn: async ({ groupId, newOwnerId }) => {
       const response = await apiClient.transferOwnership(groupId, newOwnerId);
       return response.data;
     },
-    onSuccess: (_, { groupId }) => {
-      queryClient.invalidateQueries({ queryKey: groupKeys.detail(groupId) });
-      queryClient.invalidateQueries({ queryKey: groupKeys.lists() });
-      showSuccess('groups.transferOwnershipSuccess');
-    },
-    onError: (error: Error) => {
-      handleApiError(error);
-    },
+    successMessage: 'groups.transferOwnershipSuccess',
+    invalidateQueries: (_data, { groupId }) => [groupKeys.detail(groupId), groupKeys.lists()],
   });
 };
 
@@ -262,39 +198,20 @@ export const useLeaveGroup = () => {
 };
 
 export const useApproveJoinRequest = () => {
-  const queryClient = useQueryClient();
-  const { showSuccess, handleApiError } = useNotification();
-
-  return useMutation({
-    mutationFn: ({ groupId, requestId }: { groupId: string; requestId: string }) =>
+  return useMutationFactory<unknown, { groupId: string; requestId: string }>({
+    mutationFn: ({ groupId, requestId }) =>
       apiClient.approveJoinRequest(groupId, requestId),
-    onSuccess: (_, { groupId }) => {
-      queryClient.invalidateQueries({ queryKey: groupKeys.detail(groupId) });
-      queryClient.invalidateQueries({ queryKey: groupKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: ['invitations', 'join-requests'] });
-      showSuccess('groups.joinRequestApproved');
-    },
-    onError: (error: Error) => {
-      handleApiError(error);
-    },
+    successMessage: 'groups.joinRequestApproved',
+    invalidateQueries: (_data, { groupId }) => [groupKeys.detail(groupId), groupKeys.lists(), ['invitations', 'join-requests']],
   });
 };
 
 export const useRejectJoinRequest = () => {
-  const queryClient = useQueryClient();
-  const { showSuccess, handleApiError } = useNotification();
-
-  return useMutation({
-    mutationFn: ({ groupId, requestId }: { groupId: string; requestId: string }) =>
+  return useMutationFactory<unknown, { groupId: string; requestId: string }>({
+    mutationFn: ({ groupId, requestId }) =>
       apiClient.rejectJoinRequest(groupId, requestId),
-    onSuccess: (_, { groupId }) => {
-      queryClient.invalidateQueries({ queryKey: groupKeys.detail(groupId) });
-      queryClient.invalidateQueries({ queryKey: ['invitations', 'join-requests'] });
-      showSuccess('groups.joinRequestRejected');
-    },
-    onError: (error: Error) => {
-      handleApiError(error);
-    },
+    successMessage: 'groups.joinRequestRejected',
+    invalidateQueries: (_data, { groupId }) => [groupKeys.detail(groupId), ['invitations', 'join-requests']],
   });
 };
 

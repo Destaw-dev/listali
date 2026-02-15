@@ -31,13 +31,13 @@ export function SystemMessage({ message, groupId }: SystemMessageProps) {
         return (
           <div className="flex items-center gap-2 flex-wrap justify-center">
             <span>{message.content}</span>
-            <span className="font-medium text-text-primary-700 bg-background-50 px-2 py-1 rounded">
+            <span className="font-medium text-text-primary bg-surface-hover px-2 py-1 rounded">
               {message.metadata?.itemId?.displayName}
             </span>
             <span>{t('toList')}</span>
             <IntlLink 
               href={`/groups/${groupId}/${message.metadata?.listId?._id}`} 
-              className="font-bold text-text-primary-700 hover:text-primary-700 hover:underline bg-background-50 px-2 py-1 rounded"
+              className="font-bold text-text-primary hover:text-primary-700 hover:underline bg-surface-hover px-2 py-1 rounded"
             >
               {message.metadata?.listId?.name}
             </IntlLink>
@@ -50,7 +50,7 @@ export function SystemMessage({ message, groupId }: SystemMessageProps) {
             <span>{message.content}</span>
             <IntlLink 
               href={`/groups/${groupId}/${message.metadata?.listId?._id}`} 
-              className="font-bold text-text-primary-700 hover:text-primary-700 hover:underline bg-background-50 px-2 py-1 rounded"
+              className="font-bold text-text-primary hover:text-primary-700 hover:underline bg-surface-hover px-2 py-1 rounded"
             >
               {message.metadata?.listId?.name}
             </IntlLink>
@@ -67,7 +67,7 @@ export function SystemMessage({ message, groupId }: SystemMessageProps) {
 
   return (
     <div className="flex justify-center animate-fade-in">
-      <div className="bg-background-hover text-text-muted text-sm px-4 py-2 rounded-full shadow-sm max-w-md">
+      <div className="bg-surface-hover text-text-muted text-sm px-4 py-2 rounded-full shadow-sm max-w-md">
         {renderContent()}
       </div>
     </div>

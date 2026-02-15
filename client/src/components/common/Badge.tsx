@@ -45,15 +45,15 @@ export function Badge({
   );
 
   const variantClasses = {
-    default: 'bg-neutral-300 text-neutral-800 focus:ring-neutral-500 hover:bg-neutral-200',
-    primary: 'bg-background-500 text-text-primary focus:ring-primary-500 hover:bg-background-600',
-    secondary: 'bg-secondary-500 text-text-primary focus:ring-secondary-500 hover:bg-secondary-600',
-    accent: 'bg-accent-500 text-text-primary focus:ring-accent-500 hover:bg-accent-600',
-    success: 'bg-success text-text-primary focus:ring-success hover:bg-success',
-    warning: 'bg-warning-500 text-text-primary focus:ring-warning hover:bg-warning-600',
-    error: 'bg-error text-text-primary focus:ring-error hover:bg-error',
-    info: 'bg-info-500 text-text-primary focus:ring-info hover:bg-info-600',
-    priority: 'bg-error-500 text-text-primary focus:ring-error hover:bg-error-600'
+    default: 'bg-surface-hover text-text-secondary focus:ring-neutral-500 hover:bg-border-light',
+    primary: 'bg-[var(--color-icon-primary-bg)] text-[var(--color-icon-primary-fg)] focus:ring-primary-500 hover:opacity-90',
+    secondary: 'bg-[var(--color-icon-secondary-bg)] text-[var(--color-icon-secondary-fg)] focus:ring-secondary-500 hover:opacity-90',
+    accent: 'bg-[var(--color-icon-accent-bg)] text-[var(--color-icon-accent-fg)] focus:ring-accent-500 hover:opacity-90',
+    success: 'bg-[var(--color-status-success-soft)] text-success-700 focus:ring-success hover:opacity-90',
+    warning: 'bg-[var(--color-status-warning-soft)] text-warning-700 focus:ring-warning hover:opacity-90',
+    error: 'bg-[var(--color-status-error-soft)] text-error-700 focus:ring-error hover:opacity-90',
+    info: 'bg-[var(--color-icon-info-bg)] text-[var(--color-icon-info-fg)] focus:ring-info hover:opacity-90',
+    priority: 'bg-error-500 text-text-on-primary focus:ring-error hover:bg-error-600'
   };
 
   const sizeClasses = {
@@ -66,15 +66,15 @@ export function Badge({
 
   const dotClasses = cn(
     'w-1.5 h-1.5 rounded-full shrink-0',
-    variant === 'default' && 'bg-neutral-500',
-    variant === 'primary' && 'bg-background-500',
-    variant === 'secondary' && 'bg-secondary-500',
-    variant === 'accent' && 'bg-accent-500',
+    variant === 'default' && 'bg-border',
+    variant === 'primary' && 'bg-[var(--color-icon-primary-fg)]',
+    variant === 'secondary' && 'bg-[var(--color-icon-secondary-fg)]',
+    variant === 'accent' && 'bg-[var(--color-icon-accent-fg)]',
     variant === 'success' && 'bg-success-600',
-    variant === 'warning' && 'bg-warning',
-    variant === 'error' && 'bg-error',
-    variant === 'info' && 'bg-info',
-    variant === 'priority' && 'bg-slate-400'
+    variant === 'warning' && 'bg-warning-600',
+    variant === 'error' && 'bg-error-600',
+    variant === 'info' && 'bg-[var(--color-icon-info-fg)]',
+    variant === 'priority' && 'bg-error-300'
   );
 
   return (
@@ -123,15 +123,15 @@ export function NotificationBadge({
   };
 
   const variantClasses = {
-      primary: 'bg-background-500', 
-      success: 'bg-success',
+      primary: 'bg-primary-500', 
+      success: 'bg-success-500',
       warning: 'bg-warning-500',
-      error: 'bg-error',
+      error: 'bg-error-500',
   };
 
   const notificationClasses = cn(
-    'absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2',
-    'inline-flex items-center justify-center rounded-full font-bold text-text-primary z-10 whitespace-nowrap',
+    'absolute top-0 inset-inline-end-0 transform translate-x-1/2 -translate-y-1/2',
+    'inline-flex items-center justify-center rounded-full font-bold text-text-on-primary z-10 whitespace-nowrap',
     sizeClasses[size],
     variantClasses[variant],
     className

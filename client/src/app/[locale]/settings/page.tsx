@@ -26,13 +26,21 @@ import {
   Smartphone,
   AlertTriangle,
 } from "lucide-react";
-import { Card, CardBody, Button, Badge } from "../../../components/common";
+import {
+  Card,
+  CardBody,
+  Button,
+  Badge,
+  LoadingState,
+  ConfirmDialog,
+} from "../../../components/common";
 import EditProfileModal from "../../../components/settings/EditProfileModal";
 import UpdateEmailModal from "../../../components/settings/UpdateEmailModal";
 import LanguageThemeModal from "../../../components/settings/LanguageThemeModal";
 import NotificationModal from "../../../components/settings/NotificationModal";
 import { useNotification } from "../../../contexts/NotificationContext";
 import { Theme } from "../../../types";
+import { colorRoleClasses } from "../../../lib/colorRoles";
 
 export default function SettingsPage() {
   const { user, isAuthenticated, authReady } = useAuthStore();
@@ -41,6 +49,7 @@ export default function SettingsPage() {
   const pathname = usePathname();
   const locale = (params?.locale as string) || "he";
   const t = useTranslations("settings");
+  const tCommon = useTranslations("common");
   const { theme } = useThemeStore();
   const { showWarning } = useNotification();
   const logoutMutation = useLogout();
@@ -55,6 +64,7 @@ export default function SettingsPage() {
   const [showUpdateEmailModal, setShowUpdateEmailModal] = useState(false);
   const [showLanguageThemeModal, setShowLanguageThemeModal] = useState(false);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const [isDeleteAccountDialogOpen, setIsDeleteAccountDialogOpen] = useState(false);
 
   const handleLogout = async () => {
     logoutMutation.mutate();
@@ -62,9 +72,13 @@ export default function SettingsPage() {
   };
 
   const handleDeleteAccount = async () => {
-    if (confirm(t("deleteAccountConfirmation"))) {
-      deleteAccountMutation.mutate();
-    }
+    setIsDeleteAccountDialogOpen(true);
+  };
+
+  const handleConfirmDeleteAccount = () => {
+    deleteAccountMutation.mutate(undefined, {
+      onSettled: () => setIsDeleteAccountDialogOpen(false),
+    });
   };
 
   const handleEditProfile = async (data: {
@@ -108,16 +122,7 @@ export default function SettingsPage() {
   }, [isAuthenticated, authReady, router]);
 
   if (!authReady) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Card variant="glass" className="bg-white/80 shadow-2xl max-w-md">
-          <CardBody className="p-6 text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-text-muted">{t("loading")}</p>
-          </CardBody>
-        </Card>
-      </div>
-    );
+    return <LoadingState variant="page" size="lg" message={t("loading")} />;
   }
 
   if (!isAuthenticated) {
@@ -209,8 +214,8 @@ export default function SettingsPage() {
           <div className="text-center mb-8 pt-4 ">
             <div className="flex items-center justify-center gap-3">
 
-            <div className="p-3 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full w-fit mb-3 shadow-lg">
-              <Settings className="w-6 h-6" />
+            <div className="p-3 rounded-full w-fit mb-3 shadow-lg bg-[var(--color-icon-primary-bg)]">
+              <Settings className="w-6 h-6 text-[var(--color-icon-primary-fg)]" />
             </div>
             <h1 className="text-3xl font-extrabold text-text-primary">
               {t("settings")}
@@ -224,16 +229,21 @@ export default function SettingsPage() {
           <div className="grid gap-6">
             {settingsSections.map((section) => {
               const Icon = section.icon;
-              const accentColor = 
-                section.color === 'primary' ? 'text-primary-500' : 
-                section.color === 'secondary' ? 'text-secondary-500' : 
-                'text-accent';
+              const accentColor =
+                section.color === "primary"
+                  ? "text-[var(--color-icon-primary-fg)]"
+                  : section.color === "secondary"
+                    ? "text-[var(--color-icon-secondary-fg)]"
+                    : "text-[var(--color-icon-accent-fg)]";
+              const accentBg =
+                section.color === "primary"
+                  ? "bg-[var(--color-icon-primary-bg)]"
+                  : section.color === "secondary"
+                    ? "bg-[var(--color-icon-secondary-bg)]"
+                    : "bg-[var(--color-icon-accent-bg)]";
 
               return (
-                <Card
-                  key={section.title}
-                  className="bg-background shadow-lg border border-border" 
-                >
+                <Card key={section.title} className="bg-card shadow-lg border border-border">
                   <CardBody className="p-0">
                     
                     <div className="flex items-center gap-3 p-4 border-b border-border bg-card rounded-t-xl">
@@ -241,7 +251,7 @@ export default function SettingsPage() {
                       <h2 className="text-lg font-bold">
                         {section.title}
                       </h2>
-                      <p className="text-sm text-text-muted mr-2 hidden sm:block">
+                      <p className="text-sm text-text-muted me-2 hidden sm:block">
                         - {section.description}
                       </p>
                     </div>
@@ -252,7 +262,7 @@ export default function SettingsPage() {
                         const isLastItem = index === section.items.length - 1;
 
                         return (
-                          <div key={item.label} className="my-2 text-text-primary hover:text-text-secondary hover:bg-background-hover border-b border-border">
+                          <div key={item.label} className="my-2 text-text-primary hover:text-text-secondary hover:bg-surface-hover border-b border-border">
 
                           <Button
                             variant="ghost"
@@ -288,7 +298,7 @@ export default function SettingsPage() {
                           >
                             <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                              <div className={` rounded-lg ${accentColor} bg-opacity-10`}>
+                              <div className={`rounded-lg p-1.5 ${accentBg}`}>
                                 <ItemIcon className={`w-4 h-4 ${accentColor}`} />
                               </div>
                               <span className="font-medium">
@@ -327,19 +337,17 @@ export default function SettingsPage() {
               );
             })}
 
-            <Card
-              className="bg-white shadow-lg border-2 border-error-100"
-            >
+            <Card className="bg-card shadow-lg border border-[var(--color-error-200)]">
               <CardBody className="p-6">
-                <div className="flex items-start gap-4 mb-6 border-b pb-4 border-error-100">
-                  <div className="p-3 bg-error-500 rounded-xl shadow-lg">
-                    <AlertTriangle className="w-6 h-6 text-text-primary" />
+                <div className="flex items-start gap-4 mb-6 border-b pb-4 border-[var(--color-error-200)]">
+                  <div className={`p-3 rounded-xl shadow-lg ${colorRoleClasses.statusErrorSoft}`}>
+                    <AlertTriangle className="w-6 h-6 text-error" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-error-600">
+                    <h2 className="text-xl font-bold text-error">
                       {t("dangerZone")}
                     </h2>
-                    <p className="text-gray-500 text-sm">
+                    <p className="text-text-muted text-sm">
                       {t("dangerZoneDescription")}
                     </p>
                   </div>
@@ -407,7 +415,20 @@ export default function SettingsPage() {
         onSave={handleNotificationSettings}
         isLoading={updateNotificationSettingsMutation.isPending}
       />
-      
+
+      <ConfirmDialog
+        isOpen={isDeleteAccountDialogOpen}
+        onClose={() =>
+          !deleteAccountMutation.isPending && setIsDeleteAccountDialogOpen(false)
+        }
+        onConfirm={handleConfirmDeleteAccount}
+        title={t("deleteAccount")}
+        message={t("deleteAccountConfirmation")}
+        confirmText={t("deleteAccount")}
+        cancelText={tCommon("cancel")}
+        variant="danger"
+        isLoading={deleteAccountMutation.isPending}
+      />
     </div>
   );
 }

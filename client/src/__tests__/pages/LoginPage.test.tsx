@@ -45,6 +45,7 @@ describe('LoginPage', () => {
     vi.mocked(useAuthStore).mockReturnValue({
       user: null,
       isAuthenticated: false,
+      authReady: true,
       isInitialized: true,
       setUser: vi.fn(),
     } as ReturnType<typeof useAuthStore>);
@@ -65,7 +66,8 @@ describe('LoginPage', () => {
     await user.click(submitButton);
     
     await waitFor(() => {
-      expect(screen.queryByText(/required|invalid/i)).toBeInTheDocument();
+      const errors = screen.queryAllByText(/required|invalid/i);
+      expect(errors.length).toBeGreaterThan(0);
     });
   });
 
@@ -121,6 +123,7 @@ describe('LoginPage', () => {
     vi.mocked(useAuthStore).mockReturnValue({
       user: mockUser,
       isAuthenticated: true,
+      authReady: true,
       isInitialized: true,
       setUser: vi.fn(),
     } as ReturnType<typeof useAuthStore>);
@@ -133,7 +136,8 @@ describe('LoginPage', () => {
     vi.mocked(useAuthStore).mockReturnValue({
       user: null,
       isAuthenticated: false,
-      isInitialized: false,
+      authReady: false,
+      isInitialized: true,
       setUser: vi.fn(),
     } as ReturnType<typeof useAuthStore>);
 
@@ -141,4 +145,3 @@ describe('LoginPage', () => {
     expect(screen.getByText(/loading/i)).toBeInTheDocument();
   });
 });
-
