@@ -2,7 +2,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { apiClient } from '../lib/api';
 import { useNotification } from '../contexts/NotificationContext';
-import { shoppingListKeys } from './useShoppingLists';
 import { useAuthStore } from '../store/authStore';
 import { ICreateMultipleItemsInput, IItem, ISubCategory, IShoppingList, IShoppingSession } from '../types';
 
@@ -234,7 +233,7 @@ export const usePurchaseItem = () => {
       actualPrice?: number;
     }) => 
       apiClient.purchaseItem(itemId, { quantityToPurchase, actualPrice }),
-    onSuccess: (data, { itemId, shoppingListId, groupId, }) => {
+    onSuccess: (data, { itemId, shoppingListId }) => {
       queryClient.setQueryData(['shopping-lists', 'full-data', shoppingListId], (oldData: ShoppingListFullData | undefined) => {
         if (!oldData) return oldData;
         
@@ -286,7 +285,7 @@ export const useUnpurchaseItem = () => {
   return useMutation({
     mutationFn: ({ itemId, quantityToUnpurchase }: { itemId: string; shoppingListId: string; groupId: string; quantityToUnpurchase?: number }) => 
       apiClient.unpurchaseItem(itemId, { quantityToUnpurchase }),
-    onSuccess: (data, { itemId, shoppingListId, groupId, quantityToUnpurchase }) => {
+    onSuccess: (data, { itemId, shoppingListId, quantityToUnpurchase }) => {
       queryClient.setQueryData(['shopping-lists', 'full-data', shoppingListId], (oldData: ShoppingListFullData | undefined) => {
         if (!oldData) return oldData;
         

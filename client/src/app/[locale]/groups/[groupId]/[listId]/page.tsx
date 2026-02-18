@@ -4,7 +4,6 @@ import React, { useState, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import { useRouter } from '../../../../../i18n/navigation';
 import { useTranslations } from 'next-intl';
-import { useQueryClient } from '@tanstack/react-query';
 import { Button, SkeletonCard } from '../../../../../components/common';
 import { ShoppingListHeaderBar } from '../../../../../components/shoppingList/ShoppingListHeaderBar';
 import { ShoppingListStats } from '../../../../../components/shoppingList/ShoppingListStats';
@@ -131,8 +130,6 @@ export default function ShoppingListPage() {
   const unpurchasedCount = useMemo(() => {
     return items?.filter((item: IItem) => !item.isPurchased && item.status !== 'purchased').length || 0;
   }, [items]);
-
-  const queryClient = useQueryClient();
 
   const handleAddItems = async (itemsData: ItemInput[]) => {
       const itemsWithListId = itemsData.map(item => ({
