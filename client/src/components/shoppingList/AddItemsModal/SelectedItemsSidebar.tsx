@@ -78,7 +78,7 @@ export const SelectedItemsSidebar = memo(({
   const prevSelectedProductsRef = useRef<string[]>([]);
 
   const createItemFromProduct = useCallback((product: IProduct | IManualProduct): ItemInput => {
-    const categoryId = isManualProduct(product) ? undefined : product.categoryId || undefined;
+    const categoryId = product.categoryId || undefined;
     const defaultUnit = isManualProduct(product)
       ? "piece"
       : getProductUnit({
@@ -99,10 +99,10 @@ export const SelectedItemsSidebar = memo(({
       notes: "",
       brand: product.brand || "",
       description: "",
-      product: isManualProduct(product) ? undefined : product._id,
+      product: isManualProduct(product) ? product.productRef : product._id,
       image: imageUrl,
       units: product.units || [],
-      isManualEntry: isManualProduct(product),
+      isManualEntry: isManualProduct(product) && !product.productRef,
     };
   }, []);
 

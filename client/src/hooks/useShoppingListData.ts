@@ -1,6 +1,6 @@
 "use client";
 import { useQuery } from '@tanstack/react-query';
-import { ApiClient } from '../lib/api';
+import { apiClient } from '../lib/api';
 import { useAuthStore } from '../store/authStore';
 import { IShoppingList, IItem, IShoppingSessionData } from '../types';
 
@@ -15,7 +15,6 @@ interface ShoppingListData {
 }
 
 export function useShoppingListData(listId: string): ShoppingListData {
-  const apiClient = new ApiClient();
   const { authReady, accessToken } = useAuthStore();
   
   const {

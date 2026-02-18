@@ -182,6 +182,8 @@ export interface IShoppingList extends BaseDocument {
     actualTotal?: number;
     itemsCount: number;
     completedItemsCount: number;
+    totalQuantity?: number;
+    purchasedQuantity?: number;
   };
   shoppingSessions: IShoppingSession[];
 }
@@ -350,7 +352,8 @@ export interface IManualProduct {
   description: string;
   image?: { primary: string, providers: Record<string, { url: string }> };
   isManual: true;
-  categoryId?: never; // Explicitly not present
+  categoryId?: string;
+  productRef?: string;
 }
 
 // Type guard to check if product is manual

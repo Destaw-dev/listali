@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
-import { 
-  IApiResponse, 
-  IApiError, 
+import {
+  IApiResponse,
+  IApiError,
   ApiResponse,
   IMongooseDuplicateKeyError,
   IMongooseValidationError,
@@ -10,6 +10,7 @@ import {
   IValidationError,
   IPagination
 } from '../types';
+import { logger } from '../utils/logger';
 
 export class AppError extends Error {
   statusCode: number;
@@ -88,7 +89,7 @@ const sendErrorProd = (err: IExtendedError, res: Response<ApiResponse>): void =>
       isEmailVerified: err.isEmailVerified ?? false
     });
   } else {
-    console.error('ERROR 💥:', err);
+    logger.error('Unhandled non-operational error', { name: err.name, message: err.message });
 
     res.status(500).json({
       success: false,
@@ -112,13 +113,12 @@ export const errorHandler = (
     isEmailVerified: (err as IExtendedError).isEmailVerified ?? false,
   };
 
-  console.error(`🚨 Error: ${err.message}`);
-  console.error(`📍 URL: ${req.method} ${req.originalUrl}`);
-  console.error(`👤 User: ${req.user?.id || 'unauthenticated'}`);
-  
-  if (process.env.NODE_ENV === 'development') {
-    console.error('📚 Stack:', err.stack);
-  }
+  logger.error(err.message, {
+    method: req.method,
+    url: req.originalUrl,
+    userId: req.user?.id || 'unauthenticated',
+    ...(process.env.NODE_ENV === 'development' ? { stack: err.stack } : {}),
+  });
 
   if ('code' in err && err.code === 11000) {
     error = handleDuplicateKeyError(err as IMongooseDuplicateKeyError);
@@ -156,7 +156,7 @@ export const errorHandler = (
   }
 
   if (res.headersSent) {
-    console.error('🚨 Response already sent, cannot send error');
+    logger.warn('Response already sent, cannot send error');
     return;
   }
 
@@ -167,7 +167,7 @@ export const errorHandler = (
       sendErrorProd(error, res);
     }
   } catch (sendError) {
-    console.error('🚨 Failed to send error response:', sendError);
+    logger.error('Failed to send error response', { error: String(sendError) });
     
     res.status(500).json({
       success: false,
@@ -291,19 +291,4 @@ export function getPaginationParams(query: { page?: string | string[]; limit?: s
 
 export const isValidObjectId = (id: string): boolean => {
   return /^[0-9a-fA-F]{24}$/.test(id);
-};
-
-export const requestLogger = (req: Request, res: Response, next: NextFunction): void => {
-  const start = Date.now();
-  
-  res.on('finish', () => {
-    const duration = Date.now() - start;
-    const { method, originalUrl, ip } = req;
-    
-    console.log(
-      `${method} ${originalUrl} ${res.statusCode} ${duration}ms - ${ip}`
-    );
-  });
-  
-  next();
 };

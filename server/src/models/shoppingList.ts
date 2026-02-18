@@ -16,6 +16,51 @@ type ShoppingListModel = Model<IShoppingList>& {
     findOverdue(groupId: string): Promise<IShoppingList[]>
   };
 
+type ItemForMetadata = {
+  status?: string;
+  quantity?: number;
+  purchasedQuantity?: number;
+  estimatedPrice?: number;
+  actualPrice?: number;
+};
+
+const toNonNegativeNumber = (value: unknown): number => {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < 0) return 0;
+  return parsed;
+};
+
+const calculateMetadataFromItems = (items: ItemForMetadata[]) => {
+  let completedItemsCount = 0;
+  let estimatedTotal = 0;
+  let actualTotal = 0;
+  let totalQuantity = 0;
+  let purchasedQuantity = 0;
+
+  for (const item of items) {
+    const quantity = toNonNegativeNumber(item.quantity);
+    const purchasedQty = Math.min(quantity, toNonNegativeNumber(item.purchasedQuantity));
+
+    if (item.status === 'purchased') {
+      completedItemsCount += 1;
+    }
+
+    estimatedTotal += toNonNegativeNumber(item.estimatedPrice) * quantity;
+    actualTotal += toNonNegativeNumber(item.actualPrice) * purchasedQty;
+    totalQuantity += quantity;
+    purchasedQuantity += purchasedQty;
+  }
+
+  return {
+    itemsCount: items.length,
+    completedItemsCount,
+    estimatedTotal,
+    actualTotal,
+    totalQuantity,
+    purchasedQuantity
+  };
+};
+
 const shoppingListSchema = new Schema<IShoppingList, ShoppingListModel>({
   name: {
     type: String,
@@ -92,6 +137,16 @@ const shoppingListSchema = new Schema<IShoppingList, ShoppingListModel>({
       type: Number,
       default: 0,
       min: [0, 'Completed items count cannot be negative']
+    },
+    totalQuantity: {
+      type: Number,
+      default: 0,
+      min: [0, 'Total quantity cannot be negative']
+    },
+    purchasedQuantity: {
+      type: Number,
+      default: 0,
+      min: [0, 'Purchased quantity cannot be negative']
     }
   }
 }, {
@@ -112,6 +167,11 @@ shoppingListSchema.virtual('completionPercentage').get(function() {
   return Math.round((this.metadata.completedItemsCount / this.metadata.itemsCount) * 100);
 });
 
+shoppingListSchema.virtual('quantityCompletionPercentage').get(function() {
+  if (!this.metadata.totalQuantity) return 0;
+  return Math.round(((this.metadata.purchasedQuantity || 0) / this.metadata.totalQuantity) * 100);
+});
+
 
 shoppingListSchema.virtual('budgetDifference').get(function() {
     if (this.metadata.actualTotal && this.metadata.estimatedTotal) {
@@ -123,19 +183,24 @@ shoppingListSchema.virtual('budgetDifference').get(function() {
 shoppingListSchema.pre('save', async function(next) {
   if (this.items.length > 0) {
     const Item = mongoose.model('Item');
-    const items = await Item.find({ _id: { $in: this.items } });
-    
-    this.metadata.itemsCount = items.length;
-    this.metadata.completedItemsCount = items.filter(item => item.status === 'purchased').length;
-    this.metadata.estimatedTotal = items.reduce((sum, item) => sum + (item.estimatedPrice || 0) * item.quantity, 0);
-    this.metadata.actualTotal = items
-      .filter(item => item.status === 'purchased')
-      .reduce((sum, item) => sum + (item.actualPrice || 0) * item.quantity, 0);
+    const items = await Item.find({ _id: { $in: this.items } })
+      .select('status quantity purchasedQuantity estimatedPrice actualPrice')
+      .lean();
+    const calculated = calculateMetadataFromItems(items as ItemForMetadata[]);
+
+    this.metadata.itemsCount = calculated.itemsCount;
+    this.metadata.completedItemsCount = calculated.completedItemsCount;
+    this.metadata.estimatedTotal = calculated.estimatedTotal;
+    this.metadata.actualTotal = calculated.actualTotal;
+    this.metadata.totalQuantity = calculated.totalQuantity;
+    this.metadata.purchasedQuantity = calculated.purchasedQuantity;
   } else {
     this.metadata.itemsCount = 0;
     this.metadata.completedItemsCount = 0;
     this.metadata.estimatedTotal = 0;
     this.metadata.actualTotal = 0;
+    this.metadata.totalQuantity = 0;
+    this.metadata.purchasedQuantity = 0;
   }
   
   if (this.metadata.itemsCount > 0 && 
@@ -160,19 +225,24 @@ shoppingListSchema.pre('save', async function(next) {
 shoppingListSchema.methods.updateMetadata = async function() {
   if (this.items.length > 0) {
     const Item = mongoose.model('Item');
-    const items = await Item.find({ _id: { $in: this.items } });
-    
-    this.metadata.itemsCount = items.length;
-    this.metadata.completedItemsCount = items.filter(item => item.status === 'purchased').length;
-    this.metadata.estimatedTotal = items.reduce((sum, item) => sum + (item.estimatedPrice || 0) * item.quantity, 0);
-    this.metadata.actualTotal = items
-      .filter(item => item.status === 'purchased')
-      .reduce((sum, item) => sum + (item.actualPrice || 0) * item.quantity, 0);
+    const items = await Item.find({ _id: { $in: this.items } })
+      .select('status quantity purchasedQuantity estimatedPrice actualPrice')
+      .lean();
+    const calculated = calculateMetadataFromItems(items as ItemForMetadata[]);
+
+    this.metadata.itemsCount = calculated.itemsCount;
+    this.metadata.completedItemsCount = calculated.completedItemsCount;
+    this.metadata.estimatedTotal = calculated.estimatedTotal;
+    this.metadata.actualTotal = calculated.actualTotal;
+    this.metadata.totalQuantity = calculated.totalQuantity;
+    this.metadata.purchasedQuantity = calculated.purchasedQuantity;
   } else {
     this.metadata.itemsCount = 0;
     this.metadata.completedItemsCount = 0;
     this.metadata.estimatedTotal = 0;
     this.metadata.actualTotal = 0;
+    this.metadata.totalQuantity = 0;
+    this.metadata.purchasedQuantity = 0;
   }
   
   await this.save();

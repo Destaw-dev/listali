@@ -828,7 +828,13 @@
     "scanBarcode": "Scan Barcode",
     "noCategory": "No Category",
     "brand": "Brand",
-    "save": "Save"
+    "save": "Save",
+    "frequentItems": "Frequent Items",
+    "addedTimes": "{count}",
+    "duplicateTitle": "Some items already exist in the list",
+    "duplicateItem": "{name} (currently: {count})",
+    "mergeAll": "Update Quantities",
+    "addSeparately": "Add Separately"
   },
   "BarcodeScannerModal": {
     "title": "Scan Barcode",
@@ -1434,8 +1440,10 @@
       "progress": "Progress"
     },
     "noResults": "No items match your filters",
-    "backToGroup": "Back to Group"
-    ,
+    "backToGroup": "Back to Group",
+    "listCompleted": "List completed!",
+    "quickReAddPrompt": "Want to quickly re-add frequent items?",
+    "quickReAdd": "Quick Re-add →",
     "shoppingMode": {
       "title": "Shopping Mode",
       "startMessage": "Start shopping to track your progress",

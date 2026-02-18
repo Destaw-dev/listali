@@ -46,20 +46,12 @@ export const attachCsrfCookie = (req: Request, res: Response, next: NextFunction
     return next();
   }
 
-  if (req.headers['x-client'] === 'mobile') {
-    return next();
-  }
-
   getOrCreateCsrfToken(req, res);
   next();
 };
 
 export const csrfProtection = (req: Request, _res: Response, next: NextFunction) => {
   if (process.env.NODE_ENV === 'test') {
-    return next();
-  }
-
-  if (req.headers['x-client'] === 'mobile') {
     return next();
   }
 

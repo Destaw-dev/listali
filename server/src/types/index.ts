@@ -151,6 +151,8 @@ export interface IBaseShoppingList {
     actualTotal?: number;
     itemsCount: number;
     completedItemsCount: number;
+    totalQuantity?: number;
+    purchasedQuantity?: number;
   };
 }
 

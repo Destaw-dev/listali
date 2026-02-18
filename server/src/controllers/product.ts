@@ -16,7 +16,7 @@ export const getAllProducts = async (
     const { page, limit, skip } = getPaginationParams(req.query);
     const [products, total] = await Promise.all([
       Product.find({ isActive: true })
-        .sort({ name: 1 })
+        // .sort({ name: 1 })
         .skip(skip)
         .limit(limit),
       Product.countDocuments({ isActive: true }),
@@ -69,7 +69,7 @@ export const getProductsByCategory = async (
 
     const [products, total] = await Promise.all([
       Product.find({ categoryId, isActive: true })
-        .sort({ name: 1 })
+        // .sort({ name: 1 })
         .skip(skip)
         .limit(limit),
       Product.countDocuments({ categoryId, isActive: true }),
@@ -104,7 +104,7 @@ export const getProductsBySubCategory = async (
 
     const [products, total] = await Promise.all([
       Product.find({ subCategoryId, isActive: true })
-        .sort({ name: 1 })
+        // .sort({ name: 1 })
         .skip(skip)
         .limit(limit),
       Product.countDocuments({ subCategoryId, isActive: true }),
@@ -151,8 +151,6 @@ export const getBySearchByNameHebrew = async (
     const { page, limit } = getPaginationParams(req.query);
 
     const searchTerm = req.query.query as string;
-
-    
 
     if (!searchTerm) {
       res.status(404).json(errorResponse("invalid search term"));

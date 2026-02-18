@@ -21,7 +21,7 @@ type ItemModel = Model<IItem> & {
       sort?: string;
     }
   ): Promise<ItemDocument[]>;
-  getPopularItems(groupId?: string, limit?: number): Promise<ItemDocument[]>;
+  getPopularItemsMostPurchasedByGroup(groupId?: string, limit?: number): Promise<ItemDocument[]>;
   getCategoryStats(shoppingListId?: string): Promise<ICategoryStats[]>;
   searchItems(searchTerm: string, options?: IItemQueryOptions): Promise<ItemDocument[]>;
   findByProduct(productId: string, options?: IItemQueryOptions): Promise<ItemDocument[]>;
@@ -84,15 +84,6 @@ const itemSchema = new Schema<IItem, ItemModel>({
     type: Number,
     min: [0, 'Actual price cannot be negative'],
     max: [10000, 'Actual price cannot exceed 10,000']
-  },
-  image: {
-    type: String,
-    validate: {
-      validator: function(v: string) {
-        return !v || /^https?:\/\/.+\.(jpg|jpeg|png|gif|webp)$/i.test(v);
-      },
-      message: 'Image must be a valid URL ending with jpg, jpeg, png, gif, or webp'
-    }
   },
   barcode: {
     type: String,
@@ -170,7 +161,7 @@ const itemSchema = new Schema<IItem, ItemModel>({
 });
 
 
-itemSchema.index({ shoppingList: 1, status: 1 });
+itemSchema.index({ shoppingList: 1, category: 1, status: 1 });
 itemSchema.index({ addedBy: 1 });
 itemSchema.index({ purchasedBy: 1 });
 itemSchema.index({ category: 1 });
@@ -421,41 +412,144 @@ itemSchema.statics.findSimilar = function(itemName: string, category?: ItemCateg
     .limit(5);
 };
 
-itemSchema.statics.getPopularItems = function(groupId?: string, limit: number = 10) {
+itemSchema.statics.getPopularItemsMostPurchasedByGroup = function (
+  groupId: string,
+  limit: number = 10
+) {
+  if (!groupId || !mongoose.Types.ObjectId.isValid(groupId)) {
+    // אפשר גם: return [];
+    throw new Error("Invalid groupId");
+  }
+
+  const gid = new mongoose.Types.ObjectId(groupId);
+
   const pipeline: PipelineStage[] = [
+    // 1) join ל-shoppinglists כדי להגיע ל-group
+    {
+      $lookup: {
+        from: "shoppinglists",
+        localField: "shoppingList",
+        foreignField: "_id",
+        as: "list",
+      },
+    },
+    { $unwind: "$list" },
+
+    // 2) מסנן לפי הקבוצה
+    { $match: { "list.group": gid } },
+
+    // 3) רק פריטים שנקנו + יש product
+    {
+      $match: {
+        product: { $ne: null },
+        purchasedAt: { $ne: null },
+        status: { $in: ["purchased", "partially_purchased"] },
+        purchasedQuantity: { $gt: 0 },
+      },
+    },
+
+    // 4) sort לפני group כדי ש-$first יהיה עקבי
+    { $sort: { purchasedAt: -1, updatedAt: -1, createdAt: -1 } },
+
+    // 5) group לפי product
     {
       $group: {
-        _id: {
-          name: '$name',
-          category: '$category',
-          unit: '$unit'
-        },
-        count: { $sum: 1 },
-        avgPrice: { $avg: '$actualPrice' },
-        lastPurchased: { $max: '$purchasedAt' }
-      }
+        _id: { product: "$product" },
+
+        // מדדי פופולריות (מומלץ)
+        totalPurchasedQty: { $sum: "$purchasedQuantity" }, // כמה יחידות נקנו
+        purchaseEvents: { $sum: 1 }, // כמה פעמים נקנה
+
+        lastPurchased: { $max: "$purchasedAt" },
+
+        categoryId: { $first: "$category" },
+        unit: { $first: "$unit" },
+        brand: { $first: "$brand" },
+        name: { $first: "$name" },
+        image: { $first: "$image" },
+
+        product: { $first: "$product" },
+      },
     },
-    { $sort: { count: -1 } },
-    { $limit: limit }
-  ];
 
-  if (groupId && mongoose.Types.ObjectId.isValid(groupId)) {
-    pipeline.unshift({
+    // 6) sort + limit
+    { $sort: { totalPurchasedQty: -1, purchaseEvents: -1, lastPurchased: -1 } },
+    { $limit: limit },
+
+    // 7) enrich product
+    {
       $lookup: {
-        from: 'shoppinglists',
-        localField: 'shoppingList',
-        foreignField: '_id',
-        as: 'list'
-      }
-    });
+        from: "products",
+        let: { productId: "$product" },
+        pipeline: [
+          { $match: { $expr: { $eq: ["$_id", "$$productId"] } } },
+          {
+            $project: {
+              _id: 1,
+              name: 1,
+              brand: 1,
+              image: 1,
+              averagePrice: 1,
+              price: 1,
+              categoryId: 1,
+              subCategoryId: 1,
+            },
+          },
+        ],
+        as: "productDoc",
+      },
+    },
+    { $set: { product: { $arrayElemAt: ["$productDoc", 0] } } },
 
-    pipeline.unshift({
-      $match: { 'list.group': new mongoose.Types.ObjectId(groupId) }
-    });
-  }
+    // 8) תמונת מוצר fallback (cloudinary/imagekit)
+    {
+      $set: {
+        productImage: {
+          $let: {
+            vars: { img: "$product.image" },
+            in: {
+              $ifNull: [
+                {
+                  $cond: [
+                    { $eq: ["$$img.primary", "imagekit"] },
+                    "$$img.providers.imagekit.url",
+                    "$$img.providers.cloudinary.url",
+                  ],
+                },
+                {
+                  $ifNull: [
+                    "$$img.providers.cloudinary.url",
+                    "$$img.providers.imagekit.url",
+                  ],
+                },
+              ],
+            },
+          },
+        },
+      },
+    },
+
+    // 9) אם אין image ב-item, נשתמש בתמונת מוצר
+    {
+      $set: {
+        image: {
+          $cond: [
+            { $or: [{ $eq: ["$image", null] }, { $eq: ["$image", ""] }] },
+            "$productImage",
+            "$image",
+          ],
+        },
+      },
+    },
+
+    // 10) cleanup
+    { $project: { productDoc: 0, productImage: 0, list: 0 } },
+  ];
 
   return this.aggregate(pipeline);
 };
+
+
 
 itemSchema.statics.getCategoryStats = function(shoppingListId?: string) {
   const matchConditions: FilterQuery<IItem> = {};

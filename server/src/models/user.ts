@@ -40,7 +40,7 @@ const userSchema = new Schema<IUser, UserModel, IUserMethods>({
     required: function () {
       return !this.googleId;
     },
-    minlength: 8,
+    minlength: 12,
     select: false
   },
   firstName: {

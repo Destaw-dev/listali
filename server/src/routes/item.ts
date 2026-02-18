@@ -11,7 +11,7 @@ import {
   unpurchaseItem,
   notAvailableItem,
   updateItemQuantity,
-  getPopularItems,
+  getPopularItemsMostPurchasedByGroup,
   searchItems,
   getCategoryStats,
   getAvailableUnits,
@@ -37,7 +37,7 @@ import { asyncHandler } from '../middleware/handlers';
 
 const router = express.Router();
 
-router.get('/popular', popularItemsValidation, asyncHandler(getPopularItems));
+router.get('/popular', popularItemsValidation, asyncHandler(getPopularItemsMostPurchasedByGroup));
 router.get('/search', searchItemsValidation, asyncHandler(searchItems));
 router.get('/stats/categories', categoryStatsValidation, asyncHandler(getCategoryStats));
 router.get('/units', asyncHandler(getAvailableUnits));

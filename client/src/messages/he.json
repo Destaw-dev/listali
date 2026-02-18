@@ -832,7 +832,13 @@
     "scanBarcode": "סרוק ברקוד",
     "noCategory": "ללא קטגוריה",
     "brand": "מותג",
-    "save": "שמור"
+    "save": "שמור",
+    "frequentItems": "פריטים נפוצים",
+    "addedTimes": "{count}",
+    "duplicateTitle": "חלק מהפריטים כבר קיימים ברשימה",
+    "duplicateItem": "{name} (כמות נוכחית: {count})",
+    "mergeAll": "עדכן כמויות",
+    "addSeparately": "הוסף בנפרד"
   },
   "BarcodeScannerModal": {
     "title": "סרוק ברקוד",
@@ -1437,6 +1443,9 @@
     },
     "noResults": "אין פריטים שעונים על הסינון",
     "backToGroup": "חזור לקבוצה",
+    "listCompleted": "הרשימה הושלמה!",
+    "quickReAddPrompt": "רוצה להוסיף מחדש פריטים שקונים לעיתים קרובות?",
+    "quickReAdd": "הוספה מהירה →",
     "shoppingMode": {
       "title": "מצב קניות",
       "startMessage": "התחל לקנות כדי לעקוב אחר ההתקדמות שלך",

@@ -54,6 +54,7 @@ export const ItemFormSingle = memo(({
   !!item?.isManual ||
   (hasIsManualProduct(item?.product));
 
+
   const categoryOptions: DropdownOption[] = useMemo(() => {
     const options: DropdownOption[] = [
       {

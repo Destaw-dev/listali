@@ -28,6 +28,7 @@ import { authenticateToken } from './middleware/auth';
 import { attachCsrfCookie, csrfProtection } from './middleware/csrf';
 
 import { initializeSocket } from './socket/socketHandler';
+import { logger } from './utils/logger';
 
 const app = express();
 app.set('trust proxy', 1);
@@ -50,7 +51,7 @@ const corsOptions: cors.CorsOptions = {
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'x-client', 'x-refresh-token', 'x-session-id', 'x-csrf-token'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'x-refresh-token', 'x-session-id', 'x-csrf-token'],
 };
 
 
@@ -59,10 +60,7 @@ app.use(cors(corsOptions));
 const io = new Server(server, { cors: corsOptions });
 
 io.engine.on("connection_error", (err) => {
-  console.log("SOCKET connection_error:");
-  console.log("  code:", err.code);
-  console.log("  message:", err.message);
-  console.log("  context:", err.context);
+  logger.warn('Socket.IO connection error', { code: err.code, message: err.message });
 });
 
 
@@ -145,24 +143,13 @@ app.get('/api', (req, res) => {
 initializeSocket(io);
 
 process.on('uncaughtException', (err: Error) => {
-  console.error('🚨 UNCAUGHT EXCEPTION! Shutting down...');
-  console.error('Error:', err.name, err.message);
-  console.error('Stack:', err.stack);
-  
-  server.close(() => {
-    console.log('💥 Process terminated!');
-    process.exit(1);
-  });
+  logger.error('Uncaught exception - shutting down', { name: err.name, message: err.message, stack: err.stack });
+  server.close(() => process.exit(1));
 });
 
 process.on('unhandledRejection', (err: Error) => {
-  console.error('🚨 UNHANDLED REJECTION! Shutting down...');
-  console.error('Error:', err);
-  
-  server.close(() => {
-    console.log('💥 Process terminated!');
-    process.exit(1);
-  });
+  logger.error('Unhandled rejection - shutting down', { error: String(err) });
+  server.close(() => process.exit(1));
 });
 
 app.use(notFound);

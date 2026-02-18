@@ -3,6 +3,7 @@ import { Document, Types } from 'mongoose';
 import User from '../models/user';
 import { IApiResponse, IGroup, IGroupMember } from '../types';
 import { verifyAccessToken } from '../utils/tokens';
+import { logger } from '../utils/logger';
 
 export const authenticateToken = async (
   req: Request, 
@@ -37,8 +38,10 @@ export const authenticateToken = async (
         return;
       }
 
-      user.lastSeen = new Date();
-      await user.save();
+      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+      if (!user.lastSeen || user.lastSeen < fiveMinutesAgo) {
+        User.updateOne({ _id: user._id }, { lastSeen: new Date() }).exec();
+      }
 
       req.user = user;
       req.userId = user._id.toString();
@@ -66,7 +69,7 @@ export const authenticateToken = async (
       throw error;
     }
   } catch (error) {
-    console.error('Authentication error:', error);
+    logger.error('Authentication error', { error: String(error) });
     res.status(500).json({
       success: false,
       message: 'Server error during authentication'
@@ -106,7 +109,7 @@ export const optionalAuth = async (
 
     next();
   } catch (error) {
-    console.error('Optional authentication error:', error);
+    logger.warn('Optional authentication error', { error: String(error) });
     next();
   }
 };
@@ -169,7 +172,7 @@ export const checkGroupMembership = (permission?: string) => {
 
       next();
     } catch (error) {
-      console.error('Group membership check error:', error);
+      logger.error('Group membership check error', { error: String(error) });
       res.status(500).json({
         success: false,
         message: 'Server error during group membership verification'
@@ -250,7 +253,7 @@ export const checkOwnership = (resourceType: 'group' | 'list' | 'item') => {
 
       next();
     } catch (error) {
-      console.error('Ownership check error:', error);
+      logger.error('Ownership check error', { error: String(error) });
       res.status(500).json({
         success: false,
         message: 'Server error during ownership verification'

@@ -1,6 +1,8 @@
 import express from 'express';
 import { validationResult } from 'express-validator';
 import Message from '../models/message';
+
+const stripHtml = (str: string): string => str.replace(/<[^>]*>/g, '').trim();
 import Group from '../models/group';
 import { io } from '../app';
 import { AppError, validationErrorResponse, successResponse } from '../middleware/handlers';
@@ -48,8 +50,10 @@ export const createMessage = async (req: express.Request, res: express.Response<
   const group = await Group.findById(groupId);
   if (!group || !group.members.some((m: IGroupMember) => m.user.toString() === userId)) throw new AppError('Access denied to this group', 403);
 
+  const sanitizedContent = stripHtml(content);
+
   const message = await Message.create({
-    content,
+    content: sanitizedContent,
     sender: userId,
     group: groupId,
     messageType,
@@ -150,7 +154,7 @@ export const editMessage = async (req: express.Request, res: express.Response<IA
   }
 
   const { content } = req.body;
-  await message.editMessage(content, req.userId!);
+  await message.editMessage(stripHtml(content), req.userId!);
 
   const updatedMessage = await Message.findById(message._id)
     .populate<{ sender: PopulatedSender }>('sender', 'username firstName lastName avatar')

@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { useTranslations } from "next-intl";
 import { Edit, Info, Trash2, Package } from "lucide-react";
 import { cn, extractImageUrl, extractNameFromProduct } from "../../../lib/utils";
@@ -16,7 +17,7 @@ interface ShoppingItemCardProps {
   canDelete?: boolean;
 }
 
-export function ShoppingItemCard({ 
+export const ShoppingItemCard = memo(function ShoppingItemCard({ 
   item, 
   isLoading, 
   onOpenPurchaseModal, 
@@ -224,4 +225,4 @@ export function ShoppingItemCard({
         </div>
     </article>
   );
-}
+});

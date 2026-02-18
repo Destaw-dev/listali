@@ -1,8 +1,8 @@
-import React, { RefObject, useEffect, useMemo, useState } from 'react';
+import React, { RefObject, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Search, Image as ImageIcon, Check, Package, AlertCircle } from 'lucide-react';
 import { Button, LoadingSpinner, Badge } from '../../common';
-import { extractImageUrl, extractNameFromProduct, findExistingItemById } from '../../../lib/utils';
+import { extractImageUrl, extractNameFromProduct, findExistingItemById, optimizeCloudinaryImageUrl } from '../../../lib/utils';
 import { IProduct, IItem } from '../../../types';
 
 interface Props {
@@ -23,6 +23,73 @@ interface Props {
   existingItems?: IItem[];
   canLoadImage?: () => boolean;
   onImageLoad?: () => void;
+}
+
+interface DeferredProductImageProps {
+  image: Parameters<typeof extractImageUrl>[0];
+  alt: string;
+  canLoadImage?: () => boolean;
+  onLoad?: () => void;
+}
+
+function DeferredProductImage({ image, alt, canLoadImage, onLoad }: DeferredProductImageProps) {
+  const targetRef = useRef<HTMLDivElement | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
+  const [hasError, setHasError] = useState(false);
+
+  useEffect(() => {
+    const node = targetRef.current;
+    if (!node || isVisible) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '120px', threshold: 0.01 }
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [isVisible]);
+
+  const rawImageUrl = useMemo(() => extractImageUrl(image), [image]);
+  const optimizedImageUrl = useMemo(
+    () => optimizeCloudinaryImageUrl(rawImageUrl, { width: 128, height: 128 }),
+    [rawImageUrl]
+  );
+
+  const canRequestImage = !canLoadImage || canLoadImage();
+  const shouldRenderImage = isVisible && canRequestImage && !!optimizedImageUrl && !hasError;
+
+  if (!rawImageUrl) {
+    return (
+      <div ref={targetRef} className="w-12 h-12 sm:w-16 sm:h-16 bg-surface rounded-lg border border-border flex items-center justify-center">
+        <ImageIcon className="w-6 h-6 sm:w-8 sm:h-8 text-text-muted" />
+      </div>
+    );
+  }
+
+  return (
+    <div ref={targetRef}>
+      {shouldRenderImage ? (
+        <img
+          src={optimizedImageUrl}
+          alt={alt}
+          loading="lazy"
+          decoding="async"
+          fetchPriority="low"
+          className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-lg border border-border"
+          onLoad={onLoad}
+          onError={() => setHasError(true)}
+        />
+      ) : (
+        <Package className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-lg border border-border" />
+      )}
+    </div>
+  );
 }
 
 
@@ -121,28 +188,12 @@ export function AddItemProductList({ products, onSelect, isLoading, hasNext, isF
                     >
                     <div className="flex items-center space-x-2 sm:space-x-3 space-x-reverse">
                       <div className="flex-shrink-0 relative">
-                        {product.image && canLoadImage  ? (
-                          <img
-                            src={extractImageUrl(product.image)}
-                            alt={extractNameFromProduct(product)}
-                            loading="lazy"
-                            className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-lg border border-border"
-                            onLoad={onImageLoad}
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.style.display = 'none';
-                              const placeholder = target.nextElementSibling as HTMLElement;
-                              if (placeholder) placeholder.classList.remove('hidden');
-                            }}
-                          />
-                        ) : (
-                          <Package className='w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-lg border border-border'/>
-                        )}
-                        {!product.image && (
-                          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-surface rounded-lg border border-border flex items-center justify-center">
-                            <ImageIcon className="w-6 h-6 sm:w-8 sm:h-8 text-text-muted" />
-                          </div>
-                        )}
+                        <DeferredProductImage
+                          image={product.image}
+                          alt={extractNameFromProduct(product)}
+                          canLoadImage={canLoadImage}
+                          onLoad={onImageLoad}
+                        />
                         {isSelected && (
                           <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-background rounded-full flex items-center justify-center border-2 border-white shadow-lg">
                             <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-text-primary" />

@@ -8,50 +8,43 @@ import React, {
 } from "react";
 import { useTranslations } from "next-intl";
 import { Package, X } from "lucide-react";
-import { useAvailableCategories } from "../../hooks/useItems";
+import { useAvailableCategories, usePopularItems } from "../../hooks/useItems";
+import { useNotification } from "../../contexts/NotificationContext";
 import { useModalScrollLock } from "../../hooks/useModalScrollLock";
 import { ProductsSelectionView } from "./AddItemsModal/ProductsSelectionView";
 import { SelectedItemsSidebar } from "./AddItemsModal/SelectedItemsSidebar";
 import { Button } from "../common";
-import { IProduct, IItem, IManualProduct } from "../../types";
+import { IProduct, IItem, IManualProduct, ItemInput } from "../../types";
 
-type SingleItemFormData = {
-  name: string;
-  quantity: number;
-  unit: string;
-  category?: string;
-  priority: "low" | "medium" | "high";
-  notes?: string;
-  brand?: string;
-  description?: string;
-  product?: string;
-  image?: string;
-};
- 
-
+const normalize = (s: string) => s.toLowerCase().trim();
 
 interface AddItemsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (items: SingleItemFormData[]) => Promise<boolean | void>;
+  onSubmit: (items: ItemInput[]) => Promise<boolean | void>;
   listId: string;
+  groupId?: string;
   existingItems?: IItem[];
   onMergeDuplicate?: (existingItemId: string, newQuantity: number) => Promise<void>;
+  initialSelectedProducts?: (IProduct | IManualProduct)[];
 }
-
 
 export default function AddItemsModal({
   isOpen,
   onClose,
   onSubmit,
+  groupId,
   existingItems = [],
   onMergeDuplicate,
+  initialSelectedProducts,
 }: AddItemsModalProps) {
   const t = useTranslations("AddItemModal");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState<(IProduct | IManualProduct)[]>([]);
   const [mobileView, setMobileView] = useState<'products' | 'items'>('products');
+  const { handleApiError } = useNotification();
   const { data: categories = [] } = useAvailableCategories();
+  const { data: popularItems = [] } = usePopularItems(groupId ?? '', !!groupId && isOpen);
 
   const handleProductSelect = useCallback((product: IProduct) => {
     setSelectedProducts((prev) => {
@@ -87,6 +80,38 @@ export default function AddItemsModal({
     setSelectedProducts((prev) => [...prev, manualProduct]);
   }, []);
 
+  const addFrequentItem = useCallback((pru: {
+    name: string;
+    brand?: string;
+    image?: string;
+    isManualEntry?: boolean;
+    _id?: { unit?: string; category?: string | null };
+    product?: string | { _id?: string } | null;
+  }) => {
+    const alreadySelected = selectedProducts.some(
+      (p) => normalize(p.name) === normalize(pru.name)
+    );
+    if (alreadySelected) return;
+
+    const productId = typeof pru.product === 'string' ? pru.product : pru.product?._id;
+    const defaultUnit = pru._id?.unit || 'piece';
+
+    const manualProduct: IManualProduct = {
+      name: pru.name,
+      defaultUnit,
+      priority: "medium",
+      units: [defaultUnit],
+      notes: "",
+      brand: pru.brand || "",
+      description: "",
+      isManual: true,
+      _id: productId || `popular-${Date.now()}`,
+      categoryId: pru._id?.category || undefined,
+      productRef: productId || undefined,
+    };
+    setSelectedProducts((prev) => [...prev, manualProduct]);
+  }, [selectedProducts]);
+
   const selectedProductIds = useMemo(
     () => selectedProducts.map((p) => p._id),
     [selectedProducts]
@@ -100,27 +125,27 @@ export default function AddItemsModal({
   }, [isSubmitting, onClose]);
 
   const handleSubmit = useCallback(
-    async (items: SingleItemFormData[]) => {
+    async (items: ItemInput[]) => {
       setIsSubmitting(true);
       try {
         const result = await onSubmit(items);
         if (result !== false) {
           handleClose();
         }
-      } catch {
-        console.error(t('errorAddingItems'));
+      } catch (err) {
+        handleApiError(err as Error);
       } finally {
         setIsSubmitting(false);
       }
     },
-    [onSubmit, handleClose, t]
+    [onSubmit, handleClose, handleApiError]
   );
 
   useEffect(() => {
     if (isOpen) {
-      setSelectedProducts([]);
+      setSelectedProducts(initialSelectedProducts ?? []);
     }
-  }, [isOpen]);
+  }, [isOpen, initialSelectedProducts]);
 
   useModalScrollLock(isOpen);
 
@@ -155,7 +180,7 @@ export default function AddItemsModal({
             >
               {t('products')}
               {selectedProducts.length > 0 && (
-                <span className="ml-2 px-2 py-0.5 bg-background/10 text-text-primary rounded-full text-xs">
+                <span className="ml-2 px-2 py-0.5 bg-primary/10 text-primary rounded-full text-xs">
                   {selectedProducts.length}
                 </span>
               )}
@@ -174,14 +199,40 @@ export default function AddItemsModal({
         </div>
 
         <div className="flex-1 flex flex-col sm:flex-row overflow-hidden">
-          <div className={`${mobileView === 'products' ? 'flex' : 'hidden'} sm:flex flex-1 sm:flex-[0.6] flex-col overflow-hidden `}>
+          <div className={`${mobileView === 'products' ? 'flex' : 'hidden'} sm:flex flex-1 sm:flex-[0.6] flex-col overflow-hidden`}>
+            {popularItems.length >= 2 && (
+              <div className="flex-shrink-0 px-3 sm:px-4 pt-3 pb-1">
+                <p className="text-xs font-medium text-text-muted mb-2">{t("frequentItems")}</p>
+                <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                  {popularItems.slice(0, 8).map((pi) => {
+                    const isSelected = selectedProducts.some(
+                      (p) => normalize(p.name) === normalize(pi.name)
+                    );
+                    return (
+                      <Button
+                        key={`popular-item-${pi.name}`}
+                        onClick={() => addFrequentItem(pi)}
+                        disabled={isSelected}
+                        className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                          isSelected
+                            ? 'bg-primary/10 border-primary/30 text-primary cursor-default'
+                            : 'bg-surface border-border text-text-secondary hover:border-primary hover:text-primary'
+                        }`}
+                        size="xs"
+                        variant='outline'
+                      >
+                        {pi.name}
+                      </Button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
             <div className="flex-1 overflow-y-auto p-3 sm:p-4">
-
               <ProductsSelectionView
                 onProductSelect={handleProductSelect}
                 onAddManual={addManualItem}
                 selectedProductIds={selectedProductIds}
-                selectedProductsCount={selectedProducts.length}
                 onContinue={() => {}}
                 isSubmitting={isSubmitting}
                 t={t}

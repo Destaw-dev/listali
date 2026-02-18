@@ -1,6 +1,7 @@
 import { server } from './app';
 import { connectDB } from './config/database';
 import dotenv from 'dotenv';
+import { logger } from './utils/logger';
 
 dotenv.config();
 
@@ -9,31 +10,28 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 
 async function startServer() {
   try {
-    console.log('🍃 Connecting to MongoDB...');
+    logger.info('Connecting to MongoDB...');
     await connectDB();
-    console.log('✅ MongoDB Connected successfully');
 
     server.listen(PORT, () => {
-      console.log('🚀 Server running on port', PORT);
-      console.log('📊 Environment:', NODE_ENV);
-      console.log('🔗 Client URL:', process.env.CLIENT_URL || 'http://localhost:3000' || 'http://localhost:3001');
-      console.log('📡 Socket.IO ready for connections');
+      logger.info('Server started', {
+        port: PORT,
+        env: NODE_ENV,
+        clientUrl: process.env.CLIENT_URL || 'http://localhost:3000',
+      });
     });
 
     server.on('error', (error: Error & { code?: string }) => {
-      console.error('🚨 Server error:', error);
-      
       if (error.code === 'EADDRINUSE') {
-        console.error(`❌ Port ${PORT} is already in use`);
-        console.error('💡 Please try a different port or stop the process using this port');
+        logger.error(`Port ${PORT} is already in use`);
       } else {
-        console.error('💥 Unexpected server error, shutting down...');
+        logger.error('Unexpected server error, shutting down', { error: error.message });
         process.exit(1);
       }
     });
 
   } catch (error) {
-    console.error('🚨 Failed to start server:', error);
+    logger.error('Failed to start server', { error: String(error) });
     process.exit(1);
   }
 }
@@ -41,21 +39,21 @@ async function startServer() {
 startServer();
 
 process.on('SIGTERM', () => {
-  console.log('🔄 SIGTERM received, shutting down gracefully');
+  logger.info('SIGTERM received, shutting down gracefully');
   server.close(() => {
-    console.log('✅ Process terminated');
+    logger.info('Process terminated');
     process.exit(0);
   });
 });
 
 process.on('SIGINT', () => {
-  console.log('🔄 SIGINT received, shutting down gracefully');
+  logger.info('SIGINT received, shutting down gracefully');
   server.close(() => {
-    console.log('✅ Process terminated');
+    logger.info('Process terminated');
     process.exit(0);
   });
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('🚨 Unhandled Rejection at:', promise, 'reason:', reason);
+  logger.error('Unhandled rejection', { reason: String(reason), promise: String(promise) });
 });

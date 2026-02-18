@@ -1,5 +1,4 @@
 import React, { memo, useCallback, useState } from 'react';
-import { Package } from 'lucide-react';
 import { AddItemProductList } from './AddItemProductList';
 import { FiltersSection } from './FiltersSection';
 import { useProductsSelection } from './hooks/useProductsSelection';
@@ -14,7 +13,6 @@ interface ProductsSelectionViewProps {
   onProductSelect: (product: IProduct) => void;
   onAddManual: () => void;
   selectedProductIds: string[];
-  selectedProductsCount: number;
   onContinue: () => void;
   isSubmitting: boolean;
   t: (key: string) => string;
@@ -26,7 +24,6 @@ export const ProductsSelectionView = memo(({
   onProductSelect,
   onAddManual,
   selectedProductIds,
-  selectedProductsCount,
   t,
   existingItems = [],
 }: ProductsSelectionViewProps) => {

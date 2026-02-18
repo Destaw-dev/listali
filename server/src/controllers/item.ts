@@ -745,8 +745,8 @@ export const unpurchaseItem = async (req: express.Request, res: express.Response
   if (!group || !group.members || !group.members.some((m: IGroupMember) => m.user.toString() === userId)) {
     throw new AppError('Access denied', 403);
   }
-  if (item.status !== 'purchased') {
-    throw new AppError('Item is not purchased', 400);
+  if (item.status !== 'purchased' && item.status !== 'partially_purchased') {
+    throw new AppError('Item is not purchased or partially purchased', 400);
   }
 
   await item.markAsNotPurchased(req.body.quantityToUnpurchase);
@@ -772,9 +772,6 @@ export const unpurchaseItem = async (req: express.Request, res: express.Response
 
 
   const listDoc = await ShoppingList.findById(listId);
-  if (listDoc) {
-    await listDoc.updateMetadata();
-  }
 
   const freshList = await ShoppingList.findById(listId)
     .populate('createdBy', 'username firstName lastName avatar')
@@ -790,10 +787,12 @@ export const unpurchaseItem = async (req: express.Request, res: express.Response
       updatedBy: { id: req.userId!, username: user?.username || 'user' },
       timestamp: new Date(),
       updates: {
-        status: 'pending',
-        isPurchased: false,
-        purchasedAt: null,
-        purchasedBy: null,
+        status: updatedItem?.status || 'pending',
+        isPurchased: updatedItem?.status === 'purchased',
+        isPartiallyPurchased: updatedItem?.status === 'partially_purchased',
+        purchasedQuantity: updatedItem?.purchasedQuantity || 0,
+        purchasedAt: updatedItem?.purchasedAt ? new Date(updatedItem.purchasedAt).toISOString() : null,
+        purchasedBy: updatedItem?.purchasedBy || null,
       },
       listName: listName,
       listId: listDoc?._id.toString(),
@@ -885,14 +884,14 @@ export const updateItemQuantity = async (req: express.Request, res: express.Resp
   res.status(200).json(successResponse(updatedItem, 'Item quantity updated'));
 };
 
-export const getPopularItems = async (req: express.Request, res: express.Response<IApiResponse<IItem[] | void>>) => {
+export const getPopularItemsMostPurchasedByGroup = async (req: express.Request, res: express.Response<IApiResponse<IItem[] | void>>) => {
 try {
     const { groupId, limit = 10 } = req.query;
     if (groupId) {
       const group = await Group.findById(groupId);
       if (!group || !group.members || !group.members.some((m: IGroupMember) => m.user.toString() === req.userId)) throw new AppError('Access denied', 403);
     }
-    const popularItems = await Item.getPopularItems(groupId as string, parseInt(limit as string));
+    const popularItems = await Item.getPopularItemsMostPurchasedByGroup(groupId as string, parseInt(limit as string));
     res.status(200).json(successResponse(popularItems, 'Popular items retrieved'));
   } catch (error) {
     throw new AppError(error instanceof Error ? error.message : 'Failed to get popular items', 500, true);
@@ -1120,4 +1119,3 @@ export const createMultipleItems = async (req: express.Request, res: express.Res
     await session.endSession();
   }
 };
-

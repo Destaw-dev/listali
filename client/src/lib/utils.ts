@@ -202,6 +202,47 @@ export function extractImageUrl(
   return undefined;
 }
 
+export function optimizeCloudinaryImageUrl(
+  imageUrl: string | undefined,
+  options: {
+    width?: number;
+    height?: number;
+    crop?: 'fill' | 'fit' | 'limit';
+    quality?: string;
+    format?: string;
+  } = {}
+): string | undefined {
+  if (!imageUrl || !imageUrl.includes('res.cloudinary.com') || !imageUrl.includes('/upload/')) {
+    return imageUrl;
+  }
+
+  const [prefix, suffix] = imageUrl.split('/upload/');
+  if (!prefix || !suffix) return imageUrl;
+
+  const firstSegment = suffix.split('/')[0] || '';
+  const alreadyHasTransformation = firstSegment.includes(',') || firstSegment.includes('_');
+  if (alreadyHasTransformation) return imageUrl;
+
+  const {
+    width = 128,
+    height = 128,
+    crop = 'fill',
+    quality = 'auto',
+    format = 'auto'
+  } = options;
+
+  const transformation = [
+    `f_${format}`,
+    `q_${quality}`,
+    'dpr_auto',
+    `c_${crop}`,
+    `w_${width}`,
+    `h_${height}`
+  ].join(',');
+
+  return `${prefix}/upload/${transformation}/${suffix}`;
+}
+
 export function extractNameFromProduct(product: IProduct | IManualProduct | IItem): string {
   if(!product) return '';
   if(product.sortName) {

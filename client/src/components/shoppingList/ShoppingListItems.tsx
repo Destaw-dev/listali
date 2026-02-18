@@ -138,6 +138,7 @@ export const ShoppingListItems = memo(function ShoppingListItems({
       
       await updateItemMutation.mutateAsync({
         itemId: editModalItem._id,
+        shoppingListId: listId,
         itemData,
       });
       setEditModalItem(null);

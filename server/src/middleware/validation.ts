@@ -271,9 +271,6 @@ export const createItemValidation = [
   .trim()
   .isLength({ min: 1, max: 100 })
   .withMessage('Item name must be between 1 and 100 characters'),
-  // body('category')
-  //   .isIn(CATEGORIES)
-  //   .withMessage(`Category must be one of: ${CATEGORIES.join(', ')}`),
   body('brand')
     .optional()
     .trim()
@@ -706,7 +703,7 @@ export const removeMemberValidation = [
 
 export const validateGroupId = [
   param('groupId')
-    .isMongoId().withMessage('Invalid group ID ch'),
+    .isMongoId().withMessage('Invalid group ID'),
 ];
 
 export const validateMemberId = [

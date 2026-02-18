@@ -12,8 +12,7 @@ import { ShoppingListFilters, ShoppingStatusFilter } from '../../../../../compon
 import { ShoppingListItems } from '../../../../../components/shoppingList/ShoppingListItems';
 import AddItemsModal from '../../../../../components/shoppingList/AddItemsModal';
 import { useShoppingListData } from '../../../../../hooks/useShoppingListData';
-import { useCreateMultipleItems } from '../../../../../hooks/useItems';
-import { useAvailableCategories } from '../../../../../hooks/useItems';
+import { useCreateMultipleItems, useAvailableCategories } from '../../../../../hooks/useItems';
 import { useAuthRedirect } from '../../../../../hooks/useAuthRedirect';
 import { ShoppingModeCard } from '../../../../../components/shoppingList/ShoppingModeCard';
 import { ICategory, IItem, IGroupMember, ItemInput } from '../../../../../types';
@@ -152,9 +151,9 @@ export default function ShoppingListPage() {
   const handleMergeDuplicateFromSidebar = async (existingItemId: string, newQuantity: number) => {
       await updateItemMutation.mutateAsync({
         itemId: existingItemId,
+        shoppingListId: listId,
         itemData: { quantity: newQuantity },
       });
-      await queryClient.refetchQueries({ queryKey: ['shopping-lists', 'full-data', listId] });
   };
 
 
@@ -262,11 +261,10 @@ export default function ShoppingListPage() {
 
       <AddItemsModal
         isOpen={showAddItemsModal}
-        onClose={() => {
-          setShowAddItemsModal(false);
-        }}
+        onClose={() => setShowAddItemsModal(false)}
         onSubmit={handleAddItems}
         listId={listId}
+        groupId={groupId}
         existingItems={items}
         onMergeDuplicate={handleMergeDuplicateFromSidebar}
       />

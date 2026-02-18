@@ -47,11 +47,34 @@ export const useItems = (shoppingListId: string, options?: {
 
 export const useItem = (itemId: string) => {
   const { authReady, accessToken } = useAuthStore();
-  
+
   return useQuery({
     queryKey: itemKeys.detail(itemId),
     queryFn: () => apiClient.getItemById(itemId),
     enabled: authReady && !!accessToken && !!itemId,
+  });
+};
+
+export interface PopularItem {
+  _id: { name: string; category: string | null; unit: string };
+  count: number;
+  avgPrice: number | null;
+  lastPurchased: string | null;
+  product: string | null;
+  isManualEntry: boolean;
+  image?: string;
+  brand?: string;
+  name: string;
+}
+
+export const usePopularItems = (groupId: string, enabled = true) => {
+  const { authReady, accessToken } = useAuthStore();
+
+  return useQuery({
+    queryKey: ['items', 'popular', groupId],
+    queryFn: (): Promise<PopularItem[]> => apiClient.getPopularItems(groupId),
+    enabled: authReady && !!accessToken && !!groupId && enabled,
+    staleTime: 5 * 60 * 1000,
   });
 };
 
@@ -118,10 +141,11 @@ export const useCreateMultipleItems = () => {
 export const useUpdateItem = () => {
   const queryClient = useQueryClient();
   const { showSuccess, handleApiError } = useNotification();
-  
+
   return useMutation({
-    mutationFn: ({ itemId, itemData }: { 
-      itemId: string; 
+    mutationFn: ({ itemId, itemData }: {
+      itemId: string;
+      shoppingListId: string;
       itemData: {
         name?: string;
         description?: string;
@@ -135,9 +159,21 @@ export const useUpdateItem = () => {
         alternatives?: string[];
       };
     }) => apiClient.updateItem(itemId, itemData),
-    onSuccess: (data, { itemId }) => {
-      queryClient.invalidateQueries({ queryKey: itemKeys.detail(itemId) });
-      queryClient.invalidateQueries({ queryKey: ['shopping-lists', 'full-data'] });
+    onSuccess: (data, { itemId, shoppingListId }) => {
+      const updatedItem = data?.data;
+      if (updatedItem) {
+        queryClient.setQueryData(['shopping-lists', 'full-data', shoppingListId], (oldData: ShoppingListFullData | undefined) => {
+          if (!oldData) return oldData;
+          return {
+            ...oldData,
+            items: oldData.items?.map((item: IItem) =>
+              item._id === itemId ? { ...item, ...updatedItem } : item
+            ) ?? oldData.items,
+          };
+        });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ['shopping-lists', 'full-data', shoppingListId] });
+      }
       showSuccess('items.updateSuccess');
     },
     onError: (error: Error) => {
@@ -149,19 +185,39 @@ export const useUpdateItem = () => {
 export const useDeleteItem = () => {
   const queryClient = useQueryClient();
   const { showSuccess, handleApiError } = useNotification();
-  
+
   return useMutation({
-    mutationFn: ({ itemId }: { itemId: string; shoppingListId: string }) => 
+    mutationFn: ({ itemId }: { itemId: string; shoppingListId: string }) =>
       apiClient.deleteItem(itemId),
-    onSuccess: (data, { itemId, shoppingListId }) => {
-      queryClient.invalidateQueries({ queryKey: itemKeys.list(shoppingListId) });
+    onMutate: async ({ itemId, shoppingListId }) => {
+      await queryClient.cancelQueries({ queryKey: ['shopping-lists', 'full-data', shoppingListId] });
+      const previous = queryClient.getQueryData(['shopping-lists', 'full-data', shoppingListId]);
+      queryClient.setQueryData(['shopping-lists', 'full-data', shoppingListId], (oldData: ShoppingListFullData | undefined) => {
+        if (!oldData) return oldData;
+        const items = (oldData.items ?? []).filter((item: IItem) => item._id !== itemId);
+        return {
+          ...oldData,
+          items,
+          stats: oldData.stats ? {
+            ...oldData.stats,
+            totalItems: items.length,
+            purchasedItems: items.filter((i: IItem) => i.status === 'purchased').length,
+            remainingItems: items.filter((i: IItem) => i.status !== 'purchased').length,
+          } : oldData.stats,
+        };
+      });
+      return { previous };
+    },
+    onSuccess: (_, { shoppingListId }) => {
       queryClient.invalidateQueries({ queryKey: ['shopping-lists', 'full-data', shoppingListId] });
-      queryClient.invalidateQueries({ queryKey: itemKeys.detail(itemId) });
       showSuccess('items.deleteSuccess');
     },
-    onError: (error: Error) => {
+    onError: (error: Error, { shoppingListId }, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(['shopping-lists', 'full-data', shoppingListId], context.previous);
+      }
       handleApiError(error);
-    }, 
+    },
   });
 };
 
@@ -215,11 +271,6 @@ export const usePurchaseItem = () => {
         };
       });
       
-      queryClient.invalidateQueries({ queryKey: itemKeys.detail(itemId) });
-      queryClient.invalidateQueries({ queryKey: itemKeys.list(shoppingListId) });
-      queryClient.invalidateQueries({ queryKey: shoppingListKeys.detail(shoppingListId) });
-      queryClient.invalidateQueries({ queryKey: shoppingListKeys.list(groupId) });
-      
       showSuccess('items.purchaseSuccess');
     },
     onError: (error: Error) => {
@@ -266,11 +317,6 @@ export const useUnpurchaseItem = () => {
           stats: updatedStats
         };
       });
-      
-      queryClient.invalidateQueries({ queryKey: itemKeys.detail(itemId) });
-      queryClient.invalidateQueries({ queryKey: itemKeys.list(shoppingListId) });
-      queryClient.invalidateQueries({ queryKey: shoppingListKeys.detail(shoppingListId) });
-      queryClient.invalidateQueries({ queryKey: shoppingListKeys.list(groupId) });
       
       showSuccess('items.unpurchaseSuccess');
     },

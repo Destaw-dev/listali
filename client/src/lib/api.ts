@@ -10,6 +10,7 @@ export class ApiClient {
   private refreshPromise: Promise<string> | null = null;
   private csrfToken: string | null = null;
   private csrfPromise: Promise<string | null> | null = null;
+  private inflightRequests = new Map<string, Promise<AxiosResponse>>();
 
   constructor(baseURL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5000') {
     this.baseURL = baseURL;
@@ -212,7 +213,17 @@ export class ApiClient {
   }
 
   async get(url: string, config?: AxiosRequestConfig) {
-    return this.client.get(url, config);
+    const params = config?.params ? new URLSearchParams(config.params as Record<string, string>).toString() : '';
+    const key = params ? `${url}?${params}` : url;
+
+    const existing = this.inflightRequests.get(key);
+    if (existing) return existing;
+
+    const request = this.client.get(url, config).finally(() => {
+      this.inflightRequests.delete(key);
+    });
+    this.inflightRequests.set(key, request);
+    return request;
   }
 
   async post(url: string, data?: unknown, config?: AxiosRequestConfig) {
@@ -765,6 +776,11 @@ export class ApiClient {
   async deleteAccount() {
     const response = await this.delete('/auth/account');
     return response.data;
+  }
+
+  async getPopularItems(groupId: string, limit = 8) {
+    const response = await this.get('/items/popular', { params: { groupId, limit } });
+    return response.data?.data || [];
   }
 
   updateBaseURL(newBaseURL: string) {

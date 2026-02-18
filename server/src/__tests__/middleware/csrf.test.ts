@@ -109,7 +109,7 @@ describe('CSRF middleware', () => {
       expect(next).toHaveBeenCalledTimes(1);
     });
 
-    test('skips for mobile client', () => {
+    test('attaches csrf cookie for any client (mobile bypass removed)', () => {
       process.env.NODE_ENV = 'development';
 
       const req = createReq({
@@ -120,7 +120,7 @@ describe('CSRF middleware', () => {
 
       attachCsrfCookie(req, res, next);
 
-      expect((res as unknown as MockResponse).cookie).not.toHaveBeenCalled();
+      expect((res as unknown as MockResponse).cookie).toHaveBeenCalledTimes(1);
       expect(next).toHaveBeenCalledTimes(1);
     });
 
@@ -150,17 +150,18 @@ describe('CSRF middleware', () => {
       expect(next).toHaveBeenCalledTimes(1);
     });
 
-    test('skips for mobile client', () => {
+    test('enforces csrf for any client (mobile bypass removed)', () => {
       process.env.NODE_ENV = 'development';
 
       const req = createReq({
+        method: 'POST',
         headers: { 'x-client': 'mobile' },
+        cookies: {},
       });
       const next: NextFunction = jest.fn();
 
-      csrfProtection(req, createRes(), next);
-
-      expect(next).toHaveBeenCalledTimes(1);
+      expect(() => csrfProtection(req, createRes(), next)).toThrow('Invalid CSRF token');
+      expect(next).not.toHaveBeenCalled();
     });
 
     test('throws when csrf token is missing', () => {
