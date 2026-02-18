@@ -1,505 +1,333 @@
-# ListaLi - Smart Group Shopping
+# ListaLi
 
 <div dir="rtl">
 
-# ListaLi - מערכת חכמה לניהול קניות קבוצתיות
+## מה זה ListaLi?
 
-מערכת מתקדמת לניהול רשימות קניות משותפות עם תמיכה בזמן אמת, שיתוף פעולה קבוצתי, ומסד נתונים של מוצרים.
+ListaLi היא מערכת לניהול קניות קבוצתיות בזמן אמת.  
+הפרויקט בנוי כמונוריפו עם:
 
-## 📋 תוכן עניינים
+- `client` - אפליקציית Next.js 15 + React 19
+- `server` - API מבוסס Express + MongoDB + Socket.IO
 
-- [תיאור כללי](#תיאור-כללי)
-- [תכונות עיקריות](#תכונות-עיקריות)
-- [טכנולוגיות](#טכנולוגיות)
-- [התקנה והרצה](#התקנה-והרצה)
-- [מבנה הפרויקט](#מבנה-הפרויקט)
-- [תיעוד](#תיעוד)
-- [פיתוח](#פיתוח)
-- [רישיון](#רישיון)
+## יכולות מרכזיות
 
-## 🎯 תיאור כללי
+- ניהול קבוצות ורשימות קניות משותפות
+- עדכונים בזמן אמת עם WebSocket
+- צ'אט קבוצתי
+- תמיכה ב-`he` ו-`en`
+- מצב אורח
+- תמיכה ב-PWA והתראות Push
 
-ListaLi היא אפליקציית Web מתקדמת לניהול רשימות קניות משותפות. המערכת מאפשרת למשתמשים ליצור קבוצות, לנהל רשימות קניות משותפות, ולשתף פעולה בזמן אמת עם חברי הקבוצה.
+## טכנולוגיות
 
-### תכונות עיקריות
+- Frontend: Next.js, React, TypeScript, Tailwind CSS, Zustand, TanStack Query, next-intl, Vitest
+- Backend: Node.js, Express, TypeScript, MongoDB/Mongoose, Socket.IO, JWT, Jest
 
-- **ניהול קבוצות**: יצירה וניהול קבוצות קניות עם חברים ומשפחה
-- **רשימות קניות משותפות**: יצירה ועריכה משותפת של רשימות קניות
-- **עדכונים בזמן אמת**: שימוש ב-WebSocket לעדכונים מיידיים
-- **מצב קניות**: מעקב אחר קניות פעילות עם מיקום GPS
-- **מסד נתונים של מוצרים**: חיפוש מוצרים לפי שם, ברקוד, או קטגוריה
-- **צ'אט קבוצתי**: תקשורת בין חברי הקבוצה
-- **תמיכה רב-לשונית**: עברית ואנגלית
-- **מצב אורח**: אפשרות לשימוש ללא הרשמה
+## דרישות מוקדמות
 
-## 🛠 טכנולוגיות
+- Node.js 20+
+- npm 10+
+- MongoDB (לוקאלי או Atlas)
 
-### Frontend (Client)
-- **Next.js 15** - Framework React עם App Router
-- **React 19** - ספריית UI
-- **TypeScript** - טייפ-ספייפ
-- **Tailwind CSS** - עיצוב
-- **Zustand** - ניהול state
-- **React Query (TanStack Query)** - ניהול data fetching
-- **Socket.IO Client** - תקשורת בזמן אמת
-- **next-intl** - בינלאומיות
-- **Zod** - ולידציה
-- **Vitest** - בדיקות
+## התקנה מהירה
 
-### Backend (Server)
-- **Node.js** - Runtime
-- **Express.js** - Framework
-- **TypeScript** - טייפ-ספייפ
-- **MongoDB + Mongoose** - מסד נתונים
-- **Socket.IO** - תקשורת בזמן אמת
-- **JWT** - אימות
-- **bcryptjs** - הצפנת סיסמאות
-- **Google OAuth** - התחברות עם Google
-- **Cloudinary/ImageKit** - ניהול תמונות
-- **Resend** - שליחת אימיילים
-- **Jest** - בדיקות
-
-## 🚀 התקנה והרצה
-
-### דרישות מוקדמות
-
-- Node.js 20.x או גבוה יותר
-- MongoDB (מקומי או Atlas)
-- npm או yarn
-
-### התקנה
-
-1. **שכפול הפרויקט**
 ```bash
 git clone <repository-url>
-cd smart-list
+cd Listali
 ```
 
-2. **התקנת תלויות - Client**
+התקנת תלויות:
+
 ```bash
-cd client
-npm install
+cd server && npm install
+cd ../client && npm install
 ```
 
-3. **התקנת תלויות - Server**
+## משתני סביבה
+
+### Server (`server/.env`)
+
+התחל מ:
+
 ```bash
-cd ../server
-npm install
+cd server
+cp .env.example .env
 ```
 
-4. **הגדרת משתני סביבה**
+משתנים חשובים לפיתוח מקומי:
 
-צור קובץ `.env` בתיקיית `server` על בסיס `env.example`:
-```bash
-cp env.example .env
-```
-
-ערוך את הקובץ `.env` והגדר את הערכים הנדרשים:
 ```env
 NODE_ENV=development
 PORT=5000
-CLIENT_URL=http://localhost:3000
 MONGODB_URI=mongodb://localhost:27017/listali
-JWT_SECRET=your-secret-key
-# ... שאר המשתנים
+
+CLIENT_URL=http://localhost:3000
+# אופציונלי למספר origins:
+# CLIENT_URLS=http://localhost:3000,http://127.0.0.1:3000
+
+JWT_ACCESS_SECRET=replace-me
+JWT_REFRESH_SECRET=replace-me
+JWT_ACCESS_EXPIRE_MINUTES=15
+JWT_REFRESH_EXPIRE_DAYS=30
+
+RESEND_API_KEY=replace-me
+
+# אופציונלי ל-Push:
+VAPID_PUBLIC_KEY=
+VAPID_PRIVATE_KEY=
+VAPID_EMAIL=
 ```
 
-5. **הרצת השרת**
+הערה: הקובץ `server/env.example` הוא תבנית נוספת שמכוונת יותר לסביבת production.
+
+### Client (`client/.env.local`)
+
+צור קובץ `client/.env.local`:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:5000
+NEXT_PUBLIC_WS_URL=http://localhost:5000
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=
+```
+
+## הרצה מקומית
+
+Terminal 1:
+
 ```bash
 cd server
 npm run dev
 ```
 
-השרת ירוץ על `http://localhost:5000`
+Terminal 2:
 
-6. **הרצת הלקוח**
 ```bash
 cd client
 npm run dev
 ```
 
-האפליקציה תהיה זמינה ב-`http://localhost:3000`
+כתובות ברירת מחדל:
 
-## 📁 מבנה הפרויקט
+- Client: `http://localhost:3000` (מפנה ל-`/he/welcome`)
+- Server: `http://localhost:5000`
+- Health: `http://localhost:5000/health`
+- API base: `http://localhost:5000/api`
 
-```
-smart-list/
-├── client/                 # Frontend - Next.js
-│   ├── src/
-│   │   ├── app/           # App Router pages
-│   │   ├── components/    # רכיבי React
-│   │   ├── hooks/         # Custom hooks
-│   │   ├── lib/           # Utilities ו-API clients
-│   │   ├── store/         # Zustand stores
-│   │   ├── types/         # TypeScript types
-│   │   └── messages/      # תרגומים (i18n)
-│   ├── public/            # קבצים סטטיים
-│   └── package.json
-│
-├── server/                # Backend - Express.js
-│   ├── src/
-│   │   ├── controllers/   # Controllers
-│   │   ├── models/        # Mongoose models
-│   │   ├── routes/        # API routes
-│   │   ├── middleware/    # Middleware
-│   │   ├── socket/        # Socket.IO handlers
-│   │   ├── config/        # הגדרות (DB, etc.)
-│   │   └── utils/         # Utilities
-│   ├── env.example        # דוגמה למשתני סביבה
-│   └── package.json
-│
-└── docs/                  # תיעוד
-    ├── README.md
-    ├── ARCHITECTURE.md
-    ├── API.md
-    └── DEPLOYMENT.md
-```
+## סקריפטים שימושיים
 
-## 📚 תיעוד
+### Client
 
-תיעוד מפורט זמין בתיקיית `docs/`:
-
-- **[docs/README.md](./docs/README.md)** - סקירה כללית של התיעוד
-- **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)** - תיעוד ארכיטקטורה מקיף
-- **[docs/API.md](./docs/API.md)** - תיעוד מלא של ה-API
-- **[docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md)** - הוראות פריסה
-
-## 💻 פיתוח
-
-### הרצת בדיקות
-
-**Client:**
 ```bash
 cd client
-npm run test          # הרצת בדיקות
-npm run test:ui       # UI לבדיקות
-npm run test:coverage # כיסוי בדיקות
+npm run dev
+npm run build
+npm run start
+npm run lint
+npm run lint:fix
+npm run test
+npm run test:run
+npm run test:ui
+npm run test:coverage
 ```
 
-**Server:**
+### Server
+
 ```bash
 cd server
-npm test              # הרצת בדיקות
-npm run test:watch    # מצב watch
+npm run dev
+npm run build
+npm run start
+npm run lint
+npm run lint:fix
+npm test
+npm run test:watch
 ```
 
-### Linting
+## מבנה הפרויקט
 
-**Client:**
-```bash
-cd client
-npm run lint          # בדיקת lint
-npm run lint:fix      # תיקון אוטומטי
+```text
+Listali/
+├── client/      # Next.js app (UI)
+├── server/      # Express API + Socket.IO
+└── docs/        # Architecture / API / Deployment docs
 ```
 
-**Server:**
-```bash
-cd server
-npm run lint          # בדיקת lint
-npm run lint:fix      # תיקון אוטומטי
-```
+## תיעוד נוסף
 
-### Build
+- `docs/README.md`
+- `docs/ARCHITECTURE.md`
+- `docs/API.md`
+- `docs/DEPLOYMENT.md`
 
-**Client:**
-```bash
-cd client
-npm run build         # בניית production
-npm start             # הרצת production build
-```
+## רישיון
 
-**Server:**
-```bash
-cd server
-npm run build         # קומפילציה ל-TypeScript
-npm start             # הרצת production build
-```
-
-## 🔐 אבטחה
-
-- אימות JWT עם refresh tokens
-- הצפנת סיסמאות עם bcrypt
-- Rate limiting למניעת התקפות
-- CORS מוגדר
-- Helmet.js לאבטחת HTTP headers
-- ולידציה של קלט עם express-validator
-
-## 🌐 תמיכה רב-לשונית
-
-האפליקציה תומכת בעברית ואנגלית עם שימוש ב-`next-intl`. קבצי התרגום נמצאים ב-`client/src/messages/`.
-
-## 📱 PWA
-
-האפליקציה תומכת ב-Progressive Web App (PWA) עם:
-- Service Worker
-- Offline support
-- Install prompt
-- Manifest.json
-
-## 🤝 תרומה
-
-תרומות מתקבלות בברכה! אנא פתחו issue או pull request.
-
-## 📄 רישיון
-
-פרויקט זה מוגן תחת רישיון MIT - ראה [LICENSE](./LICENSE) לפרטים.
-
-## 👤 מחבר
-
-**Destaw-dev**
-
----
+MIT - ראה `LICENSE`.
 
 </div>
 
 <div dir="ltr">
 
-# ListaLi - Smart Group Shopping
+## What is ListaLi?
 
-A comprehensive system for managing shared shopping lists with real-time collaboration, group management, and product database.
+ListaLi is a real-time collaborative shopping platform.  
+This repo is a monorepo with:
 
-## 📋 Table of Contents
+- `client` - Next.js 15 + React 19 app
+- `server` - Express API with MongoDB and Socket.IO
 
-- [Overview](#overview)
-- [Key Features](#key-features)
-- [Technologies](#technologies)
-- [Installation & Setup](#installation--setup)
-- [Project Structure](#project-structure)
-- [Documentation](#documentation)
-- [Development](#development)
-- [License](#license)
+## Core Features
 
-## 🎯 Overview
+- Shared group shopping lists
+- Real-time updates via WebSocket
+- Group chat
+- `he` / `en` localization
+- Guest mode
+- PWA support and push notifications
 
-ListaLi is an advanced web application for managing shared shopping lists. The system allows users to create groups, manage shared shopping lists, and collaborate in real-time with group members.
+## Tech Stack
 
-### Key Features
+- Frontend: Next.js, React, TypeScript, Tailwind CSS, Zustand, TanStack Query, next-intl, Vitest
+- Backend: Node.js, Express, TypeScript, MongoDB/Mongoose, Socket.IO, JWT, Jest
 
-- **Group Management**: Create and manage shopping groups with friends and family
-- **Shared Shopping Lists**: Create and collaboratively edit shopping lists
-- **Real-time Updates**: WebSocket-based instant updates
-- **Shopping Mode**: Track active shopping sessions with GPS location
-- **Product Database**: Search products by name, barcode, or category
-- **Group Chat**: Communication between group members
-- **Multi-language Support**: Hebrew and English
-- **Guest Mode**: Use without registration
+## Prerequisites
 
-## 🛠 Technologies
-
-### Frontend (Client)
-- **Next.js 15** - React framework with App Router
-- **React 19** - UI library
-- **TypeScript** - Type safety
-- **Tailwind CSS** - Styling
-- **Zustand** - State management
-- **React Query (TanStack Query)** - Data fetching
-- **Socket.IO Client** - Real-time communication
-- **next-intl** - Internationalization
-- **Zod** - Validation
-- **Vitest** - Testing
-
-### Backend (Server)
-- **Node.js** - Runtime environment
-- **Express.js** - Web framework
-- **TypeScript** - Type safety
-- **MongoDB + Mongoose** - Database
-- **Socket.IO** - Real-time communication
-- **JWT** - Authentication
-- **bcryptjs** - Password hashing
-- **Google OAuth** - Google login
-- **Cloudinary/ImageKit** - Image management
-- **Resend** - Email service
-- **Jest** - Testing
-
-## 🚀 Installation & Setup
-
-### Prerequisites
-
-- Node.js 20.x or higher
+- Node.js 20+
+- npm 10+
 - MongoDB (local or Atlas)
-- npm or yarn
 
-### Installation
+## Quick Start
 
-1. **Clone the repository**
 ```bash
 git clone <repository-url>
-cd smart-list
+cd Listali
 ```
 
-2. **Install Client dependencies**
+Install dependencies:
+
 ```bash
-cd client
-npm install
+cd server && npm install
+cd ../client && npm install
 ```
 
-3. **Install Server dependencies**
+## Environment Variables
+
+### Server (`server/.env`)
+
+Start from:
+
 ```bash
-cd ../server
-npm install
+cd server
+cp .env.example .env
 ```
 
-4. **Configure environment variables**
+Local development essentials:
 
-Create a `.env` file in the `server` directory based on `env.example`:
-```bash
-cp env.example .env
-```
-
-Edit the `.env` file and set the required values:
 ```env
 NODE_ENV=development
 PORT=5000
-CLIENT_URL=http://localhost:3000
 MONGODB_URI=mongodb://localhost:27017/listali
-JWT_SECRET=your-secret-key
-# ... other variables
+
+CLIENT_URL=http://localhost:3000
+# Optional multi-origin support:
+# CLIENT_URLS=http://localhost:3000,http://127.0.0.1:3000
+
+JWT_ACCESS_SECRET=replace-me
+JWT_REFRESH_SECRET=replace-me
+JWT_ACCESS_EXPIRE_MINUTES=15
+JWT_REFRESH_EXPIRE_DAYS=30
+
+RESEND_API_KEY=replace-me
+
+# Optional for Push:
+VAPID_PUBLIC_KEY=
+VAPID_PRIVATE_KEY=
+VAPID_EMAIL=
 ```
 
-5. **Run the server**
+Note: `server/env.example` is an additional template aimed more at production-style settings.
+
+### Client (`client/.env.local`)
+
+Create `client/.env.local`:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:5000
+NEXT_PUBLIC_WS_URL=http://localhost:5000
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=
+```
+
+## Local Run
+
+Terminal 1:
+
 ```bash
 cd server
 npm run dev
 ```
 
-Server will run on `http://localhost:5000`
+Terminal 2:
 
-6. **Run the client**
 ```bash
 cd client
 npm run dev
 ```
 
-Application will be available at `http://localhost:3000`
+Default URLs:
 
-## 📁 Project Structure
+- Client: `http://localhost:3000` (redirects to `/he/welcome`)
+- Server: `http://localhost:5000`
+- Health: `http://localhost:5000/health`
+- API base: `http://localhost:5000/api`
 
-```
-smart-list/
-├── client/                 # Frontend - Next.js
-│   ├── src/
-│   │   ├── app/           # App Router pages
-│   │   ├── components/    # React components
-│   │   ├── hooks/         # Custom hooks
-│   │   ├── lib/           # Utilities and API clients
-│   │   ├── store/         # Zustand stores
-│   │   ├── types/         # TypeScript types
-│   │   └── messages/      # Translations (i18n)
-│   ├── public/            # Static files
-│   └── package.json
-│
-├── server/                # Backend - Express.js
-│   ├── src/
-│   │   ├── controllers/   # Controllers
-│   │   ├── models/        # Mongoose models
-│   │   ├── routes/        # API routes
-│   │   ├── middleware/    # Middleware
-│   │   ├── socket/        # Socket.IO handlers
-│   │   ├── config/        # Configuration (DB, etc.)
-│   │   └── utils/         # Utilities
-│   ├── env.example        # Environment variables example
-│   └── package.json
-│
-└── docs/                  # Documentation
-    ├── README.md
-    ├── ARCHITECTURE.md
-    ├── API.md
-    └── DEPLOYMENT.md
-```
+## Useful Scripts
 
-## 📚 Documentation
+### Client
 
-Detailed documentation is available in the `docs/` directory:
-
-- **[docs/README.md](./docs/README.md)** - Documentation overview
-- **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)** - Comprehensive architecture documentation
-- **[docs/API.md](./docs/API.md)** - Complete API documentation
-- **[docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md)** - Deployment instructions
-
-## 💻 Development
-
-### Running Tests
-
-**Client:**
 ```bash
 cd client
-npm run test          # Run tests
-npm run test:ui       # Test UI
-npm run test:coverage # Test coverage
+npm run dev
+npm run build
+npm run start
+npm run lint
+npm run lint:fix
+npm run test
+npm run test:run
+npm run test:ui
+npm run test:coverage
 ```
 
-**Server:**
+### Server
+
 ```bash
 cd server
-npm test              # Run tests
-npm run test:watch    # Watch mode
+npm run dev
+npm run build
+npm run start
+npm run lint
+npm run lint:fix
+npm test
+npm run test:watch
 ```
 
-### Linting
+## Project Structure
 
-**Client:**
-```bash
-cd client
-npm run lint          # Check linting
-npm run lint:fix      # Auto-fix
+```text
+Listali/
+├── client/      # Next.js app (UI)
+├── server/      # Express API + Socket.IO
+└── docs/        # Architecture / API / Deployment docs
 ```
 
-**Server:**
-```bash
-cd server
-npm run lint          # Check linting
-npm run lint:fix      # Auto-fix
-```
+## Additional Docs
 
-### Build
+- `docs/README.md`
+- `docs/ARCHITECTURE.md`
+- `docs/API.md`
+- `docs/DEPLOYMENT.md`
 
-**Client:**
-```bash
-cd client
-npm run build         # Build for production
-npm start             # Run production build
-```
+## License
 
-**Server:**
-```bash
-cd server
-npm run build         # Compile TypeScript
-npm start             # Run production build
-```
-
-## 🔐 Security
-
-- JWT authentication with refresh tokens
-- Password hashing with bcrypt
-- Rate limiting to prevent attacks
-- CORS configured
-- Helmet.js for HTTP headers security
-- Input validation with express-validator
-
-## 🌐 Internationalization
-
-The application supports Hebrew and English using `next-intl`. Translation files are located in `client/src/messages/`.
-
-## 📱 PWA
-
-The application supports Progressive Web App (PWA) with:
-- Service Worker
-- Offline support
-- Install prompt
-- Manifest.json
-
-## 🤝 Contributing
-
-Contributions are welcome! Please open an issue or pull request.
-
-## 📄 License
-
-This project is licensed under the MIT License - see [LICENSE](./LICENSE) for details.
-
-## 👤 Author
-
-**Destaw-dev**
-
----
+MIT - see `LICENSE`.
 
 </div>

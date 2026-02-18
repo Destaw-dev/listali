@@ -11,3 +11,17 @@ api.listali.co.il {
     format console
   }
 }
+
+api.dashio.destaw.co.il {
+  encode gzip
+  reverse_proxy dashio-api:7000
+
+  header { 
+    -Server
+  }
+
+  log { 
+    output stdout
+    format console
+  }
+}
