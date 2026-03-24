@@ -2,55 +2,47 @@ import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../lib/api';
 import { useAuthStore } from '../store/authStore';
 
-interface DashboardStats {
-  groups: number;
-  lists: number;
-  completedLists: number;
-  totalItems: number;
-  purchasedItems: number;
-  remainingItems: number;
-  completedTasks: number;
-  pendingTasks: number;
-}
-
-interface GrowthStats {
-  groupsGrowth: number;
-  listsGrowth: number;
-  completedTasksGrowth: number;
-}
-
-interface RecentActivity {
+export interface MemberSummary {
   id: string;
-  type: 'message' | 'item_purchased' | 'list_created' | 'group_joined';
-  title: string;
+  username: string;
+  avatar?: string;
+}
+
+export interface ActiveList {
+  id: string;
+  name: string;
+  groupId: string;
+  groupName: string;
+  totalItems: number;
+  remainingItems: number;
+  members: MemberSummary[];
+}
+
+export interface GroupSummary {
+  id: string;
+  name: string;
+  activeListsCount: number;
+  members: MemberSummary[];
+}
+
+export interface RecentActivity {
+  id: string;
+  type: 'item_update' | 'list_update';
   description: string;
   timestamp: string;
   groupName?: string;
 }
 
-interface Achievement {
-  id: string;
-  title: string;
-  description: string;
-  unlocked: boolean;
-  progress: number;
-  maxProgress: number;
-}
-
-interface DashboardData {
-  stats: DashboardStats;
-  growth: GrowthStats;
+export interface DashboardData {
+  activeLists: ActiveList[];
+  groups: GroupSummary[];
   recentActivity: RecentActivity[];
-  achievements: Achievement[];
-  user: {
-    lastActive: string;
-    online: boolean;
-  };
+  pendingInvitations: number;
 }
 
 export const useDashboard = () => {
   const { isAuthenticated } = useAuthStore();
-  
+
   return useQuery<DashboardData>({
     queryKey: ['dashboard'],
     queryFn: async () => {

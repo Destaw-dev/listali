@@ -49,7 +49,7 @@ export const PurchaseAllButton = memo(function PurchaseAllButton({
       }, 10000);
       return () => clearTimeout(timer);
     }
-  }, [showUndo, onUndo]);
+  }, [showUndo, onUndo, setUndoState]);
 
   if (unpurchasedCount === 0 && !showUndo) return null;
 

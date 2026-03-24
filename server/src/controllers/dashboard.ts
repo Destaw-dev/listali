@@ -1,67 +1,47 @@
 import { Request, Response } from 'express';
 import Group from '../models/group';
-import ShoppingList  from '../models/shoppingList';
-import  Message  from '../models/message';
-import Item  from '../models/item';
+import ShoppingList from '../models/shoppingList';
+import Message from '../models/message';
+import Item from '../models/item';
 import User from '../models/user';
 import { errorResponse, successResponse } from '../middleware/handlers';
 
-interface DashboardStats {
-  groups: number;
-  lists: number;
-  completedLists: number;
-  totalItems: number;
-  purchasedItems: number;
-  remainingItems: number;
-  completedTasks: number;
-  pendingTasks: number;
+interface MemberSummary {
+  id: string;
+  username: string;
+  avatar?: string;
 }
 
-interface GrowthStats {
-  groupsGrowth: number;
-  listsGrowth: number;
-  completedTasksGrowth: number;
+interface ActiveList {
+  id: string;
+  name: string;
+  groupId: string;
+  groupName: string;
+  totalItems: number;
+  remainingItems: number;
+  members: MemberSummary[];
+}
+
+interface GroupSummary {
+  id: string;
+  name: string;
+  activeListsCount: number;
+  members: MemberSummary[];
 }
 
 interface RecentActivity {
   id: string;
-  type: 'message' | 'item_purchased' | 'list_created' | 'group_joined';
-  title: string;
+  type: 'item_update' | 'list_update';
   description: string;
   timestamp: Date;
-  groupName?: string | undefined;
-}
-
-interface Achievement {
-  id: string;
-  title: string;
-  description: string;
-  unlocked: boolean;
-  progress: number;
-  maxProgress: number;
+  groupName?: string;
 }
 
 interface DashboardData {
-  stats: DashboardStats;
-  growth: GrowthStats;
+  activeLists: ActiveList[];
+  groups: GroupSummary[];
   recentActivity: RecentActivity[];
-  achievements: Achievement[];
-  user: {
-    lastActive: string;
-    online: boolean;
-  };
-}
-
-function calculateGrowth(current: number, previous: number): number {
-  if (previous === 0) return current > 0 ? 100 : 0;
-  return Math.round(((current - previous) / previous) * 100);
-}
-
-function getPreviousMonthRange(): { start: Date; end: Date } {
-  const now = new Date();
-  const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const end = new Date(now.getFullYear(), now.getMonth(), 0);
-  return { start, end };
+  pendingInvitations: number;
 }
 
 export const getDashboardData = async (req: Request, res: Response) => {
@@ -72,174 +52,106 @@ export const getDashboardData = async (req: Request, res: Response) => {
       return;
     }
 
-    const now = new Date();
-    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const currentMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-
-    const { start: prevMonthStart, end: prevMonthEnd } = getPreviousMonthRange();
-
     const groups = await Group.find({
-      $or: [
-        { owner: userId },
-        { 'members.user': userId }
-      ]
-    });
+      $or: [{ owner: userId }, { 'members.user': userId }],
+    }).populate('members.user', 'username avatar');
 
-    const groupIds = groups.map(group => group._id);
+    const groupIds = groups.map((g) => g._id);
 
-    const lists = await ShoppingList.find({
-      group: { $in: groupIds }
-    });
+    const [lists, activityMessages, user] = await Promise.all([
+      ShoppingList.find({ group: { $in: groupIds } }),
 
-    const listIds = lists.map(list => list._id);
-
-    const [
-      messages,
-      items,
-      user
-    ] = await Promise.all([
       Message.find({
-        group: { $in: groupIds }
-      }),
-      
-      Item.find({
-        shoppingList: { $in: listIds }
-      }),
-      
-      User.findById(userId)
+        group: { $in: groupIds },
+        messageType: { $in: ['item_update', 'list_update'] },
+        isDeleted: false,
+      })
+        .sort({ createdAt: -1 })
+        .limit(20),
+
+      User.findById(userId),
     ]);
 
-    const currentMonthGroups = groups.filter(group => 
-      group.createdAt >= currentMonthStart && group.createdAt <= currentMonthEnd
-    ).length;
+    // Active lists with detail
+    const listIds = lists.map((l) => l._id);
+    const items = await Item.find({ shoppingList: { $in: listIds } });
 
-    const currentMonthLists = lists.filter(list => 
-      list.createdAt >= currentMonthStart && list.createdAt <= currentMonthEnd
-    ).length;
+    const activeLists: ActiveList[] = lists
+      .filter((list) => list.status === 'active')
+      .map((list) => {
+        const listItems = items.filter(
+          (i) => i.shoppingList.toString() === list._id.toString()
+        );
+        const group = groups.find(
+          (g) => g._id.toString() === list.group.toString()
+        );
+        const members: MemberSummary[] = ((group?.members || []) as any[])
+          .slice(0, 4)
+          .map((m: any) => ({
+            id: m.user._id.toString(),
+            username: m.user.username,
+            avatar: m.user.avatar,
+          }));
+        return {
+          id: list._id.toString(),
+          name: list.name,
+          groupId: group?._id.toString() || '',
+          groupName: group?.name || '',
+          totalItems: listItems.length,
+          remainingItems: listItems.filter((i) => i.status !== 'purchased')
+            .length,
+          members,
+        };
+      });
 
-    const previousMonthGroups = groups.filter(group => 
-      group.createdAt >= prevMonthStart && group.createdAt <= prevMonthEnd
-    ).length;
+    // Groups summary
+    const groupsSummary: GroupSummary[] = groups.map((group) => {
+      const members: MemberSummary[] = ((group.members || []) as any[])
+        .slice(0, 4)
+        .map((m: any) => ({
+          id: m.user._id.toString(),
+          username: m.user.username,
+          avatar: m.user.avatar,
+        }));
+      return {
+        id: group._id.toString(),
+        name: group.name,
+        activeListsCount: lists.filter(
+          (l) =>
+            l.group.toString() === group._id.toString() &&
+            l.status === 'active'
+        ).length,
+        members,
+      };
+    });
 
-    const previousMonthLists = lists.filter(list => 
-      list.createdAt >= prevMonthStart && list.createdAt <= prevMonthEnd
-    ).length;
+    // Activity feed from system messages
+    const recentActivity: RecentActivity[] = activityMessages
+      .slice(0, 15)
+      .map((msg) => ({
+        id: msg._id.toString(),
+        type: msg.messageType as 'item_update' | 'list_update',
+        description: msg.content,
+        timestamp: msg.createdAt,
+        groupName: groups.find(
+          (g) => g._id.toString() === msg.group.toString()
+        )?.name,
+      }));
 
-    const previousMonthCompletedTasks = items.filter(item => 
-      item.status === 'purchased' && 
-      item.purchasedAt && 
-      item.purchasedAt >= prevMonthStart && 
-      item.purchasedAt <= prevMonthEnd
-    ).length;
-
-    const totalItems = items.length;
-    const purchasedItems = items.filter(item => item.status === 'purchased').length;
-    const remainingItems = totalItems - purchasedItems;
-    const completedLists = lists.filter(list => {
-      const listItems = items.filter(item => item.shoppingList.toString() === list._id.toString());
-      return listItems.length > 0 && listItems.every(item => item.status === 'purchased');
-    }).length;
-    
-    const completedTasks = items.filter(item => 
-      item.status === 'purchased' && 
-      item.purchasedAt && 
-      item.purchasedAt >= currentMonthStart && 
-      item.purchasedAt <= currentMonthEnd
-    ).length;
-    
-    const pendingInvitations = user?.pendingInvitations.filter(inv => inv.status === 'pending').length || 0;
-    
-    const pendingTasks = pendingInvitations;                    
-  
-
-    const growth: GrowthStats = {
-      groupsGrowth: calculateGrowth(currentMonthGroups, previousMonthGroups),
-      listsGrowth: calculateGrowth(currentMonthLists, previousMonthLists),
-      completedTasksGrowth: calculateGrowth(previousMonthCompletedTasks, completedTasks)
-    };
-
-    const stats: DashboardStats = {
-      groups: groups.length,
-      lists: lists.length,
-      completedLists,
-      totalItems,
-      purchasedItems,
-      remainingItems,
-      completedTasks,
-      pendingTasks
-    };
-
-    const recentActivity: RecentActivity[] = [
-      ...messages
-        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-        .slice(0, 3)
-        .map(message => ({
-          id: message._id.toString(),
-          type: 'message' as const,
-          title: 'new message in group',
-          description: message.content.substring(0, 50) + '...',
-          timestamp: message.createdAt,
-          groupName: groups.find(g => g._id.toString() === message.group.toString())?.name
-        })),
-      
-      ...items
-        .filter(item => item.status === 'purchased')
-        .sort((a, b) => (b.updatedAt || b.createdAt).getTime() - (a.updatedAt || a.createdAt).getTime())
-        .slice(0, 2)
-        .map(item => ({
-          id: item._id.toString(),
-          type: 'item_purchased' as const,
-          title: 'item purchased',
-          description: `${item.name} נרכש בהצלחה`,
-          timestamp: item.updatedAt || item.createdAt
-        }))
-    ].sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()).slice(0, 5);
-
-    const achievements: Achievement[] = [
-      {
-        id: 'first_group',
-        title: 'first group created',
-        description: 'you created the first shopping list',
-        unlocked: groups.length > 0,
-        progress: Math.min(groups.length, 1),
-        maxProgress: 1
-      },
-      {
-        id: 'shopping_master',
-        title: 'shopping master',
-        description: 'you completed 10 shopping lists',
-        unlocked: completedLists >= 10,
-        progress: Math.min(completedLists, 10),
-        maxProgress: 10
-      },
-      {
-        id: 'group_player',
-        title: 'group player',
-        description: 'you joined 5 different groups',
-        unlocked: groups.length >= 5,
-        progress: Math.min(groups.length, 5),
-        maxProgress: 5
-      }
-    ];
-
-    const userInfo = {
-      lastActive: user?.updatedAt ? user.updatedAt.toLocaleTimeString('he-IL', { 
-        hour: '2-digit', 
-        minute: '2-digit' 
-      }) : 'unknown',
-      online: true
-    };
+    const pendingInvitations =
+      user?.pendingInvitations.filter((inv) => inv.status === 'pending')
+        .length || 0;
 
     const dashboardData: DashboardData = {
-      stats,
-      growth,
+      activeLists,
+      groups: groupsSummary,
       recentActivity,
-      achievements,
-      user: userInfo
+      pendingInvitations,
     };
 
-    res.status(200).json(successResponse(dashboardData, 'Dashboard data retrieved successfully'));
-
+    res
+      .status(200)
+      .json(successResponse(dashboardData, 'Dashboard data retrieved successfully'));
   } catch (error) {
     res.status(500).json(errorResponse('Internal server error'));
   }

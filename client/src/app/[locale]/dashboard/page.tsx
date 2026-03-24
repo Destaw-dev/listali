@@ -3,30 +3,182 @@
 import { useTranslations } from "next-intl";
 import { useRouter } from "../../../i18n/navigation";
 import {
-  Users,
   ShoppingCart,
-  Plus,
-  TrendingUp,
+  ClipboardList,
+  Users,
   Bell,
-  Sparkles,
+  Plus,
+  ShoppingBag,
   Activity,
-  Target,
-  Award,
 } from "lucide-react";
 import { useAuthRedirect } from "../../../hooks/useAuthRedirect";
 import { useAuthStore } from "../../../store/authStore";
-import { useDashboard } from "../../../hooks/useDashboard";
+import {
+  useDashboard,
+  MemberSummary,
+  ActiveList,
+  GroupSummary,
+  RecentActivity,
+} from "../../../hooks/useDashboard";
 import {
   Card,
   CardHeader,
   CardBody,
   Button,
-  Badge,
   LoadingState,
 } from "../../../components/common";
-import { ArrowIcon } from "../../../components/common/Arrow";
-import { IAchievement } from "../../../types";
-import { colorRoleClasses } from "../../../lib/colorRoles";
+
+// ── helpers ──────────────────────────────────────────────────────────────────
+
+type TFn = ReturnType<typeof useTranslations<"Dashboard">>;
+
+function timeAgo(timestamp: string, t: TFn): string {
+  const diff = Date.now() - new Date(timestamp).getTime();
+  const minutes = Math.floor(diff / 60_000);
+  if (minutes < 1) return t("justNow");
+  if (minutes < 60) return t("timeAgoMinutes", { count: minutes });
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return t("timeAgoHours", { count: hours });
+  const days = Math.floor(hours / 24);
+  return t("timeAgoDays", { count: days });
+}
+
+function AvatarStack({ members }: { members: MemberSummary[] }) {
+  if (!members.length) return null;
+  return (
+    <div className="flex -space-x-2 rtl:space-x-reverse">
+      {members.slice(0, 4).map((m) => (
+        <div
+          key={m.id}
+          title={m.username}
+          className="w-7 h-7 rounded-full border-2 border-card bg-[var(--color-icon-primary-bg)] flex items-center justify-center text-[10px] font-bold text-[var(--color-icon-primary-fg)]"
+        >
+          {m.username.charAt(0).toUpperCase()}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── sub-sections ─────────────────────────────────────────────────────────────
+
+function ActiveListCard({
+  list,
+  onClick,
+}: {
+  list: ActiveList;
+  onClick: () => void;
+}) {
+  const progress =
+    list.totalItems > 0
+      ? Math.round(
+          ((list.totalItems - list.remainingItems) / list.totalItems) * 100
+        )
+      : 0;
+
+  const t = useTranslations("Dashboard");
+  const progressColor = progress >= 70 ? "bg-green-400" : "bg-primary-400";
+  console.log({progressColor, progress, list});
+
+  return (
+    <Card
+      hover
+      onClick={onClick}
+      className="cursor-pointer bg-card transition-all duration-200 border-s-[3px] border-s-primary"
+    >
+      <CardBody className="p-5">
+        <div className="flex items-start justify-between mb-3">
+          <div className="min-w-0 flex-1">
+            <p className="font-bold text-text-primary text-base truncate">
+              {list.name}
+            </p>
+            <p className="text-sm text-text-muted truncate">{list.groupName}</p>
+          </div>
+          <div className="p-2 bg-[var(--color-icon-primary-bg)] rounded-xl ms-3 shrink-0">
+            <ShoppingBag className="w-4 h-4 text-[var(--color-icon-primary-fg)]" />
+          </div>
+        </div>
+
+        {/* Progress */}
+        <div className="mb-3">
+          <div className="flex justify-between text-xs text-text-muted mb-1.5">
+            <span>{list.remainingItems} {t("remaining")}</span>
+            <span className="font-medium">{progress}%</span>
+          </div>
+          <div className="w-full bg-border-light rounded-full h-2">
+            <div
+              className={`${progressColor} h-2 rounded-full transition-all duration-500`}
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <AvatarStack members={list.members} />
+          <span className="text-xs text-text-muted">
+            {list.totalItems} {t("items")}
+          </span>
+        </div>
+      </CardBody>
+    </Card>
+  );
+}
+
+function ActivityItem({ activity }: { activity: RecentActivity }) {
+  const t = useTranslations("Dashboard");
+  const isItemUpdate = activity.type === "item_update";
+  const Icon = isItemUpdate ? ShoppingCart : ClipboardList;
+
+  return (
+    <div className="flex items-start gap-3 py-3 border-b border-border-light last:border-0">
+      <div className={`p-2 rounded-lg shrink-0 mt-0.5 ${isItemUpdate ? "bg-[var(--color-icon-primary-bg)]" : "bg-[var(--color-icon-secondary-bg)]"}`}>
+        <Icon className={`w-4 h-4 ${isItemUpdate ? "text-[var(--color-icon-primary-fg)]" : "text-[var(--color-icon-secondary-fg)]"}`} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm text-text-primary leading-snug">
+          {activity.description}
+        </p>
+        <p className="text-xs text-text-muted mt-0.5">
+          {activity.groupName && (
+            <span className="font-medium">{activity.groupName} · </span>
+          )}
+          {timeAgo(activity.timestamp, t)}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function GroupItem({
+  group,
+  onManage,
+}: {
+  group: GroupSummary;
+  onManage: () => void;
+}) {
+  const t = useTranslations("Dashboard");
+  return (
+    <div className="flex items-center gap-3 py-3 border-b border-border-light last:border-0">
+      <div className="p-2 bg-[var(--color-icon-secondary-bg)] rounded-xl shrink-0">
+        <Users className="w-4 h-4 text-[var(--color-icon-secondary-fg)]" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="font-medium text-text-primary text-sm truncate">{group.name}</p>
+        <div className="flex items-center gap-2 mt-1">
+          <AvatarStack members={group.members} />
+          <span className="text-xs text-text-muted">
+            {group.activeListsCount} {t("activeLists")}
+          </span>
+        </div>
+      </div>
+      <Button variant="outline" size="sm" onClick={onManage}>
+        {t("manage")}
+      </Button>
+    </div>
+  );
+}
+
+// ── page ─────────────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -34,535 +186,177 @@ export default function DashboardPage() {
   const { user } = useAuthStore();
 
   const { safeToShow } = useAuthRedirect({
-    redirectTo: '/welcome',
+    redirectTo: "/welcome",
     requireAuth: true,
   });
 
   const { data: dashboardData } = useDashboard();
 
-
   if (!safeToShow) {
     return <LoadingState variant="page" size="lg" message={t("loading")} />;
   }
 
-  const stats = dashboardData?.stats || {
-    groups: 0,
-    lists: 0,
-    completedLists: 0,
-    totalItems: 0,
-    purchasedItems: 0,
-    remainingItems: 0,
-    completedTasks: 0,
-    pendingTasks: 0,
-  };
+  const activeLists = dashboardData?.activeLists || [];
+  const groups = dashboardData?.groups || [];
+  const recentActivity = dashboardData?.recentActivity || [];
+  const pendingInvitations = dashboardData?.pendingInvitations || 0;
 
-  const growth = dashboardData?.growth || {
-    groupsGrowth: 0,
-    listsGrowth: 0,
-    completedTasksGrowth: 0,
-  };
-
-  const achievements = dashboardData?.achievements || [];
-  const userInfo = dashboardData?.user || {
-    lastActive: t("unknown"),
-    online: false,
-  };
-
-  const quickActions = [
-    {
-      title: `${t("createGroup")} / ${t("joinGroup")}`,
-      description: t("joinGroupDesc"),
-      icon: Plus,
-      action: () => router.push('/groups'),
-      variant: "secondary" as const,
-      iconContainer: "bg-[var(--color-icon-secondary-bg)]",
-      iconColor: "text-[var(--color-icon-secondary-fg)]",
-    },
-    {
-      title: t("viewInvitations"),
-      description: t("viewInvitationsDesc"),
-      icon: Bell,
-      action: () => router.push('/invitations'),
-      variant: "accent" as const,
-      iconContainer: "bg-[var(--color-icon-accent-bg)]",
-      iconColor: "text-[var(--color-icon-accent-fg)]",
-    },
-  ];
-
-  const achievementIcons = {
-    first_group: Award,
-    shopping_master: Target,
-    group_player: Users,
-  };
+  const displayName =
+    user?.firstName || user?.username || "";
 
   return (
     <div className="min-h-screen bg-surface">
-      <div className="container mx-auto px-4 py-8 relative z-10">
-        <div className="max-w-7xl mx-auto space-y-8">
-          <Card variant="glass" className="shadow-2xl bg-card">
-            <CardBody className="p-1 sm:p-8">
-              <div className="flex sm:items-center justify-between flex-col md:flex-row gap-3 ">
-                <div className="flex items-center sm:gap-6 flex-col sm:flex-row">
-                  {user?.avatar && (
-                    <div className="">
-                      <img
-                        src={user.avatar}
-                        alt={user.firstName || user.username}
-                        width="100%"
-                        height={"100%"}
-                        loading="lazy"
-                        className="w-14 h-14 sm:w-24 sm:h-24 rounded-full border-4 border-border shadow-xl object-cover"
-                      />
-                    </div>
-                  )}
-                  <div>
-                    <div className="flex items-center gap-3 mb-3 bg-[var(--color-icon-primary-bg)] rounded-lg p-2">
-                      <h1 className="text-4xl font-bold text-[var(--color-icon-primary-fg)]">
-                        {t("welcome")}
-                      </h1>
-                    </div>
-                    <p className="text-xl text-text-secondary font-medium mb-1">
-                      {user?.username || user?.firstName + " " + user?.lastName}
-                    </p>
-                    <div className="text-sm text-text-muted flex items-center gap-2">
-                      <div className="w-2 h-2 bg-success rounded-full animate-pulse"></div>
-                      {user?.email}
-                    </div>
-                  </div>
-                </div>
-                <div className="flex flex-col items-center gap-1">
-                  <Badge variant="success" size="lg" dot className="mb-2">
-                    {t("online")}
-                  </Badge>
-                  <p className="text-sm text-text-muted">
-                    {t("lastActive")}: {userInfo.lastActive}
-                  </p>
-                </div>
-              </div>
-            </CardBody>
-          </Card>
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-7xl mx-auto space-y-6">
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
-            <Card hover className="bg-card">
-              <CardBody className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-[var(--color-icon-primary-bg)] rounded-2xl shadow-sm">
-                    <Users className="w-6 h-6 text-[var(--color-icon-primary-fg)]" />
-                  </div>
-                  <div className="text-end">
-                    <p className="text-sm font-medium text-text-muted">
-                      {t("totalGroups")}
-                    </p>
-                    <p className="text-2xl font-bold text-text-primary">
-                      {stats.groups}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-success" />
-                  <span className="text-sm font-medium text-success">
-                    {growth.groupsGrowth > 0
-                      ? `+${growth.groupsGrowth}%`
-                      : "0%"}
-                  </span>
-                  <span className="text-xs text-text-muted">
-                    {t("fromLastMonth")}
-                  </span>
-                </div>
-              </CardBody>
-            </Card>
-
-            <Card hover className="bg-card">
-              <CardBody className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-[var(--color-icon-secondary-bg)] rounded-2xl shadow-sm">
-                    <ShoppingCart className="w-6 h-6 text-[var(--color-icon-secondary-fg)]" />
-                  </div>
-                  <div className="text-end">
-                    <p className="text-sm font-medium text-text-muted">
-                      {t("totalLists")}
-                    </p>
-                    <p className="text-2xl font-bold text-secondary">
-                      {stats.lists}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-success" />
-                  <span className="text-sm font-medium text-success">
-                    {growth.listsGrowth > 0 ? `+${growth.listsGrowth}%` : "0%"}
-                  </span>
-                  <span className="text-xs text-text-muted">
-                    {t("fromLastMonth")}
-                  </span>
-                </div>
-              </CardBody>
-            </Card>
-
-            <Card hover className="bg-card">
-              <CardBody className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-[var(--color-icon-accent-bg)] rounded-2xl shadow-sm">
-                    <Target className="w-6 h-6 text-[var(--color-icon-accent-fg)]" />
-                  </div>
-                  <div className="text-end">
-                    <p className="text-sm font-medium text-text-muted">
-                      {t("completedLists")}
-                    </p>
-                    <p className="text-2xl font-bold text-accent">
-                      {stats.completedLists}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-success" />
-                  <span className="text-sm font-medium text-success">
-                    {stats.completedLists > 0
-                      ? `${Math.round(
-                          (stats.completedLists / stats.lists) * 100
-                        )}%`
-                      : "0%"}
-                  </span>
-                  <span className="text-xs text-text-muted">
-                    {t("completionPercentage")}
-                  </span>
-                </div>
-              </CardBody>
-            </Card>
-
-            <Card hover className="bg-card">
-              <CardBody className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-[var(--color-icon-warning-bg)] rounded-2xl shadow-sm">
-                    <ShoppingCart className="w-6 h-6 text-[var(--color-icon-warning-fg)]" />
-                  </div>
-                  <div className="text-end">
-                    <p className="text-sm font-medium text-text-muted">
-                      {t("purchasedItems")}
-                    </p>
-                    <p className="text-2xl font-bold text-warning">
-                      {stats.purchasedItems}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-success" />
-                  <span className="text-sm font-medium text-success">
-                    {stats.totalItems > 0
-                      ? `${Math.round(
-                          (stats.purchasedItems / stats.totalItems) * 100
-                        )}%`
-                      : "0%"}
-                  </span>
-                  <span className="text-xs text-text-muted">
-                    {t("purchasePercentage")}
-                  </span>
-                </div>
-              </CardBody>
-            </Card>
-
-            <Card hover className="bg-card">
-              <CardBody className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-[var(--color-icon-success-bg)] rounded-2xl shadow-sm">
-                    <Activity className="w-6 h-6 text-[var(--color-icon-success-fg)]" />
-                  </div>
-                  <div className="text-end">
-                    <p className="text-sm font-medium text-text-muted">
-                      {t("remainingItems")}
-                    </p>
-                    <p className="text-2xl font-bold text-success">
-                      {stats.remainingItems}
-                    </p>
-                  </div>
-                </div>
-                  <div className="w-full bg-border-light rounded-full h-2 mb-2">
-                  <div
-                    className="bg-success h-2 rounded-full"
-                    style={{
-                      width: `${
-                        stats.totalItems > 0
-                          ? Math.round(
-                              (stats.remainingItems / stats.totalItems) * 100
-                            )
-                          : 0
-                      }%`,
-                    }}
-                  ></div>
-                </div>
-                <p className="text-xs text-text-muted text-center">
-                  {t("remainingToBuy")}
-                </p>
-              </CardBody>
-            </Card>
-
-            <Card hover>
-              <CardBody className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-[var(--color-icon-info-bg)] rounded-2xl shadow-sm">
-                    <ShoppingCart className="w-6 h-6 text-[var(--color-icon-info-fg)]" />
-                  </div>
-                  <div className="text-end">
-                    <p className="text-sm font-medium text-text-muted">
-                      {t("totalItems")}
-                    </p>
-                    <p className="text-2xl font-bold text-info">
-                      {stats.totalItems}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-info" />
-                  <span className="text-sm font-medium text-info">
-                    {t("totalItemsLabel")}
-                  </span>
-                </div>
-              </CardBody>
-            </Card>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2">
-              <Card variant="glass" className="bg-surface/80 shadow-2xl">
-                <CardHeader>
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-[var(--color-icon-primary-bg)] rounded-lg">
-                      <Sparkles className="w-5 h-5 text-[var(--color-icon-primary-fg)]" />
-                    </div>
-                    <div>
-                      <h2 className="text-xl font-bold text-text-primary">
-                        {t("quickActions")}
-                      </h2>
-                      <p className="text-text-muted">{t("quickActionsDesc")}</p>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardBody>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {quickActions.map((action, index) => {
-                      const Icon = action.icon;
-                      return (
-                        <Card
-                          key={index}
-                          variant="glass"
-                          hover
-                          onClick={action.action}
-                          className="cursor-pointer  shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-                        >
-                          <CardBody className="p-6 text-center">
-                            <div
-                              className={`p-4 rounded-2xl mb-4 inline-block ${action.iconContainer} shadow-sm`}
-                            >
-                              <Icon className={`w-8 h-8 ${action.iconColor}`} />
-                            </div>
-                            <h3 className="text-lg font-semibold text-text-primary mb-2">
-                              {action.title}
-                            </h3>
-                            <p className="text-sm text-text-muted mb-4">
-                              {action.description}
-                            </p>
-                            <Button
-                              variant={action.variant}
-                              size="sm"
-                              icon={<ArrowIcon />}
-                              className="w-full"
-                            >
-                              {t("getStarted")}
-                            </Button>
-                          </CardBody>
-                        </Card>
-                      );
-                    })}
-                  </div>
-                </CardBody>
-              </Card>
-            </div>
-
+          <div className="flex items-center justify-between">
             <div>
-              <Card variant="glass" className="bg-surface/80 shadow-2xl">
-                <CardHeader>
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-[var(--color-icon-warning-bg)] rounded-lg">
-                      <Award className="w-5 h-5 text-[var(--color-icon-warning-fg)]" />
-                    </div>
-                    <div>
-                      <h2 className="text-xl font-bold text-text-primary">
-                        {t("achievements")}
-                      </h2>
-                      <p className="text-text-muted">{t("achievementsDesc")}</p>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardBody>
-                  <div className="space-y-4">
-                    {achievements.map(
-                      (achievement: IAchievement, index: number) => {
-                        const Icon =
-                          achievementIcons[
-                            achievement.id as keyof typeof achievementIcons
-                          ] || Award;
-                        return (
-                          <div
-                            key={index}
-                            className="flex items-center gap-4 p-4 bg-surface rounded-xl"
-                          >
-                            <div className="p-2 bg-surface-hover rounded-lg">
-                              <Icon
-                                className={`w-5 h-5 ${
-                                  achievement.unlocked
-                                    ? "text-warning"
-                                    : "text-text-muted"
-                                }`}
-                              />
-                            </div>
-                            <div className="flex-1">
-                              <p className="font-medium text-text-primary">
-                                {achievement.title}
-                              </p>
-                              <p className="text-sm text-text-muted">
-                                {achievement.description}
-                              </p>
-                              <div className="mt-2">
-                                <div className="w-full bg-border-light rounded-full h-2">
-                                  <div
-                                    className="bg-warning h-2 rounded-full transition-all duration-300"
-                                    style={{
-                                      width: `${
-                                        (achievement.progress /
-                                          achievement.maxProgress) *
-                                        100
-                                      }%`,
-                                    }}
-                                  ></div>
-                                </div>
-                                <p className="text-xs text-text-muted mt-1">
-                                  {achievement.progress}/
-                                  {achievement.maxProgress}
-                                </p>
-                              </div>
-                            </div>
-                            {achievement.unlocked && (
-                              <div className="w-3 h-3 bg-warning rounded-full"></div>
-                            )}
-                          </div>
-                        );
-                      }
-                    )}
-                  </div>
-                </CardBody>
-              </Card>
+              <h1 className="text-2xl font-bold text-text-primary">
+                {t("welcome")}{displayName ? ` ${displayName}` : ""}
+              </h1>
+              <p className="text-sm text-text-muted mt-0.5">
+                {activeLists.length > 0
+                  ? `${activeLists.length} ${t("activeLists")}`
+                  : t("noActiveListsNow")}
+              </p>
             </div>
+            {pendingInvitations > 0 && (
+              <button
+                onClick={() => router.push("/invitations")}
+                className="flex items-center gap-2 px-3 py-2 bg-[var(--color-icon-warning-bg)] rounded-xl hover:opacity-80 transition-opacity"
+              >
+                <Bell className="w-4 h-4 text-[var(--color-icon-warning-fg)]" />
+                <span className="text-sm font-medium text-[var(--color-icon-warning-fg)]">
+                  {pendingInvitations} {t("invitations")}
+                </span>
+              </button>
+            )}
           </div>
 
-          <Card variant="glass" className="bg-surface/80 shadow-2xl">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-[var(--color-icon-accent-bg)] rounded-lg">
-                  <Activity className="w-5 h-5 text-[var(--color-icon-accent-fg)]" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-text-primary">
-                    {t("recentActivity")}
-                  </h2>
-                  <p className="text-text-muted">{t("recentActivityDesc")}</p>
-                </div>
+          <section>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Activity className="w-4 h-4 text-text-muted" />
+                <h2 className="font-semibold text-text-primary">
+                  {t("activeLists")}
+                </h2>
               </div>
-            </CardHeader>
-            <CardBody>
-              <div className="space-y-4">
-                {stats.groups === 0 ? (
-                  <div className="text-center py-8">
-                    <div className="p-4 bg-[var(--color-icon-primary-bg)] rounded-2xl mx-auto w-fit mb-4">
-                      <Users className="w-8 h-8 text-[var(--color-icon-primary-fg)]" />
+              {activeLists.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => router.push("/groups")}
+                >
+                  {t("viewAll")}
+                </Button>
+              )}
+            </div>
+
+            {activeLists.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {activeLists.map((list) => (
+                  <ActiveListCard
+                    key={list.id}
+                    list={list}
+                    onClick={() =>
+                      router.push(`/groups/${list.groupId}/${list.id}`)
+                    }
+                  />
+                ))}
+              </div>
+            ) : (
+              <Card className="bg-card">
+                <CardBody className="py-10 flex flex-col items-center gap-3 text-center">
+                  <div className="p-4 bg-[var(--color-icon-primary-bg)] rounded-2xl">
+                    <ShoppingCart className="w-8 h-8 text-[var(--color-icon-primary-fg)]" />
+                  </div>
+                  <p className="text-text-muted">{t("noActiveLists")}</p>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    icon={<Plus className="w-4 h-4" />}
+                    onClick={() => router.push("/groups")}
+                  >
+                    {t("goShopping")}
+                  </Button>
+                </CardBody>
+              </Card>
+            )}
+          </section>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <div className="order-1 lg:order-2">
+              <Card className="bg-card">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Users className="w-4 h-4 text-[var(--color-icon-secondary-fg)]" />
+                      <h2 className="font-semibold text-text-primary">
+                        {t("myGroups")}
+                      </h2>
                     </div>
-                    <p className="text-text-muted mb-4">{t("noGroups")}</p>
                     <Button
-                      variant="primary"
-                      onClick={() => router.push('/groups')}
-                      className="mx-auto"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => router.push("/groups")}
                     >
-                      {t("createGroup")}
+                      {t("viewAll")}
                     </Button>
                   </div>
-                ) : (
-                  <>
-                    {stats.pendingTasks > 0 && (
-                      <div className={`flex items-center gap-4 p-4 ${colorRoleClasses.statusWarningSoft} rounded-xl`}>
-                        <div className="p-2 bg-[var(--color-icon-warning-bg)] rounded-lg shadow-sm">
-                          <Bell className="w-5 h-5 text-[var(--color-icon-warning-fg)]" />
-                        </div>
-                        <div className="flex-1">
-                          <p className="font-medium text-text-primary">
-                            {t("pendingInvitations")}
-                          </p>
-                          <p className="text-sm text-text-muted">
-                            {stats.pendingTasks} {t("invitations")}
-                          </p>
-                        </div>
-                        <div className="text-end">
-                          <Button
-                            variant="warning"
-                            size="sm"
-                            onClick={() =>
-                              router.push('/invitations')
-                            }
-                          >
-                            {t("viewAll")}
-                          </Button>
-                        </div>
-                      </div>
-                    )}
+                </CardHeader>
+                <CardBody className="pt-0">
+                  {groups.length > 0 ? (
+                    groups.slice(0, 5).map((group) => (
+                      <GroupItem
+                        key={group.id}
+                        group={group}
+                        onManage={() => router.push(`/groups/${group.id}`)}
+                      />
+                    ))
+                  ) : (
+                    <div className="py-6 text-center">
+                      <p className="text-sm text-text-muted mb-3">
+                        {t("noGroups")}
+                      </p>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => router.push("/groups")}
+                      >
+                        {t("createGroup")}
+                      </Button>
+                    </div>
+                  )}
+                </CardBody>
+              </Card>
+            </div>
 
-                    {stats.lists > 0 && (
-                      <div className={`flex items-center gap-4 p-4 ${colorRoleClasses.statusSuccessSoft} rounded-xl`}>
-                        <div className="p-2 bg-[var(--color-icon-success-bg)] rounded-lg shadow-sm">
-                          <ShoppingCart className="w-5 h-5 text-[var(--color-icon-success-fg)]" />
-                        </div>
-                        <div className="flex-1">
-                          <p className="font-medium text-text-primary">
-                            {t("totalLists")}
-                          </p>
-                          <p className="text-sm text-text-muted">
-                            {stats.lists} {t("lists")}
-                          </p>
-                        </div>
-                        <div className="text-end">
-                          <span className="text-sm text-text-muted">
-                            {stats.completedLists} {t("completed")}
-                          </span>
-                        </div>
-                      </div>
-                    )}
+            <div className="order-2 lg:order-1 lg:col-span-2">
+              <Card className="bg-card">
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <Activity className="w-4 h-4 text-[var(--color-icon-accent-fg)]" />
+                    <h2 className="font-semibold text-text-primary">
+                      {t("recentActivity")}
+                    </h2>
+                  </div>
+                </CardHeader>
+                <CardBody className="pt-0">
+                  {recentActivity.length > 0 ? (
+                    recentActivity.slice(0, 7).map((activity) => (
+                      <ActivityItem key={activity.id} activity={activity} />
+                    ))
+                  ) : (
+                    <p className="text-sm text-text-muted py-6 text-center">
+                      {t("noActivity")}
+                    </p>
+                  )}
+                </CardBody>
+              </Card>
+            </div>
 
-                    {stats.groups > 0 && (
-                      <div className={`flex items-center gap-4 p-4 ${colorRoleClasses.statusSecondarySoft} rounded-xl`}>
-                        <div className="p-2 bg-[var(--color-icon-secondary-bg)] rounded-lg shadow-sm">
-                          <Users className="w-5 h-5 text-[var(--color-icon-secondary-fg)]" />
-                        </div>
-                        <div className="flex-1">
-                          <p className="font-medium text-text-primary">
-                            {t("totalGroups")}
-                          </p>
-                          <p className="text-sm text-text-muted">
-                            {stats.groups} {t("groups")}
-                          </p>
-                        </div>
-                        <div className="text-end">
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={() => router.push('/groups')}
-                          >
-                            {t("manage")}
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            </CardBody>
-          </Card>
+          </div>
         </div>
       </div>
     </div>

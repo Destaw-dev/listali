@@ -8,7 +8,7 @@ import React, {
 } from "react";
 import { useTranslations } from "next-intl";
 import { Package, X } from "lucide-react";
-import { useAvailableCategories, usePopularItems } from "../../hooks/useItems";
+import { PopularItem, useAvailableCategories, usePopularItems } from "../../hooks/useItems";
 import { useNotification } from "../../contexts/NotificationContext";
 import { useModalScrollLock } from "../../hooks/useModalScrollLock";
 import { ProductsSelectionView } from "./AddItemsModal/ProductsSelectionView";
@@ -80,21 +80,14 @@ export default function AddItemsModal({
     setSelectedProducts((prev) => [...prev, manualProduct]);
   }, []);
 
-  const addFrequentItem = useCallback((pru: {
-    name: string;
-    brand?: string;
-    image?: string;
-    isManualEntry?: boolean;
-    _id?: { unit?: string; category?: string | null };
-    product?: string | { _id?: string } | null;
-  }) => {
+  const addFrequentItem = useCallback((pru: PopularItem) => {
     const alreadySelected = selectedProducts.some(
       (p) => normalize(p.name) === normalize(pru.name)
     );
     if (alreadySelected) return;
 
-    const productId = typeof pru.product === 'string' ? pru.product : pru.product?._id;
-    const defaultUnit = pru._id?.unit || 'piece';
+    const productId = pru.product?._id;
+    const defaultUnit = pru.unit || 'piece';
 
     const manualProduct: IManualProduct = {
       name: pru.name,
@@ -106,7 +99,7 @@ export default function AddItemsModal({
       description: "",
       isManual: true,
       _id: productId || `popular-${Date.now()}`,
-      categoryId: pru._id?.category || undefined,
+      categoryId: pru.categoryId || undefined,
       productRef: productId || undefined,
     };
     setSelectedProducts((prev) => [...prev, manualProduct]);

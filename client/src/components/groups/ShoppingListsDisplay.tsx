@@ -268,7 +268,7 @@ function ShoppingListCard({
         </div>
 
         {list.metadata?.itemsCount > 0 && (
-          <div className="w-full bg-info rounded-full h-1.5">
+          <div className="w-full rounded-full h-1.5">
             <div
               className="bg-primary-500 h-1.5 rounded-full transition-all"
               style={{ width: `${completionPercent}%` }}

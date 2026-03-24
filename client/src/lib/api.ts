@@ -783,6 +783,11 @@ export class ApiClient {
     return response.data?.data || [];
   }
 
+  async parseRecipe(text: string) {
+    const response = await this.post('/ai/parse', { text });
+    return response.data;
+  }
+
   updateBaseURL(newBaseURL: string) {
     this.baseURL = newBaseURL;
     this.client.defaults.baseURL = `${this.baseURL}/api`;

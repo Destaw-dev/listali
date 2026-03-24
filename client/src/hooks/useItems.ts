@@ -55,15 +55,25 @@ export const useItem = (itemId: string) => {
 };
 
 export interface PopularItem {
-  _id: { name: string; category: string | null; unit: string };
-  count: number;
-  avgPrice: number | null;
+  _id: { product: string | null };
+  totalPurchasedQty: number;
+  purchaseEvents: number;
   lastPurchased: string | null;
-  product: string | null;
-  isManualEntry: boolean;
+  product: {
+    _id: string;
+    name?: string;
+    brand?: string;
+    image?: unknown;
+    averagePrice?: number;
+    price?: number;
+    categoryId?: string | null;
+    subCategoryId?: string | null;
+  } | null;
   image?: string;
   brand?: string;
   name: string;
+  unit: string;
+  categoryId: string | null;
 }
 
 export const usePopularItems = (groupId: string, enabled = true) => {

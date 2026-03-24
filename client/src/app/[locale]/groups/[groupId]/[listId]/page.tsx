@@ -15,6 +15,7 @@ import { useCreateMultipleItems, useAvailableCategories } from '../../../../../h
 import { useAuthRedirect } from '../../../../../hooks/useAuthRedirect';
 import { ShoppingModeCard } from '../../../../../components/shoppingList/ShoppingModeCard';
 import { ICategory, IItem, IGroupMember, ItemInput } from '../../../../../types';
+
 import { useGroup } from '../../../../../hooks/useGroups';
 import { useAuthStore } from '../../../../../store/authStore';
 import { useUpdateItem } from '../../../../../hooks/useItems';
@@ -218,6 +219,7 @@ export default function ShoppingListPage() {
         groupId={groupId}
         locale={locale}
         onAddItems={() => setShowAddItemsModal(true)}
+        currentItems={items || []}
       />
 
       <ShoppingListStats
@@ -233,6 +235,12 @@ export default function ShoppingListPage() {
         totalItems={totalItems}
         purchasedItems={purchasedItems}
       />
+
+      {/* <SmartSuggestions
+        groupId={groupId}
+        listId={listId}
+        currentItems={items || []}
+      /> */}
 
       <ShoppingListFilters
         status={statusFilter}

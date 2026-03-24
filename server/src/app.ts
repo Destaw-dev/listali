@@ -21,6 +21,7 @@ import categoryRoutes from './routes/category';
 import shoppingRoutes from './routes/shopping';
 import settingsRoutes from './routes/settings';
 import dashboardRoutes from './routes/dashboard';
+import aiRoutes from './routes/ai.routes';
 
 import { errorHandler } from './middleware/handlers';
 import { notFound } from './middleware/notFound';
@@ -124,6 +125,7 @@ app.use('/api/allergen', allergenRoutes);
 app.use('/api/shopping', shoppingRoutes);
 app.use('/api/settings', authenticateToken, settingsRoutes);
 app.use('/api/dashboard', authenticateToken, dashboardRoutes);
+app.use('/api/ai', authenticateToken, aiRoutes);
 
 app.get('/api', (req, res) => {
   res.json({

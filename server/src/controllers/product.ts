@@ -7,6 +7,7 @@ import {
   errorResponse,
 } from "../middleware/handlers";
 import { IApiResponse, IProduct } from "../types";
+import { logger } from "../utils/logger";
 
 export const getAllProducts = async (
   req: Request,
@@ -170,6 +171,7 @@ export const getBySearchByNameHebrew = async (
     };
     return res.json(successResponse(products, "products loaded successfully", pagination));
   } catch (err) {
+    logger.error("Error in product search", { error: err instanceof Error ? err.message : String(err) });
     return res
       .status(500)
       .json(errorResponse("error loading products by search"));

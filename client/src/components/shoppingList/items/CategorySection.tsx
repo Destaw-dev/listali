@@ -55,6 +55,7 @@ export const CategorySection = memo(function CategorySection({
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
+        aria-expanded={isOpen}
         className={cn(
           "group flex w-full items-center justify-between py-3 px-3 rounded-xl transition-all duration-200 hover:bg-surface/50 active:scale-[0.99]",
           tone === "purchased" ? "opacity-70" : "opacity-100"
@@ -77,9 +78,9 @@ export const CategorySection = memo(function CategorySection({
           </div>
         </div>
         {isOpen ? (
-          <ChevronUp className="h-5 w-5 text-text-secondary transition-colors group-hover:text-text-primary" />
+          <ChevronUp aria-hidden="true" className="h-5 w-5 text-text-secondary transition-colors group-hover:text-text-primary" />
         ) : (
-          <ChevronDown className="h-5 w-5 text-text-secondary transition-colors group-hover:text-text-primary" />
+          <ChevronDown aria-hidden="true" className="h-5 w-5 text-text-secondary transition-colors group-hover:text-text-primary" />
         )}
       </button>
 

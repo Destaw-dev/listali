@@ -294,6 +294,7 @@
     "description": "Shopping list management",
     "login": "Login",
     "addItem": "Add Item",
+    "importRecipe": "Import from Recipe",
     "addMultipleItems": "Add Multiple Items",
     "searchProducts": "Search Products",
     "noItems": "No items in list",
@@ -1223,7 +1224,7 @@
   },
   "Dashboard": {
     "loading": "Loading...",
-    "welcome": "Welcome!",
+    "welcome": "Welcome",
     "userDetails": "User Details",
     "id": "ID",
     "username": "Username",
@@ -1305,7 +1306,16 @@
     "local": "Local",
     "checkedItems": "Checked Items",
     "myLists": "My Lists",
-    "createList": "Create List"
+    "createList": "Create List",
+    "activeLists": "Active Lists",
+    "noActiveLists": "No active lists. Start shopping!",
+    "goShopping": "Start Shopping",
+    "noActivity": "No activity yet",
+    "noActiveListsNow": "No active lists right now",
+    "remaining": "remaining",
+    "timeAgoMinutes": "{count}m ago",
+    "timeAgoHours": "{count}h ago",
+    "timeAgoDays": "{count}d ago"
   },
   "Groups": {
     "errorLoadingGroups": "Error loading groups",

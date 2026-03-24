@@ -143,9 +143,15 @@ export default async function LocaleLayout({
         <NextIntlClientProvider messages={messages} locale={locale}>
           <Providers locale={locale}>
             <div id="root" className="min-h-screen">
+              <a
+                href="#main-content"
+                className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:start-4 focus:z-[100] focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-text-on-primary focus:shadow-lg"
+              >
+                {locale === 'he' ? 'דלג לתוכן הראשי' : 'Skip to main content'}
+              </a>
               <Navigation />
-              
-              <div className="pt-0 md:pt-0">
+
+              <div id="main-content" className="pt-0 md:pt-0">
                 {children}
               </div>
               

@@ -75,7 +75,8 @@ export function ShoppingListFilters({
         value={searchQuery}
         onChange={(event) => onSearchChange(event.target.value)}
         placeholder={t("searchPlaceholder")}
-        icon={<Search className="h-4 w-4" />}
+        aria-label={t("searchPlaceholder")}
+        icon={<Search className="h-4 w-4" aria-hidden="true" />}
         variant='default'
         size="md"
         fullWidth
@@ -93,6 +94,7 @@ export function ShoppingListFilters({
               rounded
               shadow={isActive}
               onClick={handleStatusClick(value)}
+              aria-pressed={isActive}
               className={cn(
                 "min-w-[120px] whitespace-nowrap transition-all duration-200",
               )}

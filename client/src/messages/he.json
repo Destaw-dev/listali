@@ -294,6 +294,7 @@
     "description": "ניהול רשימת הקניות",
     "login": "התחבר",
     "addItem": "הוסף פריט",
+    "importRecipe": "ייבוא ממתכון",
     "addMultipleItems": "הוסף פריטים מרובים",
     "searchProducts": "חיפוש מוצרים",
     "noItems": "אין פריטים ברשימה",
@@ -772,7 +773,8 @@
   },
   "ShoppingListHeader": {
     "defaultDescription": "רשימת קניות",
-    "addItem": "הוסף פריט"
+    "addItem": "הוסף פריט",
+    "importRecipe": "ייבוא ממתכון"
   },
   "AddItemModal": {
     "addNewItem": "הוסף פריט חדש",
@@ -1220,6 +1222,27 @@
     "adding": "מוסיף...",
     "addItems": "הוסף {count} פריטים"
   },
+  "RecipeImportModal": {
+    "title": "ייבוא ממתכון (AI)",
+    "description": "הדבק טקסט של מתכון או רשימת מצרכים, וה-AI יחלץ ממנו את הפריטים באופן אוטומטי.",
+    "placeholder": "לדוגמה:\n2 כוסות קמח\n3 ביצים\n100 גרם חמאה\nחצי כוס חלב...",
+    "analyze": "נתח טקסט",
+    "analyzing": "מנתח...",
+    "selectItems": "בחר פריטים להוספה",
+    "addItems": "הוסף {count} פריטים לרשימה",
+    "noItemsFound": "לא זוהו פריטים בטקסט. נסה לנסח אחרת.",
+    "error": "שגיאה בניתוח הטקסט. אנא נסה שוב.",
+    "cancel": "ביטול",
+    "startListening": "הכתב קולית",
+    "stopListening": "עצור הקלטה",
+    "listening": "מקשיב...",
+    "browserNotSupported": "הדפדפן לא תומך בזיהוי דיבור"
+  },
+  "SmartSuggestions": {
+    "title": "אולי שכחת?",
+    "subtitle": "מוצרים שאתם קונים בדרך כלל",
+    "add": "הוסף"
+  },
   "Layout": {
     "allRightsReserved": "כל הזכויות שמורות."
   },
@@ -1228,7 +1251,7 @@
   },
   "Dashboard": {
     "loading": "טוען...",
-    "welcome": "ברוך הבא!",
+    "welcome": "ברוך הבא",
     "userDetails": "פרטי משתמש",
     "id": "מזהה",
     "username": "שם משתמש",
@@ -1307,7 +1330,16 @@
     "local": "מקומי",
     "checkedItems": "פריטים מסומנים",
     "myLists": "הרשימות שלי",
-    "createList": "צור רשימה"
+    "createList": "צור רשימה",
+    "activeLists": "רשימות פעילות",
+    "noActiveLists": "אין רשימות פעילות. התחל לקנות!",
+    "goShopping": "התחל לקנות",
+    "noActivity": "אין פעילות עדיין",
+    "noActiveListsNow": "אין רשימות פעילות כרגע",
+    "remaining": "נותרו",
+    "timeAgoMinutes": "לפני {count} דק'",
+    "timeAgoHours": "לפני {count} שע'",
+    "timeAgoDays": "לפני {count} ימים"
   },
   "Groups": {
     "errorLoadingGroups": "שגיאה בטעינת הקבוצות",

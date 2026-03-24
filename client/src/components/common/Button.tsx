@@ -11,16 +11,20 @@ interface ButtonProps extends Omit<IButtonProps, 'variant'> {
   rounded?: boolean;
   shadow?: boolean;
   glow?: boolean;
-  checked?: boolean; 
-  checkIcon?: React.ReactNode; 
-  variant?: IButtonProps['variant'] | 'checkbox' | 'dashed' | 'surface' | 'outlineError' | 'outlineBlue' | 'ghostSurface'; 
+  checked?: boolean;
+  checkIcon?: React.ReactNode;
+  variant?: IButtonProps['variant'] | 'checkbox' | 'dashed' | 'surface' | 'outlineError' | 'outlineBlue' | 'ghostSurface';
+  'aria-label'?: string;
+  'aria-pressed'?: boolean | 'true' | 'false' | 'mixed';
+  'aria-expanded'?: boolean;
+  'aria-controls'?: string;
 }
 
-export function Button({ 
-  children, 
-  variant = 'primary', 
-  size = 'md', 
-  disabled = false, 
+export function Button({
+  children,
+  variant = 'primary',
+  size = 'md',
+  disabled = false,
   loading = false,
   onClick,
   type = 'button',
@@ -32,7 +36,11 @@ export function Button({
   shadow = true,
   glow = false,
   checked = false,
-  checkIcon
+  checkIcon,
+  'aria-label': ariaLabel,
+  'aria-pressed': ariaPressed,
+  'aria-expanded': ariaExpanded,
+  'aria-controls': ariaControls,
 }: ButtonProps) {
   const baseClasses = cn(
     'inline-flex items-center justify-center font-medium transition-all duration-200',
@@ -149,6 +157,10 @@ export function Button({
       className={classes}
       disabled={disabled || loading}
       onClick={onClick}
+      aria-label={ariaLabel}
+      aria-pressed={ariaPressed}
+      aria-expanded={ariaExpanded}
+      aria-controls={ariaControls}
     >
       {loading && (
         <svg 

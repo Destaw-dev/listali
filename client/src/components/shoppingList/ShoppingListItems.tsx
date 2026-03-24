@@ -280,6 +280,9 @@ export const ShoppingListItems = memo(function ShoppingListItems({
 
     return (
     <>
+      {/* Live region for screen reader announcements */}
+      <div aria-live="polite" aria-atomic="true" className="sr-only" />
+
       <div className="rounded-3xl bg-card px-3 py-6 shadow-xl sm:px-6">
         <header className=" flex flex-col sm:flex-row sm:items-center sm:justify-between">
           <div>

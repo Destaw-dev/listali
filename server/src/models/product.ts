@@ -287,25 +287,35 @@ ProductSchema.statics.searchByNameHebrew = function (
   page: number,
   limit: number
 ) {
-  return Promise.all([
-    this.find({
-      $or: [
-        { name: { $regex: searchTerm, $options: "i" } },
-        { tags: { $in: [new RegExp(searchTerm, "i")] } },
-      ],
-      isActive: true,
-    })
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .lean(),
+  const escaped = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const regexContains = new RegExp(escaped, 'i');
 
-    this.countDocuments({
-      $or: [
-        { name: { $regex: searchTerm, $options: "i" } },
-        { tags: { $in: [new RegExp(searchTerm, "i")] } },
-      ],
-      isActive: true,
-    }),
+  const pipeline: any[] = [
+    { $match: { name: regexContains, isActive: true } },
+    {
+      $addFields: {
+        _score: {
+          $switch: {
+            branches: [
+              { case: { $regexMatch: { input: '$name', regex: `^${escaped}$`, options: 'i' } }, then: 2 },
+              { case: { $regexMatch: { input: '$name', regex: `^${escaped}`,  options: 'i' } }, then: 1 },
+            ],
+            default: 0,
+          },
+        },
+      },
+    },
+    { $sort: { _score: -1, name: 1 } },
+  ];
+
+  return Promise.all([
+    this.aggregate([
+      ...pipeline,
+      { $skip: (page - 1) * limit },
+      { $limit: limit },
+      { $project: { _score: 0 } },
+    ]),
+    this.countDocuments({ name: regexContains, isActive: true }),
   ]);
 };
 
