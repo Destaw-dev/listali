@@ -1039,30 +1039,45 @@ export const createMultipleItems = async (req: express.Request, res: express.Res
           }
         }
 
-        const [item] = await Item.create([{
-          name: resolvedName,
-          description,
-          quantity,
-          unit,
-          category: resolvedCategory,
-          brand: resolvedBrand,
-          estimatedPrice: resolvedEstimatedPrice,
-          priority,
-          notes,
-          alternatives,
-          shoppingList: shoppingListId,
-          addedBy: userId,
-          product: resolvedProductId,
-          isManualEntry: resolvedIsManualEntry
-        }], { session });
+        const duplicateQuery = resolvedProductId
+          ? { shoppingList: shoppingListId, product: resolvedProductId, unit, status: { $ne: 'cancelled' } }
+          : { shoppingList: shoppingListId, name: resolvedName, unit, isManualEntry: true, status: { $ne: 'cancelled' } };
 
-        if (item) {
-          const itemId = item._id;
-          const itemIdExists = shoppingList.items.some(id => id.toString() === itemId.toString());
-          if (!itemIdExists) {
-            shoppingList.items.push(itemId);
+        const existingItem = await Item.findOne(duplicateQuery).session(session);
+
+        if (existingItem) {
+          const updated = await Item.findByIdAndUpdate(
+            existingItem._id,
+            { $inc: { quantity: quantity || 1 } },
+            { new: true, session }
+          );
+          if (updated) createdItems.push(updated);
+        } else {
+          const [item] = await Item.create([{
+            name: resolvedName,
+            description,
+            quantity,
+            unit,
+            category: resolvedCategory,
+            brand: resolvedBrand,
+            estimatedPrice: resolvedEstimatedPrice,
+            priority,
+            notes,
+            alternatives,
+            shoppingList: shoppingListId,
+            addedBy: userId,
+            product: resolvedProductId,
+            isManualEntry: resolvedIsManualEntry
+          }], { session });
+
+          if (item) {
+            const itemId = item._id;
+            const itemIdExists = shoppingList.items.some(id => id.toString() === itemId.toString());
+            if (!itemIdExists) {
+              shoppingList.items.push(itemId);
+            }
+            createdItems.push(item);
           }
-          createdItems.push(item);
         }
       }
       

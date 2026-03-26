@@ -98,6 +98,7 @@ export function CreateShoppingListModal({
         <Input
           {...register("name")}
           type="text"
+          variant="filled"
           placeholder={t("listNamePlaceholder")}
           error={errors.name?.message}
           label={`${t("listName")} *`}
@@ -105,6 +106,7 @@ export function CreateShoppingListModal({
 
         <TextArea
           {...register("description")}
+          variant="filled"
           rows={3}
           placeholder={t("descriptionPlaceholder")}
           error={errors.description?.message}

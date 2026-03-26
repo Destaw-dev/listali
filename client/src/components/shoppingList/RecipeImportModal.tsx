@@ -21,9 +21,9 @@ const HEBREW_TO_UNIT: Record<string, string> = {
   'שקית': 'bag',
   'בקבוק': 'bottle',
   'קופסת שימורים': 'can',
-  'כוס': 'cup',
-  'כף': 'tbsp',
-  'כפית': 'tsp',
+  'כוס': 'package',
+  'כף': 'package',
+  'כפית': 'piece',
 };
 
 const UNITS = [
@@ -37,9 +37,6 @@ const UNITS = [
   { value: 'bag', label: 'שקית' },
   { value: 'bottle', label: 'בקבוק' },
   { value: 'can', label: 'קופסת שימורים' },
-  { value: 'cup', label: 'כוס' },
-  { value: 'tbsp', label: 'כף' },
-  { value: 'tsp', label: 'כפית' },
 ];
 
 interface ParsedRecipeItem {

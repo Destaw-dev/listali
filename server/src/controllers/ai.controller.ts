@@ -2,9 +2,20 @@ import { Request, Response } from "express";
 import { parseShoppingListFromText } from "../ai.service";
 import { logger } from "../utils/logger";
 import Product from "../models/product";
+import { Category } from "../models/category";
 
 type ParsedAIItem = { name: string; quantity?: number; unit?: string; category?: string };
 type ProductDoc = { name?: string; _id?: { toString(): string }; categoryId?: { toString(): string } };
+
+function getCoreSearchTerm(name: string): string {
+  const words = name.trim().split(/\s+/);
+  const core: string[] = [];
+  for (const w of words) {
+    if (/\d/.test(w)) break;
+    core.push(w);
+  }
+  return core.length > 0 ? core.join(' ') : (words[0] || '');
+}
 
 export const parseText = async (req: Request, res: Response) => {
   try {
@@ -13,20 +24,30 @@ export const parseText = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Text content is required" });
     }
 
-    const parsedItems = await parseShoppingListFromText(text);
+    const allCategories = await Category.find({}).select('_id name').lean();
+    const categoryNames = allCategories.map((c) => c.name);
+    const categoryIdByName = new Map(allCategories.map((c) => [c.name, String(c._id)]));
 
-    // Enrich each item with a product DB match (parallel, server-side)
+    const parsedItems = await parseShoppingListFromText(text, categoryNames);
+
     const searchResults = await Promise.allSettled(
-      (parsedItems as ParsedAIItem[]).map((item) => Product.searchByNameHebrew(item.name, 1, 1))
+      (parsedItems as ParsedAIItem[]).map((item) =>
+        Product.searchByNameHebrew(getCoreSearchTerm(item.name), 1, 10)
+      )
     );
+
+    console.log({parsedItems, searchResults});
+
 
     const items = (parsedItems as ParsedAIItem[]).map((item, i: number) => {
       const result = searchResults[i];
       const products: ProductDoc[] = result?.status === "fulfilled" ? (result.value[0] as ProductDoc[]) : [];
-      const iName = (item.name || "").toLowerCase().trim();
-      const match = products.find(
-        (p) => (p.name || "").toLowerCase().trim() === iName
-      );
+
+      const expectedCategoryId = item.category ? categoryIdByName.get(item.category) : null;
+      const match = expectedCategoryId
+        ? (products.find((p) => p.categoryId?.toString() === expectedCategoryId) ?? products[0] ?? null)
+        : (products[0] ?? null);
+
       return {
         ...item,
         productId: match?._id?.toString() ?? null,
