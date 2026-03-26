@@ -143,7 +143,7 @@ export const ShoppingListItems = memo(function ShoppingListItems({
       });
       setEditModalItem(null);
     },
-    [editModalItem, updateItemMutation]
+    [editModalItem, updateItemMutation, listId]
   );
 
   const handleDeleteItem = useCallback(

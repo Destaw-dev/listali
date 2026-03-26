@@ -77,7 +77,7 @@ function ActiveListCard({
       : 0;
 
   const t = useTranslations("Dashboard");
-  const progressColor = progress >= 70 ? "bg-green-400" : "bg-primary-400";
+  const progressColor = progress >= 70 ? "bg-success-400" : "bg-primary-400";
   console.log({progressColor, progress, list});
 
   return (

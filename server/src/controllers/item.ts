@@ -22,7 +22,7 @@ import {
 import { UNITS } from '../middleware/validation';
 import { io } from '../app';
 import { emitToGroupExcept, getIO } from '../socket/socketHandler';
-import { sendLocalizedPushToGroupExceptUser } from '../utils/pushNotifications';
+import { sendLocalizedPushToGroupExceptUser, LocalizedPushOptions } from '../utils/pushNotifications';
 import { queueListUpdatePush } from '../utils/pushAggregator';
 
 const verifyShoppingListAccess = async (shoppingListId: string, userId: string) => {
@@ -186,7 +186,7 @@ export const createItem = async (req: express.Request, res: express.Response<IAp
   }
 
   if (populatedItem && freshList) {
-    const pushOptions: any = {
+    const pushOptions: LocalizedPushOptions = {
       key: 'itemCreated',
       vars: {
         username: user?.username || 'user',
@@ -322,7 +322,7 @@ export const updateItem = async (req: express.Request, res: express.Response<IAp
     const listDoc = await ShoppingList.findById(listId);
     if (listDoc) {
       const user = await (await import('../models/user')).default.findById(req.userId);
-      const pushOptions: any = {
+      const pushOptions: LocalizedPushOptions = {
         key: 'itemUpdated',
         vars: {
           username: user?.username || 'user',

@@ -3,6 +3,9 @@ import { parseShoppingListFromText } from "../ai.service";
 import { logger } from "../utils/logger";
 import Product from "../models/product";
 
+type ParsedAIItem = { name: string; quantity?: number; unit?: string; category?: string };
+type ProductDoc = { name?: string; _id?: { toString(): string }; categoryId?: { toString(): string } };
+
 export const parseText = async (req: Request, res: Response) => {
   try {
     const { text } = req.body;
@@ -14,15 +17,15 @@ export const parseText = async (req: Request, res: Response) => {
 
     // Enrich each item with a product DB match (parallel, server-side)
     const searchResults = await Promise.allSettled(
-      parsedItems.map((item: any) => Product.searchByNameHebrew(item.name, 1, 1))
+      (parsedItems as ParsedAIItem[]).map((item) => Product.searchByNameHebrew(item.name, 1, 1))
     );
 
-    const items = parsedItems.map((item: any, i: number) => {
+    const items = (parsedItems as ParsedAIItem[]).map((item, i: number) => {
       const result = searchResults[i];
-      const [products] = result.status === "fulfilled" ? result.value : [[]];
+      const products: ProductDoc[] = result?.status === "fulfilled" ? (result.value[0] as ProductDoc[]) : [];
       const iName = (item.name || "").toLowerCase().trim();
-      const match = (products as any[]).find(
-        (p: any) => (p.name || "").toLowerCase().trim() === iName
+      const match = products.find(
+        (p) => (p.name || "").toLowerCase().trim() === iName
       );
       return {
         ...item,

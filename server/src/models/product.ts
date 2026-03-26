@@ -182,31 +182,19 @@ const ProductSchema = new Schema<IProduct>(
     timestamps: true,
     toJSON: { 
       virtuals: true,
-      transform: function(_doc, ret) {
-        if (ret.image && typeof ret.image === 'object') {
-          const image: any = {
-            primary: ret.image.primary
-          };
-          
-          if (ret.image.providers) {
-            image.providers = {};
-            
-            if (ret.image.providers.cloudinary && ret.image.providers.cloudinary.url) {
-              image.providers.cloudinary = {
-                url: ret.image.providers.cloudinary.url
-              };
-            }
-            
-            if (ret.image.providers.imagekit && ret.image.providers.imagekit.url) {
-              image.providers.imagekit = {
-                url: ret.image.providers.imagekit.url
-              };
-            }
+      transform: function(_doc, ret: Record<string, unknown>) {
+        const img = ret.image as Record<string, unknown> | undefined;
+        if (img && typeof img === 'object') {
+          const image: Record<string, unknown> = { primary: img.primary };
+          const providers = img.providers as Record<string, Record<string, string>> | undefined;
+          if (providers) {
+            const prov: Record<string, unknown> = {};
+            if (providers.cloudinary?.url) prov.cloudinary = { url: providers.cloudinary.url };
+            if (providers.imagekit?.url) prov.imagekit = { url: providers.imagekit.url };
+            image.providers = prov;
           }
-          
           ret.image = image;
         }
-        
         return ret;
       }
     },
@@ -290,7 +278,7 @@ ProductSchema.statics.searchByNameHebrew = function (
   const escaped = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const regexContains = new RegExp(escaped, 'i');
 
-  const pipeline: any[] = [
+  const pipeline: mongoose.PipelineStage[] = [
     { $match: { name: regexContains, isActive: true } },
     {
       $addFields: {

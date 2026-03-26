@@ -295,6 +295,9 @@
     "login": "Login",
     "addItem": "Add Item",
     "importRecipe": "Import from Recipe",
+    "recipePlanningBadge": "New",
+    "recipePlanningTitle": "Smart Meal Planning",
+    "recipePlanningDescription": "Turn your favorite recipes into a shopping list with one click.",
     "addMultipleItems": "Add Multiple Items",
     "searchProducts": "Search Products",
     "noItems": "No items in list",
@@ -1222,6 +1225,22 @@
   "HomePage": {
     "loading": "Loading..."
   },
+  "RecipeImportModal": {
+    "title": "Import from Recipe (AI)",
+    "description": "Paste recipe text or an ingredient list, and the AI will automatically extract the items.",
+    "placeholder": "For example:\n2 cups flour\n3 eggs\n100g butter\nHalf a cup of milk...",
+    "analyze": "Analyze Text",
+    "analyzing": "Analyzing...",
+    "selectItems": "Select items to add",
+    "addItems": "Add {count} items to the list",
+    "noItemsFound": "No items were identified in the text. Try phrasing it differently.",
+    "error": "Error analyzing the text. Please try again.",
+    "cancel": "Cancel",
+    "startListening": "Voice input",
+    "stopListening": "Stop recording",
+    "listening": "Listening...",
+    "browserNotSupported": "Your browser does not support speech recognition"
+  },
   "Dashboard": {
     "loading": "Loading...",
     "welcome": "Welcome",
@@ -1476,6 +1495,19 @@
       "finish": "Finish",
       "remaining": "Remaining",
       "stopping": "Stopping..."
+    },
+    "activeShopping": {
+      "remainingSection": "Remaining ({count})",
+      "purchasedSection": "In cart ({count})",
+      "allCategories": "All",
+      "finishShopping": "Finish Shopping",
+      "pauseShopping": "Pause",
+      "resumeShopping": "Resume",
+      "progressLabel": "items collected",
+      "shoppingWithMe": "Shopping with me?",
+      "moreShoppers": "+{count}",
+      "allItemsDone": "All done! Ready to finish?",
+      "elapsedTime": "Shopping time"
     }
   },
   "footer": {

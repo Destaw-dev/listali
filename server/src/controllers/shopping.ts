@@ -274,7 +274,7 @@ export const pauseShopping = async (req: Request, res: Response) => {
       throw new AppError('Shopping session not found', 404);
     }
 
-    if (shoppingSession.userId !== userId) {
+    if (shoppingSession.userId.toString() !== userId.toString()) {
       throw new AppError('Access denied to this shopping session', 403);
     }
 
@@ -365,7 +365,7 @@ export const resumeShopping = async (req: Request, res: Response) => {
       throw new AppError('Shopping session not found', 404);
     }
 
-    if (shoppingSession.userId !== userId) {
+    if (shoppingSession.userId.toString() !== userId.toString()) {
       throw new AppError('Access denied to this shopping session', 403);
     }
 

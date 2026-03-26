@@ -22,7 +22,7 @@ interface ShoppingModeCardProps {
 }
  
 
-const useShoppingSessionActions = (listId: string) => {
+export function useShoppingSessionActions(listId: string) {
   const queryClient = useQueryClient();
   const startShoppingMutation = useStartShopping();
   const stopShoppingMutation = useStopShopping();
@@ -99,7 +99,7 @@ const useShoppingSessionActions = (listId: string) => {
     pauseShoppingMutation,
     resumeShoppingMutation,
   };
-};
+}
 
 export function ShoppingModeCard({
   listId,

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "../common";
+import { Badge, Button } from "../common";
 import { cn } from "../../lib/utils";
 import { Calendar, Plus, Wand2 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -30,7 +30,7 @@ export function ShoppingListHeaderBar({
   const t = useTranslations("ShoppingList");
   const tNavigation = useTranslations("navigation");
   const [isRecipeModalOpen, setIsRecipeModalOpen] = useState(false);
-  
+
   const createItemsMutation = useCreateMultipleItems();
 
   const handleAddRecipeItems = async (items: EditableItem[]) => {
@@ -55,87 +55,83 @@ export function ShoppingListHeaderBar({
 
   return (
     <>
-    <header className="flex flex-col gap-6 rounded-3xl bg-card p-6 shadow-xl">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex items-start gap-4">
-          <Button
-            onClick={() => router.push(`/groups/${groupId}?tab=lists`)}
-            variant='surface'
-            size='md'
-            rounded
-            aria-label={tNavigation("back")}
-          >
-            <ArrowIcon className="text-text-primary"/>
-          </Button>
+      <header className="flex flex-col gap-6 rounded-3xl bg-card p-6 shadow-xl">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-start gap-4">
+            <Button
+              onClick={() => router.push(`/groups/${groupId}?tab=lists`)}
+              variant="surface"
+              size="md"
+              rounded
+              aria-label={tNavigation("back")}
+            >
+              <ArrowIcon className="text-text-primary" />
+            </Button>
 
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-semibold text-text-primary">
-                {shoppingList?.name}
-              </h1>
-              {shoppingList?.priority && (
-                <span
-                  className={cn(
-                    "rounded-full px-3 py-1 text-xs font-medium",
-                    "bg-primary text-text-on-primary"
-                  )}
-                >
-                  {shoppingList.priority}
-                </span>
-              )}
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-semibold text-text-primary">
+                  {shoppingList?.name}
+                </h1>
+                {shoppingList?.priority && (
+                  <span
+                    className={cn(
+                      "rounded-full px-3 py-1 text-xs font-medium",
+                      "bg-primary text-text-on-primary"
+                    )}
+                  >
+                    {shoppingList.priority}
+                  </span>
+                )}
+              </div>
+              <p className="mt-1 text-sm text-text-muted">
+                {shoppingList?.description || t("description")}
+              </p>
+              <div className="mt-3 flex items-center gap-2 text-xs text-text-muted">
+                <Calendar className="h-4 w-4" />
+                <span>{formattedDate}</span>
+              </div>
             </div>
-            <p className="mt-1 text-sm text-text-muted">
-              {shoppingList?.description || t("description")}
-            </p>
-            <div className="mt-3 flex items-center gap-2 text-xs text-text-muted">
-              <Calendar className="h-4 w-4" />
-              <span>{formattedDate}</span>
-            </div>
+          </div>
+
+          <div className="flex">
+            <Button onClick={onAddItems} icon={<Plus className="h-5 w-5" />} className="flex-[2] bg-primary py-3 text-text-on-primary shadow-lg transition hover:bg-primary/90 hover:shadow-xl lg:flex">
+              {t("addItem")}
+            </Button>
           </div>
         </div>
 
-        <div className="hidden items-center gap-3 lg:flex">
-          <Button
+        <div className="rounded-lg p-6 flex items-center">
+          <div className="flex-1 space-y-2">
+            <Badge variant="info" size='md'>
+            {t("recipePlanningBadge")}
+            </Badge>
+            <h4 className="text-xl font-extrabold text-text-primary">
+              {t("recipePlanningTitle")}
+            </h4>
+            <h4 className="text-text-primary">
+              {t("recipePlanningDescription")}
+            </h4>
+            <Button
             onClick={() => setIsRecipeModalOpen(true)}
             variant="outline"
             icon={<Wand2 className="h-4 w-4" />}
           >
             {t("importRecipe")}
           </Button>
-          <Button
-            onClick={onAddItems}
-            icon={<Plus className="h-5 w-5" />}
-          >
-            {t("addItem")}
-          </Button>
+          </div>
+          <div className="hidden md:block w-40 h-40 bg-card rounded-full -mr-12 opacity-50 border-8 border-info relative">
+          <Wand2 className="h-10 w-10 absolute top-1/3 left-1/3 text-text-primary" />
+          </div>
         </div>
-      </div>
+      </header>
 
-      <div className="flex gap-3 lg:hidden">
-        <Button
-          onClick={() => setIsRecipeModalOpen(true)}
-          variant="outline"
-          className="flex-1 py-3 shadow-sm"
-          icon={<Wand2 className="h-4 w-4" />}
-        >
-          {t("importRecipe")}
-        </Button>
-        <Button
-          onClick={onAddItems}
-          icon={<Plus className="h-5 w-5" />}
-          className="flex-[2] bg-primary py-3 text-text-on-primary shadow-lg transition hover:bg-primary/90 hover:shadow-xl"
-        >
-          {t("addItem")}
-        </Button>
-      </div>
-    </header>
-
-    <RecipeImportModal
-      isOpen={isRecipeModalOpen}
-      onClose={() => setIsRecipeModalOpen(false)}
-      onAddItems={handleAddRecipeItems}
-      currentItems={currentItems}
-    />
+      <RecipeImportModal
+        isOpen={isRecipeModalOpen}
+        onClose={() => setIsRecipeModalOpen(false)}
+        onAddItems={handleAddRecipeItems}
+        currentItems={currentItems}
+      />
     </>
   );
 }

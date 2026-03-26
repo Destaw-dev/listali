@@ -621,9 +621,11 @@ export const getMyJoinRequests = asyncHandler(async (req: Request, res: Response
     if (!group.joinRequests) continue;
     
     const userRequests = (group.joinRequests as IJoinRequest[]).filter((req) => {
-      const requestUser: any = req.user as any;
+      const requestUser = req.user as string | { _id: { toString(): string } };
       const requestUserId =
-        requestUser && requestUser._id ? requestUser._id.toString() : requestUser.toString();
+        typeof requestUser === 'object' && '_id' in requestUser
+          ? requestUser._id.toString()
+          : requestUser.toString();
       return requestUserId === userId && req.status === 'pending';
     });
 
@@ -697,7 +699,7 @@ export const acceptInvitation = asyncHandler(async (req: Request, res: Response<
     }
 
     const existingRequest = group.joinRequests.find(
-      (req: any) => req.user.toString() === userId && req.inviteCode === invitationId && req.status === 'pending'
+      (req: IJoinRequest) => req.user.toString() === userId && req.inviteCode === invitationId && req.status === 'pending'
     );
 
     if (existingRequest) {

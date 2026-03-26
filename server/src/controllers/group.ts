@@ -3,7 +3,7 @@ import { validationResult } from 'express-validator';
 import Group from '../models/group';
 import User from '../models/user';
 import { AppError, validationErrorResponse, successResponse, errorResponse } from '../middleware/handlers';
-import { IApiResponse, IGroupMember, IGroup, IBasePendingInvite, IGroupStatistics, Language } from '../types';
+import { IApiResponse, IGroupMember, IGroup, IBasePendingInvite, IGroupStatistics, Language, IJoinRequest, IBasePendingInvitation } from '../types';
 import { nanoid } from 'nanoid';
 import { sendGroupInviteEmail } from '../utils/email';
 import { getIO, emitToGroupExcept } from '../socket/socketHandler';
@@ -212,7 +212,7 @@ export const joinGroup = async (req: express.Request, res: express.Response<IApi
 
   if (group.settings?.requireApproval) {
     const existingRequest = group.joinRequests?.find(
-      (req: any) => req.user.toString() === userId && req.status === 'pending'
+      (req: IJoinRequest) => req.user.toString() === userId && req.status === 'pending'
     );
     
     if (existingRequest) {
@@ -356,7 +356,7 @@ export const approveJoinRequest = async (req: express.Request, res: express.Resp
     throw new AppError('No join requests found', 404);
   }
 
-  const joinRequest = group.joinRequests.find((req: any) => req._id?.toString() === requestId);
+  const joinRequest = group.joinRequests.find((req: IJoinRequest) => req._id?.toString() === requestId);
   if (!joinRequest) {
     throw new AppError('Join request not found', 404);
   }
@@ -366,12 +366,12 @@ export const approveJoinRequest = async (req: express.Request, res: express.Resp
   }
 
   const requestingUserId = joinRequest.user.toString();
-  
+
   // Check if user is already a member
   const alreadyMember = group.members.find((m: IGroupMember) => m.user.toString() === requestingUserId);
   if (alreadyMember) {
     // Remove the request since user is already a member
-    group.joinRequests = group.joinRequests.filter((req: any) => req._id?.toString() !== requestId);
+    group.joinRequests = group.joinRequests.filter((req: IJoinRequest) => req._id?.toString() !== requestId);
     await group.save();
     throw new AppError('User is already a member of this group', 400);
   }
@@ -392,7 +392,7 @@ export const approveJoinRequest = async (req: express.Request, res: express.Resp
   const requestingUser = await User.findById(requestingUserId);
   if (requestingUser) {
     const invitation = requestingUser.pendingInvitations.find(
-      (inv: any) => inv.code === joinRequest.inviteCode
+      (inv: IBasePendingInvitation) => inv.code === joinRequest.inviteCode
     );
     if (invitation && invitation.status === 'pending') {
       invitation.status = 'accepted';
@@ -457,7 +457,7 @@ export const rejectJoinRequest = async (req: express.Request, res: express.Respo
     throw new AppError('No join requests found', 404);
   }
 
-  const joinRequest = group.joinRequests.find((req: any) => req._id?.toString() === requestId);
+  const joinRequest = group.joinRequests.find((req: IJoinRequest) => req._id?.toString() === requestId);
   if (!joinRequest) {
     throw new AppError('Join request not found', 404);
   }
@@ -476,7 +476,7 @@ export const rejectJoinRequest = async (req: express.Request, res: express.Respo
   const requestingUser = await User.findById(requestingUserId);
   if (requestingUser) {
     const invitation = requestingUser.pendingInvitations.find(
-      (inv: any) => inv.code === joinRequest.inviteCode
+      (inv: IBasePendingInvitation) => inv.code === joinRequest.inviteCode
     );
     if (invitation && invitation.status === 'pending') {
       invitation.status = 'declined';

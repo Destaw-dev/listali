@@ -12,6 +12,8 @@ interface MemberSummary {
   avatar?: string;
 }
 
+type PopulatedMember = { user: { _id: { toString(): string }; username: string; avatar?: string } };
+
 interface ActiveList {
   id: string;
   name: string;
@@ -85,13 +87,12 @@ export const getDashboardData = async (req: Request, res: Response) => {
         const group = groups.find(
           (g) => g._id.toString() === list.group.toString()
         );
-        const members: MemberSummary[] = ((group?.members || []) as any[])
+        const members: MemberSummary[] = (group?.members || [])
           .slice(0, 4)
-          .map((m: any) => ({
-            id: m.user._id.toString(),
-            username: m.user.username,
-            avatar: m.user.avatar,
-          }));
+          .map((m) => {
+            const pm = m as unknown as PopulatedMember;
+            return { id: pm.user._id.toString(), username: pm.user.username, ...(pm.user.avatar ? { avatar: pm.user.avatar } : {}) };
+          });
         return {
           id: list._id.toString(),
           name: list.name,
@@ -106,13 +107,12 @@ export const getDashboardData = async (req: Request, res: Response) => {
 
     // Groups summary
     const groupsSummary: GroupSummary[] = groups.map((group) => {
-      const members: MemberSummary[] = ((group.members || []) as any[])
+      const members: MemberSummary[] = (group.members || [])
         .slice(0, 4)
-        .map((m: any) => ({
-          id: m.user._id.toString(),
-          username: m.user.username,
-          avatar: m.user.avatar,
-        }));
+        .map((m) => {
+          const pm = m as unknown as PopulatedMember;
+          return { id: pm.user._id.toString(), username: pm.user.username, ...(pm.user.avatar ? { avatar: pm.user.avatar } : {}) };
+        });
       return {
         id: group._id.toString(),
         name: group.name,
@@ -128,15 +128,16 @@ export const getDashboardData = async (req: Request, res: Response) => {
     // Activity feed from system messages
     const recentActivity: RecentActivity[] = activityMessages
       .slice(0, 15)
-      .map((msg) => ({
-        id: msg._id.toString(),
-        type: msg.messageType as 'item_update' | 'list_update',
-        description: msg.content,
-        timestamp: msg.createdAt,
-        groupName: groups.find(
-          (g) => g._id.toString() === msg.group.toString()
-        )?.name,
-      }));
+      .map((msg) => {
+        const groupName = groups.find((g) => g._id.toString() === msg.group.toString())?.name;
+        return {
+          id: msg._id.toString(),
+          type: msg.messageType as 'item_update' | 'list_update',
+          description: msg.content,
+          timestamp: msg.createdAt,
+          ...(groupName ? { groupName } : {}),
+        };
+      });
 
     const pendingInvitations =
       user?.pendingInvitations.filter((inv) => inv.status === 'pending')

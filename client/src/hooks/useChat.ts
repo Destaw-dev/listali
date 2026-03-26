@@ -510,8 +510,7 @@ export function useMarkMessagesAsReadBatch() {
 }
 
 export function useChatWebSocket(
-  groupId: string,
-  options?: { isActive?: boolean }
+  groupId: string
 ) {
   const queryClient = useQueryClient();
   const processedIds = useRef<Set<string>>(new Set());
@@ -573,7 +572,7 @@ export function useChatWebSocket(
         });
       }
     },
-    [groupId, queryClient, uid, options?.isActive]
+    [groupId, queryClient, uid]
   );
 
   useEffect(() => {

@@ -58,7 +58,7 @@ export const parseShoppingListFromText = async (text: string) => {
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    const details = (error as any)?.status ?? (error as any)?.code ?? "";
+    const details = (error as { status?: unknown; code?: unknown })?.status ?? (error as { status?: unknown; code?: unknown })?.code ?? "";
     logger.error("Error parsing with Groq", { message, details });
     throw error instanceof Error ? error : new Error("Failed to parse shopping list from AI");
   }

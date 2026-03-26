@@ -52,7 +52,7 @@ export default function GroupDetailsPage() {
   
   useGroupMemberRoleWebSocket(groupId);
 
-  useChatWebSocket(groupId, { isActive: true });
+  useChatWebSocket(groupId);
 
   const { data: unreadInfo } = useUnreadInfo(groupId, {
     staleTime: 0,
@@ -358,7 +358,7 @@ export default function GroupDetailsPage() {
                 onClick={() => handleTabChange(tab.id)}
                 className={`flex flex-col items-center gap-1 py-3 px-3 border-b-2 transition-all duration-200 min-w-[80px] ${
                   activeTab === tab.id
-                    ? 'border-primary text-primary'
+                    ? 'border-primary-500 text-primary-600'
                     : 'border-transparent text-text-muted hover:text-text-primary hover:border-border'
                 }`}
               >

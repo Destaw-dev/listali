@@ -295,6 +295,9 @@
     "login": "התחבר",
     "addItem": "הוסף פריט",
     "importRecipe": "ייבוא ממתכון",
+    "recipePlanningBadge": "חדש",
+    "recipePlanningTitle": "תכנון ארוחות חכם",
+    "recipePlanningDescription": "הפוך את המתכונים האהובים עליך לרשימת קניות בלחיצת כפתור אחת.",
     "addMultipleItems": "הוסף פריטים מרובים",
     "searchProducts": "חיפוש מוצרים",
     "noItems": "אין פריטים ברשימה",
@@ -1500,6 +1503,19 @@
       "finish": "סיים",
       "remaining": "נותרו",
       "stopping": "עוצר..."
+    },
+    "activeShopping": {
+      "remainingSection": "נותרו לקנות ({count})",
+      "purchasedSection": "נרכשו ({count})",
+      "allCategories": "הכל",
+      "finishShopping": "סיום קנייה",
+      "pauseShopping": "השהה",
+      "resumeShopping": "המשך",
+      "progressLabel": "מוצרים נאספו",
+      "shoppingWithMe": "מי קונה איתי?",
+      "moreShoppers": "+{count}",
+      "allItemsDone": "כל הפריטים! מוכן לסיים?",
+      "elapsedTime": "זמן קניות"
     }
   },
   "footer": {

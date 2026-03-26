@@ -107,7 +107,7 @@ export function ChatComponent({ groupId, groupName }: ChatComponentProps ) {
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasMarkedAsReadRef = useRef(false);
 
-  useChatWebSocket(groupId, { isActive: true });
+  useChatWebSocket(groupId);
 
   const { data: messages = [], isLoading } = useGroupMessages(groupId);
   const { data: unreadInfo } = useUnreadInfo(groupId, {

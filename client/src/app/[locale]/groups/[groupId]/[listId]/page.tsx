@@ -21,6 +21,7 @@ import { useAuthStore } from '../../../../../store/authStore';
 import { useUpdateItem } from '../../../../../hooks/useItems';
 import { extractNameFromProduct } from '../../../../../lib/utils';
 import { useShoppingListItemsWebSocket } from '../../../../../hooks/useShoppingListItemsWebSocket';
+import { ActiveShoppingView } from '../../../../../components/shoppingList/ActiveShoppingView';
 
 export default function ShoppingListPage() {
   const params = useParams();
@@ -56,6 +57,7 @@ export default function ShoppingListPage() {
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [showAddItemsModal, setShowAddItemsModal] = useState(false);
+  const [showShoppingView, setShowShoppingView] = useState(true);
 
   const { data: categories = [] } = useAvailableCategories();
 
@@ -189,6 +191,27 @@ export default function ShoppingListPage() {
   const navigateBack = () => {
     router.push(`/groups/${groupId}`);
   };
+
+  const currentSession = shoppingSession?.currentUserSession ?? null;
+  const isShoppingActive =
+    currentSession?.status === 'active' || currentSession?.status === 'paused';
+
+  if (isShoppingActive && currentSession && shoppingList && showShoppingView) {
+    return (
+      <ActiveShoppingView
+        listId={listId}
+        groupId={groupId}
+        listName={shoppingList.name}
+        items={items || []}
+        categories={categories}
+        currentSession={currentSession}
+        activeSessions={shoppingSession?.activeSessions || []}
+        totalItems={totalItems}
+        purchasedItems={purchasedItems}
+        onBack={() => setShowShoppingView(false)}
+      />
+    );
+  }
 
   if (error || !shoppingList) {
     return (
