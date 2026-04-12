@@ -32,10 +32,10 @@ export const parseShoppingListFromText = async (text: string, categoryNames: str
     - ביצה/ביצים -> יחידה (כמות לפי מספר הביצים)
 
     דוגמאות:
-    - "כוס קמח" -> name: "קמח", quantity: 1, unit: "ק\"ג"
+    - "כוס קמח" -> name: "קמח", quantity: 1, unit: "ק"ג"
     - "3/4 כוס חלב 3% תנובה" -> name: "חלב 3% תנובה", quantity: 1, unit: "ליטר"
     - "2 כפיות אבקת אפייה" -> name: "אבקת אפייה", quantity: 1, unit: "אריזה"
-    - "2 כפות סוכר" -> name: "סוכר", quantity: 1, unit: "ק\"ג"
+    - "2 כפות סוכר" -> name: "סוכר", quantity: 1, unit: "ק"ג"
     - "ביצה אחת" -> name: "ביצה", quantity: 1, unit: "יחידה"
     - "כפית תמצית וניל" -> name: "תמצית וניל", quantity: 1, unit: "יחידה"
     - "2 כפות שמן" -> name: "שמן", quantity: 1, unit: "בקבוק"

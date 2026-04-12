@@ -132,15 +132,16 @@ export default function RecipeImportModal({ isOpen, onClose, onAddItems, current
         const categoryObj = !item.categoryId
           ? (categories as ICategory[]).find(c => c.name === item.category)
           : undefined;
+        const resolvedCategoryId = item.categoryId ?? categoryObj?._id;
         const isDuplicate = !!findExistingItem(currentItems, { name: item.name, unit });
         return {
           name: item.name,
           quantity: item.quantity || 1,
           unit,
           category: item.category,
-          categoryId: item.categoryId ?? categoryObj?._id,
+          categoryId: resolvedCategoryId,
           productId: item.productId ?? undefined,
-          selected: !isDuplicate,
+          selected: !isDuplicate && !!resolvedCategoryId,
           isDuplicate,
         };
       });
@@ -172,6 +173,12 @@ export default function RecipeImportModal({ isOpen, onClose, onAddItems, current
   };
 
   const handleAdd = () => {
+    const hasSelectedItemsWithoutCategory = editableItems.some(item => item.selected && !item.categoryId);
+    if (hasSelectedItemsWithoutCategory) {
+      setError(t('missingCategory'));
+      return;
+    }
+
     const selected = editableItems.filter(i => i.selected);
     onAddItems(selected);
     onClose();
@@ -203,6 +210,7 @@ export default function RecipeImportModal({ isOpen, onClose, onAddItems, current
   };
 
   const selectedCount = editableItems.filter(i => i.selected).length;
+  const selectedWithoutCategoryCount = editableItems.filter(item => item.selected && !item.categoryId).length;
 
   return (
     <Modal
@@ -241,7 +249,6 @@ export default function RecipeImportModal({ isOpen, onClose, onAddItems, current
               </svg>
             </button>
           </div>
-          {error && <p role="alert" className="mt-2 text-sm text-error">{error}</p>}
         </>
       )}
 
@@ -257,12 +264,21 @@ export default function RecipeImportModal({ isOpen, onClose, onAddItems, current
       {hasParsed && editableItems.length > 0 && (
         <div>
           <p className="mb-2 text-sm font-medium text-text-secondary">{t('selectItems')}:</p>
+          {selectedWithoutCategoryCount > 0 && (
+            <p role="alert" className="mb-3 text-sm text-error">
+              {t('missingCategory')}
+            </p>
+          )}
           <ul role="list" className="max-h-72 space-y-1 overflow-y-auto">
             {editableItems.map((item, idx) => (
               <li
                 key={idx}
                 className={`flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors ${
-                  item.isDuplicate ? 'bg-warning/5' : 'hover:bg-surface-hover'
+                  item.selected && !item.categoryId
+                    ? 'bg-error/5'
+                    : item.isDuplicate
+                      ? 'bg-warning/5'
+                      : 'hover:bg-surface-hover'
                 }`}
               >
                 <input
@@ -307,9 +323,13 @@ export default function RecipeImportModal({ isOpen, onClose, onAddItems, current
                   value={item.categoryId ?? ''}
                   onChange={(e) => updateItem(idx, 'categoryId', e.target.value)}
                   aria-label="קטגוריה"
-                  className="shrink-0 rounded border border-transparent bg-transparent px-1 py-0.5 text-sm text-text-muted hover:border-border focus:border-primary focus:outline-none"
+                  className={`shrink-0 rounded border bg-transparent px-1 py-0.5 text-sm hover:border-border focus:border-primary focus:outline-none ${
+                    item.selected && !item.categoryId
+                      ? 'border-error text-error'
+                      : 'border-transparent text-text-muted'
+                  }`}
                 >
-                  <option value="">ללא קטגוריה</option>
+                  <option value="">{t('uncategorizedOption')}</option>
                   {(categories as ICategory[]).map(c => (
                     <option key={c._id} value={c._id}>{c.name}</option>
                   ))}
@@ -332,6 +352,8 @@ export default function RecipeImportModal({ isOpen, onClose, onAddItems, current
         </div>
       )}
 
+      {error && <p role="alert" className="mt-3 text-sm text-error">{error}</p>}
+
       <div className="mt-5 flex justify-end gap-3">
         <Button variant="ghost" size="sm" onClick={onClose}>{t('cancel')}</Button>
 
@@ -342,9 +364,9 @@ export default function RecipeImportModal({ isOpen, onClose, onAddItems, current
         ) : (
           <>
             {editableItems.length > 0 && (
-              <Button variant="outline" size="sm" onClick={handleBack}>חזור</Button>
+              <Button variant="outline" size="sm" onClick={handleBack}>{t('back')}</Button>
             )}
-            <Button onClick={handleAdd} disabled={selectedCount === 0}>
+            <Button onClick={handleAdd} disabled={selectedCount === 0 || selectedWithoutCategoryCount > 0}>
               {t('addItems', { count: selectedCount })}
             </Button>
           </>

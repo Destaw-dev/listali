@@ -1039,6 +1039,26 @@ export const createMultipleItems = async (req: express.Request, res: express.Res
           }
         }
 
+        if (typeof resolvedCategory === 'string' && !mongoose.Types.ObjectId.isValid(resolvedCategory)) {
+          const normalizedCategory = resolvedCategory.trim();
+          const { Category } = await import('../models/category');
+          const categoryDoc = await Category.findOne({
+            isActive: true,
+            $or: [
+              { name: normalizedCategory },
+              { nameEn: normalizedCategory.toLowerCase() }
+            ]
+          })
+            .select('_id')
+            .lean();
+
+          resolvedCategory = categoryDoc?._id.toString();
+        }
+
+        if (typeof resolvedCategory !== 'string' || !mongoose.Types.ObjectId.isValid(resolvedCategory)) {
+          throw new AppError(`Category is required for item "${resolvedName}"`, 400);
+        }
+
         const duplicateQuery = resolvedProductId
           ? { shoppingList: shoppingListId, product: resolvedProductId, unit, status: { $ne: 'cancelled' } }
           : { shoppingList: shoppingListId, name: resolvedName, unit, isManualEntry: true, status: { $ne: 'cancelled' } };

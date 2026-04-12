@@ -41,8 +41,11 @@
     "include": [
       "src/**/*"
 , "src/__tests__/group", "src/__tests__/items", "src/__tests__/message", "src/__tests__/shoppingLists", "src/models/seeders/allergens_full.ts", "src/models/seeders/diet_information.ts", "src/models/seeders/productGroups.ts", "src/models/seeders/subCategoryNames.ts"],
-    "exclude": [
-      "node_modules",
-      "dist",
-    ]
+"exclude": [
+  "node_modules",
+  "dist",
+  ".next",
+  "build",
+  "coverage"
+]
   }

@@ -17,6 +17,12 @@ function getCoreSearchTerm(name: string): string {
   return core.length > 0 ? core.join(' ') : (words[0] || '');
 }
 
+function normalizeObjectId(value: { toString(): string } | string | null | undefined): string | null {
+  if (!value) return null;
+  const normalized = typeof value === 'string' ? value : value.toString();
+  return normalized && normalized !== '[object Object]' ? normalized : null;
+}
+
 export const parseText = async (req: Request, res: Response) => {
   try {
     const { text } = req.body;
@@ -36,22 +42,22 @@ export const parseText = async (req: Request, res: Response) => {
       )
     );
 
-    console.log({parsedItems, searchResults});
-
-
     const items = (parsedItems as ParsedAIItem[]).map((item, i: number) => {
       const result = searchResults[i];
       const products: ProductDoc[] = result?.status === "fulfilled" ? (result.value[0] as ProductDoc[]) : [];
 
       const expectedCategoryId = item.category ? categoryIdByName.get(item.category) : null;
-      const match = expectedCategoryId
-        ? (products.find((p) => p.categoryId?.toString() === expectedCategoryId) ?? products[0] ?? null)
-        : (products[0] ?? null);
+      const categoryMatchedProduct = expectedCategoryId
+        ? (products.find((p) => normalizeObjectId(p.categoryId) === expectedCategoryId) ?? null)
+        : null;
+      const fallbackProduct = !expectedCategoryId ? (products[0] ?? null) : null;
+      const match = categoryMatchedProduct ?? fallbackProduct;
+      const matchedCategoryId = normalizeObjectId(match?.categoryId);
 
       return {
         ...item,
-        productId: match?._id?.toString() ?? null,
-        categoryId: match?.categoryId?.toString() ?? null,
+        productId: normalizeObjectId(match?._id) ?? null,
+        categoryId: expectedCategoryId ?? matchedCategoryId ?? null,
       };
     });
 
