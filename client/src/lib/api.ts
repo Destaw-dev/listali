@@ -719,6 +719,11 @@ export class ApiClient {
     return response.data;
   }
 
+  async getProductsBySubCategory(subCategoryId: string, page: number = 1, limit: number = 20) {
+    const response = await this.get(`/products/sub-category/${subCategoryId}?page=${page}&limit=${limit}`);
+    return response.data;
+  }
+
   async getUserProfile() {
     const response = await this.get('/auth/profile');
     return response.data;

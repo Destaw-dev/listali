@@ -116,6 +116,28 @@ export const useInfiniteProductsByCategory = (categoryId: string, limit: number 
   });
 };
 
+export const useInfiniteProductsBySubCategory = (subCategoryId: string, limit: number = 20) => {
+  const { isGuest } = useAuthStore();
+  const effectiveLimit = isGuest()
+    ? Math.min(limit, GUEST_LIMITS.MAX_PRODUCTS_TO_LOAD)
+    : limit;
+
+  return useInfiniteQuery({
+    queryKey: [...productKeys.all, 'subCategory', 'infinite', subCategoryId, effectiveLimit],
+    queryFn: ({ pageParam = 1 }) => apiClient.getProductsBySubCategory(subCategoryId, pageParam as number, effectiveLimit),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage: PaginatedResponse<IProduct>) => {
+      const page = lastPage?.pagination?.page ?? 1;
+      const pages = lastPage?.pagination?.pages ?? 1;
+      const maxPages = isGuest() ? GUEST_LIMITS.MAX_PRODUCT_PAGES : Infinity;
+      if (isGuest() && page >= maxPages) return undefined;
+      return page < pages ? page + 1 : undefined;
+    },
+    enabled: !!subCategoryId,
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
 export const useInfiniteSearchProducts = (query: string, limit: number = 20) => {
   const { isGuest } = useAuthStore();
   const minChars = isGuest() ? GUEST_LIMITS.MIN_SEARCH_CHARS : 2;

@@ -214,27 +214,28 @@ export default function GroupsPage() {
                 <Card
                   key={group._id}
                   hover
-                  padding="sm"
+                  padding="none"
                   rounded="xl"
                   shadow="md"
                   border={false}
                   onClick={() => navigateToGroup(group._id)}
-                  className="cursor-pointer"
+                  className="cursor-pointer overflow-hidden border-t-4 border-t-[var(--color-primary-400)]"
                 >
-
                   <CardBody padding="lg" className="pb-3">
-                    <div className="flex items-start justify-between">
+                    <div className="flex items-start gap-3">
+                      <div className="shrink-0 p-2 bg-[var(--color-icon-primary-bg)] rounded-xl mt-0.5">
+                        <Users className="w-4 h-4 text-[var(--color-icon-primary-fg)]" />
+                      </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="text-base md:text-lg font-bold line-clamp-1">
-                            {group.name}
-                          </h3>
-                        </div>
-
-                        {group.description && (
-                          <p className="text-xs md:text-sm text-text-muted mb-1 h-5 line-clamp-1">
+                        <h3 className="text-base md:text-lg font-bold line-clamp-1 text-text-primary">
+                          {group.name}
+                        </h3>
+                        {group.description ? (
+                          <p className="text-xs md:text-sm text-text-muted mt-0.5 line-clamp-1">
                             {group.description}
                           </p>
+                        ) : (
+                          <p className="text-xs text-text-muted/50 mt-0.5">{t("noDescription")}</p>
                         )}
                       </div>
                     </div>
@@ -242,27 +243,30 @@ export default function GroupsPage() {
 
                   <CardFooter
                     padding="sm"
-                    className="pt-3 flex items-center justify-between"
+                    className="px-4 py-3 flex items-center justify-between bg-[var(--color-background)] border-t border-border/50"
                   >
-                    <div className="flex -space-x-2 space-x-reverse overflow-hidden">
-                      {group.members
-                        ?.slice(0, 3)
-                        .map((member: IGroupMember, i: number) => (
+                    <div className="flex items-center gap-1.5">
+                      <div className="flex -space-x-2 space-x-reverse">
+                        {group.members?.slice(0, 3).map((member: IGroupMember, i: number) => (
                           <div
                             key={i}
-                            className="h-6 w-6 rounded-full ring-2 ring-accent/20 bg-primary flex items-center justify-center text-[10px] text-text-muted font-medium"
+                            className="h-7 w-7 rounded-full ring-2 ring-card bg-[var(--color-primary-100)] dark:bg-[var(--color-primary-900)] flex items-center justify-center text-[10px] text-[var(--color-primary-700)] dark:text-[var(--color-primary-300)] font-semibold"
                           >
-                            {member.user.firstName?.[0]}
-                            {member.user.lastName?.[0]}
+                            {member.user.firstName?.[0]}{member.user.lastName?.[0]}
                           </div>
                         ))}
-
-                      <div className="h-6 w-6 rounded-full ring-2 ring-accent/20 bg-primary flex items-center justify-center text-[10px] text-text-muted font-medium">
-                        +{group.members?.length || 0}
+                        {(group.members?.length ?? 0) > 3 && (
+                          <div className="h-7 w-7 rounded-full ring-2 ring-card bg-border flex items-center justify-center text-[10px] text-text-muted font-medium">
+                            +{(group.members?.length ?? 0) - 3}
+                          </div>
+                        )}
                       </div>
+                      <span className="text-xs text-text-muted">
+                        {group.members?.length ?? 0} {t("members")}
+                      </span>
                     </div>
 
-                    <div className="flex items-center text-[11px] md:text-xs font-medium text-text-on-primary bg-primary px-2 py-1 rounded-full">
+                    <div className="flex items-center gap-1 text-xs font-medium text-[var(--color-primary-600)] dark:text-[var(--color-primary-400)] bg-[var(--color-primary-50)] dark:bg-[var(--color-primary-950)] px-2.5 py-1 rounded-full">
                       {group.shoppingLists?.length || 0} {t("lists")}
                     </div>
                   </CardFooter>

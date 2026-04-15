@@ -135,28 +135,28 @@ export const FiltersSection = memo(({
           value: `subCategory-${subCategory._id}`,
         });
       });
-      options.push({ divider: true, label: '', value: '_divider-subCategory' });
+      options.push({ divider: false, label: '', value: '_divider-subCategory' });
     }
 
-    options.push(
-      { label: t('kosher'), value: '_header-kosher', disabled: true },
-      { label: t('off'), value: 'kosher-off' },
-      { label: t('on'), value: 'kosher-on' },
-      { divider: true, label: '', value: '_divider-kosher' }
-    );
+    // options.push(
+    //   { label: t('kosher'), value: '_header-kosher', disabled: true },
+    //   { label: t('off'), value: 'kosher-off' },
+    //   { label: t('on'), value: 'kosher-on' },
+    //   { divider: true, label: '', value: '_divider-kosher' }
+    // );
 
-    options.push(
-      { label: t('organic'), value: '_header-organic', disabled: true },
-      { label: t('off'), value: 'organic-off' },
-      { label: t('on'), value: 'organic-on' },
-      { divider: true, label: '', value: '_divider-organic' }
-    );
+    // options.push(
+    //   { label: t('organic'), value: '_header-organic', disabled: true },
+    //   { label: t('off'), value: 'organic-off' },
+    //   { label: t('on'), value: 'organic-on' },
+    //   { divider: true, label: '', value: '_divider-organic' }
+    // );
 
-    options.push(
-      { label: t('glutenFree'), value: '_header-glutenFree', disabled: true },
-      { label: t('off'), value: 'glutenFree-off' },
-      { label: t('on'), value: 'glutenFree-on' }
-    );
+    // options.push(
+    //   { label: t('glutenFree'), value: '_header-glutenFree', disabled: true },
+    //   { label: t('off'), value: 'glutenFree-off' },
+    //   { label: t('on'), value: 'glutenFree-on' }
+    // );
 
     return options;
   }, [t, selectedCategoryIdForSub, subCategories]);

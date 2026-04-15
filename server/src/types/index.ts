@@ -225,7 +225,6 @@ export interface IBaseSubCategory {
   isActive: boolean;
   description?: string;
   category?: IBaseCategory;
-  idFromApi: string;
 }
 
 // Base nutritional value interface (consistent with shared types)
@@ -264,6 +263,7 @@ export interface IBaseProduct {
   kosher?: boolean;
   kosherType?: string;
   glutenFree?: boolean;
+  isOrganic?: boolean;
   brand?: string;
   category?: IBaseCategory;
   subCategory?: IBaseSubCategory;

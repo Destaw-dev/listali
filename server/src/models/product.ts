@@ -128,12 +128,17 @@ const ProductSchema = new Schema<IProduct>(
           path: { type: String, trim: true },
         },
       },
+      source: {
+        original: { type: String, trim: true },
+        small: { type: String, trim: true },
+        transparent: { type: String, trim: true },
+      },
       meta: {
         width: Number,
         height: Number,
         format: String,
         bytes: Number,
-      },     
+      },
       status: {
         type: String,
         enum: ["missing", "uploaded", "partial", "failed"],
@@ -167,6 +172,10 @@ const ProductSchema = new Schema<IProduct>(
       default: false,
     },
     glutenFree: {
+      type: Boolean,
+      default: false,
+    },
+    isOrganic: {
       type: Boolean,
       default: false,
     },
@@ -205,7 +214,7 @@ const ProductSchema = new Schema<IProduct>(
 ProductSchema.index({ name: "text", tags: "text" });
 ProductSchema.index({ categoryId: 1, subCategoryId: 1 });
 ProductSchema.index({ kosher: 1 });
-ProductSchema.index({ organic: 1 });
+ProductSchema.index({ isOrganic: 1 });
 ProductSchema.index({ glutenFree: 1 });
 ProductSchema.index({ isActive: 1, averagePrice: 1 });
 

@@ -1364,6 +1364,7 @@
     "noResults": "No Results Found",
     "noResultsDesc": "No groups match your search criteria",
     "members": "members",
+    "noDescription": "No description",
     "owner": "Owner",
     "manage": "Manage",
     "errorDescription": "We couldn't load your groups. Please try again."

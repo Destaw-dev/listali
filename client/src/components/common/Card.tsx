@@ -123,7 +123,7 @@ export function CardHeader({
 
   return (
     <div className={cn(
-      'border-b border-border/20',
+      'border-b border-border/90',
       paddingClasses[padding],
       className
     )}>

@@ -415,6 +415,7 @@ export const useSubCategoriesByCategory = (categoryId?: string | null, enabled: 
     });
   }, [allSubCategories, categoryId, enabled]);
 
+
   return {
     data: subCategories,
     isLoading,

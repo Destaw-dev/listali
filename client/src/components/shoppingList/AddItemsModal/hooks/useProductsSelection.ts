@@ -5,6 +5,7 @@ import {
   useInfiniteAllProducts,
   useInfiniteSearchProducts,
   useInfiniteProductsByCategory,
+  useInfiniteProductsBySubCategory,
 } from '../../../../hooks/useProducts';
 import { useDebounce } from '../../../../hooks/useDebounce';
 import { IProduct, ICategory, ISubCategory } from '../../../../types';
@@ -47,12 +48,13 @@ export function useProductsSelection() {
   const minSearchChars = isGuest() ? GUEST_LIMITS.MIN_SEARCH_CHARS : 2;
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const isSearching = debouncedSearchQuery.length >= minSearchChars;
-  const isFilteringByCategory = !!selectedCategoryId;
+  const isFilteringBySubCategory = !!selectedSubCategoryId;
+  const isFilteringByCategory = !!selectedCategoryId && !selectedSubCategoryId;
   
   // Check if guest can search
   const canSearch = !isGuest() || searchCount < GUEST_LIMITS.MAX_SEARCH_ATTEMPTS;
 
-  const { data: subCategories = [] } = useSubCategoriesByCategory(selectedCategoryId, advancedOpen);
+  const { data: subCategories = [] } = useSubCategoriesByCategory(selectedCategoryId, advancedOpen || !!selectedSubCategoryId);
 
   const {
     data: allInfinite,
@@ -78,10 +80,20 @@ export function useProductsSelection() {
     isLoading: isLoadingCategory,
   } = useInfiniteProductsByCategory(selectedCategoryId || '', 50);
 
+  const {
+    data: subCategoryInfinite,
+    fetchNextPage: fetchNextSubCategory,
+    hasNextPage: hasNextSubCategory,
+    isFetchingNextPage: isFetchingNextSubCategory,
+    isLoading: isLoadingSubCategory,
+  } = useInfiniteProductsBySubCategory(selectedSubCategoryId || '', 50);
+
   const productsToShow = useMemo(() => {
     let base: IProduct[] = [];
     if (isSearching) {
       base = searchInfinite?.pages?.flatMap((p: { data?: IProduct[] }) => p?.data ?? []) ?? [];
+    } else if (isFilteringBySubCategory) {
+      base = subCategoryInfinite?.pages?.flatMap((p: { data?: IProduct[] }) => p?.data ?? []) ?? [];
     } else if (isFilteringByCategory) {
       base = categoryInfinite?.pages?.flatMap((p: { data?: IProduct[] }) => p?.data ?? []) ?? [];
     } else {
@@ -94,22 +106,6 @@ export function useProductsSelection() {
     }
 
     const filtered = base.filter((p: IProduct) => {
-      if (selectedCategoryId) {
-        const cid = typeof p.categoryId === 'string' 
-          ? p.categoryId 
-          : (typeof p.categoryId === 'object' && p.categoryId !== null && '_id' in p.categoryId 
-            ? (p.categoryId as { _id: string })._id 
-            : undefined);
-        if (cid !== selectedCategoryId) return false;
-      }
-      if (selectedSubCategoryId) {
-        const sid = typeof p.subCategoryId === 'string' 
-          ? p.subCategoryId 
-          : (typeof p.subCategoryId === 'object' && p.subCategoryId !== null && '_id' in p.subCategoryId 
-            ? (p.subCategoryId as { _id: string })._id 
-            : undefined);
-        if (sid !== selectedSubCategoryId) return false;
-      }
       if (filterKosher && !p.kosher) return false;
       if (filterOrganic && !p.organic) return false;
       if (filterGlutenFree && !p.glutenFree) return false;
@@ -124,12 +120,12 @@ export function useProductsSelection() {
     return sorted;
   }, [
     isSearching,
+    isFilteringBySubCategory,
     isFilteringByCategory,
     searchInfinite?.pages,
+    subCategoryInfinite?.pages,
     categoryInfinite?.pages,
     allInfinite?.pages,
-    selectedCategoryId,
-    selectedSubCategoryId,
     filterKosher,
     filterOrganic,
     filterGlutenFree,
@@ -137,12 +133,12 @@ export function useProductsSelection() {
     isGuest,
   ]);
 
-  const isLoading = isLoadingAll || isLoadingSearch || isLoadingCategory;
+  const isLoading = isLoadingAll || isLoadingSearch || isLoadingCategory || isLoadingSubCategory;
   // Disable infinite scroll for guest if reached max pages
-  const hasNext = isGuest() 
+  const hasNext = isGuest()
     ? false // Guest mode: no infinite scroll
-    : (isSearching ? !!hasNextSearch : isFilteringByCategory ? !!hasNextCategory : !!hasNextAll);
-  const isFetchingNext = isFetchingNextAll || isFetchingNextSearch || isFetchingNextCategory;
+    : (isSearching ? !!hasNextSearch : isFilteringBySubCategory ? !!hasNextSubCategory : isFilteringByCategory ? !!hasNextCategory : !!hasNextAll);
+  const isFetchingNext = isFetchingNextAll || isFetchingNextSearch || isFetchingNextCategory || isFetchingNextSubCategory;
 
   useEffect(() => {
     let observer: IntersectionObserver | null = null;
@@ -162,6 +158,8 @@ export function useProductsSelection() {
 
             if (isSearching) {
               fetchNextSearch();
+            } else if (isFilteringBySubCategory) {
+              fetchNextSubCategory();
             } else if (isFilteringByCategory) {
               fetchNextCategory();
             } else {
@@ -181,7 +179,7 @@ export function useProductsSelection() {
         observer.disconnect();
       }
     };
-  }, [hasNext, isFetchingNext, isSearching, isFilteringByCategory, fetchNextAll, fetchNextSearch, fetchNextCategory, productsToShow.length]);
+  }, [hasNext, isFetchingNext, isSearching, isFilteringBySubCategory, isFilteringByCategory, fetchNextAll, fetchNextSearch, fetchNextSubCategory, fetchNextCategory, productsToShow.length]);
 
   const activeFilters = useMemo<ActiveFilter[]>(() => {
     const filters: ActiveFilter[] = [];
@@ -200,9 +198,9 @@ export function useProductsSelection() {
         filters.push({ type: 'subCategory', label: subCategory.name, value: selectedSubCategoryId });
       }
     }
-    if (filterKosher) filters.push({ type: 'kosher', label: t('kosher'), value: true });
-    if (filterOrganic) filters.push({ type: 'organic', label: t('organic'), value: true });
-    if (filterGlutenFree) filters.push({ type: 'glutenFree', label: t('glutenFree'), value: true });
+    // if (filterKosher) filters.push({ type: 'kosher', label: t('kosher'), value: true });
+    // if (filterOrganic) filters.push({ type: 'organic', label: t('organic'), value: true });
+    // if (filterGlutenFree) filters.push({ type: 'glutenFree', label: t('glutenFree'), value: true });
     return filters;
   }, [searchQuery, selectedCategoryId, selectedSubCategoryId, filterKosher, filterOrganic, filterGlutenFree, categories, subCategories, t]);
 
@@ -242,6 +240,7 @@ export function useProductsSelection() {
         break;
       case 'category':
         setSelectedCategoryId(null);
+        setSelectedSubCategoryId(null);
         break;
       case 'subCategory':
         setSelectedSubCategoryId(null);
