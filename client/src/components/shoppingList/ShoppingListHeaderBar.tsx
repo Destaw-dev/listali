@@ -121,14 +121,14 @@ export function ShoppingListHeaderBar({
           </Button>
           </div>
           <div className="hidden md:block w-40 h-40 bg-card rounded-full -mr-12 opacity-50 border-8 border-info relative">
-          <Wand2 className="h-10 w-10 absolute top-1/3 left-1/3 text-text-primary" />
+          <Wand2 className="h-10 w-10 absolute top-1/3 left-2/6 text-primary-600" />
           </div>
         </div>
       </header>
 
       <RecipeImportModal
         isOpen={isRecipeModalOpen}
-        onClose={() => setIsRecipeModalOpen(false)}
+        closesRecipeModalOpen={ ()=> setIsRecipeModalOpen(false)}
         onAddItems={handleAddRecipeItems}
         currentItems={currentItems}
       />

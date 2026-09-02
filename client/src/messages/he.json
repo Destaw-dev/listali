@@ -1242,7 +1242,8 @@
     "startListening": "הכתב קולית",
     "stopListening": "עצור הקלטה",
     "listening": "מקשיב...",
-    "browserNotSupported": "הדפדפן לא תומך בזיהוי דיבור"
+    "browserNotSupported": "הדפדפן לא תומך בזיהוי דיבור",
+    "emptyText": "אנא הזן טקסט של מתכון"
   },
   "SmartSuggestions": {
     "title": "אולי שכחת?",
@@ -1563,7 +1564,7 @@
     "contact": {
       "title": "יצירת קשר",
       "description": "יש לך שאלות או הצעות? נשמח לשמוע ממך!",
-      "email": "צור קשר: support@listali.com"
+      "email": "צור קשר: support@listali.co.il"
     }
   },
   "terms": {
@@ -1610,7 +1611,7 @@
       },
       "contact": {
         "title": "יצירת קשר",
-        "content": "אם יש לך שאלות לגבי תנאי השימוש הללו, אנא צור קשר איתנו בכתובת: support@listali.com"
+        "content": "אם יש לך שאלות לגבי תנאי השימוש הללו, אנא צור קשר איתנו בכתובת: support@listali.co.il"
       }
     }
   }

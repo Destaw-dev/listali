@@ -18,6 +18,11 @@ vi.mock('../../../hooks/useItems', () => ({
     isLoading: false,
     error: null,
   })),
+  usePopularItems: vi.fn(() => ({
+    data: [],
+    isLoading: false,
+    error: null,
+  })),
 }));
 vi.mock('../../../components/shoppingList/AddItemsModal/ProductsSelectionView', () => ({
   ProductsSelectionView: ({ onProductSelect, selectedProductIds }: { onProductSelect: (product: IProduct) => void; selectedProductIds: string[] }) => (
@@ -180,4 +185,3 @@ describe('AddItemsModal', () => {
     });
   });
 });
-

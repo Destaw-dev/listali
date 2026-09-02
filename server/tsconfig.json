@@ -46,6 +46,6 @@
   "dist",
   ".next",
   "build",
-  "coverage"
+  "coverage", "node_modules", ".next", "data", "large-files", "src/scraping"
 ]
   }

@@ -197,8 +197,8 @@ export const register = asyncHandler(async (req: Request, res: Response<IApiResp
   
   await user.save();
   
-  const userResponse = user.toObject();
-  const { password: _password } = userResponse;
+  const { password: _password, refreshSessions: _refreshSessions, ...userResponse } = user.toObject();
+  const safeUser = userResponse as unknown as IAuthResponse['user'];
   
   const isMobile = isMobileClient(req);
   
@@ -221,7 +221,7 @@ if (!user.isEmailVerified && !groupJoined) {
   }
   
   const responseData: IAuthResponse = {
-    user: userResponse,
+    user: safeUser,
     accessToken,
     ...(isMobile && { refreshToken, sessionId }),
     ...(groupJoined && { groupJoined }),
@@ -285,8 +285,8 @@ export const login = asyncHandler(async (req: Request, res: Response<IApiRespons
   
   await user.save();
   
-    const userResponse = user.toObject();
-  const { password: _password } = userResponse;
+    const { password: _password, refreshSessions: _refreshSessions, ...userResponse } = user.toObject();
+  const safeUser = userResponse as unknown as IAuthResponse['user'];
   
   const isMobile = isMobileClient(req);
   
@@ -304,7 +304,7 @@ export const login = asyncHandler(async (req: Request, res: Response<IApiRespons
   }
     
     const responseData: IAuthResponse = {
-      user: userResponse,
+      user: safeUser,
       accessToken,
       ...(isMobile && { refreshToken, sessionId })
     };
@@ -352,7 +352,7 @@ export const logout = asyncHandler(async (req: Request, res: Response<IApiRespon
   res.status(200).json(successResponse(null, 'Logout successful'));
 });
 
-export const getMe = asyncHandler(async (req: Request, res: Response<IApiResponse<IUser | null | void>>) => {
+export const getMe = asyncHandler(async (req: Request, res: Response<IApiResponse<Omit<IUser, 'password' | 'refreshSessions'> | null | void>>) => {
   const user = await User.findById(req.userId).populate('groups', 'name description avatar membersCount');
   if (!user) throw new AppError('User not found', 404);
   
@@ -360,7 +360,11 @@ export const getMe = asyncHandler(async (req: Request, res: Response<IApiRespons
     throw new AppError('Please verify your email address to access your account.', 403);
   }
   
-  res.status(200).json(successResponse(user, 'User data retrieved'));
+  const { password: _password, refreshSessions: _refreshSessions, ...safeUser } = user.toObject();
+  res.status(200).json(successResponse(
+    safeUser as unknown as Omit<IUser, 'password' | 'refreshSessions'>,
+    'User data retrieved'
+  ));
 });
 
 export const updateProfile = asyncHandler(async (req: Request, res: Response<IApiResponse<IUser | null | void>>) => {
