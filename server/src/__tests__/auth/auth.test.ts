@@ -54,6 +54,8 @@ describe('🔐 Auth API', () => {
     expect(body.data).toBeDefined();
     expect(body.data?.accessToken).toBeDefined();
     expect(body.data?.user.email).toBe(user.email);
+    expect(body.data?.user).not.toHaveProperty('password');
+    expect(body.data?.user).not.toHaveProperty('refreshSessions');
   });
 
   test('POST /api/auth/register → duplicate email should fail', async () => {
@@ -76,6 +78,8 @@ describe('🔐 Auth API', () => {
     const body = res.body as IApiResponse<IAuthResponse>;
     expect(body.data).toBeDefined();
     expect(body.data?.accessToken).toBeDefined();
+    expect(body.data?.user).not.toHaveProperty('password');
+    expect(body.data?.user).not.toHaveProperty('refreshSessions');
   });
 
   test('GET /api/auth/me → should return current user', async () => {
@@ -93,6 +97,8 @@ describe('🔐 Auth API', () => {
     expect(res.status).toBe(200);
     const body = res.body as IApiResponse<Omit<IUser, 'password' | 'refreshSessions'>>;
     expect(body.data?.email).toBe(user.email);
+    expect(body.data).not.toHaveProperty('password');
+    expect(body.data).not.toHaveProperty('refreshSessions');
   });
 
   test('PUT /api/auth/profile → should update user profile', async () => {

@@ -16,7 +16,7 @@ export const parseShoppingListFromText = async (text: string, categoryNames: str
   const prompt = `
     תפקידך הוא עוזר חכם לאפליקציית קניות. המטרה שלך היא ליצור רשימת קניות — כלומר מה צריך לקנות בסופר — ולא לשחזר את הכמויות המדויקות מהמתכון.
 
-    החזר פלט בפורמט JSON בלבד (מערך של אובייקטים), ללא סימני Markdown (כמו \`\`\`json).
+    החזר פלט כאובייקט JSON עם מפתח "items" שערכו מערך. לדוגמה: {"items": [...]}. ללא סימני Markdown (כמו \`\`\`json).
 
     לכל פריט במערך, מלא את השדות הבאים:
     - name: שם המוצר כפי שמופיע בטקסט (כולל מותג/אחוז אם צוין, כגון "חלב 3% תנובה"). הסר רק כמויות ויחידות שהן חלק מהשם (כגון "500 גרם קמח" -> "קמח").
@@ -50,38 +50,30 @@ export const parseShoppingListFromText = async (text: string, categoryNames: str
       messages: [
         {
           role: "system",
-          content: "You are a JSON API. You MUST output ONLY a valid JSON array. Never write code, explanations, markdown, or any text outside the JSON array.",
+          content: "You are a JSON API. Output ONLY a valid JSON object with a single key 'items' whose value is an array. No explanations, no markdown.",
         },
         { role: "user", content: prompt },
       ],
       temperature: 0.1,
+      response_format: { type: "json_object" },
     });
 
-    const textResponse = completion.choices[0]?.message.content || "";
+    const rawContent = completion.choices[0]?.message.content || "";
 
-    const start = textResponse.indexOf("[");
-    const end = textResponse.lastIndexOf("]");
-    if (start === -1 || end === -1 || end < start) {
-      logger.error("No JSON array found in Groq response", { textResponse });
-      throw new Error("AI returned invalid JSON");
-    }
-    let jsonText = textResponse.slice(start, end + 1);
-
-    // המרת שברים (1/4, 1/2 וכו') למספרים עשרוניים
-    jsonText = jsonText.replace(/(\d+)\/(\d+)/g, (_, num, den) =>
-      String(parseInt(num) / parseInt(den))
-    );
-
-    // תיקון גרשיים לא מוסקייפים ביחידות עבריות (ק"ג, מ"ל)
-    jsonText = jsonText.replace(/ק"ג/g, 'ק\\"ג');
-    jsonText = jsonText.replace(/מ"ל/g, 'מ\\"ל');
-
+    let parsed: unknown;
     try {
-      return JSON.parse(jsonText);
+      parsed = JSON.parse(rawContent);
     } catch {
-      logger.error("Groq returned non-JSON response", { textResponse });
+      logger.error("Groq json_object mode returned unparseable content", { rawContent });
       throw new Error("AI returned invalid JSON");
     }
+
+    const items = (parsed as { items?: unknown }).items;
+    if (!Array.isArray(items)) {
+      logger.error("Groq response missing 'items' array", { parsed });
+      throw new Error("AI returned invalid JSON");
+    }
+    return items;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     const details = (error as { status?: unknown; code?: unknown })?.status ?? (error as { status?: unknown; code?: unknown })?.code ?? "";

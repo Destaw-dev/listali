@@ -7,6 +7,24 @@ import { Category } from "../models/category";
 type ParsedAIItem = { name: string; quantity?: number; unit?: string; category?: string };
 type ProductDoc = { name?: string; _id?: { toString(): string }; categoryId?: { toString(): string } };
 
+function resolveCategory(
+  aiCategory: string | undefined,
+  categoryIdByName: Map<string, string>
+): string | null {
+  if (!aiCategory) return null;
+  const trimmed = aiCategory.trim();
+  if (!trimmed) return null;
+  if (categoryIdByName.has(trimmed)) return categoryIdByName.get(trimmed)!;
+  const lower = trimmed.toLowerCase();
+  for (const [key, id] of categoryIdByName.entries()) {
+    const keyLower = key.trim().toLowerCase();
+    if (keyLower === lower || keyLower.includes(lower) || lower.includes(keyLower)) {
+      return id;
+    }
+  }
+  return null;
+}
+
 function getCoreSearchTerm(name: string): string {
   const words = name.trim().split(/\s+/);
   const core: string[] = [];
@@ -36,30 +54,53 @@ export const parseText = async (req: Request, res: Response) => {
 
     const parsedItems = await parseShoppingListFromText(text, categoryNames);
 
-    const searchResults = await Promise.allSettled(
-      (parsedItems as ParsedAIItem[]).map((item) =>
-        Product.searchByNameHebrew(getCoreSearchTerm(item.name), 1, 10)
-      )
+    const items = await Promise.all(
+      (parsedItems as ParsedAIItem[]).map(async (item) => {
+        const expectedCategoryId = resolveCategory(item.category, categoryIdByName);
+
+        let products: ProductDoc[] = [];
+        try {
+          // Pass 1: search with full item name (more specific)
+          const [fullResults] = await Product.searchByNameHebrew(item.name, 1, 5);
+          products = fullResults as ProductDoc[];
+
+          if (products.length > 0) {
+            const hasMatch = !expectedCategoryId || products.some(
+              (p) => normalizeObjectId(p.categoryId) === expectedCategoryId
+            );
+            if (!hasMatch) {
+              // Pass 2: fall back to core term for broader results
+              const coreTerm = getCoreSearchTerm(item.name);
+              if (coreTerm !== item.name) {
+                const [coreResults] = await Product.searchByNameHebrew(coreTerm, 1, 10);
+                products = coreResults as ProductDoc[];
+              }
+            }
+          } else {
+            // Pass 2: no full-name results, try core term
+            const coreTerm = getCoreSearchTerm(item.name);
+            if (coreTerm !== item.name) {
+              const [coreResults] = await Product.searchByNameHebrew(coreTerm, 1, 10);
+              products = coreResults as ProductDoc[];
+            }
+          }
+        } catch (err) {
+          logger.warn("Product search failed", { name: item.name, err });
+        }
+
+        const categoryMatchedProduct = expectedCategoryId
+          ? (products.find((p) => normalizeObjectId(p.categoryId) === expectedCategoryId) ?? null)
+          : null;
+        const fallbackProduct = !expectedCategoryId ? (products[0] ?? null) : null;
+        const match = categoryMatchedProduct ?? fallbackProduct;
+
+        return {
+          ...item,
+          productId: normalizeObjectId(match?._id) ?? null,
+          categoryId: expectedCategoryId ?? normalizeObjectId(match?.categoryId) ?? null,
+        };
+      })
     );
-
-    const items = (parsedItems as ParsedAIItem[]).map((item, i: number) => {
-      const result = searchResults[i];
-      const products: ProductDoc[] = result?.status === "fulfilled" ? (result.value[0] as ProductDoc[]) : [];
-
-      const expectedCategoryId = item.category ? categoryIdByName.get(item.category) : null;
-      const categoryMatchedProduct = expectedCategoryId
-        ? (products.find((p) => normalizeObjectId(p.categoryId) === expectedCategoryId) ?? null)
-        : null;
-      const fallbackProduct = !expectedCategoryId ? (products[0] ?? null) : null;
-      const match = categoryMatchedProduct ?? fallbackProduct;
-      const matchedCategoryId = normalizeObjectId(match?.categoryId);
-
-      return {
-        ...item,
-        productId: normalizeObjectId(match?._id) ?? null,
-        categoryId: expectedCategoryId ?? matchedCategoryId ?? null,
-      };
-    });
 
     return res.status(200).json({ items });
   } catch (error) {

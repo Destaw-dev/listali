@@ -1242,7 +1242,8 @@
     "startListening": "Voice input",
     "stopListening": "Stop recording",
     "listening": "Listening...",
-    "browserNotSupported": "Your browser does not support speech recognition"
+    "browserNotSupported": "Your browser does not support speech recognition",
+    "emptyText": "Please enter recipe text"
   },
   "Dashboard": {
     "loading": "Loading...",
@@ -1555,7 +1556,7 @@
     "contact": {
       "title": "Contact Us",
       "description": "Have questions or suggestions? We'd love to hear from you!",
-      "email": "Contact: support@listali.com"
+      "email": "Contact: support@listali.co.il"
     }
   },
   "terms": {
@@ -1602,7 +1603,7 @@
       },
       "contact": {
         "title": "Contact",
-        "content": "If you have any questions about these terms of service, please contact us at: support@listali.com"
+        "content": "If you have any questions about these terms of service, please contact us at: support@listali.co.il"
       }
     }
   }

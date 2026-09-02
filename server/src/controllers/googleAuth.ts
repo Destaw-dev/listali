@@ -91,8 +91,7 @@ const ticket = await client.verifyIdToken({
     setRefreshTokenCookies(res, refreshToken, sessionId);
   }
 
-  const userResponse = user.toObject();
-  const { password: _password } = userResponse;
+  const { password: _password, refreshSessions: _refreshSessions, ...userResponse } = user.toObject();
 
   return res.status(200).json(successResponse({ 
     user: userResponse, 

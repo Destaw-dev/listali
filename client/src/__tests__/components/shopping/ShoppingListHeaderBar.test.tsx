@@ -1,8 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ShoppingListHeaderBar } from '../../../components/shoppingList/ShoppingListHeaderBar';
 import { mockShoppingLists } from '../../mocks/mockData';
+import { renderWithProviders } from '../../../test/test-utils';
+
+vi.mock('../../../hooks/useItems', () => ({
+  useCreateMultipleItems: () => ({ mutateAsync: vi.fn() }),
+}));
+
+vi.mock('../../../components/shoppingList/RecipeImportModal', () => ({
+  default: () => null,
+}));
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
@@ -22,12 +31,13 @@ describe('ShoppingListHeaderBar', () => {
   });
 
   it('should render shopping list name', () => {
-    render(
+    renderWithProviders(
       <ShoppingListHeaderBar
         shoppingList={mockShoppingLists[0]}
         groupId="group1"
         locale="he"
         onAddItems={mockOnAddItems}
+        currentItems={[]}
       />
     );
     
@@ -35,12 +45,13 @@ describe('ShoppingListHeaderBar', () => {
   });
 
   it('should display shopping list description', () => {
-    render(
+    renderWithProviders(
       <ShoppingListHeaderBar
         shoppingList={mockShoppingLists[0]}
         groupId="group1"
         locale="he"
         onAddItems={mockOnAddItems}
+        currentItems={[]}
       />
     );
     
@@ -52,12 +63,13 @@ describe('ShoppingListHeaderBar', () => {
   it('should show priority badge when priority exists', () => {
     const listWithPriority = { ...mockShoppingLists[0], priority: 'high' as const };
     
-    render(
+    renderWithProviders(
       <ShoppingListHeaderBar
         shoppingList={listWithPriority}
         groupId="group1"
         locale="he"
         onAddItems={mockOnAddItems}
+        currentItems={[]}
       />
     );
     
@@ -66,12 +78,13 @@ describe('ShoppingListHeaderBar', () => {
 
   it('should call onAddItems when clicking add item button', async () => {
     const user = userEvent.setup();
-    render(
+    renderWithProviders(
       <ShoppingListHeaderBar
         shoppingList={mockShoppingLists[0]}
         groupId="group1"
         locale="he"
         onAddItems={mockOnAddItems}
+        currentItems={[]}
       />
     );
     
@@ -83,12 +96,13 @@ describe('ShoppingListHeaderBar', () => {
   });
 
   it('should display formatted date', () => {
-    render(
+    renderWithProviders(
       <ShoppingListHeaderBar
         shoppingList={mockShoppingLists[0]}
         groupId="group1"
         locale="he"
         onAddItems={mockOnAddItems}
+        currentItems={[]}
       />
     );
     
@@ -97,4 +111,3 @@ describe('ShoppingListHeaderBar', () => {
     expect(hasDate).toBeTruthy();
   });
 });
-
